@@ -1,3 +1,14 @@
+# Cosa ci va
+
+VPC/SUBNET trasversali
+NSG trasversali
+VPC ENDPOINTS
+route 53
+
+
+
+
+
 S3 backend setup with native lockfile.
 
 This module uses per-env files:

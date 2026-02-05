@@ -1,3 +1,12 @@
+# COSA CI VA
+    
+ECR
+
+
+
+
+
+
 S3 backend setup with native lockfile.
 
 This module uses per-env files:
