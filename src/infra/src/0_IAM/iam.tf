@@ -110,7 +110,7 @@ resource "aws_iam_policy" "githubiac_plan_policy" {
         ]
         Resource = "*"
         Condition = {
-          StringEquals = { "aws:ResourceTag/Scope" : "tfstate" }
+          StringEquals = { "s3:ResourceTag/Scope" : "tfstate" }
         }
       },
       {
