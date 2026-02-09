@@ -33,7 +33,7 @@ jobs:
           environment_input: ${{ github.event.inputs.environment }}
 
   terraform-plan:
-    name: Plan (${{ matrix.environment }})
+    name: Terraform Plan ${{ matrix.environment }}
     runs-on: ubuntu-22.04
     needs: setup-matrix
     strategy:
