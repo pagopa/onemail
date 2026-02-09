@@ -87,17 +87,17 @@ function run_cmd() {
 }
 
 function configure_aws_profile() {
+  if [ "$cicd_mode" = true ]; then
+    echo "🤖 CICD mode enabled: skipping AWS profile setup"
+    return 0
+  fi
+
   if [ -z "$aws_profile" ]; then
     echo "ℹ️  No aws_profile configured, skipping AWS profile setup"
     return 0
   fi
 
   export AWS_PROFILE="$aws_profile"
-
-  if [ "$cicd_mode" = true ]; then
-    echo "🤖 CICD mode enabled: skipping local AWS profile checks and SSO login"
-    return 0
-  fi
 
   require_cmd "aws" "needed for AWS profile checks"
   if ! aws configure list-profiles | grep -qx "$aws_profile"; then
