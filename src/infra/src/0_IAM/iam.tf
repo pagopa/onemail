@@ -105,13 +105,19 @@ resource "aws_iam_policy" "githubiac_plan_policy" {
       {
         Effect = "Allow"
         Action = [
+          "s3:ListBucket",
+          "s3:GetBucketLocation"
+        ]
+        Resource = "arn:aws:s3:::terraform-state-${local.project}-*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
           "s3:PutObject",
           "s3:DeleteObject"
         ]
-        Resource = "*"
-        Condition = {
-          StringEquals = { "s3:ResourceTag/Scope" : "tfstate" }
-        }
+        Resource = "arn:aws:s3:::terraform-state-${local.project}-*/*"
       },
       {
         Resource = "*",
