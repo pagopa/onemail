@@ -44,9 +44,7 @@ resource "aws_iam_role" "githubiac" {
           StringLike = {
             "token.actions.githubusercontent.com:sub" : [
               "repo:${var.github_repository}:environment:dev",
-              "repo:${var.github_repository}:environment:uat",
-              "repo:${var.github_repository}:environment:prod/eu-central-1",
-              "repo:${var.github_repository}:environment:prod/eu-south-1",
+              "repo:${var.github_repository}:environment:prod",
               "repo:${var.github_repository}:ref:refs/heads/main"
             ]
           }
@@ -105,26 +103,10 @@ resource "aws_iam_policy" "githubiac_plan_policy" {
       {
         Effect = "Allow"
         Action = [
-          "s3:ListBucket",
-          "s3:GetBucketLocation"
-        ]
-        Resource = "arn:aws:s3:::terraform-state-${local.project}-*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
           "s3:PutObject",
           "s3:DeleteObject"
         ]
         Resource = "arn:aws:s3:::terraform-state-${local.project}-*/*"
-      },
-      {
-        Resource = "*",
-        Action = [
-          "kms:Decrypt"
-        ],
-        Effect = "Allow"
       }
     ]
   })
