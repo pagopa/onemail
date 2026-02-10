@@ -94,8 +94,3 @@ variable "dns_zone_name" {
   default     = "onemail.pagopa.it"
 }
 
-variable "dns_delegation_ttl" {
-  type        = number
-  description = "TTL in seconds for NS delegation records. Lower values allow faster DNS changes but increase query load."
-  default     = 300
-}

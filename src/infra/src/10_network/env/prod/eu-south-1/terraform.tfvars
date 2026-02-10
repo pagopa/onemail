@@ -17,7 +17,5 @@ aws_region     = "eu-south-1"
 # enable_nat_gateway        = true
 # single_nat_gateway        = false
 
-# DNS Configuration
-dns_delegation_ttl = 86400
 
 
