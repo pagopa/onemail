@@ -27,13 +27,13 @@ locals {
     # "dev" = {
     #   name    = "dev"
     #   type    = "NS"
-    #   ttl     = 3600
+    #   ttl     = 86400
     #   records = ["ns-xxx.awsdns-xx.com.", "ns-yyy.awsdns-yy.com.", "ns-zzz.awsdns-zz.com.", "ns-aaa.awsdns-aa.com."]
     # }
     # "uat" = {
     #   name    = "uat"
     #   type    = "NS"
-    #   ttl     = 3600
+    #   ttl     = 86400
     #   records = ["ns-bbb.awsdns-bb.com.", "ns-ccc.awsdns-cc.com.", "ns-ddd.awsdns-dd.com.", "ns-eee.awsdns-ee.com."]
     # }
 
