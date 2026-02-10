@@ -106,7 +106,10 @@ resource "aws_iam_policy" "githubiac_plan_policy" {
           "s3:PutObject",
           "s3:DeleteObject"
         ]
-        Resource = "arn:aws:s3:::terraform-state-${local.project}-*/*"
+        Resource = "*"
+        Condition = {
+          StringEquals = { "s3:ResourceTag/Scope" : "tfstate" }
+        }
       }
     ]
   })
