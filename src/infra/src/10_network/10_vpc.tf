@@ -167,7 +167,7 @@ module "vpc_endpoints" {
       #policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
       security_group_ids = [aws_security_group.vpc_tls.id]
       tags               = { Name = "events-endpoint" }
-    }
+    } 
     */
   }
 
