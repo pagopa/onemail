@@ -4,16 +4,21 @@
   "description": "Lambda that sends email requests to SES.",
   "main": "dist/app.js",
   "scripts": {
-    "start": "",
+    "start": "node dist/app.js",
     "dev": "",
-    "build": "",
+    "build": "tsc && tsc-alias",
     "test": "",
     "type-check": "tsc --noEmit",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}'"
   },
-  "dependencies": {},
-  "devDependencies": {},
-  "homepage": "https://github.com/pagopa/onemail/blob/main/src/onemail/om-lambda-sender/README.md"
+  "dependencies": {
+    "@aws-lambda-powertools/event-handler": "^2.31.0",
+    "aws-lambda": "^1.0.7"
+  },
+  "homepage": "https://github.com/pagopa/onemail/blob/main/src/onemail/om-lambda-sender/README.md",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.160"
+  }
 }
