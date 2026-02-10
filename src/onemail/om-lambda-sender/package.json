@@ -1,0 +1,19 @@
+{
+  "name": "om-lambda-sender",
+  "version": "1.0.0",
+  "description": "Lambda that sends email requests to SES.",
+  "main": "dist/app.js",
+  "scripts": {
+    "start": "",
+    "dev": "",
+    "build": "",
+    "test": "",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}'"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "homepage": "https://github.com/pagopa/onemail/blob/main/src/onemail/om-lambda-sender/README.md"
+}
