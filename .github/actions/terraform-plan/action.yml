@@ -37,7 +37,7 @@ runs:
       env:
         TF_IN_AUTOMATION: "true"
       run: |
-        ENV_FOLDER="${{ inputs.environment }}-${{ inputs.region }}"
+        ENV_FOLDER="${{ inputs.environment }}/${{ inputs.region }}"
         
         echo "Running terraform plan for module: ${{ inputs.module }}"
         echo "Environment folder: $ENV_FOLDER"

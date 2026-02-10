@@ -44,6 +44,7 @@ resource "aws_iam_role" "githubiac" {
           StringLike = {
             "token.actions.githubusercontent.com:sub" : [
               "repo:${var.github_repository}:environment:dev",
+              "repo:${var.github_repository}:environment:uat",
               "repo:${var.github_repository}:environment:prod",
               "repo:${var.github_repository}:ref:refs/heads/main"
             ]
