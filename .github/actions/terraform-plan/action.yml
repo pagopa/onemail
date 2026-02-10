@@ -31,6 +31,12 @@ runs:
         role-to-assume: ${{ inputs.iac_role_plan_arn }}
         aws-region: ${{ inputs.region }}
 
+    - name: Terraform Format
+      id: fmt
+      shell: bash
+      run: terraform fmt -check --recursive
+      working-directory: src/infra/src/${{ inputs.module }}
+    
     - name: Terraform Plan
       shell: bash
       working-directory: src/infra/src/${{ inputs.module }}
