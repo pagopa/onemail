@@ -22,20 +22,19 @@ locals {
 
   # PROD records (including NS delegation for dev and uat)
   prod_records = var.env == "prod" ? {
-    # NS Delegation Records
-    # Uncomment and populate after creating dev and uat zones
-    # "dev" = {
-    #   name    = "dev"
-    #   type    = "NS"
-    #   ttl     = 86400
-    #   records = ["ns-xxx.awsdns-xx.com.", "ns-yyy.awsdns-yy.com.", "ns-zzz.awsdns-zz.com.", "ns-aaa.awsdns-aa.com."]
-    # }
-    # "uat" = {
-    #   name    = "uat"
-    #   type    = "NS"
-    #   ttl     = 86400
-    #   records = ["ns-bbb.awsdns-bb.com.", "ns-ccc.awsdns-cc.com.", "ns-ddd.awsdns-dd.com.", "ns-eee.awsdns-ee.com."]
-    # }
+    #NS Delegation Records
+    "dev" = {
+      name    = "dev"
+      type    = "NS"
+      ttl     = 86400
+      records = ["ns-1918.awsdns-47.co.uk.", "ns-1006.awsdns-61.net.", "ns-1124.awsdns-12.org.", "ns-341.awsdns-42.com."]
+    },
+    "uat" = {
+      name    = "uat"
+      type    = "NS"
+      ttl     = 86400
+      records = ["ns-1494.awsdns-58.org.", "ns-113.awsdns-14.com.", "ns-938.awsdns-53.net.", "ns-1992.awsdns-57.co.uk."]
+    }
 
     # Other PROD records here
   } : {}
