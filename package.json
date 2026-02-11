@@ -14,8 +14,7 @@
     "format:check": "prettier --check 'src/onemail/**/*.{ts,js,mjs,json,yml,yaml}'",
     "format": "prettier --write 'src/onemail/**/*.{ts,js,mjs,json,yml,yaml}'",
     "setup:hooks": "bash ./scripts/setup-pre-commit-hooks.sh",
-    "version": "pnpm changeset version && pnpm install --lockfile-only",
-    "release": "pnpm changeset publish"
+    "version": "pnpm changeset version && pnpm install --lockfile-only"
   },
   "dependencies": {
     "lodash": "^4.17.23",
