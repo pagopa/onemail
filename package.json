@@ -19,7 +19,10 @@
   },
   "dependencies": {
     "lodash": "^4.17.23",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "om-ecs-dispatcher": "workspace:*",
+    "om-lambda-sender": "workspace:*",
+    "infra": "workspace:*"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
