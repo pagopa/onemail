@@ -9,19 +9,24 @@
     "build:dispatcher": "pnpm --filter om-ecs-dispatcher build",
     "build:sender": "pnpm --filter om-lambda-sender build",
     "type-check": "tsc --noEmit",
-    "lint": "eslint src/onemail",
-    "lint:fix": "eslint --fix src/onemail",
-    "format": "prettier --write 'src/onemail/**/*.{ts,js,mjs,json,yml,yaml}'"
+    "lint:check": "eslint src/onemail",
+    "lint": "eslint --fix src/onemail",
+    "format:check": "prettier --check 'src/onemail/**/*.{ts,js,mjs,json,yml,yaml}'",
+    "format": "prettier --write 'src/onemail/**/*.{ts,js,mjs,json,yml,yaml}'",
+    "setup:hooks": "bash ./scripts/setup-pre-commit-hooks.sh"
   },
   "dependencies": {
     "lodash": "^4.17.23",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.4.1",
+    "@commitlint/config-conventional": "^20.4.1",
     "@pagopa/eslint-config": "^5.1.2",
     "@types/lodash": "^4.17.23",
     "@types/node": "^24.10.12",
     "eslint": "^10.0.0",
+    "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",

@@ -9,8 +9,9 @@
     "build": "tsc && tsc-alias",
     "test": "",
     "type-check": "tsc --noEmit",
-    "lint": "eslint",
-    "lint:fix": "eslint --fix",
+    "lint:check": "eslint",
+    "lint": "eslint --fix",
+    "format:check": "prettier --check '**/*.{ts,js,mjs,json,yml,yaml}'",
     "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}'"
   },
   "dependencies": {

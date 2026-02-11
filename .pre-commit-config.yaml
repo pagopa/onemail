@@ -1,0 +1,80 @@
+repos:
+  ## general
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Common errors
+      - id: end-of-file-fixer
+        exclude_types: [sql]
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+        exclude_types: [sql, bash, shell]
+      - id: check-executables-have-shebangs
+      # Cross platform
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: [--fix=lf]
+        exclude_types: [sql]
+      # Security
+      - id: detect-aws-credentials
+        args: ['--allow-missing-credentials']
+      - id: detect-private-key
+
+  ## terraform
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.99.2
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_docs
+        args:
+          - markdown --sort-by required
+      - id: terraform_validate
+        args:
+          - --init-args=-lockfile=readonly
+          - --args=-json
+          - --args=-no-color
+  #      - id: terraform_providers_lock
+  #        args:
+  #          - --args=-platform=windows_amd64
+  #          - --args=-platform=darwin_amd64
+  #          - --args=-platform=darwin_arm64
+  #          - --args=-platform=linux_amd64
+  #          - --args=-platform=linux_arm64
+
+  # commitlint (commit-msg)
+  - repo: local
+    hooks:
+      - id: commitlint
+        name: commitlint
+        entry: pnpm exec commitlint --edit
+        language: system
+        stages: [commit-msg]
+
+  ## node
+  - repo: local
+    hooks:
+      # eslint
+      - id: lint
+        name: lint
+        entry: pnpm eslint --quiet --fix
+        language: system
+        files: ^src/onemail/.*\.(js|ts|mjs)$
+        exclude: ^src/infra/.*
+        stages: [pre-commit]
+
+      # prettier file not checked from eslint
+      - id: prettier
+        name: prettier
+        entry: pnpm prettier --write --log-level silent
+        language: system
+        files: ^src/onemail/.*\.(json|yml|yaml)$
+        exclude: ^src/infra/.*
+        stages: [pre-commit]
+
+      # typescript type check
+      - id: type-check
+        name: type-check
+        entry: pnpm type-check
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
