@@ -4,3 +4,4 @@
 **/build/**
 src/infra/**/*
 **/apidocs/*
+**/*.md

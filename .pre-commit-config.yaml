@@ -67,7 +67,7 @@ repos:
         name: prettier
         entry: pnpm prettier --write --log-level silent
         language: system
-        files: ^src/onemail/.*\.(json|yml|yaml)$
+        files: ^(package\.json|src/onemail/.*\.(json|yml|yaml))$
         exclude: ^src/infra/.*
         stages: [pre-commit]
 
