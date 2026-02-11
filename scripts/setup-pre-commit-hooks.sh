@@ -39,4 +39,4 @@ fi
 pre-commit install --install-hooks || printf "\n${RED}%s${RESET}\n" "Warning: could not install pre-commit hooks"
 pre-commit install --hook-type commit-msg --install-hooks || printf "\n${RED}%s${RESET}\n" "Warning: could not install commit-msg hook"
 
-printf "\n${GREEN}%s${RESET}\n" "Pre-commit hooks are now active, try launching: pre-commit run --hook-stage push -a"
+printf "\n${GREEN}%s${RESET}\n" "Pre-commit hooks are now active, try launching: pre-commit run --hook-stage pre-commit -a"

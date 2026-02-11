@@ -1,7 +1,8 @@
 repos:
   ## general
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    # pre-commit/pre-commit-hooks@v5.0.0
+    rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b
     hooks:
       # Common errors
       - id: end-of-file-fixer
@@ -20,9 +21,17 @@ repos:
         args: ['--allow-missing-credentials']
       - id: detect-private-key
 
+  ## secrets detection
+  - repo: https://github.com/gitleaks/gitleaks
+    # gitleaks/gitleaks@8.28.0
+    rev: 4fb43823ef3d152d239e92d7d5cb04783b548062
+    hooks:
+      - id: gitleaks
+
   ## terraform
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.99.2
+    # antonbabenko/pre-commit-terraform@v1.99.2
+    rev: 9aa1e0e7b353dca419a08d3abd2e9f5a0978c383
     hooks:
       - id: terraform_fmt
       - id: terraform_docs
