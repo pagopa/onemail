@@ -2,7 +2,7 @@
 
 ## Overview
 
-The repository includes a `.pre-commit-config.yaml` file and a setup script that checks prerequisites and installs hooks. The configured hooks cover general checks (trailing whitespace, end-of-file fixer, etc.), Terraform validations and Node/TypeScript checks such as `eslint`, `prettier`, and `tsc`. There is also a `commit-msg` hook that uses `commitlint` to validate commit messages according to Conventional Commits.
+The repository includes a `.pre-commit-config.yaml` file and a setup script that checks prerequisites and installs hooks. The configured hooks cover general checks (trailing whitespace, end-of-file fixer, etc.), secrets detection with gitleaks, Terraform validations and Node/TypeScript checks such as `eslint`, `prettier`, and `tsc`. There is also a `commit-msg` hook that uses `commitlint` to validate commit messages according to Conventional Commits.
 
 ## Prerequisites
 
