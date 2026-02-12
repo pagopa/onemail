@@ -4,7 +4,7 @@
   "description": "Centralized email service for PagoPA products.",
   "packageManager": "pnpm@10.29.2",
   "scripts": {
-    "dev:dispatcher": "pnpm --silent --filter om-ecs-dispatcher dev --no-bail",
+    "dev:dispatcher": "pnpm --silent --filter om-ecs-dispatcher dev",
     "dev:sender": "pnpm --silent --filter om-lambda-sender dev",
     "build:dispatcher": "pnpm --filter om-ecs-dispatcher build",
     "build:sender": "pnpm --filter om-lambda-sender build",
