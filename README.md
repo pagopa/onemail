@@ -41,6 +41,7 @@ The project is managed via a CI/CD pipeline that ensures code integrity and effi
 ### Prerequisites
 
 - Node and pnpm (the node version is stored in the `.nvmrc` file, we recommend to use [nvm](https://github.com/nvm-sh/nvm) to quickly install and use different versions of node)
+- If you use VSCode editor install [prettier] (https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and set as default code formatter
 
 ### Installation
 

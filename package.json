@@ -14,13 +14,18 @@
     "lint": "eslint --fix src/onemail",
     "format:check": "prettier --check 'src/onemail/**/*.{ts,js,mjs,json,yml,yaml}'",
     "format": "prettier --write 'src/onemail/**/*.{ts,js,mjs,json,yml,yaml}'",
-    "setup:hooks": "bash ./scripts/setup-pre-commit-hooks.sh"
+    "setup:hooks": "bash ./scripts/setup-pre-commit-hooks.sh",
+    "version": "pnpm changeset version && pnpm install --lockfile-only"
   },
   "dependencies": {
     "lodash": "^4.17.23",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "om-ecs-dispatcher": "workspace:*",
+    "om-lambda-sender": "workspace:*",
+    "infra": "workspace:*"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.8",
     "@commitlint/cli": "^20.4.1",
     "@commitlint/config-conventional": "^20.4.1",
     "@pagopa/eslint-config": "^5.1.2",
