@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Lambda that sends email requests to SES.",
   "main": "dist/app.js",
+  "type": "module",
   "scripts": {
     "start": "node dist/app.js",
     "dev": "",

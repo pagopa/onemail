@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "module": "commonjs",
+    "target": "es2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": [
+      "es2022"
+    ],
     "baseUrl": "./",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -9,6 +13,7 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "rewriteRelativeImportExtensions": true
   }
 }

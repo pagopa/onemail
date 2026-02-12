@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "description": "RESTful API that sorts requests into queues based on priority",
   "main": "dist/app.js",
+  "type": "module",
   "scripts": {
     "start": "node dist/app.js",
-    "dev": "nodemon -r tsconfig-paths/register src/app.ts",
-    "build": "tsc && tsc-alias",
+    "dev": "tsx watch src/app.ts",
+    "build": "tsc",
     "test": "",
     "type-check": "tsc --noEmit",
     "lint:check": "eslint",
@@ -21,7 +22,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "nodemon": "^3.1.11"
+    "tsx": "^4.21.0"
   },
   "homepage": "https://github.com/pagopa/onemail/blob/main/src/onemail/om-ecs-dispatcher/README.md"
 }

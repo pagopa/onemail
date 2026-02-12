@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Centralized email service for PagoPA products.",
   "packageManager": "pnpm@10.29.2",
+  "type": "module",
   "scripts": {
     "dev:dispatcher": "pnpm --silent --filter om-ecs-dispatcher dev",
     "dev:sender": "pnpm --silent --filter om-lambda-sender dev",
@@ -28,8 +29,6 @@
     "eslint": "^10.0.0",
     "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
-    "tsc-alias": "^1.8.16",
-    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3"
   },
   "repository": {
