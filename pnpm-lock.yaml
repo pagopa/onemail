@@ -8,9 +8,18 @@ importers:
 
   .:
     dependencies:
+      infra:
+        specifier: workspace:*
+        version: link:src/infra
       lodash:
         specifier: ^4.17.23
         version: 4.17.23
+      om-ecs-dispatcher:
+        specifier: workspace:*
+        version: link:src/onemail/om-ecs-dispatcher
+      om-lambda-sender:
+        specifier: workspace:*
+        version: link:src/onemail/om-lambda-sender
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -51,6 +60,8 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  src/infra: {}
 
   src/onemail/om-ecs-dispatcher:
     dependencies:

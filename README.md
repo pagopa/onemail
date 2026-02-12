@@ -41,6 +41,7 @@ The project is managed via a CI/CD pipeline that ensures code integrity and effi
 ### Prerequisites
 
 - Node and pnpm (the node version is stored in the `.nvmrc` file, we recommend to use [nvm](https://github.com/nvm-sh/nvm) to quickly install and use different versions of node)
+- If you use VSCode editor install [prettier] (https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and set as default code formatter
 
 ### Installation
 
@@ -139,7 +140,7 @@ i.e.:
 ```
 chore: automate release
 fix(routes): fix auth route path
-feat(CACI-101): add zod validation
+feat(OM-101): add zod validation
 ```
 
 We use [pre-commit](https://pre-commit.com/) and [commitlint](https://github.com/conventional-changelog/commitlint) to validate messages when commiting.
