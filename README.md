@@ -138,8 +138,8 @@ i.e.:
 
 ```
 chore: automate release
-fix(routes): fix auth route path
-feat(CACI-101): add zod validation
+fix(routes): fix send email route path
+feat(OM-101): add zod validation
 ```
 
 We use [pre-commit](https://pre-commit.com/) and [commitlint](https://github.com/conventional-changelog/commitlint) to validate messages when commiting.
