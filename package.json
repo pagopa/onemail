@@ -9,7 +9,7 @@
     "dev:sender": "pnpm --silent --filter om-lambda-sender dev",
     "build:dispatcher": "pnpm --filter om-ecs-dispatcher build",
     "build:sender": "pnpm --filter om-lambda-sender build",
-    "type-check": "tsc --noEmit",
+    "type-check": "pnpm -r run type-check",
     "lint:check": "eslint src/onemail",
     "lint": "eslint --fix src/onemail",
     "format:check": "prettier --check 'src/onemail/**/*.{ts,js,mjs,json,yml,yaml}'",
