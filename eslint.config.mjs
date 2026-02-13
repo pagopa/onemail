@@ -8,7 +8,12 @@ export default [
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       '@typescript-eslint/consistent-generic-constructors': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
+      'perfectionist/sort-objects': 'off',
+      'perfectionist/sort-union-types': 'off',
     },
   },
 ];
