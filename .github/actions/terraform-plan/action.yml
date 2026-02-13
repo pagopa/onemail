@@ -1,0 +1,51 @@
+name: Terraform Plan
+description: Execute Terraform plan for a specific module and environment
+
+inputs:
+  module:
+    description: Terraform module name (e.g., 10_network, 0_IAM)
+    required: true
+    type: string
+  environment:
+    description: Environment name (dev, uat, prod)
+    required: true
+    type: string
+  region:
+    description: AWS region
+    required: true
+    type: string
+  iac_role_plan_arn:
+    description: AWS IAM role ARN for OIDC authentication
+    required: true
+    type: string
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@50ac8dd1e1b10d09dac7b8727528b91bed831ac0
+      with:
+        role-to-assume: ${{ inputs.iac_role_plan_arn }}
+        aws-region: ${{ inputs.region }}
+
+    - name: Terraform Format
+      id: fmt
+      shell: bash
+      run: terraform fmt -check --recursive
+      working-directory: src/infra/src/${{ inputs.module }}
+    
+    - name: Terraform Plan
+      shell: bash
+      working-directory: src/infra/src/${{ inputs.module }}
+      env:
+        TF_IN_AUTOMATION: "true"
+      run: |
+        ENV_FOLDER="${{ inputs.environment }}/${{ inputs.region }}"
+        
+        echo "Running terraform plan for module: ${{ inputs.module }}"
+        echo "Environment folder: $ENV_FOLDER"
+        
+        ./terraform.sh plan "$ENV_FOLDER" --cicd -input=false -lock-timeout=5m

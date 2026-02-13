@@ -1,0 +1,59 @@
+name: Terraform Apply - Network
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/infra/src/10_network/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to apply'
+        required: true
+        type: choice
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+  setup-matrix:
+    name: Setup Environment Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup Matrix
+        id: matrix
+        uses: ./.github/actions/env-matrix
+        with:
+          event_name: ${{ github.event_name }}
+          environment_input: ${{ github.event.inputs.environment }}
+
+  terraform-apply:
+    name: Terraform Apply ${{ matrix.environment }}
+    runs-on: ubuntu-latest
+    needs: setup-matrix
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
+    environment: ${{ matrix.environment }}
+    concurrency: terraform-network-${{ matrix.environment }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Run Terraform Apply
+        uses: ./.github/actions/terraform-apply
+        with:
+          module: 10_network
+          environment: ${{ matrix.environment }}
+          region: ${{ matrix.region }}
+          iac_role_arn: ${{ vars.IAM_ROLE_IAC }}
