@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node dist/app.js",
     "dev": "",
-    "build": "tsc && tsc-alias",
+    "build": "tsc",
     "test": "",
     "type-check": "tsc --noEmit",
     "lint:check": "eslint",
@@ -19,6 +19,12 @@
   "dependencies": {
     "@aws-lambda-powertools/event-handler": "^2.31.0",
     "aws-lambda": "^1.0.7"
+  },
+  "imports": {
+    "#*": {
+      "local": "./src/*.js",
+      "default": "./dist/*.js"
+    }
   },
   "homepage": "https://github.com/pagopa/onemail/blob/main/src/onemail/om-lambda-sender/README.md",
   "devDependencies": {

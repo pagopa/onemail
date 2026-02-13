@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "start": "node dist/app.js",
-    "dev": "tsx watch src/app.ts",
+    "dev": "tsx watch -C local src/app.ts",
     "build": "tsc",
     "test": "",
     "type-check": "tsc --noEmit",
@@ -24,6 +24,12 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "tsx": "^4.21.0"
+  },
+  "imports": {
+    "#*": {
+      "local": "./src/*.js",
+      "default": "./dist/*.js"
+    }
   },
   "homepage": "https://github.com/pagopa/onemail/blob/main/src/onemail/om-ecs-dispatcher/README.md"
 }
