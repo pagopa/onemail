@@ -37,6 +37,7 @@ override.tf.json
 # Ignore any IDE configuration files
 **/.idea/*
 **/.vscode/*
+!.vscode/settings.json
 
 # Intellij stuff
 *.iml
@@ -127,4 +128,3 @@ web_modules/
 .env.production.local
 .env.local
 docker/.env
-
