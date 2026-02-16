@@ -1,11 +1,11 @@
-name: Terraform Apply - Network
+name: Terraform Apply - OneMail App
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'src/infra/src/10_network/**'
+      - 'src/infra/src/70_domains/onemail_app/**'
   workflow_dispatch:
     inputs:
       environment:
@@ -44,7 +44,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
     environment: ${{ matrix.environment }}
-    concurrency: terraform-network-${{ matrix.environment }}
+    concurrency: terraform-onemail-app-${{ matrix.environment }}
     permissions:
       id-token: write
       contents: read
@@ -55,7 +55,7 @@ jobs:
       - name: Run Terraform Apply
         uses: ./.github/actions/terraform-apply
         with:
-          module: 10_network
+          module: 70_domains/onemail_app
           environment: ${{ matrix.environment }}
           region: ${{ matrix.region }}
           iac_role_arn: ${{ vars.IAM_ROLE_IAC }}
