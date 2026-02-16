@@ -16,7 +16,7 @@ dynamodb_table_config = {
   stream_enabled                 = true
   stream_view_type               = "NEW_AND_OLD_IMAGES"
   ttl_attribute_name             = "expiration_time"
-  deletion_protection_enabled    = true
+  deletion_protection_enabled    = false
   attributes = [
     {
       name = "EmailId"
