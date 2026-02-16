@@ -1,0 +1,57 @@
+name: Terraform Plan - OneMail App
+
+on:
+  pull_request:
+    paths:
+      - 'src/infra/src/70_domains/onemail_app/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to plan'
+        required: true
+        type: choice
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+  setup-matrix:
+    name: Setup Environment Matrix
+    runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+
+      - name: Setup Matrix
+        id: matrix
+        uses: ./.github/actions/env-matrix
+        with:
+          event_name: ${{ github.event_name }}
+          environment_input: ${{ github.event.inputs.environment }}
+
+  terraform-plan:
+    name: Terraform Plan ${{ matrix.environment }}
+    runs-on: ubuntu-22.04
+    needs: setup-matrix
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
+    environment: ${{ matrix.environment }}
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+
+      - name: Run Terraform Plan
+        uses: ./.github/actions/terraform-plan
+        with:
+          module: 70_domains/onemail_app
+          environment: ${{ matrix.environment }}
+          region: ${{ matrix.region }}
+          iac_role_plan_arn: ${{ vars.IAM_ROLE_IAC_PLAN }}
