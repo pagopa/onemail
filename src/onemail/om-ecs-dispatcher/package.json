@@ -1,0 +1,35 @@
+{
+  "name": "om-ecs-dispatcher",
+  "version": "1.0.0",
+  "description": "RESTful API that sorts requests into queues based on priority",
+  "private": true,
+  "main": "dist/app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/app.js",
+    "dev": "tsx watch -C local src/app.ts",
+    "build": "tsc",
+    "test": "",
+    "type-check": "tsc --noEmit",
+    "lint:check": "eslint",
+    "lint": "eslint --fix",
+    "format:check": "prettier --check '**/*.{ts,js,mjs,json,yml,yaml}'",
+    "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}'"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.4",
+    "express": "^5.2.1",
+    "http-status-codes": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "tsx": "^4.21.0"
+  },
+  "imports": {
+    "#*": {
+      "local": "./src/*.js",
+      "default": "./dist/*.js"
+    }
+  },
+  "homepage": "https://github.com/pagopa/onemail/blob/main/src/onemail/om-ecs-dispatcher/README.md"
+}

@@ -1,0 +1,33 @@
+{
+  "name": "om-lambda-sender",
+  "version": "1.0.0",
+  "description": "Lambda that sends email requests to SES.",
+  "private": true,
+  "main": "dist/app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/app.js",
+    "dev": "",
+    "build": "tsc",
+    "test": "",
+    "type-check": "tsc --noEmit",
+    "lint:check": "eslint",
+    "lint": "eslint --fix",
+    "format:check": "prettier --check '**/*.{ts,js,mjs,json,yml,yaml}'",
+    "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}'"
+  },
+  "dependencies": {
+    "@aws-lambda-powertools/event-handler": "^2.31.0",
+    "aws-lambda": "^1.0.7"
+  },
+  "imports": {
+    "#*": {
+      "local": "./src/*.js",
+      "default": "./dist/*.js"
+    }
+  },
+  "homepage": "https://github.com/pagopa/onemail/blob/main/src/onemail/om-lambda-sender/README.md",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.160"
+  }
+}

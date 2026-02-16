@@ -1,0 +1,49 @@
+{
+  "name": "onemail",
+  "version": "1.0.0",
+  "description": "Centralized email service for PagoPA products.",
+  "packageManager": "pnpm@10.29.2",
+  "type": "module",
+  "scripts": {
+    "dev:dispatcher": "pnpm --silent --filter om-ecs-dispatcher dev",
+    "dev:sender": "pnpm --silent --filter om-lambda-sender dev",
+    "build:dispatcher": "pnpm --filter om-ecs-dispatcher build",
+    "build:sender": "pnpm --filter om-lambda-sender build",
+    "type-check": "pnpm -r run type-check",
+    "lint:check": "eslint src/onemail",
+    "lint": "eslint --fix src/onemail",
+    "format:check": "prettier --check 'src/onemail/**/*.{ts,js,mjs,json,yml,yaml}'",
+    "format": "prettier --write 'src/onemail/**/*.{ts,js,mjs,json,yml,yaml}'",
+    "setup:hooks": "bash ./scripts/setup-pre-commit-hooks.sh",
+    "version": "pnpm changeset version && pnpm install --lockfile-only"
+  },
+  "dependencies": {
+    "infra": "workspace:*",
+    "lodash": "^4.17.23",
+    "om-ecs-dispatcher": "workspace:*",
+    "om-lambda-sender": "workspace:*",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.8",
+    "@commitlint/cli": "^20.4.1",
+    "@commitlint/config-conventional": "^20.4.1",
+    "@pagopa/eslint-config": "^5.1.2",
+    "@types/lodash": "^4.17.23",
+    "@types/node": "^24.10.12",
+    "eslint": "^10.0.0",
+    "prettier": "^3.8.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:pagopa/onemail.git"
+  },
+  "author": "PagoPa (https://github.com/pagopa)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pagopa/onemail/issues"
+  },
+  "homepage": "https://github.com/pagopa/onemail#readme"
+}
