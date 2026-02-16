@@ -40,8 +40,8 @@ The project is managed via a CI/CD pipeline that ensures code integrity and effi
 
 ### Prerequisites
 
-- Node and pnpm (the node version is stored in the `.nvmrc` file, we recommend to use [nvm](https://github.com/nvm-sh/nvm) to quickly install and use different versions of node)
-- If you use VSCode editor install [prettier] (https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and set as default code formatter
+- Node and pnpm (the node version is stored in the `.nvmrc` file, we recommend to use [nvm](https://github.com/nvm-sh/nvm) to quickly install and use different versions of node).
+- If you use VSCode editor install [prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode).
 
 ### Installation
 
@@ -143,9 +143,11 @@ fix(routes): fix send email route path
 feat(OM-101): add zod validation
 ```
 
-We use [pre-commit](https://pre-commit.com/) and [commitlint](https://github.com/conventional-changelog/commitlint) to validate messages when commiting.
+We use [pre-commit](https://pre-commit.com/) to ensures code quality and consistency, and [commitlint](https://github.com/conventional-changelog/commitlint) to validate messages when commiting.
 
 > [!IMPORTANT]
 > See [pre-commit.md](docs/extending/pre-commit.md) for setup, troubleshooting and how to install the hooks.
+
+We use Prettier for formatting and ESLint for rules/auto-fixes. For details and recommended settings see [code-style.md](docs/extending/code-style.md).
 
 We use [Github actions](https://github.com/features/actions) together with [Changeset](https://github.com/changesets/changesets) to release a new version (with changelog) once a PR gets merged into main branch.

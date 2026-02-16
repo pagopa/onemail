@@ -29,7 +29,6 @@
     "@commitlint/cli": "^20.4.1",
     "@commitlint/config-conventional": "^20.4.1",
     "@pagopa/eslint-config": "^5.1.2",
-    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/lodash": "^4.17.23",
     "@types/node": "^24.10.12",
     "eslint": "^10.0.0",
