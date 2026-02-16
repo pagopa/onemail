@@ -23,6 +23,7 @@ pnpm run lint
 
 > [!NOTE]
 > **Import sorting (IDE-agnostic)**
+>
 > To keep import order consistent across editors, you can:
 > - Install [Trivago Prettier Plugin](https://github.com/trivago/prettier-plugin-sort-imports)
 > - Add the following plugin to `.prettierrc`:
