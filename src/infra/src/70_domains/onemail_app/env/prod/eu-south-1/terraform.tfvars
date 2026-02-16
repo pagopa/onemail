@@ -9,14 +9,14 @@ aws_region     = "eu-south-1"
 
 # DynamoDB configuration for prod
 dynamodb_table_config = {
-  table_name                         = "EmailStatusHistory"
-  hash_key                           = "EmailId"
-  billing_mode                       = "PAY_PER_REQUEST"
-  point_in_time_recovery_enabled     = true
-  stream_enabled                     = false
-  stream_view_type                   = "NEW_AND_OLD_IMAGES"
-  ttl_attribute_name                 = "expiration_time"
-  deletion_protection_enabled        = true
+  table_name                     = "EmailStatusHistory"
+  hash_key                       = "EmailId"
+  billing_mode                   = "PAY_PER_REQUEST"
+  point_in_time_recovery_enabled = true
+  stream_enabled                 = false
+  stream_view_type               = "NEW_AND_OLD_IMAGES"
+  ttl_attribute_name             = "expiration_time"
+  deletion_protection_enabled    = true
   attributes = [
     {
       name = "EmailId"
