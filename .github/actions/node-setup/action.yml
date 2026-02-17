@@ -1,0 +1,11 @@
+name: "Node.js Setup"
+description: "Sets up Node.js by syncing .nvmrc to .node-version"
+runs:
+  using: "composite"
+  steps:
+    - name: Sync Node version
+      shell: bash
+      run: cp .nvmrc .node-version
+
+    - name: Setup Node.js
+      uses: pagopa/dx/.github/actions/node-setup@0fd2b15f5b61751fa433be93682e4a48779b600b
