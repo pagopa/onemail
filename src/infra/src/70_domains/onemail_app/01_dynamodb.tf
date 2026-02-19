@@ -6,9 +6,10 @@ module "dynamodb_table" {
   product_name       = "onemail"
   idvh_resource_tier = "standard"
 
-  table_config   = var.dynamodb_table_config # pass-through diretto
-  create_kms_key = var.dynamodb_table_config.create_kms_key
-  kms_alias      = var.dynamodb_table_config.kms_alias
+  table_config       = var.dynamodb_table_config # pass-through diretto
+  create_kms_key     = var.dynamodb_table_config.create_kms_key
+  kms_alias          = var.dynamodb_table_config.kms_alias
+  enable_replication = var.dynamodb_enable_replication
   tags = merge(
     module.tag_config.tags,
     {

@@ -45,6 +45,12 @@ variable "domain" {
   }
 }
 
+variable "dynamodb_enable_replication" {
+  type        = bool
+  description = "Enable DynamoDB replication."
+  default     = false
+}
+
 # DynamoDB table configuration
 variable "dynamodb_table_config" {
   type = object({

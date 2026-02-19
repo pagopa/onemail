@@ -27,9 +27,9 @@ dynamodb_table_config = {
     }
   ]
   global_secondary_indexes = []
-  replica_regions = [
-    {
-      region_name = "eu-central-1"
-    }
-  ]
+  # replica_regions = [
+  #   {
+  #     region_name = "eu-central-1"
+  #   }
+  # ]
 }
