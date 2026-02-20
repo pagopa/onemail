@@ -26,11 +26,6 @@ variable "env_short" {
   }
 }
 
-variable "location" {
-  type        = string
-  description = "Location or region name."
-}
-
 variable "location_short" {
   type        = string
   description = "Location short like eg: neu, weu."
@@ -43,11 +38,6 @@ variable "domain" {
     condition     = length(var.domain) <= 12
     error_message = "Max length is 12 characters."
   }
-}
-
-variable "vpc_name" {
-  type        = string
-  description = "Name of the vpc."
 }
 
 variable "vpc_cidr" {
