@@ -1,175 +1,122 @@
-# module "vpc" {
-#   source                = "terraform-aws-modules/vpc/aws"
-#   version               = "6.5.1"
-#   name                  = var.vpc_name
-#   cidr                  = var.vpc_cidr
-#   azs                   = var.azs
-#   private_subnets       = var.vpc_private_subnets_cidr
-#   private_subnet_suffix = "private"
-#   public_subnets        = var.vpc_public_subnets_cidr
-#   public_subnet_suffix  = "public"
-#   intra_subnets         = var.vpc_internal_subnets_cidr
-#   enable_nat_gateway    = var.enable_nat_gateway
-#   single_nat_gateway    = var.single_nat_gateway
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "6.5.1"
 
-#   enable_dns_hostnames = true
-#   enable_dns_support   = true
+  name                  = "${local.project}-vpc"
+  cidr                  = var.vpc_cidr
+  azs                   = var.azs
+  private_subnets       = var.vpc_private_subnets_cidr
+  private_subnet_suffix = "private"
+  public_subnets        = var.vpc_public_subnets_cidr
+  public_subnet_suffix  = "public"
+  intra_subnets         = var.vpc_internal_subnets_cidr
 
-#   tags = module.tag_config.tags
-# }
+  enable_nat_gateway = var.enable_nat_gateway
+  single_nat_gateway = var.single_nat_gateway
 
-# data "aws_security_group" "default" {
-#   name   = "default"
-#   vpc_id = module.vpc.vpc_id
-# }
+  enable_dns_hostnames = true
+  enable_dns_support   = true
 
-# resource "aws_security_group" "vpc_tls" {
-#   name_prefix = "${var.vpc_name}_tls_sg"
-#   description = "Allow TLS inbound traffic"
-#   vpc_id      = module.vpc.vpc_id
+  enable_flow_log                      = true
+  create_flow_log_cloudwatch_log_group = true
+  create_flow_log_cloudwatch_iam_role  = true
 
-#   ingress {
-#     description = "TLS from VPC"
-#     from_port   = 443
-#     to_port     = 443
-#     protocol    = "tcp"
-#     cidr_blocks = [module.vpc.vpc_cidr_block]
-#   }
+  tags = module.tag_config.tags
+}
 
-#   tags = merge({ Name = "${var.vpc_name}_tls_sg" }, module.tag_config.tags)
+resource "aws_security_group" "vpce_tls" {
+  name_prefix = "${local.project}-vpce-tls-"
+  description = "Allow TLS from VPC workloads to interface endpoints"
+  vpc_id      = module.vpc.vpc_id
 
-# }
+  ingress {
+    description = "TLS from VPC CIDR"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [module.vpc.vpc_cidr_block]
+  }
 
-# module "vpc_endpoints" {
-#   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-#   version = "6.5.1"
+  tags = merge(module.tag_config.tags, { Name = "${local.project}-vpce-tls" })
+}
 
-#   vpc_id             = module.vpc.vpc_id
-#   security_group_ids = [data.aws_security_group.default.id]
+module "vpc_endpoints" {
+  source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
+  version = "6.5.1"
 
-#   endpoints = {
-#     s3 = {
-#       service      = "s3"
-#       service_type = "Gateway"
-#       route_table_ids = flatten([
-#         module.vpc.intra_route_table_ids, module.vpc.private_route_table_ids,
-#         module.vpc.public_route_table_ids
-#       ])
-#       tags = { Name = "s3-vpc-endpoint" }
-#     },
-#     logs = {
-#       service             = "logs"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       #policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
-#       security_group_ids = [aws_security_group.vpc_tls.id]
-#       tags               = { Name = "logs-endpoint" }
-#     },
-#     monitoring = {
-#       service             = "monitoring"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       #policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
-#       security_group_ids = [aws_security_group.vpc_tls.id]
-#       tags               = { Name = "monitoring-endpoint" }
-#     },
-#     /*
-#     xray = {
-#       service             = "xray"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       #policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
-#       security_group_ids = [aws_security_group.vpc_tls.id]
-#       tags               = { Name = "xray-endpoint" }
-#     },
-#     */
-#     ecr_api = {
-#       service             = "ecr.api"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       #policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
-#       security_group_ids = [aws_security_group.vpc_tls.id]
+  vpc_id = module.vpc.vpc_id
 
-#       tags = { Name = "ecr.api-endpoint" }
-#     },
-#     ecr_dkr = {
-#       service             = "ecr.dkr"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       #policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
-#       security_group_ids = [aws_security_group.vpc_tls.id]
-#       tags               = { Name = "ecr.dkr-endpoint" }
-#     },
-#     dynamodb = {
-#       service      = "dynamodb"
-#       service_type = "Gateway"
-#       route_table_ids = flatten([
-#         module.vpc.intra_route_table_ids, module.vpc.private_route_table_ids,
-#         module.vpc.public_route_table_ids
-#       ])
-#       # policy          = data.aws_iam_policy_document.dynamodb_endpoint_policy.json
-#       tags = { Name = "dynamodb-vpc-endpoint" }
-#     },
-#     /*
-#     ecs = {
-#       service             = "ecs"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       tags                = { Name = "ecs-endpoint" }
-#     },
-#     ecs_telemetry = {
-#       service             = "ecs-telemetry"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       tags                = { Name = "ecs-telemetry-endpoint" }
-#     },
-#     */
-#     kms = {
-#       service             = "kms"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       security_group_ids  = [aws_security_group.vpc_tls.id]
-#       tags                = { Name = "kms-endpoint" }
-#     },
-#     ssm = {
-#       service             = "ssm"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       security_group_ids  = [aws_security_group.vpc_tls.id]
-#       tags                = { Name = "ssm-endpoint" }
-#     },
-#     sns = {
-#       service             = "sns"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       security_group_ids  = [aws_security_group.vpc_tls.id]
-#       tags                = { Name = "sns-endpoint" }
-#     },
-#     apigw = {
-#       service             = "execute-api"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       security_group_ids  = [aws_security_group.vpc_tls.id]
-#       tags                = { Name = "apigw-endpoint" }
-#     },
-#     sqs = {
-#       service             = "sqs"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       security_group_ids  = [aws_security_group.vpc_tls.id]
-#       tags                = { Name = "sqs" }
-#     },
-#     /*
-#     events = {
-#       service             = "events"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.intra_subnets
-#       #policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
-#       security_group_ids = [aws_security_group.vpc_tls.id]
-#       tags               = { Name = "events-endpoint" }
-#     } 
-#     */
-#   }
+  endpoints = {
+    s3 = {
+      service         = "s3"
+      service_type    = "Gateway"
+      route_table_ids = flatten([module.vpc.intra_route_table_ids, module.vpc.private_route_table_ids, module.vpc.public_route_table_ids])
+      tags            = { Name = "${local.project}-s3-vpc-endpoint" }
+    }
 
-#   tags = module.tag_config.tags
-# }
+    dynamodb = {
+      service         = "dynamodb"
+      service_type    = "Gateway"
+      route_table_ids = flatten([module.vpc.intra_route_table_ids, module.vpc.private_route_table_ids, module.vpc.public_route_table_ids])
+      tags            = { Name = "${local.project}-dynamodb-vpc-endpoint" }
+    }
+
+    logs = {
+      service             = "logs"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      security_group_ids  = [aws_security_group.vpce_tls.id]
+      tags                = { Name = "${local.project}-logs-endpoint" }
+    }
+
+    monitoring = {
+      service             = "monitoring"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      security_group_ids  = [aws_security_group.vpce_tls.id]
+      tags                = { Name = "${local.project}-monitoring-endpoint" }
+    }
+
+    ecr_api = {
+      service             = "ecr.api"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      security_group_ids  = [aws_security_group.vpce_tls.id]
+      tags                = { Name = "${local.project}-ecr-api-endpoint" }
+    }
+
+    ecr_dkr = {
+      service             = "ecr.dkr"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      security_group_ids  = [aws_security_group.vpce_tls.id]
+      tags                = { Name = "${local.project}-ecr-dkr-endpoint" }
+    }
+
+    kms = {
+      service             = "kms"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      security_group_ids  = [aws_security_group.vpce_tls.id]
+      tags                = { Name = "${local.project}-kms-endpoint" }
+    }
+
+    ssm = {
+      service             = "ssm"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      security_group_ids  = [aws_security_group.vpce_tls.id]
+      tags                = { Name = "${local.project}-ssm-endpoint" }
+    }
+
+    apigw = {
+      service             = "execute-api"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      security_group_ids  = [aws_security_group.vpce_tls.id]
+      tags                = { Name = "${local.project}-apigw-endpoint" }
+    }
+  }
+
+  tags = module.tag_config.tags
+}
