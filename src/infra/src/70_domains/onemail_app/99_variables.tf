@@ -45,6 +45,12 @@ variable "domain" {
   }
 }
 
+variable "dynamodb_enable_replication" {
+  type        = bool
+  description = "Enable DynamoDB replication."
+  default     = false
+}
+
 # DynamoDB table configuration
 variable "dynamodb_table_config" {
   type = object({
@@ -61,6 +67,9 @@ variable "dynamodb_table_config" {
     stream_view_type               = optional(string, "NEW_AND_OLD_IMAGES")
     ttl_attribute_name             = optional(string)
     deletion_protection_enabled    = optional(bool, false)
+    create_kms_key                 = optional(bool, false)
+    kms_alias                      = optional(string)
+    server_side_encryption_enabled = optional(bool, false)
     replica_regions = optional(list(object({
       region_name = string
     })), [])
