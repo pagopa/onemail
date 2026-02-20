@@ -3,7 +3,10 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "#*": ["src/*.js"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "tests"]
