@@ -1,0 +1,56 @@
+name: Code Review
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'src/onemail/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'eslint.config.mjs'
+      - '.prettier*'
+      - 'tsconfig.json'
+      - 'tsconfig.*.json'
+
+jobs:
+  lint-and-test:
+    name: Lint and test files
+    runs-on: ubuntu-22.04
+    if: ${{ github.event.pull_request.base.ref == 'main' && !startsWith(github.head_ref, 'changeset-release/') }}
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      # call common node setup workflow
+      - name: Setup Node.js
+        uses: ./.github/actions/node-setup
+
+      # install dependencies
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      # start lint checking
+      - name: Lint
+        id: lint-check
+        run: pnpm run lint:check
+
+      # start code style checking
+      - name: Format
+        id: format-check
+        run: pnpm run format:check
+
+      # run TypeScript type checking
+      - name: TypeScript type checking
+        id: type-check
+        run: pnpm run type-check
+
+      # TODO
+      # run unit tests
+      # - name: Unit tests
+      #   id: unit-tests
+      #   run: pnpm run test:silent
