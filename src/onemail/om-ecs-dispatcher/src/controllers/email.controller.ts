@@ -10,7 +10,6 @@ export const sendEmailTransactional = async (
   req: Request<object, object, SendEmailTransactionalBody>,
   res: Response<SendEmailTransactionalRes>,
 ) => {
-  console.log('Received request to send transactional email:', req.body);
   const result = await emailService.sendEmailTransactional(req.body);
   res.status(StatusCodes.OK).json(result);
 };
