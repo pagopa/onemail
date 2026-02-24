@@ -13,6 +13,10 @@ const client = new DynamoDBClient({
     },
   }),
 });
-const dynamoClient = DynamoDBDocumentClient.from(client);
+const dynamoClient = DynamoDBDocumentClient.from(client, {
+  marshallOptions: {
+    removeUndefinedValues: true,
+  },
+});
 
 export { dynamoClient };

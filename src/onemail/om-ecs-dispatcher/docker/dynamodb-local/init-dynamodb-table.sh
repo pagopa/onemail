@@ -30,9 +30,9 @@ AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID_VALUE" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_
   aws dynamodb create-table \
   --table-name "$TABLE_NAME" \
   --attribute-definitions \
-    AttributeName=id,AttributeType=S \
+    AttributeName=emailId,AttributeType=S \
   --key-schema \
-    AttributeName=id,KeyType=HASH \
+    AttributeName=emailId,KeyType=HASH \
   --billing-mode PAY_PER_REQUEST \
   --endpoint-url "$ENDPOINT" \
   --region "$REGION" \

@@ -1,3 +1,5 @@
+import z from 'zod';
+
 export const ERROR_CODES = {
   INVALID_INPUT_DATA: 'I001',
   DB_ERROR: {
@@ -10,9 +12,18 @@ export const ERROR_CODES = {
   UNEXPECTED_ERROR: 'G001',
 };
 
-export type ErrorResponse = {
-  message: string;
-  details?: { message: string }[];
-  errorCode?: string;
-  timestamp: string;
-};
+export const ErrorResponseSchema = z.object({
+  message: z.string().describe('Error message'),
+  details: z
+    .array(
+      z.object({
+        message: z.string().describe('Detailed error message'),
+      }),
+    )
+    .optional()
+    .describe('Array of detailed error messages'),
+  errorCode: z.string().optional().describe('Application-specific error code'),
+  timestamp: z.string().describe('Timestamp of when the error occurred'),
+});
+
+export type ErrorResponseDTO = z.infer<typeof ErrorResponseSchema>;

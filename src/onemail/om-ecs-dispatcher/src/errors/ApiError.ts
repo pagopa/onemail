@@ -1,6 +1,6 @@
-import { ErrorResponse } from '#dtos/error.dto';
+import { ErrorResponseDTO } from '#dtos/error.dto';
 
-export class ApiError extends Error implements ErrorResponse {
+export class ApiError extends Error implements ErrorResponseDTO {
   details?: { message: string }[];
   errorCode?: string;
   statusCode: number;
@@ -21,7 +21,7 @@ export class ApiError extends Error implements ErrorResponse {
     this.details = details;
   }
 
-  toJSON(): ErrorResponse {
+  toJSON(): ErrorResponseDTO {
     return {
       message: this.message,
       timestamp: this.timestamp,
