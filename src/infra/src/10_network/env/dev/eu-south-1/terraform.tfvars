@@ -15,5 +15,11 @@ vpc_internal_subnets_cidr = ["10.2.32.0/20", "10.2.16.0/20", "10.2.0.0/20"]
 enable_nat_gateway        = false
 single_nat_gateway        = false
 
+# Waf configuration
+web_acl = {
+  cloudwatch_metrics_enabled = true
+  sampled_requests_enabled   = true
+}
+
 
 

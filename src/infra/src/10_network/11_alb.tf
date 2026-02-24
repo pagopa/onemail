@@ -54,7 +54,7 @@ resource "aws_security_group" "alb" {
     from_port       = 8080
     to_port         = 8080
     protocol        = "tcp"
-    security_groups = [aws_security_group.ecs_proxy.id]
+    security_groups = [aws_security_group.vpce_tls.id]
   }
 
   tags = module.tag_config.tags
@@ -87,7 +87,7 @@ module "alb" {
   subnets            = module.vpc.public_subnets
   security_groups    = [aws_security_group.alb.id]
 
-  enable_deletion_protection = true
+  #enable_deletion_protection = true
   drop_invalid_header_fields = true
 
   #   access_logs = {
@@ -96,34 +96,69 @@ module "alb" {
   #     enabled = true
   #   }
 
-  listeners = {
-    https = {
-      port            = 443
-      protocol        = "HTTPS"
-      certificate_arn = module.acm.certificate_arn
-      forward = {
-        target_group_key = "proxy"
-      }
-    }
-  }
-
-  target_groups = {
-    proxy = {
-      protocol    = "HTTP"
-      port        = 8080
-      target_type = "ip"
-      health_check = {
-        protocol = "HTTP"
-        path     = "/health"
-      }
-    }
-  }
+  # Create ALB without listeners - we'll add HTTPS listener for private API Gateway
+  listeners     = {}
+  target_groups = {}
 
   tags = module.tag_config.tags
 }
 
+# Target Group for private API Gateway (via VPC Endpoint)
+resource "aws_lb_target_group" "apigw_tg" {
+  name        = "${local.project}-apigw-tg"
+  port        = 443
+  protocol    = "HTTPS"
+  vpc_id      = module.vpc.vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    protocol            = "HTTPS"
+    path                = "/health"
+    matcher             = "200-499"
+    port                = "traffic-port"
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 30
+  }
+
+  tags = merge(
+    module.tag_config.tags,
+    {
+      Name = "${local.project}-apigw-tg"
+    }
+  )
+}
+
+# Extract network interface IPs from VPC Endpoint and attach to target group
+data "aws_network_interface" "apigw_enis" {
+  for_each = toset(module.vpc_endpoints.endpoints["apigw"].network_interface_ids)
+  id       = each.value
+}
+
+resource "aws_lb_target_group_attachment" "apigw_attachment" {
+  for_each         = data.aws_network_interface.apigw_enis
+  target_group_arn = aws_lb_target_group.apigw_tg.arn
+  target_id        = each.value.private_ip
+  port             = 443
+}
+
+# HTTPS Listener - receives traffic from Global Accelerator
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = module.alb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  certificate_arn   = module.acm.acm_certificate_arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.apigw_tg.arn
+  }
+}
+
 resource "aws_wafv2_web_acl" "alb_waf" {
-  name        = var.web_acl.name
+  name        = "${local.project}-alb-waf"
   description = "ALB WAF."
   scope       = "REGIONAL"
 
