@@ -1,12 +1,20 @@
-import express, { Request, Response } from 'express';
+import { errorHandler } from '#middlewares/errorHandler.middleware';
+import express from 'express';
+
+import env from './config/env.js';
+import routes from './routes/index.js';
 
 const app = express();
+const PORT = env.server.PORT;
 
-const PORT = 3000;
+// api response type middlewares
+app.use(express.json());
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello World!');
-});
+// api routes
+app.use('/', routes);
+
+// global error middleware
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}...`);
