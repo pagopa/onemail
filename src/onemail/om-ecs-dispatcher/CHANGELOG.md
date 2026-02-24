@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.1.0
+
+### Minor Changes
+
+- 4e640bb: Data model: DTO and EmailStatus db table
+
 ## 1.0.2
 
 ### Patch Changes
