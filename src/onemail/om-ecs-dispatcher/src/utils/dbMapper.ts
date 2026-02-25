@@ -1,7 +1,7 @@
-import { EmailContentDTO } from '#dtos/email/common.dto';
 import { EmailHighPriorityBodyDTO } from '#dtos/email/emailHighPriority.dto';
 import {
   DbEmailContent,
+  EmailContent,
   EmailPriority,
   EmailStatus,
   EmailStatusHistoryItem,
@@ -18,7 +18,7 @@ export function mapEmailTransactionalToDbItem(
 
   // 1. Mutually exclusive mapping of Template and Body
   let dbTemplate: TemplateContent | undefined;
-  let dbBody: EmailContentDTO | undefined;
+  let dbBody: EmailContent | undefined;
 
   if (body.templateContent) {
     dbTemplate = {
@@ -47,7 +47,7 @@ export function mapEmailTransactionalToDbItem(
 
   // 3. Building the final DB item
   const initialStatus: EmailStatus = 'Queued';
-  const highPriority: EmailPriority = 'HIGH'; // Defaulting to HIGH for transactional emails
+  const highPriority: EmailPriority = 'HIGH';
   return {
     emailId: emailId,
     requestId: requestId,

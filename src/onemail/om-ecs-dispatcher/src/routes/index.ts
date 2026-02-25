@@ -1,5 +1,5 @@
 import env from '#config/env';
-import { NODE_ENV_VALUES } from '#utils/constants';
+import { NODE_ENV_VALUES, versionRoutePath } from '#utils/constants';
 import express from 'express';
 
 import emailRoute from './email.route.js';
@@ -20,12 +20,7 @@ genericRoutes.forEach((route) => {
 });
 
 // Versioned routes (v1)
-const routesV1Path = '/v1';
 const routesV1 = [
-  {
-    prefix: healthRoute.prefix,
-    router: healthRoute.router,
-  },
   {
     prefix: emailRoute.prefix,
     router: emailRoute.router,
@@ -33,7 +28,7 @@ const routesV1 = [
 ];
 
 routesV1.forEach((route) => {
-  expressRouter.use(`${routesV1Path}/${route.prefix}`, route.router);
+  expressRouter.use(`${versionRoutePath.v1}/${route.prefix}`, route.router);
 });
 
 // OpenAPI docs route

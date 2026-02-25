@@ -1,24 +1,24 @@
 import { dynamoClient } from '#connector/dynamo.connector';
 import {
-  HealthResponse,
+  HealthResponseDTO,
   HealthStatus,
   ServiceStatus,
 } from '#dtos/health/health.dto';
 import { ListTablesCommand } from '@aws-sdk/client-dynamodb';
 
-export const healthCheck = async (): Promise<HealthResponse> => {
-  let dynamoStatus = ServiceStatus.Unavailable;
+export const healthCheck = async (): Promise<HealthResponseDTO> => {
+  let dbStatus = ServiceStatus.Unavailable;
 
   try {
     // lightweight call to verify connectivity
     await dynamoClient.send(new ListTablesCommand({ Limit: 1 }));
-    dynamoStatus = ServiceStatus.Initialized;
+    dbStatus = ServiceStatus.Initialized;
   } catch {
-    dynamoStatus = ServiceStatus.NotInitialized;
+    dbStatus = ServiceStatus.NotInitialized;
   }
 
   const overall =
-    dynamoStatus === ServiceStatus.Initialized
+    dbStatus === ServiceStatus.Initialized
       ? HealthStatus.Healthy
       : HealthStatus.Unhealthy;
 
@@ -26,7 +26,7 @@ export const healthCheck = async (): Promise<HealthResponse> => {
     status: overall,
     timestamp: new Date().toISOString(),
     services: {
-      dynamo: dynamoStatus,
+      db: dbStatus,
     },
     uptime: process.uptime(),
   };

@@ -4,3 +4,7 @@ export const NODE_ENV_VALUES = {
   production: 'production',
   test: 'test',
 };
+
+export const versionRoutePath = {
+  v1: '/v1',
+};
