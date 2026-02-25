@@ -4,47 +4,56 @@ locals {
   # Build zone name based on environment
   zone_name = var.env == "prod" ? var.dns_zone_name : "${var.env}.${var.dns_zone_name}"
 
-  # DEV records
-  dev_records = var.env == "dev" ? {
-    # Dynamic record examples (with resource references)
-    # "api" = {
-    #   name    = "api"
-    #   type    = "CNAME"
-    #   ttl     = 300
-    #   records = [aws_apigatewayv2_api.main.api_endpoint]
-    # }
-  } : {}
-
-  # UAT records
-  uat_records = var.env == "uat" ? {
-    # Add UAT records here
-  } : {}
-
-  # PROD records (including NS delegation for dev and uat)
-  prod_records = var.env == "prod" ? {
-    #NS Delegation Records
-    "dev" = {
-      name    = "dev"
-      type    = "NS"
-      ttl     = 86400
-      records = ["ns-1918.awsdns-47.co.uk.", "ns-1006.awsdns-61.net.", "ns-1124.awsdns-12.org.", "ns-341.awsdns-42.com."]
-    },
-    "uat" = {
-      name    = "uat"
-      type    = "NS"
-      ttl     = 86400
-      records = ["ns-1494.awsdns-58.org.", "ns-113.awsdns-14.com.", "ns-938.awsdns-53.net.", "ns-1992.awsdns-57.co.uk."]
+  # All possible DNS records with consistent object structure
+  dns_records_base = {
+    # NS delegation records (PROD only)
+    "ns_dev" = {
+      display_name = "dev"
+      name         = "dev"
+      type         = "NS"
+      ttl          = 86400
+      records      = ["ns-1918.awsdns-47.co.uk.", "ns-1006.awsdns-61.net.", "ns-1124.awsdns-12.org.", "ns-341.awsdns-42.com."]
+      is_alias     = false
+      alias_config = null
+      include      = var.env == "prod"
     }
+    "ns_uat" = {
+      display_name = "uat"
+      name         = "uat"
+      type         = "NS"
+      ttl          = 86400
+      records      = ["ns-1494.awsdns-58.org.", "ns-113.awsdns-14.com.", "ns-938.awsdns-53.net.", "ns-1992.awsdns-57.co.uk."]
+      is_alias     = false
+      alias_config = null
+      include      = var.env == "prod"
+    }
+    # Global Accelerator alias record (all environments)
+    "root_ga_alias" = {
+      display_name = "root_ga_alias"
+      name         = ""
+      type         = "A"
+      ttl          = null
+      records      = null
+      is_alias     = true
+      alias_config = {
+        name                   = aws_globalaccelerator_accelerator.this.dns_name
+        zone_id                = aws_globalaccelerator_accelerator.this.hosted_zone_id
+        evaluate_target_health = true
+      }
+      include = true
+    }
+  }
 
-    # Other PROD records here
-  } : {}
-
-  # Merge all records
-  all_dns_records = merge(
-    local.dev_records,
-    local.uat_records,
-    local.prod_records
-  )
+  # Filter records based on inclusion flag
+  all_dns_records = {
+    for k, v in local.dns_records_base : v.display_name => {
+      name    = v.name
+      type    = v.type
+      ttl     = v.ttl
+      records = v.records
+      alias   = v.alias_config
+    } if v.include
+  }
 }
 
 module "zone" {

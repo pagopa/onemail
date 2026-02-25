@@ -84,3 +84,10 @@ variable "dns_zone_name" {
   default     = "onemail.pagopa.it"
 }
 
+variable "web_acl" {
+  type = object({
+    cloudwatch_metrics_enabled = optional(bool, false)
+    sampled_requests_enabled   = optional(bool, false)
+  })
+  description = "WEB acl configuration"
+}
