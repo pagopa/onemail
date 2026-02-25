@@ -1,7 +1,6 @@
 import z from 'zod';
 
 import {
-  DryRunQueryParams,
   DryRunQueryParamsSchema,
   EmailAddressSchema,
   EmailContentSchema,
@@ -49,7 +48,9 @@ export type EmailHighPriorityBodyDTO = z.infer<
 
 export const EmailHighPriorityQueryParamsSchema = DryRunQueryParamsSchema;
 
-export type EmailHighPriorityQueryParams = DryRunQueryParams;
+export type EmailHighPriorityQueryParams = z.infer<
+  typeof EmailHighPriorityQueryParamsSchema
+>;
 
 export const EmailHighPriorityResponseSchema = EmailSuccessResponseSchema;
 

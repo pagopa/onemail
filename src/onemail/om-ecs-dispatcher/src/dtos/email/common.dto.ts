@@ -67,10 +67,6 @@ export const DryRunQueryParamsSchema = z.object({
   dryRun: z.stringbool().default(false), // TODO: ignored in production
 });
 
-export type DryRunQueryParams = {
-  dryRun: string;
-};
-
 export const EmailSuccessResponseSchema = z.object({
   requestId: z.string(),
 });
