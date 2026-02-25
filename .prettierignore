@@ -3,5 +3,5 @@
 **/bin/**
 **/build/**
 src/infra/**/*
-**/apidocs/*
+**/apidoc/*
 **/*.md

@@ -9,6 +9,7 @@
     "start": "node dist/app.js",
     "dev": "tsx watch -C local src/app.ts",
     "build": "tsc",
+    "generate:openapi": "tsx -C local scripts/generateOpenapi.ts",
     "test": "",
     "type-check": "tsc --noEmit",
     "lint:check": "eslint",
