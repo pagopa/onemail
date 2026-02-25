@@ -4,8 +4,10 @@ import { configDotenv } from 'dotenv';
 configDotenv();
 
 export default {
+  projectVersion: process.env.npm_package_version || '1.0.0',
   server: {
     PORT: Number(process.env.PORT) || 3000,
+    host: process.env.HOST || 'http://localhost:3000',
     environment: process.env.NODE_ENV || NODE_ENV_VALUES.local,
   },
   aws: {
