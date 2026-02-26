@@ -30,8 +30,8 @@ resource "aws_api_gateway_rest_api_policy" "api_policy" {
 }
 
 module "api_gateway" {
-  source = "./.terraform/modules/aws_modules/IDVH/api_gateway"
-
+  #source = "./.terraform/modules/aws_modules/IDVH/api_gateway"
+  source                    = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/api_gateway?ref=main"
   env                       = var.env
   product_name              = "onemail"
   idvh_resource_tier        = "standard"
