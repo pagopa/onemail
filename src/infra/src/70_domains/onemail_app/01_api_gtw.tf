@@ -2,23 +2,21 @@ data "aws_vpc_endpoint" "api_gtw" {
   service_name = "com.amazonaws.eu-south-1.execute-api"
 }
 
-resource "aws_api_gateway_rest_api_policy" "api_policy" {
-  rest_api_id = module.api_gateway.rest_api_id
-
-  policy = jsonencode({
+locals {
+  api_gateway_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
         Effect    = "Allow",
         Principal = "*",
         Action    = "execute-api:Invoke",
-        Resource  = "${module.api_gateway.rest_api_execution_arn}/*"
+        Resource  = "execute-api:/*"
       },
       {
         Effect    = "Deny",
         Principal = "*",
         Action    = "execute-api:Invoke",
-        Resource  = "${module.api_gateway.rest_api_execution_arn}/*",
+        Resource  = "execute-api:/*",
         Condition = {
           StringNotEquals = {
             "aws:sourceVpce" : data.aws_vpc_endpoint.api_gtw.id
@@ -39,4 +37,6 @@ module "api_gateway" {
   body                      = ""
   endpoint_api_types        = ["PRIVATE"]
   endpoint_vpc_endpoint_ids = [data.aws_vpc_endpoint.api_gtw.id]
+
+  policy = local.api_gateway_policy
 }
