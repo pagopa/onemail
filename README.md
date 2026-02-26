@@ -20,7 +20,7 @@ This project is a centralized messaging service designed to streamline and stand
 
 ## Architecture
 
-![architecture](docs/architecture/architecture.png)
+![architecture](docs/architecture/architecture.webp)
 
 **CI/CD pipeline**\
 The project is managed via a CI/CD pipeline that ensures code integrity and efficient deployment. Key features include: code validation for every pull request, automatic deployment and infrastructure update (IaC).
