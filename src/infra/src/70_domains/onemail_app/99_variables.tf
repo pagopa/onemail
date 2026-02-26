@@ -44,3 +44,10 @@ variable "domain" {
     error_message = "Max length is 12 characters."
   }
 }
+
+variable "openapi_template_file" {
+  type        = string
+  description = "Path to the OpenAPI template file."
+  default     = "openapi/om.tpl.json"
+}
+
