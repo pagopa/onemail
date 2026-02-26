@@ -51,3 +51,10 @@ variable "openapi_template_file" {
   default     = "openapi/om.tpl.json"
 }
 
+variable "api_gateway_deployment_version" {
+  type        = string
+  description = "Version to trigger API Gateway redeployment."
+  default     = "1.0.0"
+}
+
+

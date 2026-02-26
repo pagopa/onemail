@@ -39,4 +39,10 @@ module "api_gateway" {
   endpoint_vpc_endpoint_ids = [data.aws_vpc_endpoint.api_gtw.id]
 
   policy = local.api_gateway_policy
+
+  tags = merge(
+    {
+      "deployment_version" = var.api_gateway_deployment_version
+    }
+  )
 }
