@@ -34,7 +34,7 @@ module "api_gateway" {
   product_name              = "onemail"
   idvh_resource_tier        = "standard"
   name                      = "${local.project}-api-gateway"
-  body                      = ""
+  body                      = templatefile("${path.module}/${var.openapi_template_file}", {})
   endpoint_api_types        = ["PRIVATE"]
   endpoint_vpc_endpoint_ids = [data.aws_vpc_endpoint.api_gtw.id]
 
