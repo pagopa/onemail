@@ -5,7 +5,7 @@ import type {
   EmailStatus,
   EmailStatusHistoryItem,
   TemplateContent,
-} from 'om-common/types';
+} from '#types/EmailStatusHistory';
 
 import { EmailHighPriorityBodyDTO } from '#dtos/email/emailHighPriority.dto';
 
