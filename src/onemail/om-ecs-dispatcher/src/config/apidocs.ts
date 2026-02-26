@@ -7,7 +7,9 @@ export const registry = new OpenAPIRegistry();
 
 // function that generate openapi docs
 export const generateSwaggerDocs = () => {
-  const generator = new OpenApiGeneratorV3(registry.definitions);
+  const generator = new OpenApiGeneratorV3(registry.definitions, {
+    unionPreferredType: 'oneOf',
+  });
   return generator.generateDocument({
     openapi: '3.0.0',
     info: {

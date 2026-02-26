@@ -32,133 +32,161 @@
         ]
       },
       "EmailHighPriorityBodyDTO": {
-        "type": "object",
-        "properties": {
-          "subject": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 255,
-            "description": "Subject of the email, required if emailContent is present"
-          },
-          "from": {
+        "allOf": [
+          {
             "type": "object",
             "properties": {
-              "name": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 255,
-                "description": "Name associated with the email address"
-              },
-              "email": {
-                "type": "string",
-                "format": "email",
-                "description": "Email address"
-              }
-            },
-            "required": [
-              "email"
-            ],
-            "description": "Sender of the email"
-          },
-          "to": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 255,
-                "description": "Name associated with the email address"
-              },
-              "email": {
-                "type": "string",
-                "format": "email",
-                "description": "Email address"
-              }
-            },
-            "required": [
-              "email"
-            ],
-            "description": "Recipient of the email"
-          },
-          "extendedHeaders": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "N": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 255,
-                  "description": "Key"
-                },
-                "V": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 255,
-                  "description": "Value"
-                }
-              },
-              "required": [
-                "N",
-                "V"
-              ]
-            },
-            "description": "Custom headers for the email"
-          },
-          "tag": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 255
-            },
-            "description": "Custom tags/categories for the email"
-          },
-          "emailContent": {
-            "type": "object",
-            "properties": {
-              "html": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 200000,
-                "description": "HTML content of the email"
-              },
-              "text": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 200000,
-                "description": "Text content of the email used as fallback if HTML content is not supported by the email client"
-              }
-            },
-            "description": "Content of the email to be sent if templateContent is not provided"
-          },
-          "templateContent": {
-            "type": "object",
-            "properties": {
-              "templateId": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 255,
-                "description": "Identifier of the email template"
-              },
-              "templateAttributes": {
+              "from": {
                 "type": "object",
-                "additionalProperties": {
-                  "nullable": true,
-                  "description": "Value"
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "description": "Name associated with the email address"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email address"
+                  }
                 },
-                "description": "Dynamic attributes for template rendering"
+                "required": [
+                  "email"
+                ],
+                "description": "Sender of the email"
+              },
+              "to": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "description": "Name associated with the email address"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email address"
+                  }
+                },
+                "required": [
+                  "email"
+                ],
+                "description": "Recipient of the email"
+              },
+              "extendedHeaders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "N": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255,
+                      "description": "Key"
+                    },
+                    "V": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255,
+                      "description": "Value"
+                    }
+                  },
+                  "required": [
+                    "N",
+                    "V"
+                  ]
+                },
+                "description": "Custom headers for the email"
+              },
+              "tag": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255
+                },
+                "description": "Custom tags/categories for the email"
               }
             },
             "required": [
-              "templateId"
-            ],
-            "description": "Template content of the email to be sent if emailContent is not provided"
+              "from",
+              "to"
+            ]
+          },
+          {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "templateContent": {
+                    "type": "object",
+                    "properties": {
+                      "templateId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Identifier of the email template"
+                      },
+                      "templateAttributes": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "nullable": true,
+                          "description": "Value"
+                        },
+                        "description": "Dynamic attributes for template rendering"
+                      }
+                    },
+                    "required": [
+                      "templateId"
+                    ],
+                    "description": "Template content of the email to be sent if emailContent is not provided"
+                  }
+                },
+                "required": [
+                  "templateContent"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "emailContent": {
+                    "type": "object",
+                    "properties": {
+                      "subject": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Subject of the email"
+                      },
+                      "html": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200000,
+                        "description": "HTML content of the email"
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200000,
+                        "description": "Text content of the email used as fallback if HTML content is not supported by the email client"
+                      }
+                    },
+                    "required": [
+                      "subject",
+                      "html"
+                    ],
+                    "description": "Content of the email to be sent if templateContent is not provided"
+                  }
+                },
+                "required": [
+                  "emailContent"
+                ]
+              }
+            ]
           }
-        },
-        "required": [
-          "from",
-          "to"
         ]
       },
       "EmailLowPriorityResponseDTO": {
