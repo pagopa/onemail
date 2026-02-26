@@ -51,8 +51,8 @@ resource "aws_security_group" "alb" {
 
   egress {
     description     = "To ECS proxy only"
-    from_port       = 8080
-    to_port         = 8080
+    from_port       = 443
+    to_port         = 443
     protocol        = "tcp"
     security_groups = [aws_security_group.vpce_tls.id]
   }
@@ -110,18 +110,6 @@ resource "aws_lb_target_group" "apigw_tg" {
   protocol    = "HTTPS"
   vpc_id      = module.vpc.vpc_id
   target_type = "ip"
-
-  health_check {
-    enabled             = true
-    protocol            = "HTTPS"
-    path                = "/health"
-    matcher             = "200-499"
-    port                = "traffic-port"
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    timeout             = 5
-    interval            = 30
-  }
 
   tags = merge(
     module.tag_config.tags,
