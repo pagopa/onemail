@@ -3,7 +3,7 @@ data "aws_vpc_endpoint" "api_gtw" {
 }
 
 data "aws_lb" "nlb" {
-  name = "${local.project}-elb"
+  name = "${local.project_nodomain}-elb"
 }
 
 locals {
