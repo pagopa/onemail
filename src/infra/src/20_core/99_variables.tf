@@ -26,11 +26,6 @@ variable "env_short" {
   }
 }
 
-variable "location" {
-  type        = string
-  description = "Location or region name."
-}
-
 variable "location_short" {
   type        = string
   description = "Location short like eg: neu, weu."
