@@ -57,8 +57,3 @@ variable "api_gateway_deployment_version" {
   default     = "1.0.0"
 }
 
-variable "nlb_arn" {
-  type        = string
-  description = "ARN of the Network Load Balancer for VPC Link integration."
-  default     = ""
-}
