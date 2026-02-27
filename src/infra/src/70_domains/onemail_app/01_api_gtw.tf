@@ -33,7 +33,7 @@ module "api_gateway" {
   env                       = var.env
   product_name              = "onemail"
   idvh_resource_tier        = "standard"
-  name                      = "${local.project}-api-gateway"
+  name                      = "${local.project_nodomain}-api-gateway"
   body                      = templatefile("${path.module}/${var.openapi_template_file}", {})
   endpoint_api_types        = ["PRIVATE"]
   endpoint_vpc_endpoint_ids = [data.aws_vpc_endpoint.api_gtw.id]
@@ -45,4 +45,11 @@ module "api_gateway" {
       "deployment_version" = var.api_gateway_deployment_version
     }
   )
+}
+
+resource "aws_api_gateway_vpc_link" "apigw" {
+  count       = var.nlb_arn != "" ? 1 : 0
+  name        = "ApiGwVPCLink"
+  description = "VPC link to the private network load balancer."
+  target_arns = [var.nlb_arn]
 }
