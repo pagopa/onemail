@@ -2,6 +2,10 @@ data "aws_vpc_endpoint" "api_gtw" {
   service_name = "com.amazonaws.eu-south-1.execute-api"
 }
 
+data "aws_lb" "nlb" {
+  name = "${local.project}-elb"
+}
+
 locals {
   api_gateway_policy = jsonencode({
     Version = "2012-10-17",
@@ -45,4 +49,10 @@ module "api_gateway" {
       "deployment_version" = var.api_gateway_deployment_version
     }
   )
+}
+
+resource "aws_api_gateway_vpc_link" "apigw" {
+  name        = "ApiGwVPCLink"
+  description = "VPC link to the private network load balancer."
+  target_arns = [data.aws_lb.nlb.arn]
 }
