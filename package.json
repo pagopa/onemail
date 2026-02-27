@@ -15,6 +15,7 @@
     "format:check": "prettier --check 'src/onemail/**/*.{ts,js,mjs,json,yml,yaml}'",
     "format": "prettier --write 'src/onemail/**/*.{ts,js,mjs,json,yml,yaml}'",
     "setup:hooks": "bash ./scripts/setup-pre-commit-hooks.sh",
+    "generate:openapi": "pnpm --filter om-ecs-dispatcher generate:openapi",
     "version": "pnpm changeset version && pnpm install --lockfile-only"
   },
   "dependencies": {

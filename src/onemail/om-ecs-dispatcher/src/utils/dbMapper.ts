@@ -1,12 +1,13 @@
-import { EmailContentDTO } from '#dtos/email/common.dto';
-import { EmailHighPriorityBodyDTO } from '#dtos/email/emailHighPriority.dto';
-import {
+import type {
   DbEmailContent,
+  EmailContent,
   EmailPriority,
   EmailStatus,
   EmailStatusHistoryItem,
   TemplateContent,
 } from '#types/EmailStatusHistory';
+
+import { EmailHighPriorityBodyDTO } from '#dtos/email/emailHighPriority.dto';
 
 export function mapEmailTransactionalToDbItem(
   body: EmailHighPriorityBodyDTO,
@@ -18,9 +19,10 @@ export function mapEmailTransactionalToDbItem(
 
   // 1. Mutually exclusive mapping of Template and Body
   let dbTemplate: TemplateContent | undefined;
-  let dbBody: EmailContentDTO | undefined;
+  let dbBody: EmailContent | undefined;
+  let dbEmailSubject: string | undefined;
 
-  if (body.templateContent) {
+  if ('templateContent' in body) {
     dbTemplate = {
       id: body.templateContent.templateId,
       // stringified JSON of the original object
@@ -28,16 +30,17 @@ export function mapEmailTransactionalToDbItem(
         ? JSON.stringify(body.templateContent.templateAttributes)
         : undefined,
     };
-  } else if (body.emailContent) {
+  } else {
     dbBody = {
       html: body.emailContent.html,
       text: body.emailContent.text,
     };
+    dbEmailSubject = body.emailContent.subject;
   }
 
   // 2. Content builder
   const content: DbEmailContent = {
-    subject: body.subject,
+    subject: dbEmailSubject,
     from: body.from,
     to: body.to,
     extendedHeaders: body.extendedHeaders,
@@ -47,7 +50,7 @@ export function mapEmailTransactionalToDbItem(
 
   // 3. Building the final DB item
   const initialStatus: EmailStatus = 'Queued';
-  const highPriority: EmailPriority = 'HIGH'; // Defaulting to HIGH for transactional emails
+  const highPriority: EmailPriority = 'HIGH';
   return {
     emailId: emailId,
     requestId: requestId,

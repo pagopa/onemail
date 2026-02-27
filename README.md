@@ -9,6 +9,7 @@
    - [Run the application](#run-the-application)
      - [Configuration](#configuration)
      - [Local run](#local-run)
+     - [OpenApi](#openapi)
      - [Build](#build)
    - [Available scripts](#available-scripts)
 4. [Contributing](#contributing)
@@ -19,7 +20,7 @@ This project is a centralized messaging service designed to streamline and stand
 
 ## Architecture
 
-![architecture](docs/architecture/architecture.png)
+![architecture](docs/architecture/architecture.webp)
 
 **CI/CD pipeline**\
 The project is managed via a CI/CD pipeline that ensures code integrity and efficient deployment. Key features include: code validation for every pull request, automatic deployment and infrastructure update (IaC).
@@ -88,6 +89,17 @@ pnpm dev:dispatcher
 pnpm dev:sender
 ```
 
+#### OpenAPI
+
+When running the services locally, two endpoints are exposed for API documentation and interactive testing:
+
+- `/api-docs`: serves the generated JSON OpenAPI.
+- `/api-docs/ui`: serves the Swagger UI where you can explore and test the APIs.
+
+These routes are enabled only in local mode and are not available in production.
+Run `pnpm run generate:openapi` to generate the JSON OpenAPI file and save it to `apidoc/openapi-docs.json`.
+
+
 #### Build
 To compile in production mode:
 
@@ -113,6 +125,7 @@ pnpm run build:sender
 - `pnpm run format:check`: Run Prettier in check mode.
 - `pnpm run format`: Format files with Prettier.
 - `pnpm run setup:hooks`: Install pre-commit hooks (runs `scripts/setup-pre-commit-hooks.sh`).
+- `pnpm run generate:openapi`: Generates the JSON OpenAPI documentation.
 
 \
 <br/>

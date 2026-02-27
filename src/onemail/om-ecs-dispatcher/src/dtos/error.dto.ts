@@ -14,14 +14,6 @@ export const ERROR_CODES = {
 
 export const ErrorResponseSchema = z.object({
   message: z.string().describe('Error message'),
-  details: z
-    .array(
-      z.object({
-        message: z.string().describe('Detailed error message'),
-      }),
-    )
-    .optional()
-    .describe('Array of detailed error messages'),
   errorCode: z.string().optional().describe('Application-specific error code'),
   timestamp: z.string().describe('Timestamp of when the error occurred'),
 });

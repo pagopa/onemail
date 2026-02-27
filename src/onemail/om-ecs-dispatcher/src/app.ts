@@ -1,3 +1,4 @@
+import '#config/zodExtend';
 import { errorHandler } from '#middlewares/errorHandler.middleware';
 import express from 'express';
 

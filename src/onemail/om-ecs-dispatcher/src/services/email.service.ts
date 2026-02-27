@@ -17,6 +17,7 @@ export const sendEmailTransactional = async (
   const clientId = 'clientIdMock';
   const tableName = env.aws.emailDbTable;
 
+  // TODO: add dry run  into db
   const dbObj = mapEmailTransactionalToDbItem(
     emailData,
     emailId,

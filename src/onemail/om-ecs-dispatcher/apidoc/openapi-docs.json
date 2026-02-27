@@ -1,0 +1,911 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OneMail Dispatcher API",
+    "version": "1.1.0",
+    "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
+    "contact": {
+      "email": "team-one-mail@pagopa.it"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "servers": [
+    {
+      "url": "${server_url}"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "EmailHighPriorityResponseDTO": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "description": "Unique identifier for the request, used for checking the status of the email in the system"
+          }
+        },
+        "required": [
+          "requestId"
+        ]
+      },
+      "EmailHighPriorityBodyDTO": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "description": "Name associated with the email address"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email address"
+                  }
+                },
+                "required": [
+                  "email"
+                ],
+                "description": "Sender of the email"
+              },
+              "to": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "description": "Name associated with the email address"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email address"
+                  }
+                },
+                "required": [
+                  "email"
+                ],
+                "description": "Recipient of the email"
+              },
+              "extendedHeaders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "N": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255,
+                      "description": "Key"
+                    },
+                    "V": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255,
+                      "description": "Value"
+                    }
+                  },
+                  "required": [
+                    "N",
+                    "V"
+                  ]
+                },
+                "description": "Custom headers for the email"
+              },
+              "tag": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255
+                },
+                "description": "Custom tags/categories for the email"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ]
+          },
+          {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "templateContent": {
+                    "type": "object",
+                    "properties": {
+                      "templateId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Identifier of the email template"
+                      },
+                      "templateAttributes": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "nullable": true,
+                          "description": "Value"
+                        },
+                        "description": "Dynamic attributes for template rendering"
+                      }
+                    },
+                    "required": [
+                      "templateId"
+                    ],
+                    "description": "Template content of the email to be sent if emailContent is not provided"
+                  }
+                },
+                "required": [
+                  "templateContent"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "emailContent": {
+                    "type": "object",
+                    "properties": {
+                      "subject": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Subject of the email"
+                      },
+                      "html": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200000,
+                        "description": "HTML content of the email"
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200000,
+                        "description": "Text content of the email used as fallback if HTML content is not supported by the email client"
+                      }
+                    },
+                    "required": [
+                      "subject",
+                      "html"
+                    ],
+                    "description": "Content of the email to be sent if templateContent is not provided"
+                  }
+                },
+                "required": [
+                  "emailContent"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "EmailLowPriorityResponseDTO": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "description": "Unique identifier for the request, used for checking the status of the email in the system"
+          }
+        },
+        "required": [
+          "requestId"
+        ]
+      },
+      "EmailLowPriorityBodyDTO": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Name associated with the email address"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Email address"
+              }
+            },
+            "required": [
+              "email"
+            ],
+            "description": "Sender of the email"
+          },
+          "tag": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "description": "Custom tags/categories for the email"
+          },
+          "replyTo": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Name associated with the email address"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Email address"
+              }
+            },
+            "required": [
+              "email"
+            ],
+            "description": "Reply-to address for the email"
+          },
+          "templateId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Identifier of the email template"
+          },
+          "sendingInfo": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "to": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255,
+                      "description": "Name associated with the email address"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "description": "Email address"
+                    }
+                  },
+                  "required": [
+                    "email"
+                  ],
+                  "description": "Recipient of the email"
+                },
+                "extendedHeaders": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "N": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Key"
+                      },
+                      "V": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Value"
+                      }
+                    },
+                    "required": [
+                      "N",
+                      "V"
+                    ]
+                  },
+                  "description": "Custom headers for the email"
+                },
+                "templateAttributes": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "nullable": true,
+                    "description": "Value"
+                  },
+                  "description": "Dynamic attributes for template rendering"
+                }
+              },
+              "required": [
+                "to"
+              ]
+            },
+            "maxItems": 50,
+            "description": "Information about the recipients and their template email content"
+          }
+        },
+        "required": [
+          "from",
+          "templateId",
+          "sendingInfo"
+        ]
+      },
+      "HealthResponseDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "Healthy",
+              "Unhealthy"
+            ],
+            "description": "Overall health status of the service"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp of the health check"
+          },
+          "services": {
+            "type": "object",
+            "properties": {
+              "db": {
+                "type": "string",
+                "enum": [
+                  "Initialized",
+                  "NotInitialized",
+                  "Unavailable"
+                ],
+                "description": "Status of the DynamoDB service"
+              }
+            },
+            "required": [
+              "db"
+            ],
+            "description": "Status of individual services"
+          },
+          "uptime": {
+            "type": "number",
+            "description": "Uptime of the service in seconds"
+          }
+        },
+        "required": [
+          "status",
+          "timestamp",
+          "services",
+          "uptime"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/v1/emails/send/high": {
+      "post": {
+        "tags": [
+          "Emails"
+        ],
+        "summary": "Send high priority single email",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "default": false,
+              "description": "Indicates whether the request is a dry run, ignored in production"
+            },
+            "required": false,
+            "description": "Indicates whether the request is a dry run, ignored in production",
+            "name": "dryRun",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "description": "Request body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailHighPriorityBodyDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Email accepted for processing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailHighPriorityResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid data |",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Generic error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/emails/send/low": {
+      "post": {
+        "tags": [
+          "Emails"
+        ],
+        "summary": "Send low priority email with single or multiple recipients",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "default": false,
+              "description": "Indicates whether the request is a dry run, ignored in production"
+            },
+            "required": false,
+            "description": "Indicates whether the request is a dry run, ignored in production",
+            "name": "dryRun",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "description": "Request body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailLowPriorityBodyDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Email accepted for processing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailLowPriorityResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid data |",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Generic error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Perform health check of the service",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid data |",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Generic error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

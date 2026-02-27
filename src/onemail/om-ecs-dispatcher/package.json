@@ -9,6 +9,7 @@
     "start": "node dist/app.js",
     "dev": "tsx watch -C local src/app.ts",
     "build": "tsc",
+    "generate:openapi": "tsx -C local scripts/generateOpenapi.ts",
     "test": "",
     "type-check": "tsc --noEmit",
     "lint:check": "eslint",
@@ -17,14 +18,17 @@
     "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}'"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.4.1",
     "@aws-sdk/client-dynamodb": "^3.989.0",
     "@aws-sdk/lib-dynamodb": "^3.989.0",
     "dotenv": "^17.2.4",
     "express": "^5.2.1",
-    "http-status-codes": "^2.3.0"
+    "http-status-codes": "^2.3.0",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "@types/swagger-ui-express": "^4.1.8",
     "tsx": "^4.21.0"
   },
   "imports": {

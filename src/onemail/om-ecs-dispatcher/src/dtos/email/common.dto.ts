@@ -18,59 +18,52 @@ export const stringCheckedSchema = ({
 
 // Handles sender and recipients [cite: 828, 866]
 export const EmailAddressSchema = z.object({
-  name: stringCheckedSchema().optional(),
-  email: z.email(),
+  name: stringCheckedSchema()
+    .optional()
+    .describe('Name associated with the email address'),
+  email: z.email().describe('Email address'),
 });
-
-export type EmailAddressDTO = z.infer<typeof EmailAddressSchema>;
 
 // Used for custom headers
 export const NameValueSchema = z.object({
-  N: stringCheckedSchema(),
-  V: stringCheckedSchema(),
+  N: stringCheckedSchema().describe('Key'),
+  V: stringCheckedSchema().describe('Value'),
 });
-
-export type NameValueDTO = z.infer<typeof NameValueSchema>;
-
-// Free HTML or text content
-export const EmailContentSchema = z
-  .object({
-    html: stringCheckedSchema({ max: 200000 }).optional(), // TODO: consider stricter validation for HTML content, e.g., sanitization or specific tags allowed
-    text: stringCheckedSchema({ max: 200000 }).optional(),
-  })
-  .refine((data) => data.html || data.text, {
-    message: 'Either html or text is required',
-  });
-
-export type EmailContentDTO = z.infer<typeof EmailContentSchema>;
 
 // Custom headers
-export const ExtendedHeadersSchema = z.array(NameValueSchema);
+export const ExtendedHeadersSchema = z
+  .array(NameValueSchema)
+  .describe('Custom headers for the email');
 
 // Tags for categorization and filtering
-export const TagSchema = z.array(stringCheckedSchema());
+export const TagSchema = z
+  .array(stringCheckedSchema())
+  .describe('Custom tags/categories for the email');
 
 // Dynamic attributes for template rendering
-export const TemplateAttributesSchema = z.record(
-  stringCheckedSchema(),
-  z.any(),
-);
+export const TemplateAttributesSchema = z
+  .record(stringCheckedSchema().describe('Key'), z.any().describe('Value'))
+  .describe('Dynamic attributes for template rendering');
 
-// Reference to template and dynamic attributes
-export const TemplateContentSchema = z.object({
-  templateId: stringCheckedSchema(),
-  templateAttributes: TemplateAttributesSchema.optional(),
-});
+// Identifier of the email template
+export const TemplateIdSchema = stringCheckedSchema().describe(
+  'Identifier of the email template',
+);
 
 // Dry Run Query Parameters
 export const DryRunQueryParamsSchema = z.object({
-  dryRun: z.stringbool().default(false), // TODO: ignored in production
+  dryRun: z
+    .stringbool()
+    .default(false)
+    .describe(
+      'Indicates whether the request is a dry run, ignored in production',
+    ), // TODO: ignored in production
 });
 
-export type DryRunQueryParams = {
-  dryRun: string;
-};
-
 export const EmailSuccessResponseSchema = z.object({
-  requestId: z.string(),
+  requestId: z
+    .string()
+    .describe(
+      'Unique identifier for the request, used for checking the status of the email in the system',
+    ),
 });
