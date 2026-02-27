@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.1.1
+
+### Patch Changes
+
+- 8662283: openapi
+
 ## 1.1.0
 
 ### Minor Changes
