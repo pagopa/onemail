@@ -7,7 +7,7 @@ module "nlb" {
   idvh_resource_tier = "standard"
   name               = "${local.project}-elb"
   vpc_id             = module.vpc.vpc_id
-  private_subnets    = var.vpc_private_subnets_cidr
+  private_subnets    = module.vpc.private_subnets
   vpc_cidr_block     = var.vpc_cidr
 
   tags = module.tag_config.tags
