@@ -3,7 +3,7 @@ data "aws_vpc_endpoint" "api_gtw" {
 }
 
 data "aws_lb" "nlb" {
-  name = "${local.project}-elb"
+  name = "${local.project_nodomain}-elb"
 }
 
 locals {
@@ -37,7 +37,7 @@ module "api_gateway" {
   env                       = var.env
   product_name              = "onemail"
   idvh_resource_tier        = "standard"
-  name                      = "${local.project}-api-gateway"
+  name                      = "${local.project_nodomain}-api-gateway"
   body                      = templatefile("${path.module}/${var.openapi_template_file}", {})
   endpoint_api_types        = ["PRIVATE"]
   endpoint_vpc_endpoint_ids = [data.aws_vpc_endpoint.api_gtw.id]
