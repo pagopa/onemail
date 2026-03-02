@@ -4,6 +4,7 @@
   "description": "Centralized email service for PagoPA products.",
   "packageManager": "pnpm@10.29.2",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev:dispatcher": "pnpm --silent --filter om-ecs-dispatcher dev",
     "dev:sender": "pnpm --silent --filter om-lambda-sender dev",
@@ -20,21 +21,17 @@
   },
   "dependencies": {
     "infra": "workspace:*",
-    "lodash": "^4.17.23",
+    "om-common": "workspace:*",
     "om-ecs-dispatcher": "workspace:*",
-    "om-lambda-sender": "workspace:*",
-    "zod": "^4.3.6"
+    "om-lambda-sender": "workspace:*"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
     "@commitlint/cli": "^20.4.1",
     "@commitlint/config-conventional": "^20.4.1",
     "@pagopa/eslint-config": "^5.1.2",
-    "@types/lodash": "^4.17.23",
-    "@types/node": "^24.10.12",
     "eslint": "^10.0.0",
     "prettier": "^3.8.1",
-    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
   "repository": {

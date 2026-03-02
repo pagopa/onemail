@@ -1,15 +1,14 @@
-import type {
+import { EmailHighPriorityBodyDTO } from '#dtos/email/emailHighPriority.dto';
+import { EmailLowPriorityBodyDTO } from '#dtos/email/emailLowPriority.dto';
+import { randomUUID } from 'node:crypto';
+import {
   DbEmailContent,
   EmailContent,
   EmailPriority,
   EmailStatus,
   EmailStatusHistoryItem,
   TemplateContent,
-} from '#types/EmailStatusHistory';
-
-import { EmailHighPriorityBodyDTO } from '#dtos/email/emailHighPriority.dto';
-import { EmailLowPriorityBodyDTO } from '#dtos/email/emailLowPriority.dto';
-import { randomUUID } from 'node:crypto';
+} from 'om-common/types';
 
 export function mapEmailLowPriorityToDbItem(
   body: EmailLowPriorityBodyDTO,

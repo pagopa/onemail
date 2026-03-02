@@ -29,3 +29,6 @@ dynamodb_table_config = {
   global_secondary_indexes = []
   replica_regions          = []
 }
+
+# ECS Cluster
+enable_container_insights = false

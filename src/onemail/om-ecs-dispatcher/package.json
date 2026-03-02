@@ -8,9 +8,9 @@
   "scripts": {
     "start": "node dist/app.js",
     "dev": "tsx watch -C local src/app.ts",
-    "build": "tsc",
+    "build": "tsc --build tsconfig.build.json",
     "generate:openapi": "tsx -C local scripts/generateOpenapi.ts",
-    "test": "",
+    "test": "echo \"No tests yet for dispatcher\"",
     "type-check": "tsc --noEmit",
     "lint:check": "eslint",
     "lint": "eslint --fix",
@@ -24,11 +24,16 @@
     "dotenv": "^17.2.4",
     "express": "^5.2.1",
     "http-status-codes": "^2.3.0",
-    "swagger-ui-express": "^5.0.1"
+    "om-common": "workspace:*",
+    "swagger-ui-express": "^5.0.1",
+    "lodash": "^4.17.23",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/swagger-ui-express": "^4.1.8",
+    "@types/lodash": "^4.17.23",
+    "@types/node": "^24.10.12",
     "tsx": "^4.21.0"
   },
   "imports": {

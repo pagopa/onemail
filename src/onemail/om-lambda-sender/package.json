@@ -7,9 +7,9 @@
   "type": "module",
   "scripts": {
     "start": "node dist/app.js",
-    "dev": "",
-    "build": "tsc",
-    "test": "",
+    "dev": "echo \"No dev start yet for sender\"",
+    "build": "tsc --build tsconfig.build.json",
+    "test": "echo \"No tests yet for sender\"",
     "type-check": "tsc --noEmit",
     "lint:check": "eslint",
     "lint": "eslint --fix",
@@ -18,7 +18,8 @@
   },
   "dependencies": {
     "@aws-lambda-powertools/event-handler": "^2.31.0",
-    "aws-lambda": "^1.0.7"
+    "aws-lambda": "^1.0.7",
+    "om-common": "workspace:*"
   },
   "imports": {
     "#*": {
@@ -28,6 +29,7 @@
   },
   "homepage": "https://github.com/pagopa/onemail/blob/main/src/onemail/om-lambda-sender/README.md",
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.160"
+    "@types/aws-lambda": "^8.10.160",
+    "@types/node": "^24.10.12"
   }
 }
