@@ -77,3 +77,7 @@ variable "dynamodb_table_config" {
   description = "DynamoDB table configuration"
   default     = null
 }
+
+variable "enable_container_insights" {
+  type = bool
+}
