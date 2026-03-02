@@ -12,7 +12,7 @@ import {
   mapEmailLowPriorityToDbItem,
   mapEmailTransactionalToDbItem,
 } from '#utils/dbMapper';
-import { PutCommand } from '@aws-sdk/lib-dynamodb';
+import { BatchWriteCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { randomUUID } from 'node:crypto';
 
 export const sendEmailTransactional = async (
@@ -57,16 +57,29 @@ export const sendEmailLowPriority = async (
     dryRun,
   );
 
-  const uploadPromises = dbListObj.map((dbObj) =>
-    dynamoClient.send(
-      new PutCommand({
-        TableName: tableName,
-        Item: { ...dbObj },
-      }),
+  // BatchWriteCommand max chunk size is 25
+  const DYNAMO_BATCH_LIMIT = 25;
+  // Split dbListObj into batches of max 25 items
+  const batches: (typeof dbListObj)[] = [];
+  for (let i = 0; i < dbListObj.length; i += DYNAMO_BATCH_LIMIT) {
+    batches.push(dbListObj.slice(i, i + DYNAMO_BATCH_LIMIT));
+  }
+
+  await Promise.all(
+    batches.map((batch) =>
+      dynamoClient.send(
+        new BatchWriteCommand({
+          RequestItems: {
+            [tableName]: batch.map((item) => ({
+              PutRequest: {
+                Item: { ...item },
+              },
+            })),
+          },
+        }),
+      ),
     ),
   );
-
-  await Promise.all(uploadPromises);
 
   return { requestId };
 };
