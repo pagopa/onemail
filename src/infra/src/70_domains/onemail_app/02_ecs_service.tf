@@ -39,10 +39,9 @@ data "aws_lb_listener" "ecs_core" {
 module "ecs_service" {
   source = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/ecs_service?ref=main"
 
-  env                = var.env
-  product_name       = "onemail"
-  idvh_resource_tier = "standard"
-
+  env                   = var.env
+  product_name          = "onemail"
+  idvh_resource_tier    = "standard"
   service_name          = "${local.project_nodomain}-ecs-service"
   cluster_arn           = data.aws_ecs_cluster.core.arn
   image                 = var.use_placeholder_image ? "nginx:latest" : "${data.aws_ecr_repository.ecs_service.repository_url}:${var.ecs_service_image_version}"
