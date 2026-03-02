@@ -73,7 +73,7 @@ export const DryRunQueryParamsSchema = z
       return true;
     },
     {
-      message: 'dryRun is not allowed in production"',
+      message: 'dryRun is not allowed in production',
     },
   );
 
