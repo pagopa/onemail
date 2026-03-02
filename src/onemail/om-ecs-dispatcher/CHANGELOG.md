@@ -1,5 +1,13 @@
 # om-ecs-dispatcher
 
+## 1.1.2
+
+### Patch Changes
+
+- 0942337: Common package for shared types
+- Updated dependencies [0942337]
+  - om-common@1.0.1
+
 ## 1.1.1
 
 ### Patch Changes
