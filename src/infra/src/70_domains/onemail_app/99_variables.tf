@@ -57,3 +57,15 @@ variable "api_gateway_deployment_version" {
   default     = "1.0.0"
 }
 
+# variable "ecs_service_image_name" {
+#   type        = string
+#   description = "Logical ECR repository key for the ECS service image."
+#   default     = "core"
+# }
+
+# variable "ecs_service_image_version" {
+#   type        = string
+#   description = "ECS service image tag/version."
+#   default     = "latest"
+# }
+
