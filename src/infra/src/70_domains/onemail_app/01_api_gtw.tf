@@ -14,13 +14,13 @@ locals {
         Effect    = "Allow",
         Principal = "*",
         Action    = "execute-api:Invoke",
-        Resource  = "execute-api:/*"
+        Resource  = "${module.api_gateway.rest_api_execution_arn}/*"
       },
       {
         Effect    = "Deny",
         Principal = "*",
         Action    = "execute-api:Invoke",
-        Resource  = "execute-api:/*",
+        Resource  = "${module.api_gateway.rest_api_execution_arn}/*",
         Condition = {
           StringNotEquals = {
             "aws:sourceVpce" : data.aws_vpc_endpoint.api_gtw.id
@@ -42,13 +42,16 @@ module "api_gateway" {
   endpoint_api_types        = ["PRIVATE"]
   endpoint_vpc_endpoint_ids = [data.aws_vpc_endpoint.api_gtw.id]
 
-  policy = local.api_gateway_policy
-
   tags = merge(
     {
       "deployment_version" = var.api_gateway_deployment_version
     }
   )
+}
+
+resource "aws_api_gateway_rest_api_policy" "main" {
+  rest_api_id = module.api_gateway.rest_api_id
+  policy      = local.api_gateway_policy
 }
 
 resource "aws_api_gateway_vpc_link" "apigw" {
