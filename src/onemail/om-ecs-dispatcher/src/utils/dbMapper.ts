@@ -14,6 +14,7 @@ export function mapEmailTransactionalToDbItem(
   emailId: string,
   requestId: string,
   clientId: string,
+  dryRun: boolean,
 ): EmailStatusHistoryItem {
   const now = new Date().toISOString();
 
@@ -65,5 +66,6 @@ export function mapEmailTransactionalToDbItem(
     content: content,
     tag: body.tag,
     clientId: clientId,
+    dryRun: dryRun,
   };
 }

@@ -10,19 +10,19 @@ import { randomUUID } from 'node:crypto';
 
 export const sendEmailTransactional = async (
   emailData: EmailHighPriorityBodyDTO,
-  _dryRun: boolean,
+  dryRun: boolean,
 ): Promise<EmailHighPriorityResponseDTO> => {
   const emailId = randomUUID();
   const requestId = randomUUID();
   const clientId = 'clientIdMock';
   const tableName = env.aws.emailDbTable;
 
-  // TODO: add dry run  into db
   const dbObj = mapEmailTransactionalToDbItem(
     emailData,
     emailId,
     requestId,
     clientId,
+    dryRun,
   );
 
   await dynamoClient.send(

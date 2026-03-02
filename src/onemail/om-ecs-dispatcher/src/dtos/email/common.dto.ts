@@ -1,3 +1,5 @@
+import env from '#config/env';
+import { NODE_ENV_VALUES } from '#utils/constants';
 import { z } from 'zod';
 
 export const stringCheckedSchema = ({
@@ -51,14 +53,29 @@ export const TemplateIdSchema = stringCheckedSchema().describe(
 );
 
 // Dry Run Query Parameters
-export const DryRunQueryParamsSchema = z.object({
-  dryRun: z
-    .stringbool()
-    .default(false)
-    .describe(
-      'Indicates whether the request is a dry run, ignored in production',
-    ), // TODO: ignored in production
-});
+export const DryRunQueryParamsSchema = z
+  .object({
+    dryRun: z
+      .stringbool()
+      .default(false)
+      .describe(
+        'Indicates whether the request is a dry run, ignored in production',
+      ),
+  })
+  .refine(
+    (data) => {
+      if (
+        data.dryRun &&
+        env.server.environment === NODE_ENV_VALUES.production
+      ) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: 'dryRun is not allowed in production"',
+    },
+  );
 
 export const EmailSuccessResponseSchema = z.object({
   requestId: z
