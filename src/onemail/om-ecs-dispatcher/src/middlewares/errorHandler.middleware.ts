@@ -1,5 +1,5 @@
-import { ApiError } from '#/errors/ApiError';
 import { ERROR_CODES } from '#dtos/error.dto';
+import { ApiError } from '#errors/ApiError';
 import {
   ConditionalCheckFailedException,
   DynamoDBServiceException,

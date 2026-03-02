@@ -1,13 +1,12 @@
-import type {
+import { EmailHighPriorityBodyDTO } from '#dtos/email/emailHighPriority.dto';
+import {
   DbEmailContent,
   EmailContent,
   EmailPriority,
   EmailStatus,
   EmailStatusHistoryItem,
   TemplateContent,
-} from '#types/EmailStatusHistory';
-
-import { EmailHighPriorityBodyDTO } from '#dtos/email/emailHighPriority.dto';
+} from 'om-common/types';
 
 export function mapEmailTransactionalToDbItem(
   body: EmailHighPriorityBodyDTO,

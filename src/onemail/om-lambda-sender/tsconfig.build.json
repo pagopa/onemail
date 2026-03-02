@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "customConditions": []
+  },
+  "references": [{ "path": "../om-common/tsconfig.build.json" }],
+  "include": ["src"]
+}
