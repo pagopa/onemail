@@ -3,11 +3,11 @@ import {
   EmailHighPriorityQueryParams,
   EmailHighPriorityResponseDTO,
 } from '#dtos/email/emailHighPriority.dto';
-// import {
-//   EmailLowPriorityBodyDTO,
-//   EmailLowPriorityQueryParams,
-//   EmailLowPriorityResponseDTO,
-// } from '#dtos/email/emailLowPriority.dto';
+import {
+  EmailLowPriorityBodyDTO,
+  EmailLowPriorityQueryParams,
+  EmailLowPriorityResponseDTO,
+} from '#dtos/email/emailLowPriority.dto';
 import * as emailService from '#services/email.service';
 import { AsStringQuery } from '#types/RequestType';
 import { Request, Response } from 'express';
@@ -27,16 +27,16 @@ export const sendEmailTransactional = async (
   res.status(StatusCodes.OK).json(result);
 };
 
-// export const sendEmailLowPriority = async (
-//   req: Request<
-//     unknown,
-//     unknown,
-//     EmailLowPriorityBodyDTO,
-//     AsStringQuery<EmailLowPriorityQueryParams>
-//   >,
-//   res: Response<EmailLowPriorityResponseDTO>,
-// ) => {
-//   const { dryRun } = req.query as unknown as EmailLowPriorityQueryParams;
-//   const result = await emailService.sendEmailLowPriority(req.body, dryRun);
-//   res.status(StatusCodes.OK).json(result);
-// };
+export const sendEmailLowPriority = async (
+  req: Request<
+    unknown,
+    unknown,
+    EmailLowPriorityBodyDTO,
+    AsStringQuery<EmailLowPriorityQueryParams>
+  >,
+  res: Response<EmailLowPriorityResponseDTO>,
+) => {
+  const { dryRun } = req.query as unknown as EmailLowPriorityQueryParams;
+  const result = await emailService.sendEmailLowPriority(req.body, dryRun);
+  res.status(StatusCodes.OK).json(result);
+};
