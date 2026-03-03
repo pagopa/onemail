@@ -42,6 +42,7 @@ export interface EmailStatusHistoryItem {
   content: DbEmailContent;
   tag?: string[];
   clientId: string;
+  dryRun: boolean;
 }
 
 export interface NameValue {

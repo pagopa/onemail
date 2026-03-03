@@ -1,4 +1,6 @@
 import { EmailHighPriorityBodyDTO } from '#dtos/email/emailHighPriority.dto';
+import { EmailLowPriorityBodyDTO } from '#dtos/email/emailLowPriority.dto';
+import { randomUUID } from 'node:crypto';
 import {
   DbEmailContent,
   EmailContent,
@@ -8,11 +10,63 @@ import {
   TemplateContent,
 } from 'om-common/types';
 
-export function mapEmailTransactionalToDbItem(
-  body: EmailHighPriorityBodyDTO,
-  emailId: string,
+export function mapEmailLowPriorityToDbItem(
+  body: EmailLowPriorityBodyDTO,
   requestId: string,
   clientId: string,
+  dryRun: boolean,
+): EmailStatusHistoryItem[] {
+  const templateId = body.templateId;
+  // 1. Initialize dbTemplate and emailHistoryList
+  let dbTemplate: TemplateContent | undefined;
+  const emailHistoryList: EmailStatusHistoryItem[] = [];
+  const initialStatus: EmailStatus = 'Queued';
+  const lowPriority: EmailPriority = 'LOW';
+  const now = new Date().toISOString();
+
+  body.sendingInfo.forEach((element) => {
+    dbTemplate = {
+      id: templateId,
+      // stringified JSON of the original object
+      matchedAttributes: element.templateAttributes
+        ? JSON.stringify(element.templateAttributes)
+        : undefined,
+    };
+    // 2. Content builder
+    const content: DbEmailContent = {
+      from: body.from,
+      to: element.to,
+      extendedHeaders: element.extendedHeaders,
+      template: dbTemplate,
+    };
+
+    // 3. add to emailHistoryList
+    emailHistoryList.push({
+      emailId: randomUUID(),
+      requestId: requestId,
+      priority: lowPriority,
+      status: initialStatus,
+      history: [
+        {
+          status: initialStatus,
+          changedAt: now,
+        },
+      ],
+      content: content,
+      tag: body.tag,
+      clientId: clientId,
+      dryRun: dryRun,
+    });
+  });
+
+  return emailHistoryList;
+}
+
+export function mapEmailTransactionalToDbItem(
+  body: EmailHighPriorityBodyDTO,
+  requestId: string,
+  clientId: string,
+  dryRun: boolean,
 ): EmailStatusHistoryItem {
   const now = new Date().toISOString();
 
@@ -51,7 +105,7 @@ export function mapEmailTransactionalToDbItem(
   const initialStatus: EmailStatus = 'Queued';
   const highPriority: EmailPriority = 'HIGH';
   return {
-    emailId: emailId,
+    emailId: randomUUID(),
     requestId: requestId,
     priority: highPriority,
     status: initialStatus,
@@ -64,5 +118,6 @@ export function mapEmailTransactionalToDbItem(
     content: content,
     tag: body.tag,
     clientId: clientId,
+    dryRun: dryRun,
   };
 }

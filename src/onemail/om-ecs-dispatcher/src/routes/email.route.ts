@@ -42,7 +42,14 @@ registerOpenApiRoute({
   },
 });
 
-// router.post('/send/low', EmailController.sendEmail);
+router.post(
+  '/send/low',
+  validate({
+    body: EmailLowPriorityBodySchema,
+    query: EmailLowPriorityQueryParamsSchema,
+  }),
+  EmailController.sendEmailLowPriority,
+);
 registerOpenApiRoute({
   method: 'post',
   path: `${versionRoutePath.v1}/${prefix}/send/low`,

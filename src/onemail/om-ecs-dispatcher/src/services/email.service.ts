@@ -4,25 +4,30 @@ import {
   EmailHighPriorityBodyDTO,
   EmailHighPriorityResponseDTO,
 } from '#dtos/email/emailHighPriority.dto';
-import { mapEmailTransactionalToDbItem } from '#utils/dbMapper';
-import { PutCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  EmailLowPriorityBodyDTO,
+  EmailLowPriorityResponseDTO,
+} from '#dtos/email/emailLowPriority.dto';
+import {
+  mapEmailLowPriorityToDbItem,
+  mapEmailTransactionalToDbItem,
+} from '#utils/dbMapper';
+import { BatchWriteCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { randomUUID } from 'node:crypto';
 
 export const sendEmailTransactional = async (
   emailData: EmailHighPriorityBodyDTO,
-  _dryRun: boolean,
+  dryRun: boolean,
 ): Promise<EmailHighPriorityResponseDTO> => {
-  const emailId = randomUUID();
   const requestId = randomUUID();
   const clientId = 'clientIdMock';
   const tableName = env.aws.emailDbTable;
 
-  // TODO: add dry run  into db
   const dbObj = mapEmailTransactionalToDbItem(
     emailData,
-    emailId,
     requestId,
     clientId,
+    dryRun,
   );
 
   await dynamoClient.send(
@@ -32,6 +37,49 @@ export const sendEmailTransactional = async (
         ...dbObj,
       },
     }),
+  );
+
+  return { requestId };
+};
+
+export const sendEmailLowPriority = async (
+  emailData: EmailLowPriorityBodyDTO,
+  dryRun: boolean,
+): Promise<EmailLowPriorityResponseDTO> => {
+  const requestId = randomUUID();
+  const clientId = 'clientIdMock';
+  const tableName = env.aws.emailDbTable;
+
+  const dbListObj = mapEmailLowPriorityToDbItem(
+    emailData,
+    requestId,
+    clientId,
+    dryRun,
+  );
+
+  // BatchWriteCommand max chunk size is 25
+  const DYNAMO_BATCH_LIMIT = 25;
+  // Split dbListObj into batches of max 25 items
+  const batches: (typeof dbListObj)[] = [];
+  for (let i = 0; i < dbListObj.length; i += DYNAMO_BATCH_LIMIT) {
+    batches.push(dbListObj.slice(i, i + DYNAMO_BATCH_LIMIT));
+  }
+
+  //TODO - handle unprocessed items in the response and retry logic if needed
+  await Promise.all(
+    batches.map((batch) =>
+      dynamoClient.send(
+        new BatchWriteCommand({
+          RequestItems: {
+            [tableName]: batch.map((item) => ({
+              PutRequest: {
+                Item: { ...item },
+              },
+            })),
+          },
+        }),
+      ),
+    ),
   );
 
   return { requestId };
