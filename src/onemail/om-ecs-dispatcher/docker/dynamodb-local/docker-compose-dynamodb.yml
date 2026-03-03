@@ -20,8 +20,8 @@ services:
     environment:
       - DYNAMO_ENDPOINT=${AWS_DYNAMODB_ENDPOINT:-http://dynamodb-local:8000}
       - AWS_REGION=${AWS_REGION:-eu-south-1}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-local}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-local}
+      - AWS_ACCESS_KEY_ID=${AWS_DYNAMODB_ACCESS_KEY_ID:-local}
+      - AWS_SECRET_ACCESS_KEY=${AWS_DYNAMODB_SECRET_ACCESS_KEY:-local}
       - PORT=8001
     depends_on:
       - dynamodb-local
