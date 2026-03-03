@@ -1,6 +1,6 @@
 {
   "name": "om-lambda-sender",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Lambda that sends email requests to SES.",
   "private": true,
   "main": "dist/app.js",
