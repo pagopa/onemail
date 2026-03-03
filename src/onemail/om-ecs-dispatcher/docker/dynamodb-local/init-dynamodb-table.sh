@@ -23,8 +23,8 @@ echo "Region: $REGION"
 
 # Use inline environment variables to avoid overwriting real AWS credentials in the shell
 # DynamoDB Local requires credentials but doesn't validate them
-AWS_ACCESS_KEY_ID_VALUE="${AWS_ACCESS_KEY_ID:-local}"
-AWS_SECRET_ACCESS_KEY_VALUE="${AWS_SECRET_ACCESS_KEY:-local}"
+AWS_ACCESS_KEY_ID_VALUE="${AWS_DYNAMODB_ACCESS_KEY_ID:-local}"
+AWS_SECRET_ACCESS_KEY_VALUE="${AWS_DYNAMODB_SECRET_ACCESS_KEY:-local}"
 
 AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID_VALUE" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY_VALUE" \
   aws dynamodb create-table \
