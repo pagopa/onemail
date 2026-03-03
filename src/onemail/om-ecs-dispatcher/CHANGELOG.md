@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.2.0
+
+### Minor Changes
+
+- fcba10b: add dryRun check and low priority route
+
 ## 1.1.2
 
 ### Patch Changes
