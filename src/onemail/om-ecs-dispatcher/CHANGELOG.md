@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.2.1
+
+### Patch Changes
+
+- 8cf478c: Fix DynamoDB local docker compose
+
 ## 1.2.0
 
 ### Minor Changes
