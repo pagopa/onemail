@@ -15,8 +15,6 @@ services:
     container_name: om-dynamodb-admin
     ports:
       - '8001:8001'
-    env_file:
-      - '../../.env'
     environment:
       - DYNAMO_ENDPOINT=http://dynamodb-local:8000
       - AWS_REGION=${AWS_REGION:-eu-south-1}
