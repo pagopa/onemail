@@ -65,6 +65,7 @@ export const sendEmailLowPriority = async (
     batches.push(dbListObj.slice(i, i + DYNAMO_BATCH_LIMIT));
   }
 
+  //TODO - handle unprocessed items in the response and retry logic if needed
   await Promise.all(
     batches.map((batch) =>
       dynamoClient.send(
