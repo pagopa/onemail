@@ -57,6 +57,7 @@ const emailSanitizerOptions: sanitizeHtml.IOptions = {
   allowedAttributes: {
     a: ['href', 'name', 'target'],
     img: ['src', 'alt', 'width', 'height'],
+    allowedSchemes: ['https', 'mailto', 'tel'],
     // Allow inline styles and classes which are heavy in emails
     '*': ['style', 'class', 'id', 'dir', 'lang'],
     table: ['width', 'border', 'cellspacing', 'cellpadding', 'bgcolor'],
