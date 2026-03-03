@@ -73,14 +73,19 @@ export const EmailContentSchema = z.object({
   subject: stringCheckedSchema().describe('Subject of the email'),
   html: stringCheckedSchema({ min: 10, max: 200000 })
     .describe('HTML content of the email')
-    .transform((dirtyHtml) =>
-      // Check 2: Transform and sanitize the input
-      sanitizeHtml(dirtyHtml, emailSanitizerOptions),
-    )
-    .refine((cleanHtml) => cleanHtml.trim().length > 0, {
-      message:
-        'Invalid HTML provided: content was removed due to security rules.',
-    }),
+    .refine(
+      (html) => {
+        const sanitized = sanitizeHtml(html, emailSanitizerOptions);
+        if (sanitized !== html) {
+          return false;
+        }
+        return true;
+      },
+      {
+        message:
+          'Invalid HTML provided: content contains disallowed tags, attributes, or non-canonical formatting.',
+      },
+    ),
   text: stringCheckedSchema({ max: 200000 })
     .optional()
     .describe(
