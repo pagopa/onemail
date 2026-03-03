@@ -1,3 +1,4 @@
+import sanitizeHtml from 'sanitize-html';
 import z from 'zod';
 
 import {
@@ -17,12 +18,68 @@ export const TemplateContentSchema = z.object({
   templateAttributes: TemplateAttributesSchema.optional(),
 });
 
+// 1. Define the allowed rules for Email HTML
+const emailSanitizerOptions: sanitizeHtml.IOptions = {
+  allowedTags: [
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'blockquote',
+    'p',
+    'a',
+    'ul',
+    'ol',
+    'nl',
+    'li',
+    'b',
+    'i',
+    'strong',
+    'em',
+    'strike',
+    'code',
+    'hr',
+    'br',
+    'div',
+    'table',
+    'thead',
+    'caption',
+    'tbody',
+    'tr',
+    'th',
+    'td',
+    'pre',
+    'span',
+    'img',
+  ],
+  allowedAttributes: {
+    a: ['href', 'name', 'target'],
+    img: ['src', 'alt', 'width', 'height'],
+    // Allow inline styles and classes which are heavy in emails
+    '*': ['style', 'class', 'id', 'dir', 'lang'],
+    table: ['width', 'border', 'cellspacing', 'cellpadding', 'bgcolor'],
+    td: ['width', 'bgcolor', 'valign', 'align'],
+  },
+  // Explicitly remove dangerous tags (sanitize-html does this by default, but it's good to be explicit)
+  disallowedTagsMode: 'discard',
+  allowProtocolRelative: false,
+};
+
 // Free HTML or text content
 export const EmailContentSchema = z.object({
   subject: stringCheckedSchema().describe('Subject of the email'),
-  html: stringCheckedSchema({ max: 200000 }).describe(
-    'HTML content of the email',
-  ), // TODO: consider stricter validation for HTML content, e.g., sanitization or specific tags allowed
+  html: stringCheckedSchema({ min: 10, max: 200000 })
+    .describe('HTML content of the email')
+    .transform((dirtyHtml) =>
+      // Check 2: Transform and sanitize the input
+      sanitizeHtml(dirtyHtml, emailSanitizerOptions),
+    )
+    .refine((cleanHtml) => cleanHtml.trim().length > 0, {
+      message:
+        'Invalid HTML provided: content was removed due to security rules.',
+    }),
   text: stringCheckedSchema({ max: 200000 })
     .optional()
     .describe(

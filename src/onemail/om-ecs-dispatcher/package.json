@@ -24,16 +24,18 @@
     "dotenv": "^17.2.4",
     "express": "^5.2.1",
     "http-status-codes": "^2.3.0",
-    "om-common": "workspace:*",
-    "swagger-ui-express": "^5.0.1",
     "lodash": "^4.17.23",
+    "om-common": "workspace:*",
+    "sanitize-html": "^2.17.1",
+    "swagger-ui-express": "^5.0.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/swagger-ui-express": "^4.1.8",
     "@types/lodash": "^4.17.23",
     "@types/node": "^24.10.12",
+    "@types/sanitize-html": "^2.16.0",
+    "@types/swagger-ui-express": "^4.1.8",
     "tsx": "^4.21.0"
   },
   "imports": {
