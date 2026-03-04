@@ -5,6 +5,7 @@ import {
   EmailAddressSchema,
   EmailSuccessResponseSchema,
   ExtendedHeadersSchema,
+  htmlContentSchema,
   stringCheckedSchema,
   TagSchema,
   TemplateAttributesSchema,
@@ -20,9 +21,7 @@ export const TemplateContentSchema = z.object({
 // Free HTML or text content
 export const EmailContentSchema = z.object({
   subject: stringCheckedSchema().describe('Subject of the email'),
-  html: stringCheckedSchema({ max: 200000 }).describe(
-    'HTML content of the email',
-  ), // TODO: consider stricter validation for HTML content, e.g., sanitization or specific tags allowed
+  html: htmlContentSchema.describe('HTML content of the email'),
   text: stringCheckedSchema({ max: 200000 })
     .optional()
     .describe(
