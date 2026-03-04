@@ -115,6 +115,8 @@ pnpm run build:sender
 
 ### Available scripts
 
+- `pnpm run dev`: Start all workspace services in development mode (in parallel).
+- `pnpm run build`: Build all workspace packages (in parallel).
 - `pnpm run dev:dispatcher`: Start the dispatcher service in development mode.
 - `pnpm run dev:sender`: Start the sender service in development mode.
 - `pnpm run build:dispatcher`: Build the dispatcher package.
@@ -126,6 +128,7 @@ pnpm run build:sender
 - `pnpm run format`: Format files with Prettier.
 - `pnpm run setup:hooks`: Install pre-commit hooks (runs `scripts/setup-pre-commit-hooks.sh`).
 - `pnpm run generate:openapi`: Generates the JSON OpenAPI documentation.
+- `pnpm run version`: Run Changesets to create package version bumps and update lockfile
 
 \
 <br/>
