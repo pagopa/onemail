@@ -11,5 +11,5 @@ aws_region     = "eu-south-1"
 api_gateway_deployment_version = "1.0.0"
 
 # ECS Service
-ecs_service_image_name = "core"
+ecs_service_image_name    = "core"
 ecs_service_image_version = "latest1" #Temporary version to test ECS Service
