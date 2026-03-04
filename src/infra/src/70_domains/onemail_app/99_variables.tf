@@ -65,12 +65,6 @@ variable "ecs_service_image_name" {
 variable "ecs_service_image_version" {
   type        = string
   description = "ECS service image tag/version."
-  default     = "latest"
 }
 
-variable "use_placeholder_image" {
-  type        = bool
-  description = "Use nginx placeholder image instead of ECR image (useful when ECR image is not yet available)."
-  default     = false
-}
 
