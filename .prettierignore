@@ -5,3 +5,5 @@
 src/infra/**/*
 **/apidoc/*
 **/*.md
+**/pnpm-lock.yaml
+**/.turbo/**
