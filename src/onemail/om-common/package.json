@@ -10,8 +10,8 @@
     "type-check": "tsc --noEmit",
     "lint:check": "eslint",
     "lint": "eslint --fix",
-    "format:check": "prettier --check '**/*.{ts,js,mjs,json,yml,yaml}'",
-    "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}'"
+    "format:check": "prettier --check '**/*.{ts,js,mjs,json,yml,yaml}' --ignore-path ../../../.prettierignore",
+    "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}' --ignore-path ../../../.prettierignore"
   },
   "exports": {
     "./types": {
