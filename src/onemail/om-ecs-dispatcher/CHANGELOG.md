@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.3.0
+
+### Minor Changes
+
+- 23440a4: add sanitazion for html in high priority
+
 ## 1.2.1
 
 ### Patch Changes
