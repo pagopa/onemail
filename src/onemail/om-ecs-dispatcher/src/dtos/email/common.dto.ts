@@ -1,5 +1,7 @@
 import env from '#config/env';
+import { emailSanitizerOptions } from '#config/htmlSanitizer';
 import { NODE_ENV_VALUES } from '#utils/constants';
+import sanitizeHtml from 'sanitize-html';
 import { z } from 'zod';
 
 export const stringCheckedSchema = ({
@@ -84,3 +86,10 @@ export const EmailSuccessResponseSchema = z.object({
       'Unique identifier for the request, used for checking the status of the email in the system',
     ),
 });
+
+export const htmlContentSchema = stringCheckedSchema({ min: 10, max: 200000 })
+  .transform((html) => sanitizeHtml(html, emailSanitizerOptions))
+  .refine((cleanHtml) => cleanHtml.trim().length > 0, {
+    message:
+      'Invalid HTML provided: content was removed due to security rules.',
+  });
