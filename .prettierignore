@@ -7,3 +7,5 @@ src/infra/**/*
 **/*.md
 **/pnpm-lock.yaml
 **/.turbo/**
+**/.changeset/**
+**/.github/**
