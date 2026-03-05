@@ -2,7 +2,8 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "customConditions": ["local"]
+    "customConditions": ["local"],
+    "types": ["node"]
   },
   "include": ["src", "tests"]
 }

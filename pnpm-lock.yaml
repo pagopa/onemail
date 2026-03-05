@@ -104,12 +104,18 @@ importers:
 
   src/onemail/om-lambda-sender:
     dependencies:
-      '@aws-lambda-powertools/event-handler':
+      '@aws-lambda-powertools/batch':
+        specifier: ^2.31.0
+        version: 2.31.0
+      '@aws-lambda-powertools/logger':
         specifier: ^2.31.0
         version: 2.31.0
       aws-lambda:
         specifier: ^1.0.7
         version: 1.0.7
+      dotenv:
+        specifier: ^17.2.4
+        version: 17.2.4
       om-common:
         specifier: workspace:*
         version: link:../om-common
@@ -141,15 +147,21 @@ packages:
   '@aws-crypto/util@5.2.0':
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
 
+  '@aws-lambda-powertools/batch@2.31.0':
+    resolution: {integrity: sha512-euYwlxH9wubpaNxxehZRZMLq32b2PnswALc1G4zkXPsEy9pBpCP73cFqrqTRL7b72HdzDI3hOSrjRBRJQRTGHA==}
+
   '@aws-lambda-powertools/commons@2.31.0':
     resolution: {integrity: sha512-K5Hy3WtU/n0M8/kgsgw6OVlF709PHOfnTfsWrJS2Cs1vVjEeBvW22a6u9n3VPNpDeqJ7GIodmSkbuzvQzq6vaA==}
 
-  '@aws-lambda-powertools/event-handler@2.31.0':
-    resolution: {integrity: sha512-M2WkbV5q1FrsUUa00v7YVaYYHD+cYJqPrxtw+8ATCR0u4n4eNJpBFLLCNaZhNtEcM/+YFN/gsAYG9R62ZrDuJg==}
+  '@aws-lambda-powertools/logger@2.31.0':
+    resolution: {integrity: sha512-FCchy2g/cK5poDvDWnVCBSN9uSDGSWDldDiHGC/bn1/oU2cCxIZu06QnYEOOOAUbCWdzgcT1F9fRjzzHbu0GxQ==}
     peerDependencies:
-      '@aws-lambda-powertools/tracer': '>=2.31.0'
+      '@aws-lambda-powertools/jmespath': 2.31.0
+      '@middy/core': 4.x || 5.x || 6.x || 7.x
     peerDependenciesMeta:
-      '@aws-lambda-powertools/tracer':
+      '@aws-lambda-powertools/jmespath':
+        optional: true
+      '@middy/core':
         optional: true
 
   '@aws-sdk/client-dynamodb@3.991.0':
@@ -848,6 +860,9 @@ packages:
   '@smithy/uuid@1.1.0':
     resolution: {integrity: sha512-4aUIteuyxtBUhVdiQqcDhKFitwfd9hqoSDYY2KRXiWtgoWJ9Bmise+KfEPDiVHWeJepvF8xJO9/9+WDIciMFFw==}
     engines: {node: '>=18.0.0'}
+
+  '@standard-schema/spec@1.1.0':
+    resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
   '@types/aws-lambda@8.10.160':
     resolution: {integrity: sha512-uoO4QVQNWFPJMh26pXtmtrRfGshPUSpMZGUyUQY20FhfHEElEBOPKgVmFs1z+kbpyBsRs2JnoOPT7++Z4GA9pA==}
@@ -2263,13 +2278,20 @@ snapshots:
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
+  '@aws-lambda-powertools/batch@2.31.0':
+    dependencies:
+      '@aws-lambda-powertools/commons': 2.31.0
+      '@aws/lambda-invoke-store': 0.2.3
+      '@standard-schema/spec': 1.1.0
+
   '@aws-lambda-powertools/commons@2.31.0':
     dependencies:
       '@aws/lambda-invoke-store': 0.2.3
 
-  '@aws-lambda-powertools/event-handler@2.31.0':
+  '@aws-lambda-powertools/logger@2.31.0':
     dependencies:
       '@aws-lambda-powertools/commons': 2.31.0
+      '@aws/lambda-invoke-store': 0.2.3
 
   '@aws-sdk/client-dynamodb@3.991.0':
     dependencies:
@@ -3385,6 +3407,8 @@ snapshots:
   '@smithy/uuid@1.1.0':
     dependencies:
       tslib: 2.8.1
+
+  '@standard-schema/spec@1.1.0': {}
 
   '@types/aws-lambda@8.10.160': {}
 
