@@ -1,8 +1,8 @@
-import type { SQSEvent, SQSHandler } from 'aws-lambda';
+import type { Context, SQSEvent, SQSHandler, SQSRecord } from 'aws-lambda';
 
 import env from '#config/env';
-import { highPriorityHandler } from '#services/highPriority.service';
-import { lowPriorityHandler } from '#services/lowPriority.service';
+import { logger } from '#config/logger';
+import { handleByPriority } from '#services/priority.service';
 import {
   BatchProcessor,
   EventType,
@@ -11,14 +11,19 @@ import {
 
 const processor = new BatchProcessor(EventType.SQS);
 
-export const handler: SQSHandler = async (event: SQSEvent, context) => {
+export const handler: SQSHandler = async (
+  event: SQSEvent,
+  context: Context,
+) => {
+  logger.addContext(context);
   const isHighPriority = event.Records[0].eventSourceARN.includes(
     env.sqs.highPriorityQueueARN,
   );
 
+  // TODO: idempotency with @aws-lambda-powertools/idempotency
   processPartialResponse(
     event,
-    isHighPriority ? highPriorityHandler : lowPriorityHandler,
+    (record: SQSRecord) => handleByPriority(record, isHighPriority),
     processor,
     {
       context,

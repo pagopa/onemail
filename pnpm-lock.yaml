@@ -110,19 +110,31 @@ importers:
       '@aws-lambda-powertools/logger':
         specifier: ^2.31.0
         version: 2.31.0
+      '@aws-sdk/client-dynamodb':
+        specifier: ^3.989.0
+        version: 3.991.0
+      '@aws-sdk/lib-dynamodb':
+        specifier: ^3.989.0
+        version: 3.991.0(@aws-sdk/client-dynamodb@3.991.0)
       aws-lambda:
         specifier: ^1.0.7
         version: 1.0.7
-      dotenv:
-        specifier: ^17.2.4
-        version: 17.2.4
+      lodash:
+        specifier: ^4.17.23
+        version: 4.17.23
       om-common:
         specifier: workspace:*
         version: link:../om-common
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@types/aws-lambda':
         specifier: ^8.10.160
         version: 8.10.160
+      '@types/lodash':
+        specifier: ^4.17.23
+        version: 4.17.23
       '@types/node':
         specifier: ^24.10.12
         version: 24.10.12
