@@ -1,0 +1,18 @@
+{
+  "name": "onemail-dev",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:4-24-trixie",
+  "workspaceFolder": "/workspaces/onemail",
+  "postCreateCommand": "bash .devcontainer/postCreate.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+    }
+  },
+  "features": {
+    "ghcr.io/gvatsal60/dev-container-features/pre-commit:1": {},
+    "ghcr.io/devcontainers/features/terraform:1": {
+      "version": "1.14.3"
+    },
+    "ghcr.io/dhoeric/features/terraform-docs:1": {}
+  }
+}
