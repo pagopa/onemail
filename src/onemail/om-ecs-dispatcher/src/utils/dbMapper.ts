@@ -20,8 +20,8 @@ export function mapEmailLowPriorityToDbItem(
   // 1. Initialize dbTemplate and emailHistoryList
   let dbTemplate: TemplateContent | undefined;
   const emailHistoryList: EmailStatusHistoryItem[] = [];
-  const initialStatus: EmailStatus = 'Queued';
-  const lowPriority: EmailPriority = 'LOW';
+  const initialStatus: EmailStatus = EmailStatus.Queued;
+  const lowPriority: EmailPriority = EmailPriority.LOW;
   const now = new Date().toISOString();
 
   body.sendingInfo.forEach((element) => {
@@ -102,8 +102,8 @@ export function mapEmailTransactionalToDbItem(
   };
 
   // 3. Building the final DB item
-  const initialStatus: EmailStatus = 'Queued';
-  const highPriority: EmailPriority = 'HIGH';
+  const initialStatus: EmailStatus = EmailStatus.Queued;
+  const highPriority: EmailPriority = EmailPriority.HIGH;
   return {
     emailId: randomUUID(),
     requestId: requestId,
