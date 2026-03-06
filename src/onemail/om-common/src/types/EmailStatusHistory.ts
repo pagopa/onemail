@@ -30,7 +30,8 @@ export type EmailStatus =
   | 'Dispatched'
   | 'Delivered'
   | 'SoftBounce'
-  | 'HardBounce';
+  | 'HardBounce'
+  | 'RejectedBySES';
 
 export interface EmailStatusHistoryItem {
   emailId: string; // PK
