@@ -11,6 +11,7 @@ import {
 
 const processor = new BatchProcessor(EventType.SQS);
 
+//todo do error handler but exclude some SES errors
 export const handler: SQSHandler = async (
   event: SQSEvent,
   context: Context,
