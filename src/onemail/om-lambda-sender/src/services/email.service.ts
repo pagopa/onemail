@@ -10,9 +10,18 @@ export const sendHighPriorityEmail = async (
   const sesInput = mapDbHighPriorityItemToSesModel(input);
   //2. send email with ses connector
   const command = new SendEmailCommand(sesInput);
-  const { MessageId } = await sesClient.send(command);
-
-  return MessageId;
+  // try catch to handle SES errors??
+  try {
+    const { MessageId } = await sesClient.send(command);
+    return MessageId;
+  } catch (error) {
+    // Log the error and return undefined
+    console.error('Error sending high priority email with SES', {
+      error,
+      emailId: input.emailId,
+    });
+    return undefined;
+  }
 };
 
 //TODO - to be implemented
