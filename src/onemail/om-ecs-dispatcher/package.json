@@ -8,14 +8,14 @@
   "scripts": {
     "start": "node dist/app.js",
     "dev": "tsx watch -C local src/app.ts",
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json",
     "generate:openapi": "tsx -C local scripts/generateOpenapi.ts",
     "test": "echo \"No tests yet for dispatcher\"",
     "type-check": "tsc --noEmit",
     "lint:check": "eslint",
     "lint": "eslint --fix",
-    "format:check": "prettier --check '**/*.{ts,js,mjs,json,yml,yaml}'",
-    "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}'"
+    "format:check": "prettier --check '**/*.{ts,js,mjs,json,yml,yaml}' --ignore-path ../../../.prettierignore",
+    "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}' --ignore-path ../../../.prettierignore"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.4.1",
