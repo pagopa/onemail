@@ -1,5 +1,13 @@
 # om-ecs-dispatcher
 
+## 1.3.1
+
+### Patch Changes
+
+- ff2d332: add turborepo
+- Updated dependencies [ff2d332]
+  - om-common@1.0.2
+
 ## 1.3.0
 
 ### Minor Changes
