@@ -1,7 +1,10 @@
 import type { SQSRecord } from 'aws-lambda';
 
 import { logger } from '#config/logger';
-import { getEmailById } from '#repositories/email.repository';
+import {
+  getEmailById,
+  updateEmailStatus,
+} from '#repositories/email.repository';
 import { validateSqsEventItem } from '#utils/validateSqsEventItem';
 
 import {
@@ -30,16 +33,29 @@ export const handleByPriority = async (
     return;
   }
 
+  let sesMessageId: string | undefined;
   // 3. Send the email with SES
   if (isHighPriority) {
     // ses high
-    await sendHighPriorityEmail(email);
+    sesMessageId = await sendHighPriorityEmail(email);
   } else {
     // ses low
-    //await sendLowPriorityEmail(email);
+    //sesMessageId = await sendLowPriorityEmail(email);
+    sesMessageId = 'low-priority-placeholder'; // Placeholder until low priority is implemented
   }
 
   // 4. Update the email status in DB
+  if (sesMessageId) {
+    await updateEmailStatus(item.emailId, 'Dispatched', sesMessageId);
+  } else {
+    // error handling if SES failed to send the email
+    // update status to RejectedBySES and log the error
+    await updateEmailStatus(item.emailId, 'RejectedBySES');
+    logger.error('Rejected by SES when sending email', {
+      emailId: item.emailId,
+    });
+    return;
+  }
 
   logger.info('Processed item', { item, email });
 };
