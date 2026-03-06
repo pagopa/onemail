@@ -4,6 +4,11 @@ import { logger } from '#config/logger';
 import { getEmailById } from '#repositories/email.repository';
 import { validateSqsEventItem } from '#utils/validateSqsEventItem';
 
+import {
+  //sendLowPriorityEmail,
+  sendHighPriorityEmail,
+} from './email.service.js';
+
 export const handleByPriority = async (
   record: SQSRecord,
   isHighPriority: boolean,
@@ -28,8 +33,10 @@ export const handleByPriority = async (
   // 3. Send the email with SES
   if (isHighPriority) {
     // ses high
+    await sendHighPriorityEmail(email);
   } else {
     // ses low
+    //await sendLowPriorityEmail(email);
   }
 
   // 4. Update the email status in DB

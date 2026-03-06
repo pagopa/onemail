@@ -13,7 +13,7 @@ export interface EmailAddress {
 }
 
 export interface EmailContent {
-  html?: string;
+  html: string;
   text?: string;
 }
 

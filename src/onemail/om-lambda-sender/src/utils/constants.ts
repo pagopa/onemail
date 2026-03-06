@@ -9,3 +9,8 @@ export const SQS_QUEUE_ARN = {
   high: 'highPriorityQueueARN',
   low: 'lowPriorityQueueARN',
 };
+
+export const SES_SIMULATOR = {
+  SUCCESS: 'success@simulator.amazonses.com',
+  BOUNCE: 'bounce@simulator.amazonses.com',
+};
