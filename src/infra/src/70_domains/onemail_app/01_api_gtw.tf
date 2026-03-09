@@ -1,11 +1,3 @@
-data "aws_vpc_endpoint" "api_gtw" {
-  service_name = "com.amazonaws.eu-south-1.execute-api"
-}
-
-data "aws_lb" "nlb" {
-  name = "${local.project_nodomain}-elb"
-}
-
 locals {
   api_gateway_policy = jsonencode({
     Version = "2012-10-17",

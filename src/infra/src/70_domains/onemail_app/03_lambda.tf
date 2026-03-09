@@ -1,11 +1,3 @@
-data "aws_sqs_queue" "high_priority" {
-  name = "${local.project_nodomain}-sqs-high-priority"
-}
-
-data "aws_sqs_queue" "low_priority" {
-  name = "${local.project_nodomain}-sqs-low-priority"
-}
-
 data "aws_iam_policy_document" "sender_policy" {
   statement {
     actions = [
@@ -26,6 +18,15 @@ data "aws_iam_policy_document" "sender_policy" {
     ]
     resources = ["*"]
   }
+
+  statement {
+    actions = [
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:GetItem"
+    ]
+    resources = [data.aws_dynamodb_table.EmailStatusHistory.arn]
+  }
 }
 
 module "security_group_lambda_sender" {
@@ -38,6 +39,10 @@ module "security_group_lambda_sender" {
 
   egress_cidr_blocks      = []
   egress_ipv6_cidr_blocks = []
+
+  egress_prefix_list_ids = [
+    data.aws_vpc_endpoint.dynamodb.id
+  ]
 
   egress_rules = ["https-443-tcp"]
 }
