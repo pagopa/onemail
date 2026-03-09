@@ -41,7 +41,7 @@ module "security_group_lambda_sender" {
   egress_ipv6_cidr_blocks = []
 
   egress_prefix_list_ids = [
-    data.aws_vpc_endpoint.dynamodb.id
+    data.aws_vpc_endpoint.dynamodb.prefix_list_id
   ]
 
   egress_rules = ["https-443-tcp"]
