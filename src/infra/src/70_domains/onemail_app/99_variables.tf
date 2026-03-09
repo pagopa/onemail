@@ -69,7 +69,7 @@ variable "ecs_service_image_version" {
 
 variable "lambda_sender" {
   type = object({
-    reserved_concurrent_executions = number
+    reserved_concurrent_executions = optional(number)
     environment_variables          = map(string)
     package_path                   = string
   })
