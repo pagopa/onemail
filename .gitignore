@@ -55,6 +55,9 @@ override.tf.json
 dist/
 dist/*
 
+# Turborepo
+.turbo
+
 # .zip files
 **/*.zip
 

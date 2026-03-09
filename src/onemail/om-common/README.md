@@ -20,23 +20,7 @@ import type { EmailStatusHistoryItem } from 'om-common/types';
 }
 ```
 
-2. Add a project reference in `tsconfig.build.json`
-
-```json
-{
-  "references": [{ "path": "../om-common/tsconfig.build.json" }]
-}
-```
-
-3. Use `tsc --build` in the build script, to ensures om-common is compiled before the consuming package during build.
-
-```json
-"scripts": {
-  "build": "tsc --build <tsconfig-file>"
-}
-```
-
-4. Use the `local` condition when running locally with `tsx`. This allows `tsx` to resolve `om-common` imports directly from source, without requiring a prior build.
+2. Use the `local` condition when running locally with `tsx`. This allows `tsx` to resolve `om-common` imports directly from source, without requiring a prior build.
 
 ```json
 "scripts": {

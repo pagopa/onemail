@@ -9,3 +9,5 @@ runs:
 
     - name: Setup Node.js
       uses: pagopa/dx/.github/actions/node-setup@0fd2b15f5b61751fa433be93682e4a48779b600b
+      env:
+        TURBO_CACHE_DIR: .turbo

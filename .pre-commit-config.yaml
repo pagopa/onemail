@@ -67,8 +67,7 @@ repos:
         name: lint
         entry: pnpm eslint --quiet --fix
         language: system
-        files: ^src/onemail/.*\.(js|ts|mjs)$
-        exclude: ^src/infra/.*
+        types_or: [javascript, ts, jsx, tsx]
         stages: [pre-commit]
 
       # prettier file not checked from eslint
@@ -76,14 +75,13 @@ repos:
         name: prettier
         entry: pnpm prettier --write --log-level silent
         language: system
-        files: ^(package\.json|src/onemail/.*\.(json|yml|yaml))$
-        exclude: ^src/infra/.*
+        types_or: [json, yaml, markdown]
         stages: [pre-commit]
 
       # typescript type check
       - id: type-check
         name: type-check
-        entry: pnpm type-check
+        entry: pnpm run type-check
         language: system
         pass_filenames: false
         stages: [pre-commit]
