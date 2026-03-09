@@ -5,7 +5,24 @@
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
   "customizations": {
     "vscode": {
-      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "hashicorp.terraform",
+        "editorconfig.editorconfig",
+        "redhat.vscode-yaml",
+        "redhat.vscode-xml",
+        "aykutsarac.jsoncrack-vscode",
+        "ms-vsliveshare.vsliveshare",
+        "github.copilot-chat",
+        "github.copilot",
+        "github.copilot-labs",
+        "amazonwebservices.aws-toolkit-vscode",
+        "gruntfuggly.todo-tree",
+        "github.vscode-github-actions",
+        "davidanson.vscode-markdownlint",
+        "mhutchie.git-graph"
+      ]
     }
   },
   "features": {
