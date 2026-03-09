@@ -3,7 +3,9 @@ import pagopa from '@pagopa/eslint-config';
 export default [
   ...pagopa,
   // extends
-  // { ignores: [] },
+  {
+    ignores: ['**/dist/**', '**/build/**', 'src/infra/**', '**/.turbo/**'],
+  },
   {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {

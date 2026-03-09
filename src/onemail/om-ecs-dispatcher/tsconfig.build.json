@@ -5,6 +5,5 @@
     "outDir": "dist",
     "customConditions": []
   },
-  "references": [{ "path": "../om-common/tsconfig.build.json" }],
   "include": ["src"]
 }

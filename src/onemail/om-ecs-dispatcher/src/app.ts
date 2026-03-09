@@ -20,3 +20,9 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}...`);
 });
+
+// Check for graceful shutdown
+process.on('SIGINT', () => {
+  // Here you can eventually perform other cleanup tasks before exiting
+  process.exit(0); // Exit gracefully
+});
