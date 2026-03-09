@@ -1,5 +1,11 @@
 # onemail
 
+## 1.0.10
+
+### Patch Changes
+
+- 62a990c: add dev container
+
 ## 1.0.9
 
 ### Patch Changes
