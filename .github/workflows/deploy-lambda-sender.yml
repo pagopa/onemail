@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload Lambda zip to S3
         run: |
-          aws s3 cp ./om-lambda-sender.zip s3://${{ vars.LAMBDA_CODE_BUCKET_NAME }}/${{ vars.LAMBDA_OM_LAMBDA_SENDER_KEY }}
+          aws s3 cp ./om-lambda-sender.zip s3://${{ vars.LAMBDA_CODE_BUCKET_NAME }}/${{ vars.LAMBDA_SENDER_KEY }}
 
       - name: Deploy Lambda function
         run: |
