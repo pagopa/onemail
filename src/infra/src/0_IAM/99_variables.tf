@@ -33,3 +33,8 @@ variable "app_name" {
   description = "App name."
   default     = "onemail"
 }
+
+variable "lambda_code_bucket_name" {
+  type        = string
+  description = "Lambda code S3 bucket name."
+}
