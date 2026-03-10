@@ -12,6 +12,8 @@
     "dev:sender": "turbo run dev --filter=om-lambda-sender",
     "build:dispatcher": "turbo run build --filter=om-ecs-dispatcher",
     "build:sender": "turbo run build --filter=om-lambda-sender",
+    "package:dispatcher": "bash scripts/package-dispatcher.sh",
+    "package:sender": "bash scripts/package-sender.sh",
     "type-check": "turbo run type-check --filter=!onemail",
     "lint:check": "turbo run lint:check --filter=!onemail",
     "lint": "turbo run lint --filter=!onemail",
