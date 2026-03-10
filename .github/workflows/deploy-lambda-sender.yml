@@ -8,6 +8,11 @@ on:
       - 'main'
     paths:
       - 'src/onemail/om-lambda-sender/**'
+      - 'src/onemail/om-common/**'
+      - 'scripts/package-sender.sh'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'tsconfig.json'
   workflow_dispatch:
     inputs:
       environment:
