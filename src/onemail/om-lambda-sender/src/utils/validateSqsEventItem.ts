@@ -1,15 +1,24 @@
-import { SqsEventItem, SqsEventItemSchema } from '#dtos/sqsEventItem';
+import {
+  SqsEventItemHigh,
+  SqsEventItemHighSchema,
+  SqsEventItemLow,
+  SqsEventItemLowSchema,
+} from '#dtos/sqsEventItem';
 import { SQSRecord } from 'aws-lambda';
 import { isEmpty } from 'lodash';
 
 export const validateSqsEventItem = (
   item: SQSRecord,
-): { valid: boolean; item?: SqsEventItem } => {
+  isHighPriority: boolean,
+): { valid: boolean; item?: SqsEventItemHigh | SqsEventItemLow } => {
   if (isEmpty(item.body)) {
     return { valid: false };
   }
 
-  const validationResult = SqsEventItemSchema.safeParse(JSON.parse(item.body));
+  const validationResult = isHighPriority
+    ? SqsEventItemHighSchema.safeParse(JSON.parse(item.body))
+    : SqsEventItemLowSchema.safeParse(JSON.parse(item.body));
+
   if (!validationResult.success) {
     return { valid: false };
   }

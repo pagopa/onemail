@@ -1,8 +1,12 @@
 import z from 'zod';
 
 // TODO: consider moving this schema and this type to a shared package on common package
-export const SqsEventItemSchema = z.object({
+export const SqsEventItemHighSchema = z.object({
   emailId: z.string().trim().min(1),
 });
+export const SqsEventItemLowSchema = z.object({
+  requestId: z.string().trim().min(1),
+});
 
-export type SqsEventItem = z.infer<typeof SqsEventItemSchema>;
+export type SqsEventItemHigh = z.infer<typeof SqsEventItemHighSchema>;
+export type SqsEventItemLow = z.infer<typeof SqsEventItemLowSchema>;
