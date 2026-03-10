@@ -74,8 +74,3 @@ variable "lambda_sender" {
     package_path                   = string
   })
 }
-
-variable "github_repository" {
-  type = string
-}
-

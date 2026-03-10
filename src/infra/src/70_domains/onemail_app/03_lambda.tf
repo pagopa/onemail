@@ -53,7 +53,6 @@ module "lambda_sender" {
   env                = var.env
   product_name       = "onemail"
   idvh_resource_tier = "standard"
-  github_repository  = var.github_repository
 
   name        = "${local.project_nodomain}-lambda-sender"
   description = "Lambda function responsible for sending emails, triggered by SQS messages from both high and low priority queues."
