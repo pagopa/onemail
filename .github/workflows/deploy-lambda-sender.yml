@@ -62,10 +62,7 @@ jobs:
 
       - name: Create Lambda zip package
         run: |
-          pnpm --filter om-lambda-sender deploy --prod dist-artifact
-          cp -R src/onemail/om-lambda-sender/dist dist-artifact/
-          cd dist-artifact
-          zip -rq ../om-lambda-sender.zip .
+          pnpm run package:sender
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
