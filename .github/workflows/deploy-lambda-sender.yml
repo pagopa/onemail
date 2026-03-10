@@ -110,4 +110,4 @@ jobs:
           aws lambda update-function-code \
             --function-name ${{ env.LAMBDA_NAME }} \
             --s3-bucket ${{ vars.LAMBDA_CODE_BUCKET_NAME }} \
-            --s3-key ${{ vars.LAMBDA_OM_LAMBDA_SENDER_KEY }}
+            --s3-key ${{ vars.LAMBDA_SENDER_KEY }}
