@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1 https://github.com/actions/checkout/releases/tag/v4.3.1
 
       # call common node setup workflow
       - name: Setup Node.js

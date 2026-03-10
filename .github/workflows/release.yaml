@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7 https://github.com/actions/checkout/releases/tag/v4.1.7
         with:
           fetch-depth: 0
 
@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7 https://github.com/actions/checkout/releases/tag/v4.1.7
         with:
           fetch-depth: 0
 
@@ -65,7 +65,7 @@ jobs:
 
       - name: Create Release Pull Request
         id: changesets
-        uses: changesets/action@06245a4e0a36c064a573d4150030f5ec548e4fcc # v1.4.10
+        uses: changesets/action@06245a4e0a36c064a573d4150030f5ec548e4fcc # v1.4.10 https://github.com/changesets/action/releases/tag/v1.4.10
         with:
           version: pnpm run version
           publish: pnpm changeset tag
