@@ -58,9 +58,6 @@ dist/*
 # Turborepo
 .turbo
 
-# Local working notes and temporary artifacts
-tmp/
-
 # .zip files
 **/*.zip
 
