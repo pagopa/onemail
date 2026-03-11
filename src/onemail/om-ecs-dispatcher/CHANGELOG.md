@@ -1,5 +1,14 @@
 # om-ecs-dispatcher
 
+## 1.3.2
+
+### Patch Changes
+
+- 0ad091d: project package and om-lambda-sender deploy action
+- cff024f: Implement first version of working lambda-sender poc
+- Updated dependencies [cff024f]
+  - om-common@1.0.3
+
 ## 1.3.1
 
 ### Patch Changes
