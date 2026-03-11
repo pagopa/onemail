@@ -1,19 +1,9 @@
-resource "random_integer" "bucket_lambda_code_suffix" {
-  min = 1000
-  max = 9999
-}
+module "s3_code_bucket" {
+  source = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/s3_bucket?ref=main"
 
-module "s3_lambda_code_bucket" {
-  source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "4.1.1"
-
-  bucket = local.bucket_lambda_code
-  acl    = "private"
-
-  control_object_ownership = true
-  object_ownership         = "ObjectWriter"
-
-  tags = {
-    Name = local.bucket_lambda_code
-  }
+  env                = var.env
+  product_name       = "onemail"
+  idvh_resource_tier = "standard"
+  name               = "${local.project_nodomain}-lambda-code-deploy"
+  tags               = module.tag_config.tags
 }
