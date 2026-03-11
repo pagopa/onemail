@@ -1,5 +1,11 @@
 # infra
 
+## 1.0.2
+
+### Patch Changes
+
+- 0ad091d: project package and om-lambda-sender deploy action
+
 ## 1.0.1
 
 ### Patch Changes
