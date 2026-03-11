@@ -55,7 +55,7 @@ module "lambda_sender" {
   idvh_resource_tier = "standard"
 
   name        = "${local.project_nodomain}-lambda-sender"
-  description = "Lambda function responsible for sending emails, triggered by SQS messages from both high and low priority queues."
+  description = "Lambda function responsible for sending emails, triggered by SQS messages from both high and low priority queues"
 
   package_path       = "${path.module}/${var.lambda_sender.package_path}"
   lambda_policy_json = data.aws_iam_policy_document.sender_policy.json
