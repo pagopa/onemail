@@ -1,9 +1,33 @@
-import { Router } from '@aws-lambda-powertools/event-handler/http';
-import { Context } from 'aws-lambda';
+import type { Context, SQSEvent, SQSHandler } from 'aws-lambda';
 
-const app: Router = new Router();
+import env from '#config/env';
+import { logger } from '#config/logger';
+import {
+  handleHighPriority,
+  handleLowPriority,
+} from '#services/priority.service';
+import {
+  BatchProcessor,
+  EventType,
+  processPartialResponse,
+} from '@aws-lambda-powertools/batch';
 
-app.get('/', async () => ({ message: 'Hello World!' }));
+const processor = new BatchProcessor(EventType.SQS);
 
-export const handler = async (event: unknown, context: Context) =>
-  app.resolve(event, context);
+//todo do error handler but exclude some SES errors
+export const handler: SQSHandler = async (
+  event: SQSEvent,
+  context: Context,
+) => {
+  logger.addContext(context);
+  const isHighPriority = event.Records[0].eventSourceARN.includes(
+    env.sqs.highPriorityQueueARN,
+  );
+
+  const recordHandler = isHighPriority ? handleHighPriority : handleLowPriority;
+
+  // TODO: idempotency with @aws-lambda-powertools/idempotency
+  processPartialResponse(event, recordHandler, processor, {
+    context,
+  });
+};

@@ -1,3 +1,17 @@
+export const EmailStatus = {
+  Delivered: 'Delivered',
+  Dispatched: 'Dispatched',
+  HardBounce: 'HardBounce',
+  Queued: 'Queued',
+  RejectedBySES: 'RejectedBySES',
+  SoftBounce: 'SoftBounce',
+} as const;
+
+export const EmailPriority = {
+  HIGH: 'HIGH',
+  LOW: 'LOW',
+} as const;
+
 export interface DbEmailContent {
   subject?: string;
   from: EmailAddress;
@@ -13,7 +27,7 @@ export interface EmailAddress {
 }
 
 export interface EmailContent {
-  html?: string;
+  html: string;
   text?: string;
 }
 
@@ -23,14 +37,9 @@ export interface EmailEvent {
   reason?: string;
 }
 
-export type EmailPriority = 'HIGH' | 'LOW';
+export type EmailPriority = (typeof EmailPriority)[keyof typeof EmailPriority];
 
-export type EmailStatus =
-  | 'Queued'
-  | 'Dispatched'
-  | 'Delivered'
-  | 'SoftBounce'
-  | 'HardBounce';
+export type EmailStatus = (typeof EmailStatus)[keyof typeof EmailStatus];
 
 export interface EmailStatusHistoryItem {
   emailId: string; // PK
