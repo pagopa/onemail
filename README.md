@@ -124,6 +124,8 @@ pnpm run build:sender
 - `pnpm run dev:sender`: Start the sender service in development mode.
 - `pnpm run build:dispatcher`: Build the dispatcher package.
 - `pnpm run build:sender`: Build the sender package.
+- `pnpm run package:dispatcher`: Package the dispatcher service into `dist-artifact/om-ecs-dispatcher`.
+- `pnpm run package:sender`: Package the sender service and create the `om-lambda-sender.zip` archive for deployment.
 - `pnpm run type-check`: Run TypeScript type checking.
 - `pnpm run lint:check`: Run ESLint checks (no auto-fix).
 - `pnpm run lint`: Run ESLint with auto-fix.

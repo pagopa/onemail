@@ -54,6 +54,7 @@ override.tf.json
 # dist folder
 dist/
 dist/*
+dist-artifact/**
 
 # Turborepo
 .turbo

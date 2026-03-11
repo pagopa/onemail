@@ -5,6 +5,9 @@
   "private": true,
   "main": "dist/app.js",
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "start": "node dist/app.js",
     "dev": "tsx watch -C local src/app.ts",
