@@ -1,5 +1,6 @@
 import env from '#config/env';
 import { dynamoClient } from '#connector/dynamo.connector';
+import { sqsClient } from '#connector/sqs.connector';
 import {
   EmailHighPriorityBodyDTO,
   EmailHighPriorityResponseDTO,
@@ -12,6 +13,7 @@ import {
   mapEmailLowPriorityToDbItem,
   mapEmailTransactionalToDbItem,
 } from '#utils/dbMapper';
+import { SendMessageCommand } from '@aws-sdk/client-sqs';
 import { BatchWriteCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { randomUUID } from 'node:crypto';
 
@@ -36,6 +38,13 @@ export const sendEmailTransactional = async (
       Item: {
         ...dbObj,
       },
+    }),
+  );
+
+  await sqsClient.send(
+    new SendMessageCommand({
+      QueueUrl: env.aws.sqs.highPriorityQueueUrl,
+      MessageBody: JSON.stringify({ emailId: dbObj.emailId }),
     }),
   );
 
@@ -80,6 +89,13 @@ export const sendEmailLowPriority = async (
         }),
       ),
     ),
+  );
+
+  await sqsClient.send(
+    new SendMessageCommand({
+      QueueUrl: env.aws.sqs.lowPriorityQueueUrl,
+      MessageBody: JSON.stringify({ requestId: requestId }),
+    }),
   );
 
   return { requestId };
