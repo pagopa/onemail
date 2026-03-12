@@ -45,12 +45,6 @@ variable "domain" {
   }
 }
 
-variable "dynamodb_enable_replication" {
-  type        = bool
-  description = "Enable DynamoDB replication."
-  default     = false
-}
-
 # DynamoDB table configuration
 variable "dynamodb_table_config" {
   type = object({
@@ -61,23 +55,29 @@ variable "dynamodb_table_config" {
       name = string
       type = string
     }))
-    billing_mode                   = optional(string, "PAY_PER_REQUEST")
-    point_in_time_recovery_enabled = optional(bool, true)
-    stream_enabled                 = optional(bool, true)
-    stream_view_type               = optional(string, "NEW_AND_OLD_IMAGES")
+    billing_mode                   = optional(string)
+    point_in_time_recovery_enabled = optional(bool)
+    stream_enabled                 = optional(bool)
+    stream_view_type               = optional(string)
     ttl_attribute_name             = optional(string)
-    deletion_protection_enabled    = optional(bool, false)
-    create_kms_key                 = optional(bool, false)
+    deletion_protection_enabled    = optional(bool)
+    create_kms_key                 = optional(bool)
     kms_alias                      = optional(string)
-    server_side_encryption_enabled = optional(bool, false)
+    server_side_encryption_enabled = optional(bool)
+    replication_enabled            = optional(bool)
+    global_secondary_indexes = optional(list(object({
+      name            = string
+      hash_key        = string
+      projection_type = string
+    })))
     replica_regions = optional(list(object({
       region_name = string
-    })), [])
+    })))
   })
   description = "DynamoDB table configuration"
-  default     = null
 }
 
+# ECS Cluster configuration
 variable "enable_container_insights" {
   type = bool
 }

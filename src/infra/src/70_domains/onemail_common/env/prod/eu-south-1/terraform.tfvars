@@ -17,6 +17,7 @@ dynamodb_table_config = {
   stream_view_type               = "NEW_AND_OLD_IMAGES"
   ttl_attribute_name             = "expiration_time"
   deletion_protection_enabled    = false
+  replication_enabled            = false
   create_kms_key                 = true
   kms_alias                      = "/dynamodb/emailstatushistory"
   server_side_encryption_enabled = true
@@ -24,14 +25,21 @@ dynamodb_table_config = {
     {
       name = "EmailId"
       type = "S"
+    },
+    {
+      name = "request_id"
+      type = "S"
+    }
+  ]
+  global_secondary_indexes = [
+    {
+      name            = "gsi_request_id_idx"
+      hash_key        = "request_id"
+      projection_type = "ALL"
     }
   ]
   global_secondary_indexes = []
-  # replica_regions = [
-  #   {
-  #     region_name = "eu-central-1"
-  #   }
-  # ]
+  replica_regions          = []
 }
 
 # ECS Cluster
