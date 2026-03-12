@@ -13,6 +13,10 @@ import {
   getEmailsByRequestId,
   updateEmailStatus,
 } from '#repositories/email.repository';
+import {
+  publishMetrics as publishMetrics,
+  SenderMetricName,
+} from '#repositories/metrics.repository';
 import { RetryableBulkEmailStatuses } from '#types/retryableSESStatus';
 import {
   BadRequestException,
@@ -39,7 +43,11 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
   // 2. Fetch the email details from DB
   const email = await getEmailById(emailId);
   if (!email) {
-    // TODO: metric for email not found
+    await publishMetrics([
+      {
+        name: SenderMetricName.EmailNotFound,
+      },
+    ]);
     logger.error('Email not found in DynamoDB', { emailId });
     return;
   }
@@ -52,6 +60,11 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
     const errorMessage = handleSesError(error);
     if (errorMessage) {
       await updateEmailStatus(emailId, EmailStatus.RejectedBySES);
+      await publishMetrics([
+        {
+          name: SenderMetricName.HighPriorityRejectedBySes,
+        },
+      ]);
       logger.error(errorMessage);
       return;
     }
@@ -61,8 +74,18 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
   // 4. Update the email status in DB
   if (sesMessageId) {
     await updateEmailStatus(emailId, EmailStatus.Dispatched, sesMessageId);
+    await publishMetrics([
+      {
+        name: SenderMetricName.HighPriorityDispatched,
+      },
+    ]);
   } else {
     await updateEmailStatus(emailId, EmailStatus.RejectedBySES);
+    await publishMetrics([
+      {
+        name: SenderMetricName.HighPriorityRejectedBySes,
+      },
+    ]);
     logger.error('Rejected by SES when sending email', { emailId });
     return;
   }
@@ -82,7 +105,11 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
   // 2. Fetch all emails for this requestId from DB
   const emails = await getEmailsByRequestId(requestId);
   if (isEmpty(emails)) {
-    // TODO: metric for emails not found
+    await publishMetrics([
+      {
+        name: SenderMetricName.EmailBatchNotFound,
+      },
+    ]);
     logger.error('Emails not found in DynamoDB', { requestId });
     return;
   }
@@ -130,6 +157,20 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
     ];
 
     await batchUpdateEmailStatuses(updates);
+    await publishMetrics([
+      {
+        name: SenderMetricName.LowPriorityDispatched,
+        value: successful.length,
+      },
+      {
+        name: SenderMetricName.LowPriorityRejectedBySes,
+        value: nonRetryableFailures.length,
+      },
+      {
+        name: SenderMetricName.LowPriorityRetryableFailure,
+        value: retryableFailures.length,
+      },
+    ]);
   } catch (error) {
     const errorMessage = handleSesError(error);
     if (errorMessage) {
@@ -140,6 +181,12 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
           status: EmailStatus.RejectedBySES as EmailStatus,
         })),
       );
+      await publishMetrics([
+        {
+          name: SenderMetricName.LowPriorityRejectedBySes,
+          value: emails.length,
+        },
+      ]);
       logger.error(errorMessage);
       return;
     }
@@ -151,15 +198,27 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
 
 function handleSesError(error: unknown): string | undefined {
   if (error instanceof BadRequestException) {
-    //todo metrics
+    publishMetrics([
+      {
+        name: SenderMetricName.LowPriorityRejectedBySes,
+      },
+    ]);
     return `Rejected by SES - BadRequestException: ${error.message}`;
   }
   if (error instanceof MailFromDomainNotVerifiedException) {
-    //todo metrics
+    publishMetrics([
+      {
+        name: SenderMetricName.LowPriorityRejectedBySes,
+      },
+    ]);
     return `Rejected by SES - MailFromDomainNotVerifiedException: ${error.message}`;
   }
   if (error instanceof MessageRejected) {
-    //todo metrics
+    publishMetrics([
+      {
+        name: SenderMetricName.LowPriorityRejectedBySes,
+      },
+    ]);
     return `Rejected by SES - MessageRejected: ${error.message}`;
   }
   return undefined;
@@ -175,7 +234,11 @@ function validateRecord(
   }
   const result = schema.safeParse(JSON.parse(record.body));
   if (!result.success) {
-    // TODO: metric for invalid records
+    publishMetrics([
+      {
+        name: SenderMetricName.InvalidRecord, //TODO: check if we want this level of detail
+      },
+    ]);
     logger.error('Invalid payload, discarding record', { record });
     return undefined;
   }

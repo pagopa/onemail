@@ -10,6 +10,9 @@ export default {
     emailDbRequestIdGSI:
       process.env.AWS_EMAIL_DB_REQUEST_ID_GSI ??
       throwMissingRequiredEnvVar('AWS_EMAIL_DB_REQUEST_ID_GSI'),
+    cloudWatchMetricsNamespace:
+      process.env.AWS_CLOUDWATCH_METRICS_NAMESPACE ??
+      throwMissingRequiredEnvVar('AWS_CLOUDWATCH_METRICS_NAMESPACE'),
     localDynamoDb: {
       endpoint: process.env.AWS_DYNAMODB_ENDPOINT || 'http://localhost:8000',
       accessKeyId: process.env.AWS_DYNAMODB_ACCESS_KEY_ID || 'local',
