@@ -38,7 +38,6 @@ dynamodb_table_config = {
       projection_type = "ALL"
     }
   ]
-  global_secondary_indexes = []
   replica_regions          = []
 }
 
