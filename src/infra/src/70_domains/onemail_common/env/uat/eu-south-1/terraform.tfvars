@@ -38,7 +38,7 @@ dynamodb_table_config = {
       projection_type = "ALL"
     }
   ]
-  replica_regions          = []
+  replica_regions = []
 }
 
 # ECS Cluster
