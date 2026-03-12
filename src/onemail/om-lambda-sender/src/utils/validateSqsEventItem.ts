@@ -1,10 +1,11 @@
+import type { SQSRecord } from 'aws-lambda';
+
 import {
   SqsEventItemHigh,
   SqsEventItemHighSchema,
   SqsEventItemLow,
   SqsEventItemLowSchema,
 } from '#dtos/sqsEventItem';
-import { SQSRecord } from 'aws-lambda';
 import { isEmpty } from 'lodash';
 
 export const validateSqsEventItem = (
