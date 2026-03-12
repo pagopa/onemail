@@ -9,6 +9,10 @@ import {
   EmailLowPriorityResponseDTO,
 } from '#dtos/email/emailLowPriority.dto';
 import {
+  EmailStatusQueryParamsDTO,
+  EmailStatusResponseDTO,
+} from '#dtos/email/emailStatus.dto';
+import {
   SanitizeHtmlDTO,
   SanitizeHtmlResponseDTO,
 } from '#dtos/email/validateHtml.dto';
@@ -50,4 +54,18 @@ export const sanitizeHtmlContent = async (
   res: Response<SanitizeHtmlResponseDTO>,
 ) => {
   res.status(StatusCodes.OK).json({ sanitizedHtml: req.body.htmlContent });
+};
+
+export const getEmailStatus = async (
+  req: Request<
+    unknown,
+    unknown,
+    unknown,
+    AsStringQuery<EmailStatusQueryParamsDTO>
+  >,
+  res: Response<EmailStatusResponseDTO>,
+) => {
+  const { requestId } = req.query as unknown as EmailStatusQueryParamsDTO;
+  const result = await emailService.getEmailStatus(requestId);
+  res.status(StatusCodes.OK).json(result);
 };

@@ -11,6 +11,10 @@ import {
   EmailLowPriorityResponseSchema,
 } from '#dtos/email/emailLowPriority.dto';
 import {
+  EmailStatusQueryParamsSchema,
+  EmailStatusResponseSchema,
+} from '#dtos/email/emailStatus.dto';
+import {
   SanitizeHtmlResponseSchema,
   SanitizeHtmlSchema,
 } from '#dtos/email/validateHtml.dto';
@@ -23,6 +27,25 @@ import { StatusCodes } from 'http-status-codes';
 const router = Router();
 const prefix = 'emails';
 const tag = 'Emails';
+
+router.get(
+  '/status',
+  validate({ query: EmailStatusQueryParamsSchema }),
+  EmailController.getEmailStatus,
+);
+registerOpenApiRoute({
+  method: 'get',
+  path: `${versionRoutePath.v1}/${prefix}/status`,
+  summary: 'Get email status',
+  tags: [tag],
+  queryParams: EmailStatusQueryParamsSchema,
+  responses: {
+    [StatusCodes.OK]: {
+      schema: EmailStatusResponseSchema,
+      description: 'Email status retrieved successfully',
+    },
+  },
+});
 
 router.post(
   '/send/high',

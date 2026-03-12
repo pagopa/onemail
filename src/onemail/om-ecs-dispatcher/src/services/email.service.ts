@@ -8,12 +8,21 @@ import {
   EmailLowPriorityBodyDTO,
   EmailLowPriorityResponseDTO,
 } from '#dtos/email/emailLowPriority.dto';
+import { EmailStatusResponseDTO } from '#dtos/email/emailStatus.dto';
+import { ERROR_CODES } from '#dtos/error.dto';
+import { ApiError } from '#errors/ApiError';
 import {
   mapEmailLowPriorityToDbItem,
   mapEmailTransactionalToDbItem,
 } from '#utils/dbMapper';
-import { BatchWriteCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  BatchWriteCommand,
+  PutCommand,
+  QueryCommand,
+} from '@aws-sdk/lib-dynamodb';
+import { StatusCodes } from 'http-status-codes';
 import { randomUUID } from 'node:crypto';
+import { EmailStatusHistoryItem } from 'om-common/types';
 
 export const sendEmailTransactional = async (
   emailData: EmailHighPriorityBodyDTO,
@@ -83,4 +92,39 @@ export const sendEmailLowPriority = async (
   );
 
   return { requestId };
+};
+
+export const getEmailStatus = async (
+  requestId: string,
+): Promise<EmailStatusResponseDTO> => {
+  const result = await dynamoClient.send(
+    new QueryCommand({
+      TableName: env.aws.emailDbTable,
+      IndexName: env.aws.emailDbRequestIdGSI,
+      KeyConditionExpression: '#requestId = :requestId',
+      ExpressionAttributeNames: {
+        '#requestId': 'requestId',
+      },
+      ExpressionAttributeValues: {
+        ':requestId': requestId,
+      },
+      Limit: 1,
+    }),
+  );
+
+  const statusItem = result.Items?.[0] as EmailStatusHistoryItem | undefined;
+
+  if (!statusItem) {
+    throw new ApiError(
+      `Email with requestId ${requestId} not found`,
+      StatusCodes.NOT_FOUND,
+      ERROR_CODES.RESOURCE_NOT_FOUND,
+    );
+  }
+
+  return {
+    status: statusItem.status,
+    priority: statusItem.priority,
+    history: statusItem.history,
+  };
 };
