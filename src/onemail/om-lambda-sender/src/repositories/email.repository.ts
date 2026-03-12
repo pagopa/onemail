@@ -10,6 +10,8 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 
+import { publishMetrics, SenderMetricName } from './metrics.repository.js';
+
 // TODO: low timeout
 export const getEmailById = async (
   emailId: string,
@@ -86,10 +88,65 @@ export interface EmailStatusUpdate {
 }
 
 const DYNAMO_BATCH_LIMIT = 25;
+const MAX_RETRIES = 3;
 
 /**
- * Batch-update email statuses using BatchWriteCommand (PutRequest).
- * Chunks into batches of 25 (DynamoDB limit).
+ * Batch-update email statuses using BatchWriteCommand requests.
+ * Retries only unprocessed items with exponential backoff.
+ */
+const processBatchWithRetry = async (
+  tableName: string,
+  initialRequests: { PutRequest: { Item: EmailStatusHistoryItem } }[],
+): Promise<void> => {
+  let pendingRequests = initialRequests;
+  let retryCount = 0;
+
+  while (pendingRequests.length > 0 && retryCount <= MAX_RETRIES) {
+    const response = await dynamoClient.send(
+      new BatchWriteCommand({
+        RequestItems: {
+          [tableName]: pendingRequests,
+        },
+      }),
+    );
+
+    // Extract unprocessed items directly
+    const unprocessedRequests =
+      (response.UnprocessedItems?.[tableName] as typeof initialRequests) ?? [];
+
+    if (unprocessedRequests.length === 0) {
+      return;
+    }
+
+    retryCount++;
+    pendingRequests = unprocessedRequests;
+
+    if (retryCount > MAX_RETRIES) {
+      await publishMetrics([
+        {
+          name: SenderMetricName.EmailStatusBatchUpdateFailed,
+        },
+      ]);
+      throw new Error(
+        `Failed to update ${pendingRequests.length} email statuses after ${MAX_RETRIES} retries. Email IDs: ${pendingRequests
+          .map((req) => req.PutRequest.Item.emailId)
+          .join(', ')}`,
+      );
+    }
+
+    logger.warn(
+      'Retrying unprocessed email status updates after DynamoDB throttling',
+      {
+        retryCount,
+        emailIds: pendingRequests.map((req) => req.PutRequest.Item.emailId),
+      },
+    );
+  }
+};
+
+/**
+ * Batch-update email statuses using BatchWriteCommand requests.
+ * Chunks requests into batches of 25 and retries unprocessed items.
  * Individual batch failures are logged but do not fail the entire operation.
  */
 export const batchUpdateEmailStatuses = async (
@@ -97,6 +154,10 @@ export const batchUpdateEmailStatuses = async (
 ): Promise<void> => {
   const tableName = env.aws.emailDbTable;
   const now = new Date().toISOString();
+
+  if (updates.length === 0) {
+    return;
+  }
 
   const items = updates.map(({ item, status, messageId }) => {
     // Append the new status to the existing history array
@@ -107,11 +168,15 @@ export const batchUpdateEmailStatuses = async (
     });
 
     return {
-      ...item,
-      status,
-      updatedAt: now,
-      sesMessageId: messageId ?? null,
-      history: updatedHistory,
+      PutRequest: {
+        Item: {
+          ...item,
+          status,
+          updatedAt: now,
+          messageId: messageId ?? null,
+          history: updatedHistory,
+        },
+      },
     };
   });
 
@@ -120,30 +185,19 @@ export const batchUpdateEmailStatuses = async (
     batches.push(items.slice(i, i + DYNAMO_BATCH_LIMIT));
   }
 
-  //TODO - handle unprocessed items in the response and retry logic if needed
   const results = await Promise.allSettled(
-    batches.map((batch) =>
-      dynamoClient.send(
-        new BatchWriteCommand({
-          RequestItems: {
-            [tableName]: batch.map((item) => ({
-              PutRequest: {
-                Item: { ...item },
-              },
-            })),
-          },
-        }),
-      ),
-    ),
+    batches.map((batch) => processBatchWithRetry(tableName, batch)),
   );
 
   for (const [index, result] of results.entries()) {
     if (result.status === 'rejected') {
-      const failedEmailIds = batches[index].map((i) => i.emailId);
+      const failedEmailIds = batches[index].map(
+        (i) => i.PutRequest.Item.emailId,
+      );
       logger.error('BatchWriteCommand failed for batch', {
         batchIndex: index,
         emailIds: failedEmailIds,
-        error: result.reason,
+        error: result.reason?.message || result.reason,
       });
     }
   }
