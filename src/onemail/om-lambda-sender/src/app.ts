@@ -27,7 +27,7 @@ export const handler: SQSHandler = async (
   const recordHandler = isHighPriority ? handleHighPriority : handleLowPriority;
 
   // TODO: idempotency with @aws-lambda-powertools/idempotency
-  processPartialResponse(event, recordHandler, processor, {
+  return processPartialResponse(event, recordHandler, processor, {
     context,
   });
 };

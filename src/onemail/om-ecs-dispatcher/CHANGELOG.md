@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.4.0
+
+### Minor Changes
+
+- d6f6e6a: add sqs event handling in ecs-dispatcher
+
 ## 1.3.2
 
 ### Patch Changes
