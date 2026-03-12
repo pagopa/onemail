@@ -20,6 +20,14 @@ export default {
       accessKeyId: process.env.AWS_DYNAMODB_ACCESS_KEY_ID || 'local',
       secretAccessKey: process.env.AWS_DYNAMODB_SECRET_ACCESS_KEY || 'local',
     },
+    sqs: {
+      highPriorityQueueUrl:
+        process.env.SQS_HIGH_PRIORITY_QUEUE_URL ??
+        throwMissingRequiredEnvVar('SQS_HIGH_PRIORITY_QUEUE_URL'),
+      lowPriorityQueueUrl:
+        process.env.SQS_LOW_PRIORITY_QUEUE_URL ??
+        throwMissingRequiredEnvVar('SQS_LOW_PRIORITY_QUEUE_URL'),
+    },
   },
 };
 
