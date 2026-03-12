@@ -21,3 +21,36 @@ data "aws_lb" "nlb" {
 data "aws_dynamodb_table" "EmailStatusHistory" {
   name = "EmailStatusHistory"
 }
+
+data "aws_ecs_cluster" "core" {
+  cluster_name = "${local.project_nodomain}-ecs-cluster"
+}
+
+data "aws_vpc" "core" {
+  filter {
+    name   = "tag:Name"
+    values = ["${local.project_nodomain}-vpc"]
+  }
+}
+
+data "aws_subnets" "private" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.core.id]
+  }
+
+  filter {
+    name   = "tag:Name"
+    values = ["${local.project_nodomain}-vpc-private-*"]
+  }
+}
+
+data "aws_ecr_repository" "ecs_service" {
+  name = "${local.project_nodomain}-ecr-${var.ecs_service_image_name}"
+}
+
+
+data "aws_lb_listener" "ecs_core" {
+  load_balancer_arn = data.aws_lb.nlb.arn
+  port              = 8080
+}
