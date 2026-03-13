@@ -6,8 +6,8 @@ export const NODE_ENV_VALUES = {
 };
 
 export const SQS_QUEUE_ARN = {
-  high: 'highPriorityQueueARN',
-  low: 'lowPriorityQueueARN',
+  high: 'HIGH_PRIORITY_QUEUE_ARN',
+  low: 'LOW_PRIORITY_QUEUE_ARN',
 };
 
 export const SES_SIMULATOR = {
