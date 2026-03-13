@@ -1,5 +1,5 @@
 import env from '#config/env';
-import { NODE_ENV_VALUES, versionRoutePath } from '#utils/constants';
+import { APP_ENV_VALUES, versionRoutePath } from '#utils/constants';
 import express from 'express';
 
 import emailRoute from './email.route.js';
@@ -34,7 +34,7 @@ routesV1.forEach((route) => {
 // OpenAPI docs route
 // ! The OpenAPI route needs to be imported and registered at the end to ensure that all routes and components are registered before generating the documentation
 import openApiRoute from './openapi.route.js';
-if (env.server.environment === NODE_ENV_VALUES.local) {
+if (env.server.environment === APP_ENV_VALUES.local) {
   expressRouter.use(`/${openApiRoute.prefix}`, openApiRoute.router);
 }
 

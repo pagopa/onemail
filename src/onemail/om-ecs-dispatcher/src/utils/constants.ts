@@ -1,4 +1,4 @@
-export const NODE_ENV_VALUES = {
+export const APP_ENV_VALUES = {
   local: 'local',
   development: 'development',
   uat: 'uat',
