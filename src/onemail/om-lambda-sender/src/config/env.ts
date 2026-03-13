@@ -14,11 +14,6 @@ export default {
       process.env.AWS_CLOUDWATCH_METRICS_NAMESPACE ||
       'lambda-sender/ApplicationMetrics', //TODO: reimplement throw when infra is ready
     // ?? throwMissingRequiredEnvVar('AWS_CLOUDWATCH_METRICS_NAMESPACE'),
-    localDynamoDb: {
-      endpoint: process.env.AWS_DYNAMODB_ENDPOINT || 'http://localhost:8000',
-      accessKeyId: process.env.AWS_DYNAMODB_ACCESS_KEY_ID || 'local',
-      secretAccessKey: process.env.AWS_DYNAMODB_SECRET_ACCESS_KEY || 'local',
-    },
   },
   sqs: {
     highPriorityQueueARN:
