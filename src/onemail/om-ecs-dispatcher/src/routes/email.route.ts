@@ -29,13 +29,13 @@ const prefix = 'emails';
 const tag = 'Emails';
 
 router.get(
-  '/status',
+  '/statuses',
   validate({ query: EmailStatusQueryParamsSchema }),
   EmailController.getEmailStatus,
 );
 registerOpenApiRoute({
   method: 'get',
-  path: `${versionRoutePath.v1}/${prefix}/status`,
+  path: `${versionRoutePath.v1}/${prefix}/statuses`,
   summary: 'Get email status',
   tags: [tag],
   queryParams: EmailStatusQueryParamsSchema,
