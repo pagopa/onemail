@@ -38,7 +38,7 @@ AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID_VALUE" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_
    --global-secondary-indexes \
     "[
       {
-        \"IndexName\": \"requestId-index\",
+        \"IndexName\": \"gsi_request_id_idx\",
         \"KeySchema\": [
           {\"AttributeName\": \"requestId\", \"KeyType\": \"HASH\"}
         ],
