@@ -1,0 +1,42 @@
+# Version control
+.git
+.gitignore
+*.log
+*.log*
+**/logs
+
+# Dependencies
+**/node_modules
+**/.pnpm-store
+
+# Build outputs
+**/dist
+**/dist-artifact
+**/.turbo
+**/tsconfig.tsbuildinfo
+**/*.zip
+
+# turbo prune output (local simulation dirs, not used in Docker build)
+out/
+
+# Infrastructure
+src/infra
+
+# Dev / local env files
+**/.env
+**/.env.*
+
+# Logs
+**/npm-debug.log*
+**/pnpm-debug.log*
+
+# Editor / OS
+**/.DS_Store
+**/.idea
+**/.vscode
+
+# Docs
+README.md
+CHANGELOG.md
+**/docs
+**/api-docs

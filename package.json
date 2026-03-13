@@ -12,7 +12,7 @@
     "dev:sender": "turbo run dev --filter=om-lambda-sender",
     "build:dispatcher": "turbo run build --filter=om-ecs-dispatcher",
     "build:sender": "turbo run build --filter=om-lambda-sender",
-    "package:dispatcher": "bash scripts/package-dispatcher.sh",
+    "package:dispatcher": "pnpm --filter=om-ecs-dispatcher deploy --prod dist-artifact/om-ecs-dispatcher",
     "package:sender": "bash scripts/package-sender.sh",
     "type-check": "turbo run type-check --filter=!onemail",
     "lint:check": "turbo run lint:check --filter=!onemail",
@@ -20,7 +20,7 @@
     "format:check": "turbo run format:check --filter=!onemail",
     "format": "turbo run format --filter=!onemail",
     "setup:hooks": "bash ./scripts/setup-pre-commit-hooks.sh",
-    "generate:openapi": "pnpm --filter om-ecs-dispatcher generate:openapi",
+    "generate:openapi": "pnpm --filter=om-ecs-dispatcher generate:openapi",
     "version": "pnpm changeset version && pnpm install --lockfile-only"
   },
   "dependencies": {
