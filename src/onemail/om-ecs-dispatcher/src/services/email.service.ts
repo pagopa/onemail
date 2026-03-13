@@ -112,7 +112,7 @@ export const sendEmailLowPriority = async (
 
 export const getEmailStatus = async (
   requestId: string,
-): Promise<EmailStatusResponseDTO> => {
+): Promise<EmailStatusResponseDTO[]> => {
   const result = await dynamoClient.send(
     new QueryCommand({
       TableName: env.aws.emailDbTable,
@@ -124,13 +124,12 @@ export const getEmailStatus = async (
       ExpressionAttributeValues: {
         ':requestId': requestId,
       },
-      Limit: 1,
     }),
   );
 
-  const statusItem = result.Items?.[0] as EmailStatusHistoryItem | undefined;
+  const items = result.Items as EmailStatusHistoryItem[] | undefined;
 
-  if (!statusItem) {
+  if (!items || items.length === 0) {
     throw new ApiError(
       `Email with requestId ${requestId} not found`,
       StatusCodes.NOT_FOUND,
@@ -138,9 +137,11 @@ export const getEmailStatus = async (
     );
   }
 
-  return {
-    status: statusItem.status,
-    priority: statusItem.priority,
-    history: statusItem.history,
-  };
+  const mapped = items.map((item) => ({
+    status: item.status,
+    priority: item.priority,
+    history: item.history,
+  }));
+
+  return mapped;
 };

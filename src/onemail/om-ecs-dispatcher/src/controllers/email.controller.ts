@@ -63,7 +63,7 @@ export const getEmailStatus = async (
     unknown,
     AsStringQuery<EmailStatusQueryParamsDTO>
   >,
-  res: Response<EmailStatusResponseDTO>,
+  res: Response<EmailStatusResponseDTO[]>,
 ) => {
   const { requestId } = req.query as unknown as EmailStatusQueryParamsDTO;
   const result = await emailService.getEmailStatus(requestId);
