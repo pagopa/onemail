@@ -1,5 +1,23 @@
 # onemail
 
+## 1.1.0
+
+### Minor Changes
+
+- d6f6e6a: add sqs event handling in ecs-dispatcher
+
+### Patch Changes
+
+- Updated dependencies [d6f6e6a]
+  - om-ecs-dispatcher@1.4.0
+
+## 1.0.12
+
+### Patch Changes
+
+- Updated dependencies [acacd3e]
+  - om-lambda-sender@1.1.1
+
 ## 1.0.11
 
 ### Patch Changes

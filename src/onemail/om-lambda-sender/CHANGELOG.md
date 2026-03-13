@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.1.1
+
+### Patch Changes
+
+- acacd3e: Exclude pnpm internal files from ZIP archive to reduce size
+
 ## 1.1.0
 
 ### Minor Changes
