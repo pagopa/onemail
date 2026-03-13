@@ -67,6 +67,7 @@ module "lambda_sender" {
     AWS_EMAIL_DB_REQUEST_ID_GSI = one(data.aws_dynamodb_table.EmailStatusHistory.global_secondary_index).name
     HIGH_PRIORITY_QUEUE_ARN     = data.aws_sqs_queue.high_priority.arn
     LOW_PRIORITY_QUEUE_ARN      = data.aws_sqs_queue.low_priority.arn
+    NODE_ENV                    = "production"
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_sender.security_group_id]
