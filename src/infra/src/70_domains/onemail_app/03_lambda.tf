@@ -62,9 +62,14 @@ module "lambda_sender" {
 
   memory_size                    = 256
   reserved_concurrent_executions = var.lambda_sender.reserved_concurrent_executions
-  environment_variables          = var.lambda_sender.environment_variables
-  vpc_subnet_ids                 = data.aws_subnets.private.ids
-  vpc_security_group_ids         = [module.security_group_lambda_sender.security_group_id]
+  environment_variables = {
+    AWS_EMAIL_DB_TABLE          = data.aws_dynamodb_table.EmailStatusHistory.name
+    AWS_EMAIL_DB_REQUEST_ID_GSI = one(data.aws_dynamodb_table.EmailStatusHistory.global_secondary_index).name
+    HIGH_PRIORITY_QUEUE_ARN     = data.aws_sqs_queue.high_priority.arn
+    LOW_PRIORITY_QUEUE_ARN      = data.aws_sqs_queue.low_priority.arn
+  }
+  vpc_subnet_ids         = data.aws_subnets.private.ids
+  vpc_security_group_ids = [module.security_group_lambda_sender.security_group_id]
 
   tags = module.tag_config.tags
 }
