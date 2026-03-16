@@ -36,6 +36,12 @@ variable "location_short" {
   description = "Location short like eg: neu, weu."
 }
 
+variable "dns_zone_name" {
+  type        = string
+  description = "Name of the DNS hosted zone. For prod: 'onemail.pagopa.it', for dev/uat: subdomain will be automatically prefixed."
+  default     = "onemail.pagopa.it"
+}
+
 variable "domain" {
   type        = string
   description = "Domain name."

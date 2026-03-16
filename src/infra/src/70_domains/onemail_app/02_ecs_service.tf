@@ -32,12 +32,36 @@ module "ecs_service" {
   task_policy_json      = data.aws_iam_policy_document.ecs_task_policy.json
   environment_variables = [
     {
-      name  = "SQS_HIGH_PRIORITY_QUEUE_ARN"
-      value = data.aws_sqs_queue.high_priority.arn
+      name  = "PORT"
+      value = "3000"
     },
     {
-      name  = "SQS_LOW_PRIORITY_QUEUE_ARN"
-      value = data.aws_sqs_queue.low_priority.arn
+      name  = "HOST"
+      value = "https://${trimsuffix(data.aws_route53_zone.onemail.name, ".")}"
+    },
+    {
+      name  = "APP_ENV"
+      value = var.env
+    },
+    {
+      name  = "AWS_REGION"
+      value = var.aws_region
+    },
+    {
+      name  = "AWS_EMAIL_DB_TABLE"
+      value = data.aws_dynamodb_table.EmailStatusHistory.name
+    },
+    {
+      name  = "AWS_EMAIL_DB_REQUEST_ID_GSI"
+      value = one(data.aws_dynamodb_table.EmailStatusHistory.global_secondary_index).name
+    },
+    {
+      name  = "SQS_HIGH_PRIORITY_QUEUE_URL"
+      value = data.aws_sqs_queue.high_priority.url
+    },
+    {
+      name  = "SQS_LOW_PRIORITY_QUEUE_URL"
+      value = data.aws_sqs_queue.low_priority.url
     }
   ]
 }
