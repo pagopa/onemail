@@ -15,6 +15,9 @@ export default {
     emailDbTable:
       process.env.AWS_EMAIL_DB_TABLE ??
       throwMissingRequiredEnvVar('AWS_EMAIL_DB_TABLE'),
+    emailDbRequestIdGSI:
+      process.env.AWS_EMAIL_DB_REQUEST_ID_GSI ??
+      throwMissingRequiredEnvVar('AWS_EMAIL_DB_REQUEST_ID_GSI'),
     localDynamoDb: {
       endpoint: process.env.AWS_DYNAMODB_ENDPOINT || 'http://localhost:8000',
       accessKeyId: process.env.AWS_DYNAMODB_ACCESS_KEY_ID || 'local',

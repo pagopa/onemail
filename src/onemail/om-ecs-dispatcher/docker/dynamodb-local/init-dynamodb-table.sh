@@ -16,10 +16,16 @@ fi
 TABLE_NAME="${AWS_EMAIL_DB_TABLE:-EmailStatusHistory}"
 ENDPOINT="${AWS_DYNAMODB_ENDPOINT:-http://localhost:8000}"
 REGION="${AWS_REGION:-eu-south-1}"
+PK_NAME="emailId"
+REQUEST_ID_NAME="requestId"
+REQUEST_ID_GSI="${AWS_EMAIL_DB_REQUEST_ID_GSI:-gsi_request_id_idx}"
 
 echo "Creating DynamoDB table: $TABLE_NAME"
 echo "Endpoint: $ENDPOINT"
 echo "Region: $REGION"
+echo "Primary Key: $PK_NAME"
+echo "Request ID Attribute: $REQUEST_ID_NAME"
+echo "Request ID GSI: $REQUEST_ID_GSI"
 
 # Use inline environment variables to avoid overwriting real AWS credentials in the shell
 # DynamoDB Local requires credentials but doesn't validate them
@@ -30,15 +36,28 @@ AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID_VALUE" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_
   aws dynamodb create-table \
   --table-name "$TABLE_NAME" \
   --attribute-definitions \
-    AttributeName=emailId,AttributeType=S \
+    AttributeName=$PK_NAME,AttributeType=S \
+    AttributeName=$REQUEST_ID_NAME,AttributeType=S \
   --key-schema \
-    AttributeName=emailId,KeyType=HASH \
+    AttributeName=$PK_NAME,KeyType=HASH \
+   --global-secondary-indexes \
+    "[
+      {
+        \"IndexName\": \"$REQUEST_ID_GSI\",
+        \"KeySchema\": [
+          {\"AttributeName\": \"$REQUEST_ID_NAME\", \"KeyType\": \"HASH\"}
+        ],
+        \"Projection\": {
+          \"ProjectionType\": \"ALL\"
+        }
+      }
+    ]" \
   --billing-mode PAY_PER_REQUEST \
   --endpoint-url "$ENDPOINT" \
   --region "$REGION" \
   --no-cli-pager
 
 echo "Table $TABLE_NAME created successfully"
-# To verify, run: 
+# To verify, run:
 # AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID_VALUE" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY_VALUE" \
 # aws dynamodb describe-table --table-name $TABLE_NAME --endpoint-url $ENDPOINT --region $REGION"

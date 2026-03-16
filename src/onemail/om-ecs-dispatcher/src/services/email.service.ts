@@ -9,13 +9,22 @@ import {
   EmailLowPriorityBodyDTO,
   EmailLowPriorityResponseDTO,
 } from '#dtos/email/emailLowPriority.dto';
+import { EmailStatusResponseDTO } from '#dtos/email/emailStatus.dto';
+import { ERROR_CODES } from '#dtos/error.dto';
+import { ApiError } from '#errors/ApiError';
 import {
   mapEmailLowPriorityToDbItem,
   mapEmailTransactionalToDbItem,
 } from '#utils/dbMapper';
 import { SendMessageCommand } from '@aws-sdk/client-sqs';
-import { BatchWriteCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  BatchWriteCommand,
+  PutCommand,
+  QueryCommand,
+} from '@aws-sdk/lib-dynamodb';
+import { StatusCodes } from 'http-status-codes';
 import { randomUUID } from 'node:crypto';
+import { EmailStatusHistoryItem } from 'om-common/types';
 
 export const sendEmailTransactional = async (
   emailData: EmailHighPriorityBodyDTO,
@@ -99,4 +108,50 @@ export const sendEmailLowPriority = async (
   );
 
   return { requestId };
+};
+
+export const getEmailStatus = async (
+  requestId: string,
+): Promise<EmailStatusResponseDTO> => {
+  const result = await dynamoClient.send(
+    new QueryCommand({
+      TableName: env.aws.emailDbTable,
+      IndexName: env.aws.emailDbRequestIdGSI,
+      KeyConditionExpression: '#requestId = :requestId',
+      ExpressionAttributeNames: {
+        '#requestId': 'requestId',
+      },
+      ExpressionAttributeValues: {
+        ':requestId': requestId,
+      },
+    }),
+  );
+
+  const items = result.Items as EmailStatusHistoryItem[] | undefined;
+
+  if (!items || items.length === 0) {
+    throw new ApiError(
+      `Email with requestId ${requestId} not found`,
+      StatusCodes.NOT_FOUND,
+      ERROR_CODES.RESOURCE_NOT_FOUND,
+    );
+  }
+
+  const mapped = items.map((item) => {
+    // Sort history in descending order based on changedAt timestamp
+    const sortedHistory = [...item.history].sort(
+      (a, b) =>
+        new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime(),
+    );
+
+    return {
+      status: item.status,
+      priority: item.priority,
+      history: sortedHistory,
+      to: item.content.to,
+      emailId: item.emailId,
+    };
+  });
+
+  return mapped;
 };
