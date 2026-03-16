@@ -80,7 +80,7 @@ export const DryRunQueryParamsSchema = z
   );
 
 export const RequestIdSchema = stringCheckedSchema().describe(
-  'Unique identifier for the request, used for checking the status of the email in the system',
+  'Unique identifier for the request, used for checking the status of the emails in the system',
 );
 
 export const EmailSuccessResponseSchema = z.object({

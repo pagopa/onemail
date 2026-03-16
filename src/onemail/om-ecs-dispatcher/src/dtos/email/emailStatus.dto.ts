@@ -14,7 +14,7 @@ export const EmailStatusQueryParamsSchema = z
   .openapi('EmailStatusQueryParamsDTO');
 
 // Single status history event item
-export const EmailEventSchema = z
+const EmailEventSchema = z
   .object({
     status: z.enum(EmailStatus).describe('Status value at this point in time'),
     changedAt: z.iso
@@ -27,7 +27,7 @@ export const EmailEventSchema = z
   .describe('Single history event for the email status');
 
 // Full response for the email status endpoint
-export const EmailStatusResponseSchema = z
+const EmailStatusItemSchema = z
   .object({
     status: z.enum(EmailStatus).describe('Current status of the email'),
     priority: z
@@ -38,9 +38,10 @@ export const EmailStatusResponseSchema = z
       .array(EmailEventSchema)
       .describe('Chronological history of status changes'),
   })
-  .openapi('EmailStatusResponseDTO');
+  .openapi('EmailStatusItemDTO');
 
-export type EmailEventDTO = z.infer<typeof EmailEventSchema>;
+export const EmailStatusResponseSchema = z.array(EmailStatusItemSchema);
+
 export type EmailStatusQueryParamsDTO = z.infer<
   typeof EmailStatusQueryParamsSchema
 >;

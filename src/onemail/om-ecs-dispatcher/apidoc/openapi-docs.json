@@ -19,7 +19,7 @@
   ],
   "components": {
     "schemas": {
-      "EmailStatusResponseDTO": {
+      "EmailStatusItemDTO": {
         "type": "object",
         "properties": {
           "status": {
@@ -114,7 +114,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 255,
-            "description": "Unique identifier for the request, used for checking the status of the email in the system"
+            "description": "Unique identifier for the request, used for checking the status of the emails in the system"
           }
         },
         "required": [
@@ -286,7 +286,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 255,
-            "description": "Unique identifier for the request, used for checking the status of the email in the system"
+            "description": "Unique identifier for the request, used for checking the status of the emails in the system"
           }
         },
         "required": [
@@ -505,28 +505,31 @@
         "tags": [
           "Emails"
         ],
-        "summary": "Get email status",
+        "summary": "Get emails status",
         "parameters": [
           {
             "schema": {
               "type": "string",
               "minLength": 1,
               "maxLength": 255,
-              "description": "Unique identifier for the request, used for checking the status of the email in the system"
+              "description": "Unique identifier for the request, used for checking the status of the emails in the system"
             },
             "required": true,
-            "description": "Unique identifier for the request, used for checking the status of the email in the system",
+            "description": "Unique identifier for the request, used for checking the status of the emails in the system",
             "name": "requestId",
             "in": "query"
           }
         ],
         "responses": {
           "200": {
-            "description": "Email status retrieved successfully",
+            "description": "Emails status retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EmailStatusResponseDTO"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EmailStatusItemDTO"
+                  }
                 }
               }
             }

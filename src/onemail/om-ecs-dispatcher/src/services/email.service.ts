@@ -112,7 +112,7 @@ export const sendEmailLowPriority = async (
 
 export const getEmailStatus = async (
   requestId: string,
-): Promise<EmailStatusResponseDTO[]> => {
+): Promise<EmailStatusResponseDTO> => {
   const result = await dynamoClient.send(
     new QueryCommand({
       TableName: env.aws.emailDbTable,

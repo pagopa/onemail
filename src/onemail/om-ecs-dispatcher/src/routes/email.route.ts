@@ -36,13 +36,13 @@ router.get(
 registerOpenApiRoute({
   method: 'get',
   path: `${versionRoutePath.v1}/${prefix}/statuses`,
-  summary: 'Get email status',
+  summary: 'Get emails status',
   tags: [tag],
   queryParams: EmailStatusQueryParamsSchema,
   responses: {
     [StatusCodes.OK]: {
       schema: EmailStatusResponseSchema,
-      description: 'Email status retrieved successfully',
+      description: 'Emails status retrieved successfully',
     },
   },
 });
