@@ -7,12 +7,9 @@ on:
     branches:
       - 'main'
     paths:
-      - 'src/onemail/om-lambda-sender/**'
-      - 'src/onemail/om-common/**'
-      - 'scripts/package-sender.sh'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'tsconfig.json'
+      - .github/workflows/deploy-lambda-sender.yml
+      - src/onemail/om-lambda-sender/CHANGELOG.md
+      - src/onemail/om-common/CHANGELOG.md
   workflow_dispatch:
     inputs:
       environment:
