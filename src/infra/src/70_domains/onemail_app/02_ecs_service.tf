@@ -19,17 +19,19 @@ data "aws_iam_policy_document" "ecs_task_policy" {
 module "ecs_service" {
   source = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/ecs_service?ref=main"
 
-  env                   = var.env
-  product_name          = "onemail"
-  idvh_resource_tier    = "standard"
-  service_name          = "${local.project_nodomain}-ecs-service"
-  cluster_arn           = data.aws_ecs_cluster.core.arn
-  image                 = "${data.aws_ecr_repository.ecs_service.repository_url}:${var.ecs_service_image_version}"
-  container_name        = "${local.project_nodomain}-ecs-container"
-  private_subnets       = data.aws_subnets.private.ids
-  target_group_arn      = data.aws_lb_listener.ecs_core.default_action[0].target_group_arn
-  nlb_security_group_id = element(tolist(data.aws_lb.nlb.security_groups), 0)
-  task_policy_json      = data.aws_iam_policy_document.ecs_task_policy.json
+  env                           = var.env
+  product_name                  = "onemail"
+  idvh_resource_tier            = "standard"
+  service_name                  = "${local.project_nodomain}-ecs-service"
+  cluster_arn                   = data.aws_ecs_cluster.core.arn
+  image                         = "${data.aws_ecr_repository.ecs_service.repository_url}:${var.ecs_service_image_version}"
+  container_name                = "${local.project_nodomain}-ecs-container"
+  private_subnets               = data.aws_subnets.private.ids
+  target_group_arn              = data.aws_lb_listener.ecs_core.default_action[0].target_group_arn
+  nlb_security_group_id         = element(tolist(data.aws_lb.nlb.security_groups), 0)
+  task_policy_json              = data.aws_iam_policy_document.ecs_task_policy.json
+  create_deploy_role            = true
+  deploy_role_github_repository = var.deploy_role_github_repository
   environment_variables = [
     {
       name  = "PORT"
