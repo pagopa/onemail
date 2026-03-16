@@ -49,6 +49,11 @@ data "aws_ecr_repository" "ecs_service" {
   name = "${local.project_nodomain}-ecr-${var.ecs_service_image_name}"
 }
 
+data "aws_route53_zone" "onemail" {
+  name         = local.zone_name
+  private_zone = false
+}
+
 
 data "aws_lb_listener" "ecs_core" {
   load_balancer_arn = data.aws_lb.nlb.arn
