@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.5.0
+
+### Minor Changes
+
+- 119d94b: Add new get email status api
+
 ## 1.4.0
 
 ### Minor Changes
