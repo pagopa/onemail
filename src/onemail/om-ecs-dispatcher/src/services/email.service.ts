@@ -149,6 +149,7 @@ export const getEmailStatus = async (
       priority: item.priority,
       history: sortedHistory,
       to: item.content.to,
+      emailId: item.emailId,
     };
   });
 

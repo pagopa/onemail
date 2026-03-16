@@ -29,6 +29,7 @@ const EmailEventSchema = z
 // Full response for the email status endpoint
 const EmailStatusItemSchema = z
   .object({
+    emailId: z.string().describe('Unique identifier of the email'),
     status: z.enum(EmailStatus).describe('Current status of the email'),
     priority: z
       .enum(EmailPriority)
