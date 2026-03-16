@@ -1,7 +1,11 @@
 import { EmailPriority, EmailStatus } from 'om-common/types';
 import z from 'zod';
 
-import { RequestIdSchema, stringCheckedSchema } from './common.dto.js';
+import {
+  EmailAddressSchema,
+  RequestIdSchema,
+  stringCheckedSchema,
+} from './common.dto.js';
 
 export const EmailStatusQueryParamsSchema = z
   .object({
@@ -29,6 +33,7 @@ export const EmailStatusResponseSchema = z
     priority: z
       .enum(EmailPriority)
       .describe('Priority of the tracked email request'),
+    to: EmailAddressSchema.describe('Recipient email address'),
     history: z
       .array(EmailEventSchema)
       .describe('Chronological history of status changes'),

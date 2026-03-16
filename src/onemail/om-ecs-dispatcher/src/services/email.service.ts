@@ -137,11 +137,20 @@ export const getEmailStatus = async (
     );
   }
 
-  const mapped = items.map((item) => ({
-    status: item.status,
-    priority: item.priority,
-    history: item.history,
-  }));
+  const mapped = items.map((item) => {
+    // Sort history in descending order based on changedAt timestamp
+    const sortedHistory = [...item.history].sort(
+      (a, b) =>
+        new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime(),
+    );
+
+    return {
+      status: item.status,
+      priority: item.priority,
+      history: sortedHistory,
+      to: item.content.to,
+    };
+  });
 
   return mapped;
 };
