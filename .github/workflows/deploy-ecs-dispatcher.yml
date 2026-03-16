@@ -1,5 +1,7 @@
 name: Deploy ECS Dispatcher
 
+permissions: {}
+
 on:
   push:
     branches:
