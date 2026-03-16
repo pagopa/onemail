@@ -147,7 +147,7 @@ const processBatchWithRetry = async (
 /**
  * Batch-update email statuses using BatchWriteCommand requests.
  * Chunks requests into batches of 25 and retries unprocessed items.
- * Individual batch failures are logged but do not fail the entire operation.
+ * Individual batch failures are logged and then propagated to the caller.
  */
 export const batchUpdateEmailStatuses = async (
   updates: EmailStatusUpdate[],
@@ -188,6 +188,7 @@ export const batchUpdateEmailStatuses = async (
   const results = await Promise.allSettled(
     batches.map((batch) => processBatchWithRetry(tableName, batch)),
   );
+  const failedBatchErrors: Error[] = [];
 
   for (const [index, result] of results.entries()) {
     if (result.status === 'rejected') {
@@ -199,6 +200,19 @@ export const batchUpdateEmailStatuses = async (
         emailIds: failedEmailIds,
         error: result.reason?.message || result.reason,
       });
+
+      failedBatchErrors.push(
+        result.reason instanceof Error
+          ? result.reason
+          : new Error(String(result.reason)),
+      );
     }
+  }
+
+  if (failedBatchErrors.length > 0) {
+    throw new AggregateError(
+      failedBatchErrors,
+      `Failed to update ${failedBatchErrors.length} email status batch${failedBatchErrors.length > 1 ? 'es' : ''}.`,
+    );
   }
 };
