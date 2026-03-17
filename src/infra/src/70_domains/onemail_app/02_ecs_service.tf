@@ -66,4 +66,5 @@ module "ecs_service" {
       value = data.aws_sqs_queue.low_priority.url
     }
   ]
+
 }

@@ -11,4 +11,5 @@ module "nlb" {
   vpc_cidr_block     = var.vpc_cidr
 
   tags = module.tag_config.tags
+
 }
