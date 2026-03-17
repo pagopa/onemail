@@ -1,8 +1,8 @@
-export const NODE_ENV_VALUES = {
+export const APP_ENV_VALUES = {
   local: 'local',
-  development: 'development',
+  development: 'dev',
   uat: 'uat',
-  production: 'production',
+  production: 'prod',
 };
 
 export const versionRoutePath = {

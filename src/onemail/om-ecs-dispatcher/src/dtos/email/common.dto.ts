@@ -1,6 +1,6 @@
 import env from '#config/env';
 import { emailSanitizerOptions } from '#config/htmlSanitizer';
-import { NODE_ENV_VALUES } from '#utils/constants';
+import { APP_ENV_VALUES } from '#utils/constants';
 import sanitizeHtml from 'sanitize-html';
 import { z } from 'zod';
 
@@ -66,10 +66,7 @@ export const DryRunQueryParamsSchema = z
   })
   .refine(
     (data) => {
-      if (
-        data.dryRun &&
-        env.server.environment === NODE_ENV_VALUES.production
-      ) {
+      if (data.dryRun && env.server.environment === APP_ENV_VALUES.production) {
         return false;
       }
       return true;

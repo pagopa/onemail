@@ -19,7 +19,7 @@ import {
   SanitizeHtmlSchema,
 } from '#dtos/email/validateHtml.dto';
 import { validate } from '#middlewares/validateApiInput.middleware';
-import { NODE_ENV_VALUES, versionRoutePath } from '#utils/constants';
+import { APP_ENV_VALUES, versionRoutePath } from '#utils/constants';
 import { registerOpenApiRoute } from '#utils/openapi';
 import { Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
@@ -93,7 +93,7 @@ registerOpenApiRoute({
   },
 });
 
-if (env.server.environment !== NODE_ENV_VALUES.production) {
+if (env.server.environment !== APP_ENV_VALUES.production) {
   router.post(
     '/sanitize-html',
     validate({
