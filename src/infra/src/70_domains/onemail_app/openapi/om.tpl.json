@@ -1,42 +1,221 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "OneMail API",
-    "version": "1.0.0",
-    "description": "OneMail REST API"
+    "title": "OneMail Dispatcher API",
+    "version": "1.5.1",
+    "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
+    "contact": {
+      "email": "team-one-mail@pagopa.it"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    }
   },
+  "servers": [
+    {
+      "url": "${server_url}"
+    }
+  ],
   "paths": {
-    "/health": {
+    "/v1/emails/statuses": {
       "get": {
-        "summary": "Health check endpoint",
-        "responses": {
-          "200": {
-            "description": "Service is healthy",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "ok"
-                    }
-                  }
-                }
-              }
+        "tags": ["Emails"],
+        "summary": "Get emails status",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-amazon-apigateway-integration": {
+          "type": "HTTP",
+          "httpMethod": "GET",
+          "uri": "${uri}/v1/emails/statuses",
+          "connectionType": "VPC_LINK",
+          "connectionId": "${connection_id}",
+          "passthroughBehavior": "WHEN_NO_TEMPLATES",
+          "timeoutInMillis": 20000,
+          "requestParameters": {
+            "integration.request.querystring.requestId": "method.request.querystring.requestId"
+          },
+          "responses": {
+            "default": {
+              "statusCode": "200"
             }
           }
         },
-        "x-amazon-apigateway-integration": {
-          "type": "MOCK",
-          "responses": {
-            "default": {
-              "statusCode": "200",
-              "responseTemplates": {
-                "application/json": "{\"status\": \"ok\"}"
-              }
+        "responses": {
+          "200": { "description": "Emails status retrieved successfully" },
+          "400": { "description": "Bad request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Resource not found" },
+          "500": { "description": "Generic error" }
+        }
+      }
+    },
+    "/v1/emails/send/high": {
+      "post": {
+        "tags": ["Emails"],
+        "summary": "Send high priority single email",
+        "parameters": [
+          {
+            "name": "dryRun",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "false"
             }
           }
+        ],
+        "x-amazon-apigateway-integration": {
+          "type": "HTTP",
+          "httpMethod": "POST",
+          "uri": "${uri}/v1/emails/send/high",
+          "connectionType": "VPC_LINK",
+          "connectionId": "${connection_id}",
+          "passthroughBehavior": "WHEN_NO_TEMPLATES",
+          "timeoutInMillis": 20000,
+          "requestParameters": {
+            "integration.request.querystring.dryRun": "method.request.querystring.dryRun"
+          },
+          "responses": {
+            "default": {
+              "statusCode": "202"
+            }
+          }
+        },
+        "responses": {
+          "202": { "description": "Email accepted for processing" },
+          "400": { "description": "Bad request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Resource not found" },
+          "500": { "description": "Generic error" }
+        }
+      }
+    },
+    "/v1/emails/send/low": {
+      "post": {
+        "tags": ["Emails"],
+        "summary": "Send low priority email with single or multiple recipients",
+        "parameters": [
+          {
+            "name": "dryRun",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "false"
+            }
+          }
+        ],
+        "x-amazon-apigateway-integration": {
+          "type": "HTTP",
+          "httpMethod": "POST",
+          "uri": "${uri}/v1/emails/send/low",
+          "connectionType": "VPC_LINK",
+          "connectionId": "${connection_id}",
+          "passthroughBehavior": "WHEN_NO_TEMPLATES",
+          "timeoutInMillis": 20000,
+          "requestParameters": {
+            "integration.request.querystring.dryRun": "method.request.querystring.dryRun"
+          },
+          "responses": {
+            "default": {
+              "statusCode": "202"
+            }
+          }
+        },
+        "responses": {
+          "202": { "description": "Email accepted for processing" },
+          "400": { "description": "Bad request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Resource not found" },
+          "500": { "description": "Generic error" }
+        }
+      }
+    },
+    "/v1/emails/sanitize-html": {
+      "post": {
+        "tags": ["Emails"],
+        "summary": "Sanitize HTML content of the email",
+        "x-amazon-apigateway-integration": {
+          "type": "HTTP",
+          "httpMethod": "POST",
+          "uri": "${uri}/v1/emails/sanitize-html",
+          "connectionType": "VPC_LINK",
+          "connectionId": "${connection_id}",
+          "passthroughBehavior": "WHEN_NO_TEMPLATES",
+          "timeoutInMillis": 20000,
+          "responses": {
+            "default": {
+              "statusCode": "200"
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Email sanitized successfully" },
+          "400": { "description": "Bad request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Resource not found" },
+          "500": { "description": "Generic error" }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Perform readiness check of the service",
+        "x-amazon-apigateway-integration": {
+          "type": "HTTP",
+          "httpMethod": "GET",
+          "uri": "${uri}/health/ready",
+          "connectionType": "VPC_LINK",
+          "connectionId": "${connection_id}",
+          "passthroughBehavior": "WHEN_NO_TEMPLATES",
+          "timeoutInMillis": 5000,
+          "responses": {
+            "default": {
+              "statusCode": "200"
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Service is ready" },
+          "500": { "description": "Generic error" }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Perform liveness check of the service",
+        "x-amazon-apigateway-integration": {
+          "type": "HTTP",
+          "httpMethod": "GET",
+          "uri": "${uri}/health",
+          "connectionType": "VPC_LINK",
+          "connectionId": "${connection_id}",
+          "passthroughBehavior": "WHEN_NO_TEMPLATES",
+          "timeoutInMillis": 5000,
+          "responses": {
+            "default": {
+              "statusCode": "200"
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Service is alive" },
+          "500": { "description": "Generic error" }
         }
       }
     }

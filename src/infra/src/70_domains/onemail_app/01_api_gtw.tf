@@ -25,12 +25,16 @@ locals {
 
 module "api_gateway" {
   #source = "./.terraform/modules/aws_modules/IDVH/api_gateway"
-  source                    = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/api_gateway?ref=main"
-  env                       = var.env
-  product_name              = "onemail"
-  idvh_resource_tier        = "standard"
-  name                      = "${local.project_nodomain}-api-gateway"
-  body                      = templatefile("${path.module}/${var.openapi_template_file}", {})
+  source             = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/api_gateway?ref=main"
+  env                = var.env
+  product_name       = "onemail"
+  idvh_resource_tier = "standard"
+  name               = "${local.project_nodomain}-api-gateway"
+  body = templatefile("${path.module}/${var.openapi_template_file}", {
+    connection_id = aws_api_gateway_vpc_link.apigw.id
+    uri           = "http://${data.aws_lb.nlb.dns_name}:3000"
+    server_url    = "api.${local.zone_name}"
+  })
   endpoint_api_types        = ["PRIVATE"]
   endpoint_vpc_endpoint_ids = [data.aws_vpc_endpoint.api_gtw.id]
 
