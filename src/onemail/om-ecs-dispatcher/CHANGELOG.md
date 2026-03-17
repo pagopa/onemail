@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.5.2
+
+### Patch Changes
+
+- 9bb8bc8: Fix deploy dispatcher action - env matrix
+
 ## 1.5.1
 
 ### Patch Changes
