@@ -1,5 +1,11 @@
 # onemail
 
+## 1.1.4
+
+### Patch Changes
+
+- c900d1f: Refactor infra changeset modules
+
 ## 1.1.3
 
 ### Patch Changes
