@@ -4,5 +4,5 @@ module "ecr" {
   product_name           = "onemail"
   idvh_resource_tier     = "standard"
   repository_name_prefix = "${local.project_nodomain}-ecr"
-
+  tags                   = module.tag_config.tags
 }
