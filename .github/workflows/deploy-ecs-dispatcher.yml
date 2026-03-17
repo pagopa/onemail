@@ -105,6 +105,7 @@ jobs:
 
       - name: Download current ECS task definition
         run: |
+          echo oml-$ENV_SHORT-$REGION_SHORT-ecs-service
           aws ecs describe-task-definition \
             --task-definition oml-$ENV_SHORT-$REGION_SHORT-ecs-service \
             --query taskDefinition > ./task-definition.json
