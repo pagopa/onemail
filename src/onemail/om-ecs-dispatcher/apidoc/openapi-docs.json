@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.4.0",
+    "version": "1.5.1",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -471,6 +471,10 @@
             "type": "string",
             "description": "Timestamp of the health check"
           },
+          "uptime": {
+            "type": "number",
+            "description": "Uptime of the service in seconds"
+          },
           "services": {
             "type": "object",
             "properties": {
@@ -488,6 +492,29 @@
               "db"
             ],
             "description": "Status of individual services"
+          }
+        },
+        "required": [
+          "status",
+          "timestamp",
+          "uptime",
+          "services"
+        ]
+      },
+      "SimpleHealthResponseDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "Healthy",
+              "Unhealthy"
+            ],
+            "description": "Overall health status of the service"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp of the health check"
           },
           "uptime": {
             "type": "number",
@@ -497,7 +524,6 @@
         "required": [
           "status",
           "timestamp",
-          "services",
           "uptime"
         ]
       }
@@ -1218,19 +1244,179 @@
         }
       }
     },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Perform readiness check of the service",
+        "responses": {
+          "200": {
+            "description": "Service is ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid data |",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Generic error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "errorCode": {
+                      "type": "string",
+                      "description": "Application-specific error code"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of when the error occurred"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
           "Health"
         ],
-        "summary": "Perform health check of the service",
+        "summary": "Perform liveness check of the service",
         "responses": {
           "200": {
-            "description": "Service is healthy",
+            "description": "Service is alive",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HealthResponseDTO"
+                  "$ref": "#/components/schemas/SimpleHealthResponseDTO"
                 }
               }
             }

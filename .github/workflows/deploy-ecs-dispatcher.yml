@@ -59,11 +59,11 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     continue-on-error: false
-    environment: ${{ matrix.environment == 'prod' && format('{0}/{1}', matrix.environment, matrix.region) || matrix.environment }}
+    environment: ${{ matrix.environment }}
     env:
       AWS_REGION: ${{ matrix.region }}
       ENV_SHORT: ${{ fromJSON('{"dev":"d","uat":"u","prod":"p"}')[matrix.environment] }}
-      REGION_SHORT: ${{ fromJSON('{"eu-south-1":"es-1","eu-central-1":"ec-1"}')[matrix.region] }}
+      REGION_SHORT: ${{ fromJSON('{"eu-south-1":"eus1","eu-central-1":"euc1"}')[matrix.region] }}
 
     steps:
       - name: Checkout
@@ -106,7 +106,7 @@ jobs:
       - name: Download current ECS task definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition om-${REGION_SHORT}-${ENV_SHORT}-dispatcher \
+            --task-definition oml-$ENV_SHORT-$REGION_SHORT-ecs-service \
             --query taskDefinition > ./task-definition.json
           echo "$(jq 'del(
             .taskDefinitionArn,
@@ -126,13 +126,13 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@4225e0b507142a2e432b018bc3ccb728559b437a # v1.2.0 https://github.com/aws-actions/amazon-ecs-render-task-definition/releases/tag/v1.2.0
         with:
           task-definition: ./task-definition.json
-          container-name: om-ecs-dispatcher
+          container-name: oml-${{ env.ENV_SHORT }}-${{ env.REGION_SHORT }}-ecs-container
           image: ${{ vars.ECR_REGISTRY }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}
 
       - name: Deploy updated task definition to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@0e82244a9c6dac43d70151a94c67ebc4bab18fc5 # v2.2.0 https://github.com/aws-actions/amazon-ecs-deploy-task-definition/releases/tag/v2.2.0
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: om-${{ env.REGION_SHORT }}-${{ env.ENV_SHORT }}-dispatcher
-          cluster: om-${{ env.REGION_SHORT }}-${{ env.ENV_SHORT }}-ecs
+          service: oml-${{ env.ENV_SHORT }}-${{ env.REGION_SHORT }}-ecs-service
+          cluster: oml-${{ env.ENV_SHORT }}-${{ env.REGION_SHORT }}-ecs-cluster
           wait-for-service-stability: true
