@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'src/infra/src/10_network/**'
+      - 'src/infra/src/10_network/CHANGELOG.md'
   workflow_dispatch:
     inputs:
       environment:
