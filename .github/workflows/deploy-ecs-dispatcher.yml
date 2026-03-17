@@ -106,7 +106,7 @@ jobs:
       - name: Download current ECS task definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition oml-${ENV_SHORT}-${REGION_SHORT}-service \
+            --task-definition oml-$ENV_SHORT-$REGION_SHORT-service \
             --query taskDefinition > ./task-definition.json
           echo "$(jq 'del(
             .taskDefinitionArn,
