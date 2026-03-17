@@ -126,7 +126,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@4225e0b507142a2e432b018bc3ccb728559b437a # v1.2.0 https://github.com/aws-actions/amazon-ecs-render-task-definition/releases/tag/v1.2.0
         with:
           task-definition: ./task-definition.json
-          container-name: om-ecs-dispatcher
+          container-name: oml-${{ env.ENV_SHORT }}-${{ env.REGION_SHORT }}-ecs-container
           image: ${{ vars.ECR_REGISTRY }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}
 
       - name: Deploy updated task definition to ECS
