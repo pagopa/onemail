@@ -1,4 +1,5 @@
 packages:
   - 'src/onemail/*'
-  - 'src/infra/**'
+  - 'src/infra/src/**'
+  - '!**/.*/**'
   - '.'
