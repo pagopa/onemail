@@ -106,7 +106,7 @@ jobs:
       - name: Download current ECS task definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition om-${REGION_SHORT}-${ENV_SHORT}-dispatcher \
+            --task-definition oml-${ENV_SHORT}-${REGION_SHORT}-service \
             --query taskDefinition > ./task-definition.json
           echo "$(jq 'del(
             .taskDefinitionArn,
@@ -133,6 +133,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@0e82244a9c6dac43d70151a94c67ebc4bab18fc5 # v2.2.0 https://github.com/aws-actions/amazon-ecs-deploy-task-definition/releases/tag/v2.2.0
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: om-${{ env.REGION_SHORT }}-${{ env.ENV_SHORT }}-dispatcher
-          cluster: om-${{ env.REGION_SHORT }}-${{ env.ENV_SHORT }}-ecs
+          service: oml-${{ env.ENV_SHORT }}-${{ env.REGION_SHORT }}-service
+          cluster: oml-${{ env.ENV_SHORT }}-${{ env.REGION_SHORT }}-cluster
           wait-for-service-stability: true
