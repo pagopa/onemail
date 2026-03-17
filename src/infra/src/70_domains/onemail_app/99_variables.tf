@@ -79,3 +79,8 @@ variable "lambda_sender" {
     package_path                   = string
   })
 }
+
+variable "deploy_role_github_repository" {
+  type        = string
+  description = "Role to deploy ecs"
+}
