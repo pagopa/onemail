@@ -57,5 +57,5 @@ data "aws_route53_zone" "onemail" {
 
 data "aws_lb_listener" "ecs_core" {
   load_balancer_arn = data.aws_lb.nlb.arn
-  port              = 8080
+  port              = 3000
 }
