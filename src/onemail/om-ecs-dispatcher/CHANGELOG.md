@@ -1,5 +1,12 @@
 # om-ecs-dispatcher
 
+## 1.5.1
+
+### Patch Changes
+
+- ebeac02: Fix ecs dispatcher deploy action
+- abd1a80: Deploy action
+
 ## 1.5.0
 
 ### Minor Changes
