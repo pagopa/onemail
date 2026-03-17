@@ -1,0 +1,6 @@
+{
+  "name": "infra-core",
+  "version": "1.0.0",
+  "description": "Core infrastructure code.",
+  "private": true
+}

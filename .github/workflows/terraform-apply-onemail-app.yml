@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'src/infra/src/70_domains/onemail_app/**'
+      - 'src/infra/src/70_domains/onemail_app/CHANGELOG.md'
   workflow_dispatch:
     inputs:
       environment:
