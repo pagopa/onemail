@@ -1,5 +1,12 @@
 # onemail
 
+## 1.1.3
+
+### Patch Changes
+
+- Updated dependencies [9bb8bc8]
+  - om-ecs-dispatcher@1.5.2
+
 ## 1.1.2
 
 ### Patch Changes
