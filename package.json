@@ -24,7 +24,13 @@
     "version": "pnpm changeset version && pnpm install --lockfile-only"
   },
   "dependencies": {
-    "infra": "workspace:*",
+    "infra-iam": "workspace:*",
+    "infra-network": "workspace:*",
+    "infra-core": "workspace:*",
+    "infra-security": "workspace:*",
+    "infra-domains-onemail-app": "workspace:*",
+    "infra-domains-onemail-common": "workspace:*",
+    "infra-domains-onemail-monitoring": "workspace:*",
     "om-common": "workspace:*",
     "om-ecs-dispatcher": "workspace:*",
     "om-lambda-sender": "workspace:*"

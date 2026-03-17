@@ -1,0 +1,6 @@
+{
+  "name": "infra-security",
+  "version": "1.0.0",
+  "description": "Security infrastructure code.",
+  "private": true
+}

@@ -9,9 +9,27 @@ importers:
 
   .:
     dependencies:
-      infra:
+      infra-core:
         specifier: workspace:*
-        version: link:src/infra
+        version: link:src/infra/src/20_core
+      infra-domains-onemail-app:
+        specifier: workspace:*
+        version: link:src/infra/src/70_domains/onemail_app
+      infra-domains-onemail-common:
+        specifier: workspace:*
+        version: link:src/infra/src/70_domains/onemail_common
+      infra-domains-onemail-monitoring:
+        specifier: workspace:*
+        version: link:src/infra/src/70_domains/onemail_monitoring
+      infra-iam:
+        specifier: workspace:*
+        version: link:src/infra/src/0_IAM
+      infra-network:
+        specifier: workspace:*
+        version: link:src/infra/src/10_network
+      infra-security:
+        specifier: workspace:*
+        version: link:src/infra/src/30_security
       om-common:
         specifier: workspace:*
         version: link:src/onemail/om-common
@@ -47,7 +65,19 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  src/infra: {}
+  src/infra/src/0_IAM: {}
+
+  src/infra/src/10_network: {}
+
+  src/infra/src/20_core: {}
+
+  src/infra/src/30_security: {}
+
+  src/infra/src/70_domains/onemail_app: {}
+
+  src/infra/src/70_domains/onemail_common: {}
+
+  src/infra/src/70_domains/onemail_monitoring: {}
 
   src/onemail/om-common: {}
 
