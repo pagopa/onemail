@@ -1,35 +1,56 @@
 {
-  "name": "onemail-dev",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:4-24-trixie",
-  "workspaceFolder": "/workspaces/onemail",
+  "image": "mcr.microsoft.com/devcontainers/base:debian@sha256:da67c59f82e057e0ccb81ec7d13fb50464c26f477638018e6de1b2623a008a3a",
+  "features": {
+    "ghcr.io/devcontainers-extra/features/pre-commit:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/terraform:1": {
+      "version": "1.14.3",
+      "tflint": "latest",
+      "installTFsec": true,
+      "installTerraformDocs": true
+    },
+    "ghcr.io/pagopa/devcontainer-features/trivy:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "none",
+      "installYarnUsingApt": false,
+      "pnpmVersion": "none",
+      "nvmInstallPath": "/opt/nvm"
+    },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  "postStartCommand": {
+    "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
+  },
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
   "customizations": {
     "vscode": {
       "extensions": [
-        "dbaeumer.vscode-eslint",
+        "-vscjava.vscode-java-pack",
+        "-ms-dotnettools.csharp",
+        "ms-azuretools.vscode-azure-github-copilot",
+        "ms-vscode.vscode-websearchforcopilot",
+        "github.vscode-github-actions",
+        "github.vscode-pull-request-github",
+        "arcanis.vscode-zipfs",
         "esbenp.prettier-vscode",
-        "hashicorp.terraform",
-        "editorconfig.editorconfig",
+        "EditorConfig.EditorConfig",
+        "bruno-api-client.bruno",
+        "vitest.explorer",
         "redhat.vscode-yaml",
+        "dbaeumer.vscode-eslint",
+        "github.copilot",
+        "github.copilot-chat",
         "redhat.vscode-xml",
         "aykutsarac.jsoncrack-vscode",
         "ms-vsliveshare.vsliveshare",
-        "github.copilot-chat",
-        "github.copilot",
         "github.copilot-labs",
         "amazonwebservices.aws-toolkit-vscode",
         "gruntfuggly.todo-tree",
         "github.vscode-github-actions",
         "davidanson.vscode-markdownlint",
-        "mhutchie.git-graph"
+        "mhutchie.git-graph",
+        "hashicorp.terraform"
       ]
     }
-  },
-  "features": {
-    "ghcr.io/gvatsal60/dev-container-features/pre-commit:1": {},
-    "ghcr.io/devcontainers/features/terraform:1": {
-      "version": "1.14.3"
-    },
-    "ghcr.io/dhoeric/features/terraform-docs:1": {}
   }
 }
