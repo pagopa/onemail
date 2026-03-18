@@ -21,6 +21,16 @@ export const HealthResponseSchema = HealthCommonSchema.extend({
   services: z
     .object({
       db: z.enum(ServiceStatus).describe('Status of the DynamoDB service'),
+      queue: z
+        .object({
+          highPriority: z
+            .enum(ServiceStatus)
+            .describe('Status of the high priority queue'),
+          lowPriority: z
+            .enum(ServiceStatus)
+            .describe('Status of the low priority queue'),
+        })
+        .describe('Status of SQS queues'),
     })
     .describe('Status of individual services'),
 }).openapi('HealthResponseDTO');

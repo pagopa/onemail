@@ -30,8 +30,8 @@ export const EmailAddressSchema = z.object({
 
 // Used for custom headers
 export const NameValueSchema = z.object({
-  N: stringCheckedSchema().describe('Key'),
-  V: stringCheckedSchema().describe('Value'),
+  N: stringCheckedSchema({ max: 126 }).describe('Key'),
+  V: stringCheckedSchema({ max: 995 }).describe('Value'),
 });
 
 // Custom headers
@@ -84,7 +84,7 @@ export const EmailSuccessResponseSchema = z.object({
   requestId: RequestIdSchema,
 });
 
-export const htmlContentSchema = stringCheckedSchema({ min: 10, max: 200000 })
+export const htmlContentSchema = stringCheckedSchema({ min: 10, max: 150000 })
   .transform((html) => sanitizeHtml(html, emailSanitizerOptions))
   .refine((cleanHtml) => cleanHtml.trim().length > 0, {
     message:

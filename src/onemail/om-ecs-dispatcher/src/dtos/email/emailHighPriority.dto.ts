@@ -22,7 +22,7 @@ export const TemplateContentSchema = z.object({
 export const EmailContentSchema = z.object({
   subject: stringCheckedSchema().describe('Subject of the email'),
   html: htmlContentSchema.describe('HTML content of the email'),
-  text: stringCheckedSchema({ max: 200000 })
+  text: stringCheckedSchema({ max: 50000 })
     .optional()
     .describe(
       'Text content of the email used as fallback if HTML content is not supported by the email client',
