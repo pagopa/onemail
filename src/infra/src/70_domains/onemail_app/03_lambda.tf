@@ -23,9 +23,15 @@ data "aws_iam_policy_document" "sender_policy" {
     actions = [
       "dynamodb:PutItem",
       "dynamodb:UpdateItem",
-      "dynamodb:GetItem"
+      "dynamodb:GetItem",
+      "dynamodb:Query",
+      "dynamodb:BatchWriteItem",
+      "dynamodb:BatchGetItem"
     ]
-    resources = [data.aws_dynamodb_table.EmailStatusHistory.arn]
+    resources = [
+      data.aws_dynamodb_table.EmailStatusHistory.arn,
+      "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsi_name}"
+    ]
   }
 }
 
