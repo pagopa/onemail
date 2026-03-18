@@ -5,7 +5,9 @@ provider "registry.terraform.io/hashicorp/aws" {
   version     = "6.32.1"
   constraints = ">= 3.29.0, >= 6.4.0, >= 6.26.0, >= 6.28.0, >= 6.32.1, ~> 6.32.1"
   hashes = [
+    "h1:S9FhFACHbATLcz5I7dsM7KwUL94hdyfxj2AhHZ4rtKA=",
     "h1:j691GxEePvwjhYV08mwgTLD/CiCG4YHdZOXL+gV6qt0=",
+    "h1:pIWlu/D0yFPM5dk37TWNaRUZZSNOs9MW7to8IP/F5TA=",
     "zh:024d2cc116c8c83bb63b71623e3654109948791b250929449f4533b06678d574",
     "zh:0ee944eb1c0b28957ad04541546ebac66f81b74ae811d20bcd7043d0313722e1",
     "zh:43f1b6bcc2d6ba34dd4f02aab2ef3923281cf82455e608ac1ea493374dbb132d",
@@ -29,6 +31,8 @@ provider "registry.terraform.io/hashicorp/external" {
   constraints = ">= 1.0.0, ~> 2.3"
   hashes = [
     "h1:FnUk98MI5nOh3VJ16cHf8mchQLewLfN1qZG/MqNgPrI=",
+    "h1:IE3n531K7Agq3/pourJdsKV7l5EifBb09TXsb8shTXM=",
+    "h1:smKSos4zs57pJjQrNuvGBpSWth2el9SgePPbPHo0aps=",
     "zh:6e89509d056091266532fa64de8c06950010498adf9070bf6ff85bc485a82562",
     "zh:78d5eefdd9e494defcb3c68d282b8f96630502cac21d1ea161f53cfe9bb483b3",
     "zh:86868aec05b58dc0aa1904646a2c26b9367d69b890c9ad70c33c0d3aa7b1485a",
@@ -48,6 +52,8 @@ provider "registry.terraform.io/hashicorp/local" {
   version     = "2.7.0"
   constraints = ">= 1.0.0"
   hashes = [
+    "h1:2RYa3j7m/0WmET2fqotY4CHxE1Hpk0fgn47/126l+Og=",
+    "h1:ZM8+dCHsSogRknZkPUeUMzHyY1UAZ0GWFJ24YP8v+AQ=",
     "h1:sSwlfp2etjCaE9hIF7bJBDjRIhDCVFglEOVyiCI7vgs=",
     "zh:261fec71bca13e0a7812dc0d8ae9af2b4326b24d9b2e9beab3d2400fab5c5f9a",
     "zh:308da3b5376a9ede815042deec5af1050ec96a5a5410a2206ae847d82070a23e",
@@ -69,6 +75,8 @@ provider "registry.terraform.io/hashicorp/null" {
   constraints = ">= 2.0.0"
   hashes = [
     "h1:L5V05xwp/Gto1leRryuesxjMfgZwjb7oool4WS1UEFQ=",
+    "h1:hkf5w5B6q8e2A42ND2CjAvgvSN3puAosDmOJb3zCVQM=",
+    "h1:wTNrZnwQdOOT/TW9pa+7GgJeFK2OvTvDmx78VmUmZXM=",
     "zh:59f6b52ab4ff35739647f9509ee6d93d7c032985d9f8c6237d1f8a59471bbbe2",
     "zh:78d5eefdd9e494defcb3c68d282b8f96630502cac21d1ea161f53cfe9bb483b3",
     "zh:795c897119ff082133150121d39ff26cb5f89a730a2c8c26f3a9c1abf81a9c43",
