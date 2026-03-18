@@ -84,7 +84,7 @@ export const EmailSuccessResponseSchema = z.object({
   requestId: RequestIdSchema,
 });
 
-export const htmlContentSchema = stringCheckedSchema({ min: 10, max: 200000 })
+export const htmlContentSchema = stringCheckedSchema({ min: 10, max: 150000 })
   .transform((html) => sanitizeHtml(html, emailSanitizerOptions))
   .refine((cleanHtml) => cleanHtml.trim().length > 0, {
     message:
