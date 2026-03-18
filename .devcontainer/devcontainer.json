@@ -27,10 +27,8 @@
       "extensions": [
         "-vscjava.vscode-java-pack",
         "-ms-dotnettools.csharp",
-        "-ms-azuretools.vscode-azureterraform",
         "ms-azuretools.vscode-azure-github-copilot",
         "ms-vscode.vscode-websearchforcopilot",
-        "ms-azuretools.vscode-azureterraform",
         "github.vscode-github-actions",
         "github.vscode-pull-request-github",
         "arcanis.vscode-zipfs",
@@ -41,7 +39,17 @@
         "redhat.vscode-yaml",
         "dbaeumer.vscode-eslint",
         "github.copilot",
-        "github.copilot-chat"
+        "github.copilot-chat",
+        "redhat.vscode-xml",
+        "aykutsarac.jsoncrack-vscode",
+        "ms-vsliveshare.vsliveshare",
+        "github.copilot-labs",
+        "amazonwebservices.aws-toolkit-vscode",
+        "gruntfuggly.todo-tree",
+        "github.vscode-github-actions",
+        "davidanson.vscode-markdownlint",
+        "mhutchie.git-graph",
+        "hashicorp.terraform"
       ]
     }
   }
