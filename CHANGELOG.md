@@ -1,5 +1,13 @@
 # onemail
 
+## 1.1.8
+
+### Patch Changes
+
+- fe201cd: update terraform lock with linux platform and dx dev container template
+- Updated dependencies [fe201cd]
+  - infra-domains-onemail-app@1.1.1
+
 ## 1.1.7
 
 ### Patch Changes
