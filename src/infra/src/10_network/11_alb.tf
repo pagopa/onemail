@@ -111,6 +111,17 @@ resource "aws_lb_target_group" "apigw_tg" {
   vpc_id      = module.vpc.vpc_id
   target_type = "ip"
 
+  health_check {
+    enabled             = true
+    protocol            = "HTTPS"
+    path                = "/"
+    matcher             = "403"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    interval            = 30
+    timeout             = 5
+  }
+
   tags = merge(
     module.tag_config.tags,
     {
