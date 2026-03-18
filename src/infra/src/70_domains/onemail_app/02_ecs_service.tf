@@ -14,6 +14,21 @@ data "aws_iam_policy_document" "ecs_task_policy" {
       data.aws_sqs_queue.low_priority.arn
     ]
   }
+
+  statement {
+    sid = "DyanamodbAccess"
+
+    actions = [
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:GetItem",
+      "dynamodb:DescribeTable"
+    ]
+
+    resources = [
+      data.aws_dynamodb_table.EmailStatusHistory.arn
+    ]
+  }
 }
 
 module "ecs_service" {
