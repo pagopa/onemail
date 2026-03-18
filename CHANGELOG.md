@@ -1,5 +1,13 @@
 # onemail
 
+## 1.1.7
+
+### Patch Changes
+
+- Updated dependencies [1e8b22d]
+  - infra-domains-onemail-app@1.1.0
+  - infra-network@1.1.0
+
 ## 1.1.6
 
 ### Patch Changes
