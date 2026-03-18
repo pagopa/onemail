@@ -12,6 +12,13 @@ data "aws_vpc_endpoint" "dynamodb" {
 
 data "aws_vpc_endpoint" "api_gtw" {
   service_name = "com.amazonaws.eu-south-1.execute-api"
+  vpc_id       = data.aws_vpc.core.id
+}
+
+data "aws_acm_certificate" "api_custom_domain" {
+  domain      = local.zone_name
+  statuses    = ["ISSUED"]
+  most_recent = true
 }
 
 data "aws_lb" "nlb" {
