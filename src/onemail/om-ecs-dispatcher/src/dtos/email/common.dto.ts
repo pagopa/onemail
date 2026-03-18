@@ -30,8 +30,8 @@ export const EmailAddressSchema = z.object({
 
 // Used for custom headers
 export const NameValueSchema = z.object({
-  N: stringCheckedSchema().describe('Key'),
-  V: stringCheckedSchema().describe('Value'),
+  N: stringCheckedSchema({ max: 126 }).describe('Key'),
+  V: stringCheckedSchema({ max: 995 }).describe('Value'),
 });
 
 // Custom headers
