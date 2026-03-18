@@ -5,21 +5,19 @@ import {
   type MetricDatum,
   PutMetricDataCommand,
 } from '@aws-sdk/client-cloudwatch';
+import { isEmpty } from 'lodash';
 
-export const SenderMetricName = {
-  EmailNotFound: 'EmailNotFound',
-  EmailBatchNotFound: 'EmailBatchNotFound',
-  HighPriorityDispatched: 'HighPriorityDispatched',
-  LowPriorityDispatched: 'LowPriorityDispatched',
-  HighPriorityRejectedBySes: 'HighPriorityRejectedBySes',
-  LowPriorityRejectedBySes: 'LowPriorityRejectedBySes',
-  LowPriorityRetryableFailure: 'LowPriorityRetryableFailure',
-  EmailStatusBatchUpdateFailed: 'EmailStatusBatchUpdateFailed',
-  InvalidRecord: 'InvalidRecord',
-} as const;
-
-export type SenderMetricName =
-  (typeof SenderMetricName)[keyof typeof SenderMetricName];
+export enum SenderMetricName {
+  EmailBatchNotFound = 'EmailBatchNotFound',
+  EmailNotFound = 'EmailNotFound',
+  EmailStatusBatchUpdateFailed = 'EmailStatusBatchUpdateFailed',
+  HighPriorityDispatched = 'HighPriorityDispatched',
+  HighPriorityRejectedBySes = 'HighPriorityRejectedBySes',
+  InvalidRecord = 'InvalidRecord',
+  LowPriorityDispatched = 'LowPriorityDispatched',
+  LowPriorityRejectedBySes = 'LowPriorityRejectedBySes',
+  LowPriorityRetryableFailure = 'LowPriorityRetryableFailure',
+}
 
 interface SenderMetricInput {
   name: SenderMetricName;
@@ -43,7 +41,7 @@ export const publishMetrics = async (
     .filter((metric) => metric.value && metric.value > 0)
     .map((metric) => buildMetricDatum(metric));
 
-  if (metricData.length === 0) {
+  if (isEmpty(metricData)) {
     return;
   }
 
