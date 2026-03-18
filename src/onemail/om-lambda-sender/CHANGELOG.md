@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.2.0
+
+### Minor Changes
+
+- 55fd987: implement retry for batch status update and cloudwatch metrics
+
 ## 1.1.1
 
 ### Patch Changes

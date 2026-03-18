@@ -1,5 +1,12 @@
 # onemail
 
+## 1.1.6
+
+### Patch Changes
+
+- Updated dependencies [55fd987]
+  - om-lambda-sender@1.2.0
+
 ## 1.1.5
 
 ### Patch Changes
