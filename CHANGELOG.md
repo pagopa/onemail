@@ -1,5 +1,14 @@
 # onemail
 
+## 1.1.9
+
+### Patch Changes
+
+- Updated dependencies [e19ea7d]
+- Updated dependencies [d7b628e]
+  - infra-domains-onemail-app@1.2.0
+  - om-ecs-dispatcher@1.5.3
+
 ## 1.1.8
 
 ### Patch Changes

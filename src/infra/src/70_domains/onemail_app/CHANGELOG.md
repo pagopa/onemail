@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.2.0
+
+### Minor Changes
+
+- e19ea7d: Lambda and Ecs dynamodb permissions
+
 ## 1.1.1
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.5.3
+
+### Patch Changes
+
+- d7b628e: Dispatcher improvement - api response code and input constraints, health check
+
 ## 1.5.2
 
 ### Patch Changes
