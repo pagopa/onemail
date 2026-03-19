@@ -38,7 +38,7 @@ resource "aws_ses_domain_mail_from" "onemail_mail_from" {
 # Configuration set and account-level safety settings
 resource "aws_ses_configuration_set" "main" {
   count = var.enable_ses ? 1 : 0
-  name  = "onemail-configuration-set"
+  name  = "${local.project_nodomain}-${var.env}-configuration-set"
 
   reputation_metrics_enabled = true
   sending_enabled            = true
