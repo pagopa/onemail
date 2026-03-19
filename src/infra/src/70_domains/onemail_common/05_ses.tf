@@ -22,7 +22,7 @@ resource "aws_route53_record" "ses_dkim_records" {
   name    = "${element(aws_ses_domain_dkim.onemail_dkim[0].dkim_tokens, count.index)}._domainkey.${local.zone_name}"
   type    = "CNAME"
   ttl     = 600
-  records = ["${element(aws_ses_domain_dkim.onemail_dkim[0].dkim_tokens, count.index)}.dkim.amazonses.com"]
+  records = ["${element(aws_ses_domain_dkim.onemail_dkim[0].dkim_tokens, count.index)}.dkim.${var.aws_region}.amazonses.com"]
 }
 
 # Custom MAIL FROM domain for SPF and DMARC alignment
