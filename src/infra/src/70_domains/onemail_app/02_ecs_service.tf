@@ -16,7 +16,7 @@ data "aws_iam_policy_document" "ecs_task_policy" {
   }
 
   statement {
-    sid = "DyanamodbAccess"
+    sid = "DynamoDBAccess"
 
     actions = [
       "dynamodb:PutItem",
