@@ -1,4 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# Purpose: Start DynamoDB Local via Docker Compose, wait until it is ready, and initialize tables.
+# Usage examples:
+#   ./run-local.sh
+#   ./run-local.sh 2>&1 | tee dynamodb-local.log
+
 set -euo pipefail
 
 cd "$(dirname "$0")"
