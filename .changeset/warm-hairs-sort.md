@@ -4,4 +4,4 @@
 'infra-network': minor
 ---
 
-Aws SES configuration and Dns records creation
+AWS SES configuration and DNS records creation
