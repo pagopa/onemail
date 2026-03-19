@@ -1,5 +1,5 @@
 ---
-'infra-domains-onemail-common': major
+'infra-domains-onemail-common': minor
 'infra-domains-onemail-app': minor
 'infra-network': minor
 ---
