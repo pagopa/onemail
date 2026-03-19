@@ -2,7 +2,7 @@
 
 data "aws_ses_domain_identity" "onemail" {
   count  = var.enable_ses_dns_records ? 1 : 0
-  domain = var.env == "prod" ? var.dns_zone_name : "${var.env}.${var.dns_zone_name}"
+  domain = local.zone_name
 }
 
 locals {
