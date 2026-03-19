@@ -19,7 +19,8 @@ docker compose --env-file ../../.env -f ./docker-compose-dynamodb.yml up -d
 echo -e "\n⏳ Waiting for DynamoDB to be ready (max 20s)..."
 MAX_RETRIES=20
 COUNT=0
-echo -e "🔗 DynamoDB Endpoint: $DYNAMO_HOST\n"
+
+# Wait for port 8000 to be responsive
 until curl -s "$DYNAMO_HOST" > /dev/null; do
   if [ "$COUNT" -eq "$MAX_RETRIES" ]; then
     echo -e "\n❌ Error: DynamoDB took too long to start. Exiting..."
