@@ -89,6 +89,7 @@ variable "dns_zone_name" {
 }
 
 variable "enable_ses" {
-  type    = bool
-  default = false
+  type        = bool
+  description = "Whether to enable SES-related resources for this domain."
+  default     = false
 }

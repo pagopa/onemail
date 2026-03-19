@@ -32,7 +32,7 @@ resource "aws_ses_domain_mail_from" "onemail_mail_from" {
   mail_from_domain = "bounce.${local.zone_name}"
   # In test phase: allow SES fallback if the custom MAIL FROM MX is not ready yet.
   # Production: set this to "RejectMessage" to avoid implicit fallback.
-  behavior_on_mx_failure = "UseDefaultValue"
+  behavior_on_mx_failure = var.env == "prod" ? "RejectMessage" : "UseDefaultValue"
 }
 
 # Configuration set and account-level safety settings
