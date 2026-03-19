@@ -32,7 +32,7 @@ done
 
 echo -e "\n📦 Initializing DynamoDB table..."
 chmod +x ./init-dynamodb-table.sh
-AWS_DYNAMODB_ENDPOINT="$DYNAMO_HOST" ./init-dynamodb-table.sh
+./init-dynamodb-table.sh
 
 echo -e "\n✅ DynamoDB Local is ready!"
 echo -e "\n🔗 DynamoDB Admin UI: http://localhost:8001"
