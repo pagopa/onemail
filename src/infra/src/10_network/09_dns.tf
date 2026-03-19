@@ -11,9 +11,7 @@ locals {
 
   # SES DNS records are enabled only after SES resources are provisioned in onemail_common
   ses_dns_enabled = var.enable_ses_dns_records
-}
 
-locals {
   ses_verification_token  = local.ses_dns_enabled ? try(data.aws_ses_domain_identity.onemail[0].verification_token, null) : null
   ses_mail_from_subdomain = local.ses_dns_enabled ? "bounce" : null
   # Test posture: monitor only, with relaxed alignment to reduce false negatives while validating flows.
