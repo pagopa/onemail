@@ -1,8 +1,24 @@
 # Route53 Hosted Zones Configuration
 
+data "aws_ses_domain_identity" "onemail" {
+  count  = var.enable_ses_dns_records ? 1 : 0
+  domain = var.env == "prod" ? var.dns_zone_name : "${var.env}.${var.dns_zone_name}"
+}
+
 locals {
   # Build zone name based on environment
   zone_name = var.env == "prod" ? var.dns_zone_name : "${var.env}.${var.dns_zone_name}"
+
+  # SES DNS records are enabled only after SES resources are provisioned in onemail_common
+  ses_dns_enabled = var.enable_ses_dns_records
+}
+
+locals {
+  ses_verification_token  = local.ses_dns_enabled ? try(data.aws_ses_domain_identity.onemail[0].verification_token, null) : null
+  ses_mail_from_subdomain = local.ses_dns_enabled ? "bounce" : null
+  # Test posture: monitor only, with relaxed alignment to reduce false negatives while validating flows.
+  # Production target: add reporting (`rua`, optionally `ruf`) and move policy toward `quarantine` or `reject`.
+  ses_dmarc_value = local.ses_dns_enabled ? "v=DMARC1; p=none; adkim=r; aspf=r; fo=1; pct=100" : null
 
   # All possible DNS records with consistent object structure
   dns_records_base = {
@@ -41,6 +57,52 @@ locals {
         evaluate_target_health = true
       }
       include = true
+    }
+    # SES verification TXT record
+    "ses_verification" = {
+      display_name = "ses_verification"
+      name         = "_amazonses"
+      type         = "TXT"
+      ttl          = 600
+      records      = local.ses_verification_token == null ? [] : [local.ses_verification_token]
+      is_alias     = false
+      alias_config = null
+      include      = local.ses_verification_token != null
+    }
+    # SES custom MAIL FROM MX record
+    "ses_mail_from_mx" = {
+      display_name = "ses_mail_from_mx"
+      name         = local.ses_mail_from_subdomain
+      type         = "MX"
+      ttl          = 600
+      records      = local.ses_mail_from_subdomain == null ? [] : ["10 feedback-smtp.${var.aws_region}.amazonses.com"]
+      is_alias     = false
+      alias_config = null
+      include      = local.ses_mail_from_subdomain != null
+    }
+    # SES custom MAIL FROM SPF record
+    "ses_mail_from_spf" = {
+      display_name = "ses_mail_from_spf"
+      name         = local.ses_mail_from_subdomain
+      type         = "TXT"
+      ttl          = 600
+      # Test posture: use soft fail until the MAIL FROM path is fully validated in every environment.
+      # Production target: change `~all` to `-all` if SES is the only legitimate sender for this subdomain.
+      records      = local.ses_mail_from_subdomain == null ? [] : ["v=spf1 include:amazonses.com ~all"]
+      is_alias     = false
+      alias_config = null
+      include      = local.ses_mail_from_subdomain != null
+    }
+    # SES DMARC TXT record
+    "ses_dmarc" = {
+      display_name = "ses_dmarc"
+      name         = "_dmarc"
+      type         = "TXT"
+      ttl          = 600
+      records      = local.ses_dmarc_value == null ? [] : [local.ses_dmarc_value]
+      is_alias     = false
+      alias_config = null
+      include      = local.ses_dmarc_value != null
     }
   }
 

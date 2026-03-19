@@ -84,6 +84,12 @@ variable "dns_zone_name" {
   default     = "onemail.pagopa.it"
 }
 
+variable "enable_ses_dns_records" {
+  type        = bool
+  description = "Enable SES-related DNS records and SES data lookups. Set to true only after SES resources are created in onemail_common."
+  default     = false
+}
+
 variable "web_acl" {
   type = object({
     cloudwatch_metrics_enabled = optional(bool, false)

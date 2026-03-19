@@ -17,6 +17,13 @@ data "aws_iam_policy_document" "sender_policy" {
       "ses:SendRawEmail"
     ]
     resources = ["*"]
+    # resources = [data.aws_ses_domain_identity.onemail.arn]
+
+    # condition {
+    #   test     = "StringLike"
+    #   variable = "ses:FromAddress"
+    #   values   = [local.ses_allowed_sender_pattern]
+    # }
   }
 
   statement {

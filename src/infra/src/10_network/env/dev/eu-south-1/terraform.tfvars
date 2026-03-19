@@ -21,5 +21,7 @@ web_acl = {
   sampled_requests_enabled   = true
 }
 
+enable_ses_dns_records = true
+
 
 

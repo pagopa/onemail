@@ -81,3 +81,14 @@ variable "dynamodb_table_config" {
 variable "enable_container_insights" {
   type = bool
 }
+
+variable "dns_zone_name" {
+  type        = string
+  description = "Name of the DNS hosted zone. For prod: 'onemail.pagopa.it', for dev/uat: subdomain will be automatically prefixed."
+  default     = "onemail.pagopa.it"
+}
+
+variable "enable_ses" {
+  type    = bool
+  default = false
+}
