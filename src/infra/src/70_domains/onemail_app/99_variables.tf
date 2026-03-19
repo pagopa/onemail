@@ -84,3 +84,9 @@ variable "deploy_role_github_repository" {
   type        = string
   description = "Role to deploy ecs"
 }
+
+variable "enable_ses" {
+  type        = bool
+  description = "Enable SES identity-based restrictions for the sender Lambda policy. Disable it during early tests to keep broad SES permissions."
+  default     = false
+}

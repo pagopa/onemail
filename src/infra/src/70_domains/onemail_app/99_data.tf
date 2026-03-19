@@ -61,6 +61,11 @@ data "aws_route53_zone" "onemail" {
   private_zone = false
 }
 
+data "aws_ses_domain_identity" "onemail" {
+  count  = var.enable_ses ? 1 : 0
+  domain = local.zone_name
+}
+
 
 data "aws_lb_listener" "ecs_core" {
   load_balancer_arn = data.aws_lb.nlb.arn

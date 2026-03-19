@@ -16,7 +16,17 @@ data "aws_iam_policy_document" "sender_policy" {
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
-    resources = ["*"]
+    resources = var.enable_ses ? [data.aws_ses_domain_identity.onemail[0].arn] : ["*"]
+
+    dynamic "condition" {
+      for_each = var.enable_ses ? [1] : []
+
+      content {
+        test     = "StringLike"
+        variable = "ses:FromAddress"
+        values   = [local.ses_allowed_sender_pattern]
+      }
+    }
   }
 
   statement {
