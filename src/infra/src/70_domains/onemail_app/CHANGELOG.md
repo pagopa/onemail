@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.3.0
+
+### Minor Changes
+
+- e74abf3: AWS SES configuration and DNS records creation
+
 ## 1.2.0
 
 ### Minor Changes
