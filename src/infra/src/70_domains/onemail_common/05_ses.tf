@@ -1,4 +1,5 @@
 data "aws_route53_zone" "onemail" {
+  count        = var.enable_ses ? 1 : 0
   name         = local.zone_name
   private_zone = false
 }
@@ -17,7 +18,7 @@ resource "aws_ses_domain_dkim" "onemail_dkim" {
 
 resource "aws_route53_record" "ses_dkim_records" {
   count   = var.enable_ses ? 3 : 0
-  zone_id = data.aws_route53_zone.onemail.zone_id
+  zone_id = data.aws_route53_zone.onemail[0].zone_id
   name    = "${element(aws_ses_domain_dkim.onemail_dkim[0].dkim_tokens, count.index)}._domainkey.${local.zone_name}"
   type    = "CNAME"
   ttl     = 600
