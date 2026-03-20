@@ -23,7 +23,9 @@ export const healthCheck = async (): Promise<HealthResponseDTO> => {
       new DescribeTableCommand({ TableName: env.aws.emailDbTable }),
     );
     dbStatus = ServiceStatus.Initialized;
-  } catch {
+    console.log('DynamoDB health check passed');
+  } catch (error) {
+    console.error('Error checking DynamoDB health:', error);
     dbStatus = ServiceStatus.NotInitialized;
   }
 
@@ -36,7 +38,9 @@ export const healthCheck = async (): Promise<HealthResponseDTO> => {
       }),
     );
     sqsHighStatus = ServiceStatus.Initialized;
-  } catch {
+    console.log('High priority SQS queue health check passed');
+  } catch (error) {
+    console.error('Error checking high priority SQS queue health:', error);
     sqsHighStatus = ServiceStatus.NotInitialized;
   }
 
@@ -49,7 +53,9 @@ export const healthCheck = async (): Promise<HealthResponseDTO> => {
       }),
     );
     sqsLowStatus = ServiceStatus.Initialized;
-  } catch {
+    console.log('Low priority SQS queue health check passed');
+  } catch (error) {
+    console.error('Error checking low priority SQS queue health:', error);
     sqsLowStatus = ServiceStatus.NotInitialized;
   }
 
