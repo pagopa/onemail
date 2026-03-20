@@ -2,4 +2,4 @@
 'infra-domains-onemail-common': patch
 ---
 
-DNS records dkim
+Make SES DKIM DNS CNAME records region-specific
