@@ -52,4 +52,8 @@ resource "aws_sesv2_configuration_set" "config_sets" {
   reputation_options {
     reputation_metrics_enabled = true
   }
+
+  delivery_options {
+    tls_policy = "Require"
+  }
 }
