@@ -54,6 +54,6 @@ resource "aws_sesv2_configuration_set" "config_sets" {
   }
 
   delivery_options {
-    tls_policy = "Require"
+    tls_policy = "REQUIRE"
   }
 }
