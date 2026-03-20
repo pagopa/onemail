@@ -8,7 +8,7 @@ resource "aws_sesv2_email_identity" "tenant_identities" {
   count          = var.enable_ses ? 1 : 0
   email_identity = local.zone_name
 
-  configuration_set_name = aws_sesv2_configuration_set.config_sets[0].configuration_set_name
+  configuration_set_name = aws_sesv2_configuration_set.config_set[0].configuration_set_name
 }
 
 # DKIM configuration
@@ -41,7 +41,7 @@ resource "aws_ses_domain_mail_from" "onemail_mail_from" {
 #   suppressed_reasons = ["BOUNCE", "COMPLAINT"]
 # }
 
-resource "aws_sesv2_configuration_set" "config_sets" {
+resource "aws_sesv2_configuration_set" "config_set" {
   count                  = var.enable_ses ? 1 : 0
   configuration_set_name = "${local.project_nodomain}-${var.env}-configuration-set"
 
