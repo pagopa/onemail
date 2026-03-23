@@ -31,6 +31,19 @@ data "aws_iam_policy_document" "ecs_task_policy" {
       "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${one(data.aws_dynamodb_table.EmailStatusHistory.global_secondary_index).name}"
     ]
   }
+
+  statement {
+    sid = "KMSAccess"
+
+    actions = [
+      "kms:Decrypt",
+      "kms:Encrypt"
+    ]
+
+    resources = [
+      data.aws_kms_alias.kms_alias.arn
+    ]
+  }
 }
 
 module "ecs_service" {
