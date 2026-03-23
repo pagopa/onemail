@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.5.0
+
+### Minor Changes
+
+- 00e8135: KMS permissions ECS and Lambda
+
 ## 1.4.0
 
 ### Minor Changes
