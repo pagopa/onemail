@@ -10,7 +10,7 @@ aws_region     = "eu-south-1"
 # DynamoDB configuration for dev
 dynamodb_table_config = {
   table_name                     = "EmailStatusHistory"
-  hash_key                       = "EmailId"
+  hash_key                       = "emailId"
   billing_mode                   = "PAY_PER_REQUEST"
   point_in_time_recovery_enabled = false
   stream_enabled                 = false
@@ -23,18 +23,18 @@ dynamodb_table_config = {
   server_side_encryption_enabled = true
   attributes = [
     {
-      name = "EmailId"
+      name = "emailId"
       type = "S"
     },
     {
-      name = "request_id"
+      name = "requestId"
       type = "S"
     }
   ]
   global_secondary_indexes = [
     {
       name            = "gsi_request_id_idx"
-      hash_key        = "request_id"
+      hash_key        = "requestId"
       projection_type = "ALL"
     }
   ]
