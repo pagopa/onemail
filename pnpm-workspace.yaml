@@ -3,3 +3,12 @@ packages:
   - 'src/infra/src/**'
   - '!**/.*/**'
   - '.'
+
+# shared libs
+catalog:
+  '@aws-sdk/client-dynamodb': ^3.1014.0
+  '@aws-sdk/lib-dynamodb': ^3.1014.0
+  lodash: ^4.17.23
+  zod: ^4.3.6
+  '@types/lodash': ^4.17.23
+  '@types/node': ^24.10.12
