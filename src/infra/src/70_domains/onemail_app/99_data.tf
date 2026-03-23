@@ -72,6 +72,6 @@ data "aws_lb_listener" "ecs_core" {
   port              = 3000
 }
 
-data "aws_kms_key" "by_alias" {
-  key_id = "dynamodb/emailstatushistory"
+data "aws_kms_alias" "kms_alias" {
+  name = "alias/dynamodb/emailstatushistory"
 }

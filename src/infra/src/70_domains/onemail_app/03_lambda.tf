@@ -53,7 +53,7 @@ data "aws_iam_policy_document" "sender_policy" {
     ]
 
     resources = [
-      data.aws_kms_key.by_alias.arn
+      data.aws_kms_alias.kms_alias.arn
     ]
   }
 }
