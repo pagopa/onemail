@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.4.0
+
+### Minor Changes
+
+- 0240cd5: Adding kms permissions for ecs and lambda
+
 ## 1.3.0
 
 ### Minor Changes
