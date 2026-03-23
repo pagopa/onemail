@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.2.1
+
+### Patch Changes
+
+- 3306206: update all AWS SDK dependencies to same version + lambda zip package fix
+
 ## 1.2.0
 
 ### Minor Changes
