@@ -23,18 +23,18 @@ dynamodb_table_config = {
   server_side_encryption_enabled = true
   attributes = [
     {
-      name = "EmailId"
+      name = "emailId"
       type = "S"
     },
     {
-      name = "request_id"
+      name = "requestId"
       type = "S"
     }
   ]
   global_secondary_indexes = [
     {
       name            = "gsi_request_id_idx"
-      hash_key        = "request_id"
+      hash_key        = "requestId"
       projection_type = "ALL"
     }
   ]

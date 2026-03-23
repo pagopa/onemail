@@ -23,11 +23,11 @@ dynamodb_table_config = {
   server_side_encryption_enabled = true
   attributes = [
     {
-      name = "EmailId"
+      name = "emailId"
       type = "S"
     },
     {
-      name = "request_id"
+      name = "requestId"
       type = "S"
     }
   ]
