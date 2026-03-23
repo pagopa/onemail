@@ -44,17 +44,19 @@ data "aws_iam_policy_document" "sender_policy" {
     ]
   }
 
-  statement {
-    sid = "KMSAccess"
+  dynamic "statement" {
+    for_each = local.dynamodb_kms_key_arn != null ? [local.dynamodb_kms_key_arn] : []
 
-    actions = [
-      "kms:Decrypt",
-      "kms:Encrypt"
-    ]
+    content {
+      sid = "KMSAccess"
 
-    resources = [
-      data.aws_kms_alias.kms_alias.target_key_arn
-    ]
+      actions = [
+        "kms:Decrypt",
+        "kms:Encrypt"
+      ]
+
+      resources = [statement.value]
+    }
   }
 }
 
