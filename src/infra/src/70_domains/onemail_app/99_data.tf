@@ -73,5 +73,5 @@ data "aws_lb_listener" "ecs_core" {
 }
 
 data "aws_kms_key" "by_alias" {
-  key_id = "/dynamodb/emailstatushistory"
+  key_id = "dynamodb/emailstatushistory"
 }
