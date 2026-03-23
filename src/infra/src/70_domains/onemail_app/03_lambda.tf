@@ -43,19 +43,6 @@ data "aws_iam_policy_document" "sender_policy" {
       "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsi_name}"
     ]
   }
-
-  statement {
-    sid = "KMSAccess"
-
-    actions = [
-      "kms:Decrypt",
-      "kms:Encrypt"
-    ]
-
-    resources = [
-      data.aws_kms_alias.kms_alias.arn
-    ]
-  }
 }
 
 module "security_group_lambda_sender" {
