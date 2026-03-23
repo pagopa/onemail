@@ -1,5 +1,11 @@
 # infra-network
 
+## 1.3.0
+
+### Minor Changes
+
+- e87d616: Adding SQS vpc endpoint
+
 ## 1.2.0
 
 ### Minor Changes

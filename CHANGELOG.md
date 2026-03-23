@@ -1,5 +1,12 @@
 # onemail
 
+## 1.1.12
+
+### Patch Changes
+
+- Updated dependencies [e87d616]
+  - infra-network@1.3.0
+
 ## 1.1.11
 
 ### Patch Changes
