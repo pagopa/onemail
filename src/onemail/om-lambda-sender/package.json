@@ -22,19 +22,19 @@
   "dependencies": {
     "@aws-lambda-powertools/batch": "^2.31.0",
     "@aws-lambda-powertools/logger": "^2.31.0",
-    "@aws-sdk/client-cloudwatch": "^3.1007.0",
-    "@aws-sdk/client-dynamodb": "^3.989.0",
-    "@aws-sdk/client-sesv2": "^3.1002.0",
-    "@aws-sdk/lib-dynamodb": "^3.989.0",
+    "@aws-sdk/client-cloudwatch": "^3.1014.0",
+    "@aws-sdk/client-dynamodb": "^3.1014.0",
+    "@aws-sdk/client-sesv2": "^3.1014.0",
+    "@aws-sdk/lib-dynamodb": "^3.1014.0",
     "lodash": "^4.17.23",
     "om-common": "workspace:*",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "aws-lambda": "^1.0.7",
     "@types/aws-lambda": "^8.10.160",
     "@types/lodash": "^4.17.23",
-    "@types/node": "^24.10.12"
+    "@types/node": "^24.10.12",
+    "aws-lambda": "^1.0.7"
   },
   "imports": {
     "#*": {
