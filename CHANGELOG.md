@@ -1,5 +1,13 @@
 # onemail
 
+## 1.1.16
+
+### Patch Changes
+
+- Updated dependencies [3306206]
+  - om-ecs-dispatcher@1.5.4
+  - om-lambda-sender@1.2.1
+
 ## 1.1.15
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.5.4
+
+### Patch Changes
+
+- 3306206: update all AWS SDK dependencies to same version + lambda zip package fix
+
 ## 1.5.3
 
 ### Patch Changes
