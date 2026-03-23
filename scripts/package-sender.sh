@@ -18,7 +18,7 @@ echo -e "\n📁 Creating ZIP archive..."
 (
     cd "$ARTIFACT_DIR"
     # Exclude readme, lock file, source maps and pnpm's internal files to avoid duplicating hardlinked files
-    # With -y flag the zip can resolve transitive dependencies through the symlink chain (.pnpm folder) and avoid copying libs multiple times
+    # The -y option tells zip to store symlinks as symlinks (it does not follow them).
     zip -ryq "../../$ZIP_NAME" . \
         -x "README.md" \
         -x "pnpm-lock.yaml" \
