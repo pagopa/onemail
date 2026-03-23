@@ -41,7 +41,7 @@ data "aws_iam_policy_document" "ecs_task_policy" {
     ]
 
     resources = [
-      data.aws_kms_alias.kms_alias.arn
+      data.aws_kms_alias.kms_alias.target_key_arn
     ]
   }
 }
