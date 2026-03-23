@@ -71,3 +71,7 @@ data "aws_lb_listener" "ecs_core" {
   load_balancer_arn = data.aws_lb.nlb.arn
   port              = 3000
 }
+
+data "aws_kms_key" "by_alias" {
+  key_id = "/dynamodb/emailstatushistory"
+}

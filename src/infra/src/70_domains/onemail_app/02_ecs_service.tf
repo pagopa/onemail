@@ -22,11 +22,25 @@ data "aws_iam_policy_document" "ecs_task_policy" {
       "dynamodb:PutItem",
       "dynamodb:UpdateItem",
       "dynamodb:GetItem",
-      "dynamodb:DescribeTable"
+      "dynamodb:DescribeTable",
+      "dynamodb:Query"
     ]
 
     resources = [
       data.aws_dynamodb_table.EmailStatusHistory.arn
+    ]
+  }
+
+  statement {
+    sid = "KMSAccess"
+
+    actions = [
+      "kms:Decrypt",
+      "kms:Encrypt"
+    ]
+
+    resources = [
+      data.aws_kms_key.by_alias.arn
     ]
   }
 }
