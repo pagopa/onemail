@@ -5,6 +5,27 @@ settings:
   excludeLinksFromLockfile: false
   injectWorkspacePackages: true
 
+catalogs:
+  default:
+    '@aws-sdk/client-dynamodb':
+      specifier: ^3.1014.0
+      version: 3.1014.0
+    '@aws-sdk/lib-dynamodb':
+      specifier: ^3.1014.0
+      version: 3.1014.0
+    '@types/lodash':
+      specifier: ^4.17.23
+      version: 4.17.23
+    '@types/node':
+      specifier: ^24.10.12
+      version: 24.10.12
+    lodash:
+      specifier: ^4.17.23
+      version: 4.17.23
+    zod:
+      specifier: ^4.3.6
+      version: 4.3.6
+
 importers:
 
   .:
@@ -87,13 +108,13 @@ importers:
         specifier: ^8.4.1
         version: 8.4.1(zod@4.3.6)
       '@aws-sdk/client-dynamodb':
-        specifier: ^3.1014.0
+        specifier: 'catalog:'
         version: 3.1014.0
       '@aws-sdk/client-sqs':
         specifier: ^3.1014.0
         version: 3.1014.0
       '@aws-sdk/lib-dynamodb':
-        specifier: ^3.1014.0
+        specifier: 'catalog:'
         version: 3.1014.0(@aws-sdk/client-dynamodb@3.1014.0)
       dotenv:
         specifier: ^17.2.4
@@ -105,7 +126,7 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
       lodash:
-        specifier: ^4.17.23
+        specifier: 'catalog:'
         version: 4.17.23
       om-common:
         specifier: workspace:*
@@ -117,17 +138,17 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(express@5.2.1)
       zod:
-        specifier: ^4.3.6
+        specifier: 'catalog:'
         version: 4.3.6
     devDependencies:
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
       '@types/lodash':
-        specifier: ^4.17.23
+        specifier: 'catalog:'
         version: 4.17.23
       '@types/node':
-        specifier: ^24.10.12
+        specifier: 'catalog:'
         version: 24.10.12
       '@types/sanitize-html':
         specifier: ^2.16.0
@@ -151,32 +172,32 @@ importers:
         specifier: ^3.1014.0
         version: 3.1014.0
       '@aws-sdk/client-dynamodb':
-        specifier: ^3.1014.0
+        specifier: 'catalog:'
         version: 3.1014.0
       '@aws-sdk/client-sesv2':
         specifier: ^3.1014.0
         version: 3.1014.0
       '@aws-sdk/lib-dynamodb':
-        specifier: ^3.1014.0
+        specifier: 'catalog:'
         version: 3.1014.0(@aws-sdk/client-dynamodb@3.1014.0)
       lodash:
-        specifier: ^4.17.23
+        specifier: 'catalog:'
         version: 4.17.23
       om-common:
         specifier: workspace:*
         version: link:../om-common
       zod:
-        specifier: ^4.3.6
+        specifier: 'catalog:'
         version: 4.3.6
     devDependencies:
       '@types/aws-lambda':
         specifier: ^8.10.160
         version: 8.10.161
       '@types/lodash':
-        specifier: ^4.17.23
+        specifier: 'catalog:'
         version: 4.17.23
       '@types/node':
-        specifier: ^24.10.12
+        specifier: 'catalog:'
         version: 24.10.12
       aws-lambda:
         specifier: ^1.0.7
