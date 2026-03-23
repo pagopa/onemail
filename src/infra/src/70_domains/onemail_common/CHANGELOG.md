@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.1.2
+
+### Patch Changes
+
+- 2df41d4: standardize DynamoDB attribute names and hash keys
+
 ## 1.1.1
 
 ### Patch Changes
