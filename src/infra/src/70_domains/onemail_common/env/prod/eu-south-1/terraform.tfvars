@@ -34,7 +34,7 @@ dynamodb_table_config = {
   global_secondary_indexes = [
     {
       name            = "gsi_request_id_idx"
-      hash_key        = "request_id"
+      hash_key        = "requestId"
       projection_type = "ALL"
     }
   ]
