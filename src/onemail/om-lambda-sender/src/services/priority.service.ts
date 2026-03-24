@@ -23,7 +23,7 @@ import {
   MailFromDomainNotVerifiedException,
   MessageRejected,
 } from '@aws-sdk/client-sesv2';
-import { isEmpty } from 'lodash-es';
+import isEmpty from 'lodash-es/isEmpty.js';
 import { EmailStatus } from 'om-common/types';
 
 import {
