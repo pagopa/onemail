@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.7.0
+
+### Minor Changes
+
+- 4e6a558: Lambda Sender egress rule
+
 ## 1.6.0
 
 ### Minor Changes
