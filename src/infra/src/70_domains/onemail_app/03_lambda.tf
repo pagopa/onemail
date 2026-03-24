@@ -75,15 +75,15 @@ module "security_group_lambda_sender" {
     data.aws_vpc_endpoint.dynamodb.prefix_list_id
   ]
 
-  #egress_rules = ["https-443-tcp"]
-}
-
-resource "aws_vpc_security_group_egress_rule" "sender_https_rule" {
-  security_group_id = module.security_group_lambda_sender.security_group_id
-  from_port         = 443
-  ip_protocol       = "tcp"
-  to_port           = 443
-  cidr_ipv4         = data.aws_vpc.core.cidr_block
+  egress_with_cidr_blocks = [
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      description = "HTTPS to VPC"
+      cidr_blocks = data.aws_vpc.core.cidr_block
+    }
+  ]
 }
 
 module "lambda_sender" {
