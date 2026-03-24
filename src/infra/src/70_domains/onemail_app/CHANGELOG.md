@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.6.0
+
+### Minor Changes
+
+- 0c893fd: SES VPC endpoint and fix Lambda permissions
+
 ## 1.5.0
 
 ### Minor Changes
