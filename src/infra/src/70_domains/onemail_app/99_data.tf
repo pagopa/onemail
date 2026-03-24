@@ -71,3 +71,7 @@ data "aws_lb_listener" "ecs_core" {
   load_balancer_arn = data.aws_lb.nlb.arn
   port              = 3000
 }
+
+data "aws_sesv2_configuration_set" "oml_config_set" {
+  configuration_set_name = "${local.project_nodomain}-${var.env}-configuration-set"
+}
