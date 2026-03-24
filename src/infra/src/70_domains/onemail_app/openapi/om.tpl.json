@@ -33,7 +33,7 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "HTTP",
+          "type": "HTTP_PROXY",
           "httpMethod": "GET",
           "uri": "${uri}/v1/emails/statuses",
           "connectionType": "VPC_LINK",
@@ -42,11 +42,6 @@
           "timeoutInMillis": 20000,
           "requestParameters": {
             "integration.request.querystring.requestId": "method.request.querystring.requestId"
-          },
-          "responses": {
-            "default": {
-              "statusCode": "200"
-            }
           }
         },
         "responses": {
@@ -75,7 +70,7 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "HTTP",
+          "type": "HTTP_PROXY",
           "httpMethod": "POST",
           "uri": "${uri}/v1/emails/send/high",
           "connectionType": "VPC_LINK",
@@ -84,11 +79,6 @@
           "timeoutInMillis": 20000,
           "requestParameters": {
             "integration.request.querystring.dryRun": "method.request.querystring.dryRun"
-          },
-          "responses": {
-            "default": {
-              "statusCode": "202"
-            }
           }
         },
         "responses": {
@@ -117,7 +107,7 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "HTTP",
+          "type": "HTTP_PROXY",
           "httpMethod": "POST",
           "uri": "${uri}/v1/emails/send/low",
           "connectionType": "VPC_LINK",
@@ -126,11 +116,6 @@
           "timeoutInMillis": 20000,
           "requestParameters": {
             "integration.request.querystring.dryRun": "method.request.querystring.dryRun"
-          },
-          "responses": {
-            "default": {
-              "statusCode": "202"
-            }
           }
         },
         "responses": {
@@ -148,18 +133,13 @@
         "tags": ["Emails"],
         "summary": "Sanitize HTML content of the email",
         "x-amazon-apigateway-integration": {
-          "type": "HTTP",
+          "type": "HTTP_PROXY",
           "httpMethod": "POST",
           "uri": "${uri}/v1/emails/sanitize-html",
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
           "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "timeoutInMillis": 20000,
-          "responses": {
-            "default": {
-              "statusCode": "200"
-            }
-          }
+          "timeoutInMillis": 20000
         },
         "responses": {
           "200": { "description": "Email sanitized successfully" },
@@ -176,18 +156,13 @@
         "tags": ["Health"],
         "summary": "Perform readiness check of the service",
         "x-amazon-apigateway-integration": {
-          "type": "HTTP",
+          "type": "HTTP_PROXY",
           "httpMethod": "GET",
           "uri": "${uri}/health/ready",
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
           "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "timeoutInMillis": 5000,
-          "responses": {
-            "default": {
-              "statusCode": "200"
-            }
-          }
+          "timeoutInMillis": 5000
         },
         "responses": {
           "200": { "description": "Service is ready" },
@@ -200,18 +175,13 @@
         "tags": ["Health"],
         "summary": "Perform liveness check of the service",
         "x-amazon-apigateway-integration": {
-          "type": "HTTP",
+          "type": "HTTP_PROXY",
           "httpMethod": "GET",
           "uri": "${uri}/health",
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
           "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "timeoutInMillis": 5000,
-          "responses": {
-            "default": {
-              "statusCode": "200"
-            }
-          }
+          "timeoutInMillis": 5000
         },
         "responses": {
           "200": { "description": "Service is alive" },
