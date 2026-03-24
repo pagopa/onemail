@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.2.2
+
+### Patch Changes
+
+- 6af8fec: replace lodash with lodash-es for ESM porting
+
 ## 1.2.1
 
 ### Patch Changes
