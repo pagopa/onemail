@@ -1,5 +1,11 @@
 # infra-network
 
+## 1.4.0
+
+### Minor Changes
+
+- 0c893fd: SES VPC endpoint and fix Lambda permissions
+
 ## 1.3.0
 
 ### Minor Changes
