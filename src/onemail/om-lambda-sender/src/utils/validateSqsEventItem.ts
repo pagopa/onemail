@@ -6,7 +6,7 @@ import {
   SqsEventItemLow,
   SqsEventItemLowSchema,
 } from '#dtos/sqsEventItem';
-import { isEmpty } from 'lodash';
+import { isEmpty } from 'lodash-es';
 
 export const validateSqsEventItem = (
   item: SQSRecord,

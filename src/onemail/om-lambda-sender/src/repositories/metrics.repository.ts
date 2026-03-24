@@ -5,7 +5,7 @@ import {
   type MetricDatum,
   PutMetricDataCommand,
 } from '@aws-sdk/client-cloudwatch';
-import { isEmpty } from 'lodash';
+import { isEmpty } from 'lodash-es';
 
 export enum SenderMetricName {
   EmailBatchNotFound = 'EmailBatchNotFound',
