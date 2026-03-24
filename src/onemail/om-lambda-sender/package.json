@@ -26,13 +26,13 @@
     "@aws-sdk/client-dynamodb": "catalog:",
     "@aws-sdk/client-sesv2": "^3.1014.0",
     "@aws-sdk/lib-dynamodb": "catalog:",
-    "lodash": "catalog:",
+    "lodash-es": "catalog:",
     "om-common": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.160",
-    "@types/lodash": "catalog:",
+    "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "aws-lambda": "^1.0.7"
   },

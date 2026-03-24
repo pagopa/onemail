@@ -23,7 +23,7 @@ import {
   MailFromDomainNotVerifiedException,
   MessageRejected,
 } from '@aws-sdk/client-sesv2';
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash-es/isEmpty.js';
 import { EmailStatus } from 'om-common/types';
 
 import {
@@ -150,6 +150,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
           status: EmailStatus.RejectedBySES as EmailStatus,
         };
       }),
+      // TODO: align behavior between high and low priority - for high priority we do not update the status in case of retryable errors
       ...retryableFailures.map((entry) => ({
         item: entry.item,
         status: EmailStatus.Queued as EmailStatus,
