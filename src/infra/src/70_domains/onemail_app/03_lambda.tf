@@ -19,7 +19,7 @@ data "aws_iam_policy_document" "sender_policy" {
       "ses:SendBulkEmail",
       "ses:SendBulkTemplatedEmail"
     ]
-    resources = var.enable_ses ? [data.aws_sesv2_configuration_set.oml_config_set[0].arn, "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:template/*"] : ["*"]
+    resources = var.enable_ses ? [data.aws_ses_domain_identity.onemail[0].arn, data.aws_sesv2_configuration_set.oml_config_set[0].arn, "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:template/*"] : ["*"]
 
     dynamic "condition" {
       for_each = var.enable_ses ? [1] : []
