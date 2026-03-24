@@ -16,7 +16,7 @@ data "aws_iam_policy_document" "sender_policy" {
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
-    resources = var.enable_ses ? [data.aws_ses_domain_identity.onemail[0].arn, data.aws_sesv2_configuration_set.oml_config_set.arn] : ["*"]
+    resources = var.enable_ses ? [data.aws_ses_domain_identity.onemail[0].arn, data.aws_sesv2_configuration_set.oml_config_set[0].arn] : ["*"]
 
     dynamic "condition" {
       for_each = var.enable_ses ? [1] : []
