@@ -3,4 +3,4 @@
 'infra-network': minor
 ---
 
-SES vpc endpoint and fix lambda permissions
+SES VPC endpoint and fix Lambda permissions
