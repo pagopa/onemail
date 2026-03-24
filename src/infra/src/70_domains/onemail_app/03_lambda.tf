@@ -83,7 +83,7 @@ resource "aws_vpc_security_group_egress_rule" "sender_https_rule" {
   from_port         = 443
   ip_protocol       = "tcp"
   to_port           = 443
-  cidr_ipv4         = "0.0.0.0/0"
+  cidr_ipv4         = data.aws_vpc.core.cidr_block
 }
 
 module "lambda_sender" {
