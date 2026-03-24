@@ -7,8 +7,6 @@ import {
 } from '@aws-sdk/client-sesv2';
 import { EmailStatusHistoryItem } from 'om-common/types';
 
-import { SES_SIMULATOR } from './constants.js';
-
 export function mapDbHighPriorityItemToSesModel(
   item: EmailStatusHistoryItem,
 ): SendEmailCommandInput {
@@ -46,11 +44,9 @@ export function mapDbHighPriorityItemToSesModel(
       ? `${content.from.name} <${content.from.email}>`
       : content.from.email,
     Destination: {
-      ToAddresses: item.dryRun
-        ? [SES_SIMULATOR.SUCCESS]
-        : content.to.name
-          ? [`${content.to.name} <${content.to.email}>`]
-          : [content.to.email],
+      ToAddresses: content.to.name
+        ? [`${content.to.name} <${content.to.email}>`]
+        : [content.to.email],
     },
     Content: content_obj,
   };
@@ -84,11 +80,9 @@ export function mapDbLowPriorityItemToSesModel(
       );
     }
 
-    const toAddress = item.dryRun
-      ? SES_SIMULATOR.SUCCESS
-      : content.to.name
-        ? `${content.to.name} <${content.to.email}>`
-        : content.to.email;
+    const toAddress = content.to.name
+      ? `${content.to.name} <${content.to.email}>`
+      : content.to.email;
 
     const headers = content.extendedHeaders?.map((h) => ({
       Name: h.N,
@@ -107,6 +101,8 @@ export function mapDbLowPriorityItemToSesModel(
       ReplacementHeaders: headers,
     };
   });
+
+  // TODO: replyTo - tag
 
   const input: SendBulkEmailCommandInput = {
     FromEmailAddress: firstContent.from.name

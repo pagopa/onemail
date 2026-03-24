@@ -20,7 +20,7 @@ export const stringCheckedSchema = ({
     .max(maxLength, { message: `Field can't exceed ${maxLength} characters` });
 };
 
-// Handles sender and recipients [cite: 828, 866]
+// Handles sender and recipients
 export const EmailAddressSchema = z.object({
   name: stringCheckedSchema()
     .optional()
