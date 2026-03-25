@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.2.3
+
+### Patch Changes
+
+- 6d2d49a: handling dryRun scenarios saving simulator address to db
+
 ## 1.2.2
 
 ### Patch Changes
