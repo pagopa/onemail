@@ -1,3 +1,4 @@
+import { DryRunValidationError } from '#errors/DryRunValidationError';
 import {
   Body,
   BulkEmailEntry,
@@ -135,7 +136,7 @@ function checkDryRunRecipient(item: EmailStatusHistoryItem): void {
     isDryRun &&
     !Object.values(SES_SIMULATOR).includes(toEmail as SES_SIMULATOR)
   ) {
-    throw new Error(
+    throw new DryRunValidationError(
       `Dry-run email item (id: ${item.emailId}) has non-simulator recipient address: ${toEmail}. Aborting send.`,
     );
   }

@@ -7,6 +7,7 @@ import {
   SqsEventItemLow,
   SqsEventItemLowSchema,
 } from '#dtos/sqsEventItem';
+import { DryRunValidationError } from '#errors/DryRunValidationError';
 import {
   batchUpdateEmailStatuses,
   getEmailById,
@@ -57,9 +58,23 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
   try {
     sesMessageId = await sendHighPriorityEmail(email);
   } catch (error) {
+    if (error instanceof DryRunValidationError) {
+      logger.error('Dry-run validation failed, marking email as rejected', {
+        emailId,
+        error: error.message,
+        retryable: false,
+      });
+      await updateEmailStatus({ emailId, status: EmailStatus.DryRunError });
+      await publishMetrics([
+        { name: SenderMetricName.HighPriorityRejectedBySes },
+      ]);
+      return;
+    }
+
     const errorMessage = handleSesError(error);
     if (errorMessage) {
-      await updateEmailStatus(emailId, EmailStatus.RejectedBySES);
+      // TODO: add reason ?
+      await updateEmailStatus({ emailId, status: EmailStatus.RejectedBySES });
       await publishMetrics([
         {
           name: SenderMetricName.HighPriorityRejectedBySes,
@@ -73,14 +88,18 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
 
   // 4. Update the email status in DB
   if (sesMessageId) {
-    await updateEmailStatus(emailId, EmailStatus.Dispatched, sesMessageId);
+    await updateEmailStatus({
+      emailId,
+      status: EmailStatus.Dispatched,
+      messageId: sesMessageId,
+    });
     await publishMetrics([
       {
         name: SenderMetricName.HighPriorityDispatched,
       },
     ]);
   } else {
-    await updateEmailStatus(emailId, EmailStatus.RejectedBySES);
+    await updateEmailStatus({ emailId, status: EmailStatus.RejectedBySES });
     await publishMetrics([
       {
         name: SenderMetricName.HighPriorityRejectedBySes,
@@ -156,6 +175,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       })),
     ];
 
+    // TODO: add reason ?
     await batchUpdateEmailStatuses(updates);
     await publishMetrics([
       {
@@ -172,6 +192,26 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       },
     ]);
   } catch (error) {
+    if (error instanceof DryRunValidationError) {
+      logger.error('Dry-run validation failed, marking batch as rejected', {
+        requestId,
+        error: error.message,
+        retryable: false,
+      });
+      await batchUpdateEmailStatuses(
+        emails.map((email) => ({
+          item: email,
+          status: EmailStatus.DryRunError as EmailStatus,
+        })),
+      );
+      await publishMetrics([
+        {
+          name: SenderMetricName.LowPriorityRejectedBySes,
+          value: emails.length,
+        },
+      ]);
+      return;
+    }
     const errorMessage = handleSesError(error);
     if (errorMessage) {
       // Whole batch rejected — mark all items
