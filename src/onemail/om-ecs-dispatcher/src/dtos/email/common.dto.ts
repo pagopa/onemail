@@ -57,12 +57,11 @@ export const TemplateIdSchema = stringCheckedSchema().describe(
 // Dry Run Query Parameters
 export const DryRunQueryParamsSchema = z
   .object({
-    dryRun: z
-      .stringbool()
-      .default(false)
-      .describe(
+    dryRun: z.stringbool().default(false).openapi({
+      type: 'boolean',
+      description:
         'Indicates whether the request is a dry run, ignored in production',
-      ),
+    }),
   })
   .refine(
     (data) => {
