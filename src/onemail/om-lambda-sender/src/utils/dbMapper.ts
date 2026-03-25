@@ -1,3 +1,4 @@
+import { DryRunValidationError } from '#errors/DryRunValidationError';
 import {
   Body,
   BulkEmailEntry,
@@ -6,13 +7,14 @@ import {
   SendEmailCommandInput,
 } from '@aws-sdk/client-sesv2';
 import { EmailStatusHistoryItem } from 'om-common/types';
-
-import { SES_SIMULATOR } from './constants.js';
+import { SES_SIMULATOR } from 'om-common/utils';
 
 export function mapDbHighPriorityItemToSesModel(
   item: EmailStatusHistoryItem,
 ): SendEmailCommandInput {
   const { content } = item;
+
+  checkDryRunRecipient(item);
 
   const headers = content.extendedHeaders?.map((h) => ({
     Name: h.N,
@@ -46,11 +48,9 @@ export function mapDbHighPriorityItemToSesModel(
       ? `${content.from.name} <${content.from.email}>`
       : content.from.email,
     Destination: {
-      ToAddresses: item.dryRun
-        ? [SES_SIMULATOR.SUCCESS]
-        : content.to.name
-          ? [`${content.to.name} <${content.to.email}>`]
-          : [content.to.email],
+      ToAddresses: content.to.name
+        ? [`${content.to.name} <${content.to.email}>`]
+        : [content.to.email],
     },
     Content: content_obj,
   };
@@ -68,6 +68,8 @@ export function mapDbLowPriorityItemToSesModel(
   // Use the first item to derive shared defaults (from, template name)
   const firstContent = items[0].content;
 
+  // TODO: in case of thrown error, check if the error needs to make message item retryable or if it's a hard failure that should be discarded
+
   if (!firstContent.template) {
     throw new Error(
       'SendBulkEmail only supports template-based content. Body content is not allowed.',
@@ -84,11 +86,7 @@ export function mapDbLowPriorityItemToSesModel(
       );
     }
 
-    const toAddress = item.dryRun
-      ? SES_SIMULATOR.SUCCESS
-      : content.to.name
-        ? `${content.to.name} <${content.to.email}>`
-        : content.to.email;
+    checkDryRunRecipient(item);
 
     const headers = content.extendedHeaders?.map((h) => ({
       Name: h.N,
@@ -97,7 +95,7 @@ export function mapDbLowPriorityItemToSesModel(
 
     return {
       Destination: {
-        ToAddresses: [toAddress],
+        ToAddresses: [content.to.email],
       },
       ReplacementEmailContent: {
         ReplacementTemplate: {
@@ -107,6 +105,8 @@ export function mapDbLowPriorityItemToSesModel(
       ReplacementHeaders: headers,
     };
   });
+
+  // TODO: replyTo - tag
 
   const input: SendBulkEmailCommandInput = {
     FromEmailAddress: firstContent.from.name
@@ -125,4 +125,19 @@ export function mapDbLowPriorityItemToSesModel(
   //TODO - tenantName to be added
 
   return input;
+}
+
+// Validates that dry-run items target an approved SES simulator address.
+function checkDryRunRecipient(item: EmailStatusHistoryItem): void {
+  const isDryRun = item.dryRun === true;
+  const toEmail = item.content.to.email;
+
+  if (
+    isDryRun &&
+    !Object.values(SES_SIMULATOR).includes(toEmail as SES_SIMULATOR)
+  ) {
+    throw new DryRunValidationError(
+      `Dry-run email item (id: ${item.emailId}) has non-simulator recipient address: ${toEmail}. Aborting send.`,
+    );
+  }
 }

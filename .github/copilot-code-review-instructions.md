@@ -4,6 +4,11 @@
 - Keep findings concise, severity-ordered, and tied to concrete evidence.
 - Preserve requested behavior first, then improve security, maintainability, and token efficiency.
 
+## Reviewer non-negotiables
+- Ignore `TODO`, `FIXME`, or similar technical debt markers in the code. Do not flag them unless they introduce immediate security or correctness risks.
+- Ignore the presence, lack of specificity, formatting, or typos within comments (e.g. `#`, `//`, `/** */`).
+- If there is a need to flag typos and naming inconsistencies issues, flag them only when found in executable/functional code (variables, functions, strings, etc.) and not in comments.
+
 ## Review output format
 - `Critical`: must-fix issues such as security flaws, correctness bugs, or data-loss risk.
 - `Major`: high-risk improvements such as mandatory rule violations, unsafe defaults, or missing validation.

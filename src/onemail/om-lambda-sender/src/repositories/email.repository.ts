@@ -52,11 +52,17 @@ export const getEmailsByRequestId = async (
 
 // update email status in db - to be implemented
 // add messageId
-export const updateEmailStatus = async (
-  emailId: string,
-  status: EmailStatus,
-  messageId?: string,
-): Promise<void> => {
+export const updateEmailStatus = async ({
+  emailId,
+  status,
+  messageId,
+  reason,
+}: {
+  emailId: string;
+  status: EmailStatus;
+  messageId?: string;
+  reason?: string;
+}): Promise<void> => {
   const now = new Date().toISOString();
   await dynamoClient.send(
     new UpdateCommand({
@@ -75,7 +81,7 @@ export const updateEmailStatus = async (
         ':updatedAt': now,
         ':sesMessageId': messageId || null,
         ':emptyList': [],
-        ':newHistoryItem': [{ status, changedAt: now }],
+        ':newHistoryItem': [{ status, changedAt: now, reason }],
       },
     }),
   );
@@ -85,6 +91,7 @@ export interface EmailStatusUpdate {
   item: EmailStatusHistoryItem;
   status: EmailStatus;
   messageId?: string;
+  reason?: string;
 }
 
 const DYNAMO_BATCH_LIMIT = 25;
@@ -159,12 +166,13 @@ export const batchUpdateEmailStatuses = async (
     return;
   }
 
-  const items = updates.map(({ item, status, messageId }) => {
+  const items = updates.map(({ item, status, messageId, reason }) => {
     // Append the new status to the existing history array
     const updatedHistory = item.history ? [...item.history] : [];
     updatedHistory.push({
       status,
       changedAt: now,
+      reason,
     });
 
     return {

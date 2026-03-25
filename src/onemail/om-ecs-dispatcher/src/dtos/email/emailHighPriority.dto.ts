@@ -31,7 +31,9 @@ export const EmailContentSchema = z.object({
 
 const BaseEmailSchema = z.object({
   from: EmailAddressSchema.describe('Sender of the email'),
-  to: EmailAddressSchema.describe('Recipient of the email'),
+  to: EmailAddressSchema.describe(
+    'Recipient of the email, ignored in case of dryRun',
+  ),
   extendedHeaders: ExtendedHeadersSchema.optional(),
   tag: TagSchema.optional(),
 });

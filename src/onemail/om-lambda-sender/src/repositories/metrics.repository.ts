@@ -12,9 +12,11 @@ export enum SenderMetricName {
   EmailNotFound = 'EmailNotFound',
   EmailStatusBatchUpdateFailed = 'EmailStatusBatchUpdateFailed',
   HighPriorityDispatched = 'HighPriorityDispatched',
+  HighPriorityDryRunError = 'HighPriorityDryRunError',
   HighPriorityRejectedBySes = 'HighPriorityRejectedBySes',
   InvalidRecord = 'InvalidRecord',
   LowPriorityDispatched = 'LowPriorityDispatched',
+  LowPriorityDryRunError = 'LowPriorityDryRunError',
   LowPriorityRejectedBySes = 'LowPriorityRejectedBySes',
   LowPriorityRetryableFailure = 'LowPriorityRetryableFailure',
 }

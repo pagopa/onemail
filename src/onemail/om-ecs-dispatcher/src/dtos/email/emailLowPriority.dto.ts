@@ -11,7 +11,9 @@ import {
 } from './common.dto.js';
 
 export const SendingInfoSchema = z.object({
-  to: EmailAddressSchema.describe('Recipient of the email'),
+  to: EmailAddressSchema.describe(
+    'Recipient of the email, ignored in case of dryRun',
+  ),
   extendedHeaders: ExtendedHeadersSchema.optional(),
   templateAttributes: TemplateAttributesSchema.optional(),
 });
