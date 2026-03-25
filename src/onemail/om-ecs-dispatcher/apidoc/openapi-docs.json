@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.5.1",
+    "version": "1.5.4",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -169,7 +169,7 @@
                 "required": [
                   "email"
                 ],
-                "description": "Recipient of the email"
+                "description": "Recipient of the email, ignored in case of dryRun"
               },
               "extendedHeaders": {
                 "type": "array",
@@ -179,13 +179,13 @@
                     "N": {
                       "type": "string",
                       "minLength": 1,
-                      "maxLength": 255,
+                      "maxLength": 126,
                       "description": "Key"
                     },
                     "V": {
                       "type": "string",
                       "minLength": 1,
-                      "maxLength": 255,
+                      "maxLength": 995,
                       "description": "Value"
                     }
                   },
@@ -228,10 +228,20 @@
                       "templateAttributes": {
                         "type": "object",
                         "additionalProperties": {
-                          "nullable": true,
-                          "description": "Value"
+                          "description": "Value for the template attribute. Can be a string, number, boolean, object, or array."
                         },
-                        "description": "Dynamic attributes for template rendering"
+                        "description": "Dynamic attributes for template rendering. Each key represents the attribute name used in the template (e.g., \"user_name\"), and its value will be substituted during rendering.",
+                        "example": {
+                          "user_name": "John Doe",
+                          "payment_id": 12345,
+                          "items": [
+                            "book",
+                            "pen"
+                          ],
+                          "metadata": {
+                            "source": "web"
+                          }
+                        }
                       }
                     },
                     "required": [
@@ -259,13 +269,13 @@
                       "html": {
                         "type": "string",
                         "minLength": 10,
-                        "maxLength": 200000,
+                        "maxLength": 150000,
                         "description": "HTML content of the email"
                       },
                       "text": {
                         "type": "string",
                         "minLength": 1,
-                        "maxLength": 200000,
+                        "maxLength": 50000,
                         "description": "Text content of the email used as fallback if HTML content is not supported by the email client"
                       }
                     },
@@ -379,7 +389,7 @@
                   "required": [
                     "email"
                   ],
-                  "description": "Recipient of the email"
+                  "description": "Recipient of the email, ignored in case of dryRun"
                 },
                 "extendedHeaders": {
                   "type": "array",
@@ -389,13 +399,13 @@
                       "N": {
                         "type": "string",
                         "minLength": 1,
-                        "maxLength": 255,
+                        "maxLength": 126,
                         "description": "Key"
                       },
                       "V": {
                         "type": "string",
                         "minLength": 1,
-                        "maxLength": 255,
+                        "maxLength": 995,
                         "description": "Value"
                       }
                     },
@@ -409,10 +419,20 @@
                 "templateAttributes": {
                   "type": "object",
                   "additionalProperties": {
-                    "nullable": true,
-                    "description": "Value"
+                    "description": "Value for the template attribute. Can be a string, number, boolean, object, or array."
                   },
-                  "description": "Dynamic attributes for template rendering"
+                  "description": "Dynamic attributes for template rendering. Each key represents the attribute name used in the template (e.g., \"user_name\"), and its value will be substituted during rendering.",
+                  "example": {
+                    "user_name": "John Doe",
+                    "payment_id": 12345,
+                    "items": [
+                      "book",
+                      "pen"
+                    ],
+                    "metadata": {
+                      "source": "web"
+                    }
+                  }
                 }
               },
               "required": [
@@ -447,7 +467,7 @@
           "htmlContent": {
             "type": "string",
             "minLength": 10,
-            "maxLength": 200000,
+            "maxLength": 150000,
             "description": "HTML content to be sanitized",
             "example": "<p>Hello <strong>World</strong></p>"
           }
@@ -486,10 +506,39 @@
                   "Unavailable"
                 ],
                 "description": "Status of the DynamoDB service"
+              },
+              "queue": {
+                "type": "object",
+                "properties": {
+                  "highPriority": {
+                    "type": "string",
+                    "enum": [
+                      "Initialized",
+                      "NotInitialized",
+                      "Unavailable"
+                    ],
+                    "description": "Status of the high priority queue"
+                  },
+                  "lowPriority": {
+                    "type": "string",
+                    "enum": [
+                      "Initialized",
+                      "NotInitialized",
+                      "Unavailable"
+                    ],
+                    "description": "Status of the low priority queue"
+                  }
+                },
+                "required": [
+                  "highPriority",
+                  "lowPriority"
+                ],
+                "description": "Status of SQS queues"
               }
             },
             "required": [
-              "db"
+              "db",
+              "queue"
             ],
             "description": "Status of individual services"
           }
@@ -536,7 +585,7 @@
         "tags": [
           "Emails"
         ],
-        "summary": "Get emails status",
+        "summary": "Get email status history",
         "parameters": [
           {
             "schema": {
@@ -553,7 +602,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Emails status retrieved successfully",
+            "description": "Email status history retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -717,8 +766,7 @@
         "parameters": [
           {
             "schema": {
-              "type": "string",
-              "default": false,
+              "type": "boolean",
               "description": "Indicates whether the request is a dry run, ignored in production"
             },
             "required": false,
@@ -900,8 +948,7 @@
         "parameters": [
           {
             "schema": {
-              "type": "string",
-              "default": false,
+              "type": "boolean",
               "description": "Indicates whether the request is a dry run, ignored in production"
             },
             "required": false,
@@ -1079,7 +1126,7 @@
         "tags": [
           "Emails"
         ],
-        "summary": "Sanitize HTML content of the email",
+        "summary": "Test HTML content sanitization of the email",
         "requestBody": {
           "description": "Request body",
           "content": {
@@ -1091,8 +1138,8 @@
           }
         },
         "responses": {
-          "202": {
-            "description": "Email accepted for processing",
+          "200": {
+            "description": "Email sanitized successfully",
             "content": {
               "application/json": {
                 "schema": {
