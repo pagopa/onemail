@@ -66,7 +66,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       });
       await updateEmailStatus({ emailId, status: EmailStatus.DryRunError });
       await publishMetrics([
-        { name: SenderMetricName.HighPriorityRejectedBySes },
+        { name: SenderMetricName.HighPriorityDryRunError },
       ]);
       return;
     }
@@ -206,7 +206,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       );
       await publishMetrics([
         {
-          name: SenderMetricName.LowPriorityRejectedBySes,
+          name: SenderMetricName.LowPriorityDryRunError,
           value: emails.length,
         },
       ]);
