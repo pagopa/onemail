@@ -72,6 +72,7 @@ export const DryRunQueryParamsSchema = z
   .object({
     dryRun: z.stringbool().default(false).openapi({
       type: 'boolean',
+      default: false,
       description:
         'Indicates whether the request is a dry run, ignored in production',
     }),

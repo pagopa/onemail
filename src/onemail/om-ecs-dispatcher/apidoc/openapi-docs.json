@@ -767,6 +767,7 @@
           {
             "schema": {
               "type": "boolean",
+              "default": false,
               "description": "Indicates whether the request is a dry run, ignored in production"
             },
             "required": false,
@@ -949,6 +950,7 @@
           {
             "schema": {
               "type": "boolean",
+              "default": false,
               "description": "Indicates whether the request is a dry run, ignored in production"
             },
             "required": false,
