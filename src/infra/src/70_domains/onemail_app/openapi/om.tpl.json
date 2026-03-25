@@ -39,10 +39,7 @@
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
           "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "timeoutInMillis": 20000,
-          "requestParameters": {
-            "integration.request.querystring.requestId": "method.request.querystring.requestId"
-          }
+          "timeoutInMillis": 20000
         },
         "responses": {
           "200": { "description": "Emails status retrieved successfully" },
@@ -76,10 +73,7 @@
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
           "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "timeoutInMillis": 20000,
-          "requestParameters": {
-            "integration.request.querystring.dryRun": "method.request.querystring.dryRun"
-          }
+          "timeoutInMillis": 20000
         },
         "responses": {
           "202": { "description": "Email accepted for processing" },
@@ -113,10 +107,7 @@
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
           "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "timeoutInMillis": 20000,
-          "requestParameters": {
-            "integration.request.querystring.dryRun": "method.request.querystring.dryRun"
-          }
+          "timeoutInMillis": 20000
         },
         "responses": {
           "202": { "description": "Email accepted for processing" },
