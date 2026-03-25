@@ -23,7 +23,8 @@ data "aws_iam_policy_document" "ecs_task_policy" {
       "dynamodb:UpdateItem",
       "dynamodb:GetItem",
       "dynamodb:DescribeTable",
-      "dynamodb:Query"
+      "dynamodb:Query",
+      "dynamodb:BatchWriteItem"
     ]
 
     resources = [

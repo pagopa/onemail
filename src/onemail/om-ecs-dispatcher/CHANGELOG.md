@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.5.5
+
+### Patch Changes
+
+- 6af8fec: replace lodash with lodash-es for ESM porting
+
 ## 1.5.4
 
 ### Patch Changes

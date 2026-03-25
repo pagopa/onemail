@@ -1,6 +1,6 @@
 {
   "name": "om-ecs-dispatcher",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "RESTful API that sorts requests into queues based on priority",
   "private": true,
   "main": "dist/app.js",
@@ -28,7 +28,7 @@
     "dotenv": "^17.2.4",
     "express": "^5.2.1",
     "http-status-codes": "^2.3.0",
-    "lodash": "catalog:",
+    "lodash-es": "catalog:",
     "om-common": "workspace:*",
     "sanitize-html": "^2.17.1",
     "swagger-ui-express": "^5.0.1",
@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/lodash": "catalog:",
+    "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "@types/sanitize-html": "^2.16.0",
     "@types/swagger-ui-express": "^4.1.8",

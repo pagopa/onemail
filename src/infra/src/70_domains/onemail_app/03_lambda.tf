@@ -14,9 +14,12 @@ data "aws_iam_policy_document" "sender_policy" {
   statement {
     actions = [
       "ses:SendEmail",
-      "ses:SendRawEmail"
+      "ses:SendRawEmail",
+      "ses:SendTemplatedEmail",
+      "ses:SendBulkEmail",
+      "ses:SendBulkTemplatedEmail"
     ]
-    resources = var.enable_ses ? [data.aws_ses_domain_identity.onemail[0].arn, data.aws_sesv2_configuration_set.oml_config_set[0].arn] : ["*"]
+    resources = var.enable_ses ? [data.aws_ses_domain_identity.onemail[0].arn, data.aws_sesv2_configuration_set.oml_config_set[0].arn, "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:template/*"] : ["*"]
 
     dynamic "condition" {
       for_each = var.enable_ses ? [1] : []
@@ -75,15 +78,15 @@ module "security_group_lambda_sender" {
     data.aws_vpc_endpoint.dynamodb.prefix_list_id
   ]
 
-  #egress_rules = ["https-443-tcp"]
-}
-
-resource "aws_vpc_security_group_egress_rule" "sender_https_rule" {
-  security_group_id = module.security_group_lambda_sender.security_group_id
-  from_port         = 443
-  ip_protocol       = "tcp"
-  to_port           = 443
-  cidr_ipv4         = data.aws_vpc.core.cidr_block
+  egress_with_cidr_blocks = [
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      description = "HTTPS to VPC"
+      cidr_blocks = data.aws_vpc.core.cidr_block
+    }
+  ]
 }
 
 module "lambda_sender" {
