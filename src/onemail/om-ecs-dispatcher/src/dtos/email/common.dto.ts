@@ -47,7 +47,20 @@ export const TagSchema = z
 // Dynamic attributes for template rendering
 export const TemplateAttributesSchema = z
   .record(stringCheckedSchema().describe('Key'), z.any().describe('Value'))
-  .describe('Dynamic attributes for template rendering');
+  .openapi({
+    description:
+      'Dynamic attributes for template rendering. Each key represents the attribute name used in the template (e.g., "user_name"), and its value will be substituted during rendering.',
+    additionalProperties: {
+      description:
+        'Value for the template attribute. Can be a string, number, boolean, object, or array.',
+    },
+    example: {
+      user_name: 'John Doe',
+      payment_id: 12345,
+      items: ['book', 'pen'],
+      metadata: { source: 'web' },
+    },
+  });
 
 // Identifier of the email template
 export const TemplateIdSchema = stringCheckedSchema().describe(
