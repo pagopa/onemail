@@ -115,6 +115,7 @@ export function mapDbLowPriorityItemToSesModel(
     DefaultContent: {
       Template: {
         TemplateName: firstContent.template.id,
+        TemplateData: '{}', // default empty, as we validate template attributes before and we are using ReplacementTemplateData for each entry
       },
     },
     BulkEmailEntries: bulkEntries,
