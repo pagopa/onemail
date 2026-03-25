@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.7.1
+
+### Patch Changes
+
+- 7a2ec16: user http_proxy instead http for integration requests
+
 ## 1.7.0
 
 ### Minor Changes

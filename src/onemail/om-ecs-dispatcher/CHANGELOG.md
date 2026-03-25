@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.5.6
+
+### Patch Changes
+
+- 6d2d49a: handling dryRun scenarios saving simulator address to db
+
 ## 1.5.5
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # onemail
 
+## 1.1.20
+
+### Patch Changes
+
+- Updated dependencies [6d2d49a]
+- Updated dependencies [7a2ec16]
+  - om-ecs-dispatcher@1.5.6
+  - om-lambda-sender@1.2.3
+  - infra-domains-onemail-app@1.7.1
+
 ## 1.1.19
 
 ### Patch Changes
