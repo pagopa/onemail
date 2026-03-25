@@ -18,6 +18,11 @@
       "local": "./src/types/index.ts",
       "types": "./dist/types/index.d.ts",
       "default": "./dist/types/index.js"
+    },
+    "./utils": {
+      "local": "./src/utils/index.ts",
+      "types": "./dist/utils/index.d.ts",
+      "default": "./dist/utils/index.js"
     }
   },
   "devDependencies": {},

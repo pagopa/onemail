@@ -9,8 +9,7 @@ import {
   EmailStatusHistoryItem,
   TemplateContent,
 } from 'om-common/types';
-
-import { SES_SIMULATOR } from './constants.js';
+import { SES_SIMULATOR } from 'om-common/utils';
 
 export function mapEmailLowPriorityToDbItem(
   body: EmailLowPriorityBodyDTO,
