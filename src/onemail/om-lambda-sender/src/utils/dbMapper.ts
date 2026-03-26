@@ -6,7 +6,7 @@ import {
   SendBulkEmailCommandInput,
   SendEmailCommandInput,
 } from '@aws-sdk/client-sesv2';
-import { EmailStatusHistoryItem } from 'om-common/types';
+import { EmailAddress, EmailStatusHistoryItem } from 'om-common/types';
 import { SES_SIMULATOR } from 'om-common/utils';
 
 export function mapDbHighPriorityItemToSesModel(
@@ -44,13 +44,9 @@ export function mapDbHighPriorityItemToSesModel(
   }
 
   const input: SendEmailCommandInput = {
-    FromEmailAddress: content.from.name
-      ? `${content.from.name} <${content.from.email}>`
-      : content.from.email,
+    FromEmailAddress: formatEmailAddress(content.from),
     Destination: {
-      ToAddresses: content.to.name
-        ? [`${content.to.name} <${content.to.email}>`]
-        : [content.to.email],
+      ToAddresses: [formatEmailAddress(content.to)],
     },
     Content: content_obj,
   };
@@ -95,7 +91,7 @@ export function mapDbLowPriorityItemToSesModel(
 
     return {
       Destination: {
-        ToAddresses: [content.to.email],
+        ToAddresses: [formatEmailAddress(content.to)],
       },
       ReplacementEmailContent: {
         ReplacementTemplate: {
@@ -106,15 +102,15 @@ export function mapDbLowPriorityItemToSesModel(
     };
   });
 
-  // TODO: replyTo - tag
-
   const input: SendBulkEmailCommandInput = {
-    FromEmailAddress: firstContent.from.name
-      ? `${firstContent.from.name} <${firstContent.from.email}>`
-      : firstContent.from.email,
+    FromEmailAddress: formatEmailAddress(firstContent.from),
+    ReplyToAddresses: firstContent.replyTo
+      ? [formatEmailAddress(firstContent.replyTo)]
+      : undefined,
     DefaultContent: {
       Template: {
         TemplateName: firstContent.template.id,
+        TemplateData: '{}', // default empty, as we validate template attributes before and we are using ReplacementTemplateData for each entry
       },
     },
     BulkEmailEntries: bulkEntries,
@@ -140,4 +136,20 @@ function checkDryRunRecipient(item: EmailStatusHistoryItem): void {
       `Dry-run email item (id: ${item.emailId}) has non-simulator recipient address: ${toEmail}. Aborting send.`,
     );
   }
+}
+
+function escapeEmailDisplayName(name: string): string {
+  // escape backslashes and double quotes in the display name
+  const escaped = name.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  // quote it if it contains special characters or leading/trailing whitespace
+  const hasSpecialChars = /[",;:<>@()[\]\\]/.test(name);
+  const hasLeadingOrTrailingWhitespace = /^\s/.test(name) || /\s$/.test(name);
+  const needsQuoting = hasSpecialChars || hasLeadingOrTrailingWhitespace;
+  return needsQuoting ? `"${escaped}"` : escaped;
+}
+
+function formatEmailAddress(address: EmailAddress): string {
+  return address.name
+    ? `${escapeEmailDisplayName(address.name)} <${address.email}>`
+    : address.email;
 }

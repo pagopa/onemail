@@ -37,6 +37,7 @@ export function mapEmailLowPriorityToDbItem(
     const content: DbEmailContent = {
       from: body.from,
       to: dryRun ? { email: SES_SIMULATOR.SUCCESS } : element.to,
+      replyTo: body.replyTo,
       extendedHeaders: element.extendedHeaders,
       template: dbTemplate,
     };
@@ -105,7 +106,7 @@ export function mapEmailTransactionalToDbItem(
   // 3. Building the final DB item
   const initialStatus: EmailStatus = EmailStatus.Queued;
   const highPriority: EmailPriority = EmailPriority.HIGH;
-  // TODO: add replyTo
+
   return {
     emailId: randomUUID(),
     requestId: requestId,

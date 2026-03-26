@@ -17,6 +17,7 @@ export interface DbEmailContent {
   subject?: string;
   from: EmailAddress;
   to: EmailAddress;
+  replyTo?: EmailAddress;
   extendedHeaders?: NameValue[];
   template?: TemplateContent; // mutually exclusive with Body
   body?: EmailContent; // mutually exclusive with Template
