@@ -1,5 +1,6 @@
 import env from '#config/env';
 import { dynamoClient } from '#connector/dynamo.connector';
+import { sesClient } from '#connector/ses.connector';
 import { sqsClient } from '#connector/sqs.connector';
 import {
   EmailHighPriorityBodyDTO,
@@ -16,6 +17,11 @@ import {
   mapEmailLowPriorityToDbItem,
   mapEmailTransactionalToDbItem,
 } from '#utils/dbMapper';
+import {
+  GetSuppressedDestinationCommand,
+  ListSuppressedDestinationsCommand,
+  NotFoundException,
+} from '@aws-sdk/client-sesv2';
 import { SendMessageCommand } from '@aws-sdk/client-sqs';
 import {
   BatchWriteCommand,
@@ -24,7 +30,7 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { StatusCodes } from 'http-status-codes';
 import { randomUUID } from 'node:crypto';
-import { EmailStatusHistoryItem } from 'om-common/types';
+import { EmailStatus, EmailStatusHistoryItem } from 'om-common/types';
 
 export const sendEmailTransactional = async (
   emailData: EmailHighPriorityBodyDTO,
@@ -34,28 +40,33 @@ export const sendEmailTransactional = async (
   const clientId = 'clientIdMock';
   const tableName = env.aws.emailDbTable;
 
+  // check if email is in SES suppression list before building the DB item
+  const toEmail = emailData.to.email;
+  const suppressionStatus = await isSuppressed(toEmail);
+
   const dbObj = mapEmailTransactionalToDbItem(
     emailData,
     requestId,
     clientId,
     dryRun,
+    suppressionStatus.suppressed ? suppressionStatus.reason : undefined,
   );
 
   await dynamoClient.send(
     new PutCommand({
       TableName: tableName,
-      Item: {
-        ...dbObj,
-      },
+      Item: { ...dbObj },
     }),
   );
 
-  await sqsClient.send(
-    new SendMessageCommand({
-      QueueUrl: env.aws.sqs.highPriorityQueueUrl,
-      MessageBody: JSON.stringify({ emailId: dbObj.emailId }),
-    }),
-  );
+  if (!suppressionStatus.suppressed) {
+    await sqsClient.send(
+      new SendMessageCommand({
+        QueueUrl: env.aws.sqs.highPriorityQueueUrl,
+        MessageBody: JSON.stringify({ emailId: dbObj.emailId }),
+      }),
+    );
+  }
 
   return { requestId };
 };
@@ -68,11 +79,19 @@ export const sendEmailLowPriority = async (
   const clientId = 'clientIdMock';
   const tableName = env.aws.emailDbTable;
 
+  // check suppression list before building DB items
+  const suppressedEmails = await getSuppressedEmails();
+
   const dbListObj = mapEmailLowPriorityToDbItem(
     emailData,
     requestId,
     clientId,
     dryRun,
+    suppressedEmails,
+  );
+
+  const hasEmailsToSend = dbListObj.some(
+    (item) => item.status !== EmailStatus.RejectedBySES,
   );
 
   // BatchWriteCommand max chunk size is 25
@@ -100,12 +119,14 @@ export const sendEmailLowPriority = async (
     ),
   );
 
-  await sqsClient.send(
-    new SendMessageCommand({
-      QueueUrl: env.aws.sqs.lowPriorityQueueUrl,
-      MessageBody: JSON.stringify({ requestId: requestId }),
-    }),
-  );
+  if (hasEmailsToSend) {
+    await sqsClient.send(
+      new SendMessageCommand({
+        QueueUrl: env.aws.sqs.lowPriorityQueueUrl,
+        MessageBody: JSON.stringify({ requestId: requestId }),
+      }),
+    );
+  }
 
   return { requestId };
 };
@@ -155,3 +176,52 @@ export const getEmailStatus = async (
 
   return mapped;
 };
+
+export async function getSuppressedEmails() {
+  const emails: string[] = [];
+  let nextToken: string | undefined;
+
+  do {
+    const response = await sesClient.send(
+      new ListSuppressedDestinationsCommand({
+        NextToken: nextToken,
+      }),
+    );
+
+    for (const item of response.SuppressedDestinationSummaries ?? []) {
+      if (item.EmailAddress) {
+        emails.push(item.EmailAddress);
+      }
+    }
+
+    nextToken = response.NextToken;
+  } while (nextToken);
+
+  return emails;
+}
+
+export async function isSuppressed(email: string) {
+  try {
+    const response = await sesClient.send(
+      new GetSuppressedDestinationCommand({
+        EmailAddress: email,
+      }),
+    );
+
+    return {
+      suppressed: true,
+      reason: response.SuppressedDestination?.Reason ?? null,
+      lastUpdateTime: response.SuppressedDestination?.LastUpdateTime ?? null,
+    };
+  } catch (error: NotFoundException | unknown) {
+    if (error instanceof NotFoundException) {
+      return {
+        suppressed: false,
+        reason: null,
+        lastUpdateTime: null,
+      };
+    }
+
+    throw error;
+  }
+}
