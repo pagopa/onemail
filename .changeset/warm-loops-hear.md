@@ -3,4 +3,4 @@
 'om-ecs-dispatcher': patch
 ---
 
-align aws aopenapi api gtw template script
+Align AWS OpenAPI and API Gateway template synchronization script.

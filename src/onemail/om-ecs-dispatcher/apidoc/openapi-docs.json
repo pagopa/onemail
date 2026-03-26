@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.5.6",
+    "version": "1.5.7",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -97,6 +97,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 255,
+            "pattern": "^[^\\r\\n]+$",
             "description": "Name associated with the email address"
           },
           "email": {
@@ -543,7 +544,7 @@
             }
           },
           "400": {
-            "description": "Bad request - invalid data |",
+            "description": "Bad request - invalid data",
             "content": {
               "application/json": {
                 "schema": {
@@ -636,7 +637,7 @@
             }
           },
           "400": {
-            "description": "Bad request - invalid data |",
+            "description": "Bad request - invalid data",
             "content": {
               "application/json": {
                 "schema": {
@@ -729,7 +730,7 @@
             }
           },
           "400": {
-            "description": "Bad request - invalid data |",
+            "description": "Bad request - invalid data",
             "content": {
               "application/json": {
                 "schema": {
@@ -809,7 +810,7 @@
             }
           },
           "400": {
-            "description": "Bad request - invalid data |",
+            "description": "Bad request - invalid data",
             "content": {
               "application/json": {
                 "schema": {
@@ -879,7 +880,7 @@
             }
           },
           "400": {
-            "description": "Bad request - invalid data |",
+            "description": "Bad request - invalid data",
             "content": {
               "application/json": {
                 "schema": {
@@ -949,7 +950,7 @@
             }
           },
           "400": {
-            "description": "Bad request - invalid data |",
+            "description": "Bad request - invalid data",
             "content": {
               "application/json": {
                 "schema": {

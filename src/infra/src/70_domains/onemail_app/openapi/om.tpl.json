@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.5.6",
+    "version": "1.5.7",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -43,7 +43,7 @@
         },
         "responses": {
           "200": { "description": "Email status history retrieved successfully" },
-          "400": { "description": "Bad request - invalid data |" },
+          "400": { "description": "Bad request - invalid data" },
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
@@ -79,7 +79,7 @@
         },
         "responses": {
           "202": { "description": "Email accepted for processing" },
-          "400": { "description": "Bad request - invalid data |" },
+          "400": { "description": "Bad request - invalid data" },
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
@@ -115,7 +115,7 @@
         },
         "responses": {
           "202": { "description": "Email accepted for processing" },
-          "400": { "description": "Bad request - invalid data |" },
+          "400": { "description": "Bad request - invalid data" },
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
@@ -138,7 +138,7 @@
         },
         "responses": {
           "200": { "description": "Service is ready" },
-          "400": { "description": "Bad request - invalid data |" },
+          "400": { "description": "Bad request - invalid data" },
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
@@ -161,7 +161,7 @@
         },
         "responses": {
           "200": { "description": "Service is alive" },
-          "400": { "description": "Bad request - invalid data |" },
+          "400": { "description": "Bad request - invalid data" },
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
@@ -185,7 +185,7 @@
           },
           "responses": {
             "200": { "description": "Email sanitized successfully" },
-            "400": { "description": "Bad request - invalid data |" },
+            "400": { "description": "Bad request - invalid data" },
             "401": { "description": "Unauthorized - authentication required or invalid credentials" },
             "403": { "description": "Forbidden - permission denied to perform the request" },
             "404": { "description": "Resource not found" },

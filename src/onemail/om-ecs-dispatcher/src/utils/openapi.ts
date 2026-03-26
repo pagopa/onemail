@@ -16,7 +16,7 @@ type OpenApiResponses = Record<number, OpenApiResponse>;
 
 const defaultErrorResponses = {
   [StatusCodes.BAD_REQUEST]: {
-    description: 'Bad request - invalid data |',
+    description: 'Bad request - invalid data',
     content: { [applicationJsonContentType]: { schema: ErrorResponseSchema } },
   },
   [StatusCodes.UNAUTHORIZED]: {
