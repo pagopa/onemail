@@ -91,24 +91,25 @@ this is an example of an x-amazon-apigateway-integration block that must be on e
   },
 
 RULES:
-1. UPDATE doc info version from spec to template and leave other info fields unchanged.
-2. UPDATE routes (method, path, tags, params, summary, responses) from spec to template.
+1. If the OpenAPI spec file is unchanged, do not modify the template file.
+2. UPDATE doc info version from spec to template and leave other info fields unchanged.
+3. UPDATE routes (method, path, tags, params, summary, responses) from spec to template.
    - If a route is removed from the spec, remove it from the template.
    - If a route is added in the spec, add it to the template (before health routes).
-3. x-amazon-apigateway-integration:
+4. x-amazon-apigateway-integration:
    - Update 'httpMethod' and 'uri' as needed, if changed.
    - For NEW routes: add the integration block (type=HTTP_PROXY, connectionType=VPC_LINK, timeoutInMillis=20000 for data routes, 5000 for health routes).
    - NEVER change connectionId, connectionType, passthroughBehavior.
-4. IMMUTABILITY:
+5. For EXISTING paths:
+   - If a route has NOT changed in the spec, leave the route block in the template as-is.
+6. IMMUTABILITY:
    - Keep ALL Terraform template variable references literally (do not resolve): \${uri}, \${connection_id}, \${server_url}.
    - Keep ALL Terraform conditional directives literally e.g. %{ if env != \"prod\" } and %{ endif }. Do NOT remove or move them. But you have to edit the content inside them if it has changes.
-5. CONDITIONALS (IMPORTANT):
+7. CONDITIONALS (IMPORTANT):
    - If description/summary for paths or parameters contains 'ignored in production' or 'non-production', you MUST wrap in %{ if env != \"prod\" } <path-or-parameter> %{ endif } block.
-6. CLEANUP:
+8. CLEANUP:
    - Drop 'requestBody', 'components', '\$ref'.
    - Drop description and validation keywords in parameters schema, like minLength, maxLength etc.
-7. For EXISTING paths:
-   - If the route has NOT changed in the spec, leave the route block as-is.
 
 Keep current formatting and indentation style.
 Write the result directly to '$TEMPLATE_FILE'. Do not output anything else."
