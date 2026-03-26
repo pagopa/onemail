@@ -44,12 +44,18 @@ export const sendEmailTransactional = async (
   const toEmail = emailData.to.email;
   const suppressionStatus = await isSuppressed(toEmail);
 
+  if (suppressionStatus.suppressed) {
+    throw new ApiError(
+      `Email address ${toEmail} is in SES suppression list. Reason: ${suppressionStatus.reason}`,
+      StatusCodes.BAD_REQUEST,
+    );
+  }
+
   const dbObj = mapEmailTransactionalToDbItem(
     emailData,
     requestId,
     clientId,
     dryRun,
-    suppressionStatus.suppressed ? suppressionStatus.reason : undefined,
   );
 
   await dynamoClient.send(
@@ -59,14 +65,12 @@ export const sendEmailTransactional = async (
     }),
   );
 
-  if (!suppressionStatus.suppressed) {
-    await sqsClient.send(
-      new SendMessageCommand({
-        QueueUrl: env.aws.sqs.highPriorityQueueUrl,
-        MessageBody: JSON.stringify({ emailId: dbObj.emailId }),
-      }),
-    );
-  }
+  await sqsClient.send(
+    new SendMessageCommand({
+      QueueUrl: env.aws.sqs.highPriorityQueueUrl,
+      MessageBody: JSON.stringify({ emailId: dbObj.emailId }),
+    }),
+  );
 
   return { requestId };
 };
