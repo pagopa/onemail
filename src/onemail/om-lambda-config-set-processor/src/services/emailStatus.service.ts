@@ -3,7 +3,7 @@ import {
   ConfSetEventItemSchema,
   HandledConfSetEventItem,
 } from '#dtos/confSetEventItem.dto';
-import { updateEmailStatusWithSesMessageId } from '#repositories/email.repository';
+import { updateEmailStatusBySesMessageId } from '#repositories/email.repository';
 import {
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
@@ -47,7 +47,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
   if (
     eventItem.eventType === CapitalizedSesConfigurationSetEventType.Delivery
   ) {
-    await updateEmailStatusWithSesMessageId(
+    await updateEmailStatusBySesMessageId(
       eventItem.mail.messageId,
       eventItem.mail.timestamp,
       EmailStatus.Delivered,
@@ -66,7 +66,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     }
     //Hard Bounce
     if (eventItem.bounce.bounceType === CapitalizedSesBounceType.Permanent) {
-      await updateEmailStatusWithSesMessageId(
+      await updateEmailStatusBySesMessageId(
         eventItem.mail.messageId,
         eventItem.mail.timestamp,
         EmailStatus.HardBounce,
