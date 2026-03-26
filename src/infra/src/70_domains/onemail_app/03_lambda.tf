@@ -20,7 +20,7 @@ data "aws_iam_policy_document" "sender_policy" {
       "ses:SendBulkEmail",
       "ses:SendBulkTemplatedEmail"
     ]
-    resources = var.enable_ses ? [data.aws_ses_domain_identity.onemail[0].arn, data.aws_sesv2_configuration_set.oml_config_set[0].arn, "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:template/*"] : ["*"]
+    resources = var.enable_ses && var.env != "dev" ? [data.aws_ses_domain_identity.onemail[0].arn, data.aws_sesv2_configuration_set.oml_config_set[0].arn, "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:template/*"] : ["*"]
 
     dynamic "condition" {
       for_each = var.enable_ses ? [1] : []
@@ -44,7 +44,7 @@ data "aws_iam_policy_document" "sender_policy" {
     ]
     resources = [
       data.aws_dynamodb_table.EmailStatusHistory.arn,
-      "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsi_name}"
+      "${data.aws_dynamodb_table.main.arn}/index/${local.gsis["gsi_request_id_idx"].name}"
     ]
   }
 
@@ -138,7 +138,7 @@ data "aws_iam_policy_document" "set_processor_policy" {
       "sqs:DeleteMessage",
       "sqs:GetQueueAttributes"
     ]
-    resources = ["*"] # Broad permissions for SQS queues, to be refined with specific ARNs when queue is created
+    resources = [data.aws_sqs_queue.sqs_set_processor.arn] # Broad permissions for SQS queues, to be refined with specific ARNs when queue is created
   }
 
   statement {
@@ -152,7 +152,7 @@ data "aws_iam_policy_document" "set_processor_policy" {
     ]
     resources = [
       data.aws_dynamodb_table.EmailStatusHistory.arn,
-      "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsi_name}"
+      "${data.aws_dynamodb_table.main.arn}/index/${local.gsis["gsi_ses_message_id_idx"].name}"
     ]
   }
 
@@ -204,15 +204,19 @@ module "lambda_set_processor" {
 
   memory_size                    = 256
   reserved_concurrent_executions = var.lambda_set_processor.reserved_concurrent_executions
-  # environment_variables = {
-  #   AWS_EMAIL_DB_TABLE          = data.aws_dynamodb_table.EmailStatusHistory.name
-  #   AWS_EMAIL_DB_REQUEST_ID_GSI = one(data.aws_dynamodb_table.EmailStatusHistory.global_secondary_index).name
-  #   HIGH_PRIORITY_QUEUE_ARN     = data.aws_sqs_queue.high_priority.arn
-  #   LOW_PRIORITY_QUEUE_ARN      = data.aws_sqs_queue.low_priority.arn
-  #   NODE_ENV                    = "production"
-  # }
+  environment_variables = {
+    AWS_EMAIL_DB_TABLE               = data.aws_dynamodb_table.EmailStatusHistory.name
+    AWS_EMAIL_DB_MESSAGE_ID_GSI      = "${data.aws_dynamodb_table.main.arn}/index/${local.gsis["gsi_ses_message_id_idx"].name}"
+    AWS_CLOUDWATCH_METRICS_NAMESPACE = "AWS/SES"
+  }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_set_processor.security_group_id]
 
   tags = module.tag_config.tags
+}
+
+resource "aws_lambda_event_source_mapping" "config_set_processor" {
+  event_source_arn = data.aws_sqs_queue.sqs_set_processor.arn
+  function_name    = module.lambda_set_processor.lambda_function_arn
+  #scaling_config { maximum_concurrency = 8 } # To adjust based on expected load for high priority tasks
 }

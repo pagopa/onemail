@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "ecs_task_policy" {
 
     resources = [
       data.aws_dynamodb_table.EmailStatusHistory.arn,
-      "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${one(data.aws_dynamodb_table.EmailStatusHistory.global_secondary_index).name}"
+      "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsis["gsi_request_id_idx"].name}"
     ]
   }
 
@@ -88,7 +88,7 @@ module "ecs_service" {
     },
     {
       name  = "AWS_EMAIL_DB_REQUEST_ID_GSI"
-      value = one(data.aws_dynamodb_table.EmailStatusHistory.global_secondary_index).name
+      value = "${data.aws_dynamodb_table.main.arn}/index/${local.gsis["gsi_request_id_idx"].name}"
     },
     {
       name  = "SQS_HIGH_PRIORITY_QUEUE_URL"

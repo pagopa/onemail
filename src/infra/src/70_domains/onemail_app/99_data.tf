@@ -6,6 +6,10 @@ data "aws_sqs_queue" "low_priority" {
   name = "${local.project_nodomain}-sqs-low-priority"
 }
 
+data "aws_sqs_queue" "sqs_set_processor" {
+  name = "${local.project_nodomain}-sqs-config-set-processor"
+}
+
 data "aws_vpc_endpoint" "dynamodb" {
   service_name = "com.amazonaws.eu-south-1.dynamodb"
 }

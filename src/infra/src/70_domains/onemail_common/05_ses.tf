@@ -57,3 +57,45 @@ resource "aws_sesv2_configuration_set" "config_set" {
     tls_policy = "REQUIRE"
   }
 }
+
+resource "aws_sesv2_configuration_set_event_destination" "to_eb" {
+  #for_each               = var.tenants
+  configuration_set_name = aws_sesv2_configuration_set.config_set[0].configuration_set_name
+  event_destination_name = "dest-eb-${local.project_nodomain}"
+
+  event_destination {
+    enabled              = true
+    matching_event_types = ["SEND", "REJECT", "BOUNCE", "COMPLAINT", "DELIVERY"]
+    event_bridge_destination {
+      event_bus_arn = "arn:aws:events:${var.aws_region}:${data.aws_caller_identity.current.account_id}:event-bus/default"
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "ses_rule" {
+  name = "ses-central-rule"
+  event_pattern = jsonencode({
+    source      = ["aws.ses"],
+    detail-type = ["SES Event"],
+    detail      = { "configuration-set-name" = [{ prefix = "${local.project_nodomain}-configuration-set*" }] }
+  })
+}
+
+resource "aws_cloudwatch_event_target" "sqs_target" {
+  rule = aws_cloudwatch_event_rule.ses_rule.name
+  arn  = aws_sqs_queue.sqs_set_processor.arn
+}
+
+resource "aws_sqs_queue_policy" "eb_to_sqs" {
+  queue_url = aws_sqs_queue.sqs_set_processor.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect    = "Allow",
+      Principal = { Service = "events.amazonaws.com" },
+      Action    = "sqs:SendMessage",
+      Resource  = aws_sqs_queue.sqs_set_processor.arn,
+      Condition = { ArnEquals = { "aws:SourceArn" = aws_cloudwatch_event_rule.ses_rule.arn } }
+    }]
+  })
+}

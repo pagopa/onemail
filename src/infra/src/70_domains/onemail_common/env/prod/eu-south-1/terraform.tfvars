@@ -29,12 +29,21 @@ dynamodb_table_config = {
     {
       name = "requestId"
       type = "S"
+    },
+    {
+      name = "sesMessageId"
+      type = "S"
     }
   ]
   global_secondary_indexes = [
     {
       name            = "gsi_request_id_idx"
       hash_key        = "requestId"
+      projection_type = "ALL"
+    },
+    {
+      name            = "gsi_ses_message_id_idx"
+      hash_key        = "sesMessageId"
       projection_type = "ALL"
     }
   ]
