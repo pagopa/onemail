@@ -122,7 +122,32 @@
           "500": { "description": "Generic error" }
         }
       }
-    },
+    }
+    %{ if env != "prod" },
+      "/v1/emails/sanitize-html": {
+        "post": {
+          "tags": ["Emails"],
+          "summary": "Test HTML content sanitization of the email, only available in non-production environments",
+          "x-amazon-apigateway-integration": {
+            "type": "HTTP_PROXY",
+            "httpMethod": "POST",
+            "uri": "${uri}/v1/emails/sanitize-html",
+            "connectionType": "VPC_LINK",
+            "connectionId": "${connection_id}",
+            "passthroughBehavior": "WHEN_NO_TEMPLATES",
+            "timeoutInMillis": 20000
+          },
+          "responses": {
+            "200": { "description": "Email sanitized successfully" },
+            "400": { "description": "Bad request - invalid data" },
+            "401": { "description": "Unauthorized - authentication required or invalid credentials" },
+            "403": { "description": "Forbidden - permission denied to perform the request" },
+            "404": { "description": "Resource not found" },
+            "500": { "description": "Generic error" }
+          }
+        }
+      }
+    %{ endif },
     "/health/ready": {
       "get": {
         "tags": ["Health"],
@@ -169,30 +194,5 @@
         }
       }
     }
-    %{ if env != "prod" },
-      "/v1/emails/sanitize-html": {
-        "post": {
-          "tags": ["Emails"],
-          "summary": "Test HTML content sanitization of the email, only available in non-production environments",
-          "x-amazon-apigateway-integration": {
-            "type": "HTTP_PROXY",
-            "httpMethod": "POST",
-            "uri": "${uri}/v1/emails/sanitize-html",
-            "connectionType": "VPC_LINK",
-            "connectionId": "${connection_id}",
-            "passthroughBehavior": "WHEN_NO_TEMPLATES",
-            "timeoutInMillis": 20000
-          },
-          "responses": {
-            "200": { "description": "Email sanitized successfully" },
-            "400": { "description": "Bad request - invalid data" },
-            "401": { "description": "Unauthorized - authentication required or invalid credentials" },
-            "403": { "description": "Forbidden - permission denied to perform the request" },
-            "404": { "description": "Resource not found" },
-            "500": { "description": "Generic error" }
-          }
-        }
-      }
-    %{ endif }
   }
 }

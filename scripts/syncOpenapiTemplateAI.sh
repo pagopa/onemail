@@ -33,6 +33,10 @@ TEMPLATE_FILE="$(cd "$PACKAGE_ROOT/src/infra/src/70_domains/onemail_app/openapi"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --model)
+      if [[ $# -lt 2 ]]; then
+        echo "❌ Missing value for --model." >&2
+        exit 1
+      fi
       MODEL="$2"
       shift 2
       ;;
@@ -102,7 +106,7 @@ RULES:
    - If description/summary for paths or parameters contains 'ignored in production' or 'non-production', you MUST wrap in %{ if env != \"prod\" } <path-or-parameter> %{ endif } block.
 6. CLEANUP:
    - Drop 'requestBody', 'components', '\$ref'.
-   - Drop description and validation keywords like minLength, maxLength etc.
+   - Drop description and validation keywords in parameters schema, like minLength, maxLength etc.
 
 Keep current formatting and indentation style.
 Write the result directly to '$TEMPLATE_FILE'. Do not output anything else."
