@@ -23,6 +23,9 @@ export const stringCheckedSchema = ({
 // Handles sender and recipients
 export const EmailAddressSchema = z.object({
   name: stringCheckedSchema()
+    .regex(/^[^\r\n]+$/, {
+      message: 'Display name must not contain line breaks',
+    })
     .optional()
     .describe('Name associated with the email address'),
   email: z.email().describe('Email address'),
