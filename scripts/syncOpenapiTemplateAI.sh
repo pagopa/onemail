@@ -107,6 +107,8 @@ RULES:
 6. CLEANUP:
    - Drop 'requestBody', 'components', '\$ref'.
    - Drop description and validation keywords in parameters schema, like minLength, maxLength etc.
+7. For EXISTING paths:
+   - If the route has NOT changed in the spec, leave the route block as-is.
 
 Keep current formatting and indentation style.
 Write the result directly to '$TEMPLATE_FILE'. Do not output anything else."
