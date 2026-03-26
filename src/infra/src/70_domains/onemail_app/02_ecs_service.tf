@@ -14,6 +14,39 @@ data "aws_iam_policy_document" "ecs_task_policy" {
       data.aws_sqs_queue.low_priority.arn
     ]
   }
+
+  statement {
+    sid = "DynamoDBAccess"
+
+    actions = [
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:GetItem",
+      "dynamodb:DescribeTable",
+      "dynamodb:Query",
+      "dynamodb:BatchWriteItem"
+    ]
+
+    resources = [
+      data.aws_dynamodb_table.EmailStatusHistory.arn,
+      "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${one(data.aws_dynamodb_table.EmailStatusHistory.global_secondary_index).name}"
+    ]
+  }
+
+  dynamic "statement" {
+    for_each = local.dynamodb_kms_key_arn != null ? [local.dynamodb_kms_key_arn] : []
+
+    content {
+      sid = "KMSAccess"
+
+      actions = [
+        "kms:Decrypt",
+        "kms:Encrypt"
+      ]
+
+      resources = [statement.value]
+    }
+  }
 }
 
 module "ecs_service" {

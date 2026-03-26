@@ -9,6 +9,7 @@ import {
   EmailStatusHistoryItem,
   TemplateContent,
 } from 'om-common/types';
+import { SES_SIMULATOR } from 'om-common/utils';
 
 export function mapEmailLowPriorityToDbItem(
   body: EmailLowPriorityBodyDTO,
@@ -35,7 +36,7 @@ export function mapEmailLowPriorityToDbItem(
     // 2. Content builder
     const content: DbEmailContent = {
       from: body.from,
-      to: element.to,
+      to: dryRun ? { email: SES_SIMULATOR.SUCCESS } : element.to,
       extendedHeaders: element.extendedHeaders,
       template: dbTemplate,
     };
@@ -95,7 +96,7 @@ export function mapEmailTransactionalToDbItem(
   const content: DbEmailContent = {
     subject: dbEmailSubject,
     from: body.from,
-    to: body.to,
+    to: dryRun ? { email: SES_SIMULATOR.SUCCESS } : body.to,
     extendedHeaders: body.extendedHeaders,
     template: dbTemplate,
     body: dbBody,
@@ -104,6 +105,7 @@ export function mapEmailTransactionalToDbItem(
   // 3. Building the final DB item
   const initialStatus: EmailStatus = EmailStatus.Queued;
   const highPriority: EmailPriority = EmailPriority.HIGH;
+  // TODO: add replyTo
   return {
     emailId: randomUUID(),
     requestId: requestId,

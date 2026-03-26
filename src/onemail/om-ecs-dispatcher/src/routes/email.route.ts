@@ -36,13 +36,13 @@ router.get(
 registerOpenApiRoute({
   method: 'get',
   path: `${versionRoutePath.v1}/${prefix}/statuses`,
-  summary: 'Get emails status',
+  summary: 'Get email status history',
   tags: [tag],
   queryParams: EmailStatusQueryParamsSchema,
   responses: {
     [StatusCodes.OK]: {
       schema: EmailStatusResponseSchema,
-      description: 'Emails status retrieved successfully',
+      description: 'Email status history retrieved successfully',
     },
   },
 });
@@ -104,13 +104,13 @@ if (env.server.environment !== APP_ENV_VALUES.production) {
   registerOpenApiRoute({
     method: 'post',
     path: `${versionRoutePath.v1}/${prefix}/sanitize-html`,
-    summary: 'Sanitize HTML content of the email',
+    summary: 'Test HTML content sanitization of the email',
     tags: [tag],
     requestBody: SanitizeHtmlSchema,
     responses: {
-      [StatusCodes.ACCEPTED]: {
+      [StatusCodes.OK]: {
         schema: SanitizeHtmlResponseSchema,
-        description: 'Email accepted for processing',
+        description: 'Email sanitized successfully',
       },
     },
   });

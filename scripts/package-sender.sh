@@ -18,11 +18,11 @@ echo -e "\n📁 Creating ZIP archive..."
 (
     cd "$ARTIFACT_DIR"
     # Exclude readme, lock file, source maps and pnpm's internal files to avoid duplicating hardlinked files
-    zip -rq "../../$ZIP_NAME" . \
+    # The -y option tells zip to store symlinks as symlinks (it does not follow them).
+    zip -ryq "../../$ZIP_NAME" . \
         -x "README.md" \
         -x "pnpm-lock.yaml" \
-        -x "*.map" \
-        -x "node_modules/.pnpm/*"
+        -x "*.map"
 )
 
 echo -e "✅ Done: $ZIP_NAME"

@@ -4,6 +4,7 @@ export const EmailStatus = {
   HardBounce: 'HardBounce',
   Queued: 'Queued',
   RejectedBySES: 'RejectedBySES',
+  DryRunError: 'DryRunError',
   SoftBounce: 'SoftBounce',
 } as const;
 

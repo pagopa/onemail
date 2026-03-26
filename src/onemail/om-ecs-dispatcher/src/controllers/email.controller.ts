@@ -32,7 +32,7 @@ export const sendEmailTransactional = async (
 ) => {
   const { dryRun } = req.query as unknown as EmailHighPriorityQueryParams;
   const result = await emailService.sendEmailTransactional(req.body, dryRun);
-  res.status(StatusCodes.OK).json(result);
+  res.status(StatusCodes.ACCEPTED).json(result);
 };
 
 export const sendEmailLowPriority = async (
@@ -46,7 +46,7 @@ export const sendEmailLowPriority = async (
 ) => {
   const { dryRun } = req.query as unknown as EmailLowPriorityQueryParams;
   const result = await emailService.sendEmailLowPriority(req.body, dryRun);
-  res.status(StatusCodes.OK).json(result);
+  res.status(StatusCodes.ACCEPTED).json(result);
 };
 
 export const sanitizeHtmlContent = async (

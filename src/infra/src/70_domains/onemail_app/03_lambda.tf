@@ -14,18 +14,52 @@ data "aws_iam_policy_document" "sender_policy" {
   statement {
     actions = [
       "ses:SendEmail",
-      "ses:SendRawEmail"
+      "ses:SendRawEmail",
+      "ses:SendTemplatedEmail",
+      "ses:SendBulkEmail",
+      "ses:SendBulkTemplatedEmail"
     ]
-    resources = ["*"]
+    resources = var.enable_ses ? [data.aws_ses_domain_identity.onemail[0].arn, data.aws_sesv2_configuration_set.oml_config_set[0].arn, "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:template/*"] : ["*"]
+
+    dynamic "condition" {
+      for_each = var.enable_ses ? [1] : []
+
+      content {
+        test     = "StringLike"
+        variable = "ses:FromAddress"
+        values   = [local.ses_allowed_sender_pattern]
+      }
+    }
   }
 
   statement {
     actions = [
       "dynamodb:PutItem",
       "dynamodb:UpdateItem",
-      "dynamodb:GetItem"
+      "dynamodb:GetItem",
+      "dynamodb:Query",
+      "dynamodb:BatchWriteItem",
+      "dynamodb:BatchGetItem"
     ]
-    resources = [data.aws_dynamodb_table.EmailStatusHistory.arn]
+    resources = [
+      data.aws_dynamodb_table.EmailStatusHistory.arn,
+      "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsi_name}"
+    ]
+  }
+
+  dynamic "statement" {
+    for_each = local.dynamodb_kms_key_arn != null ? [local.dynamodb_kms_key_arn] : []
+
+    content {
+      sid = "KMSAccess"
+
+      actions = [
+        "kms:Decrypt",
+        "kms:Encrypt"
+      ]
+
+      resources = [statement.value]
+    }
   }
 }
 
@@ -44,7 +78,15 @@ module "security_group_lambda_sender" {
     data.aws_vpc_endpoint.dynamodb.prefix_list_id
   ]
 
-  egress_rules = ["https-443-tcp"]
+  egress_with_cidr_blocks = [
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      description = "HTTPS to VPC"
+      cidr_blocks = data.aws_vpc.core.cidr_block
+    }
+  ]
 }
 
 module "lambda_sender" {

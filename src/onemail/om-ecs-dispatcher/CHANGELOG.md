@@ -1,5 +1,29 @@
 # om-ecs-dispatcher
 
+## 1.5.6
+
+### Patch Changes
+
+- 6d2d49a: handling dryRun scenarios saving simulator address to db
+
+## 1.5.5
+
+### Patch Changes
+
+- 6af8fec: replace lodash with lodash-es for ESM porting
+
+## 1.5.4
+
+### Patch Changes
+
+- 3306206: update all AWS SDK dependencies to same version + lambda zip package fix
+
+## 1.5.3
+
+### Patch Changes
+
+- d7b628e: Dispatcher improvement - api response code and input constraints, health check
+
 ## 1.5.2
 
 ### Patch Changes

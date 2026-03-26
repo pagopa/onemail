@@ -5,16 +5,18 @@ import {
   type MetricDatum,
   PutMetricDataCommand,
 } from '@aws-sdk/client-cloudwatch';
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash-es/isEmpty.js';
 
 export enum SenderMetricName {
   EmailBatchNotFound = 'EmailBatchNotFound',
   EmailNotFound = 'EmailNotFound',
   EmailStatusBatchUpdateFailed = 'EmailStatusBatchUpdateFailed',
   HighPriorityDispatched = 'HighPriorityDispatched',
+  HighPriorityDryRunError = 'HighPriorityDryRunError',
   HighPriorityRejectedBySes = 'HighPriorityRejectedBySes',
   InvalidRecord = 'InvalidRecord',
   LowPriorityDispatched = 'LowPriorityDispatched',
+  LowPriorityDryRunError = 'LowPriorityDryRunError',
   LowPriorityRejectedBySes = 'LowPriorityRejectedBySes',
   LowPriorityRetryableFailure = 'LowPriorityRetryableFailure',
 }

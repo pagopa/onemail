@@ -1,5 +1,23 @@
 # om-lambda-sender
 
+## 1.2.3
+
+### Patch Changes
+
+- 6d2d49a: handling dryRun scenarios saving simulator address to db
+
+## 1.2.2
+
+### Patch Changes
+
+- 6af8fec: replace lodash with lodash-es for ESM porting
+
+## 1.2.1
+
+### Patch Changes
+
+- 3306206: update all AWS SDK dependencies to same version + lambda zip package fix
+
 ## 1.2.0
 
 ### Minor Changes

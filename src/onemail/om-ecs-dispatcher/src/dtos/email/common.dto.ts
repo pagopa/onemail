@@ -20,7 +20,7 @@ export const stringCheckedSchema = ({
     .max(maxLength, { message: `Field can't exceed ${maxLength} characters` });
 };
 
-// Handles sender and recipients [cite: 828, 866]
+// Handles sender and recipients
 export const EmailAddressSchema = z.object({
   name: stringCheckedSchema()
     .optional()
@@ -30,8 +30,8 @@ export const EmailAddressSchema = z.object({
 
 // Used for custom headers
 export const NameValueSchema = z.object({
-  N: stringCheckedSchema().describe('Key'),
-  V: stringCheckedSchema().describe('Value'),
+  N: stringCheckedSchema({ max: 126 }).describe('Key'),
+  V: stringCheckedSchema({ max: 995 }).describe('Value'),
 });
 
 // Custom headers
@@ -47,7 +47,20 @@ export const TagSchema = z
 // Dynamic attributes for template rendering
 export const TemplateAttributesSchema = z
   .record(stringCheckedSchema().describe('Key'), z.any().describe('Value'))
-  .describe('Dynamic attributes for template rendering');
+  .openapi({
+    description:
+      'Dynamic attributes for template rendering. Each key represents the attribute name used in the template (e.g., "user_name"), and its value will be substituted during rendering.',
+    additionalProperties: {
+      description:
+        'Value for the template attribute. Can be a string, number, boolean, object, or array.',
+    },
+    example: {
+      user_name: 'John Doe',
+      payment_id: 12345,
+      items: ['book', 'pen'],
+      metadata: { source: 'web' },
+    },
+  });
 
 // Identifier of the email template
 export const TemplateIdSchema = stringCheckedSchema().describe(
@@ -57,12 +70,12 @@ export const TemplateIdSchema = stringCheckedSchema().describe(
 // Dry Run Query Parameters
 export const DryRunQueryParamsSchema = z
   .object({
-    dryRun: z
-      .stringbool()
-      .default(false)
-      .describe(
+    dryRun: z.stringbool().default(false).openapi({
+      type: 'boolean',
+      default: false,
+      description:
         'Indicates whether the request is a dry run, ignored in production',
-      ),
+    }),
   })
   .refine(
     (data) => {
@@ -84,7 +97,7 @@ export const EmailSuccessResponseSchema = z.object({
   requestId: RequestIdSchema,
 });
 
-export const htmlContentSchema = stringCheckedSchema({ min: 10, max: 200000 })
+export const htmlContentSchema = stringCheckedSchema({ min: 10, max: 150000 })
   .transform((html) => sanitizeHtml(html, emailSanitizerOptions))
   .refine((cleanHtml) => cleanHtml.trim().length > 0, {
     message:

@@ -1,5 +1,115 @@
 # onemail
 
+## 1.1.20
+
+### Patch Changes
+
+- Updated dependencies [6d2d49a]
+- Updated dependencies [7a2ec16]
+  - om-ecs-dispatcher@1.5.6
+  - om-lambda-sender@1.2.3
+  - infra-domains-onemail-app@1.7.1
+
+## 1.1.19
+
+### Patch Changes
+
+- Updated dependencies [6af8fec]
+  - om-ecs-dispatcher@1.5.5
+  - om-lambda-sender@1.2.2
+
+## 1.1.18
+
+### Patch Changes
+
+- Updated dependencies [4e6a558]
+  - infra-domains-onemail-app@1.7.0
+
+## 1.1.17
+
+### Patch Changes
+
+- Updated dependencies [0c893fd]
+  - infra-domains-onemail-app@1.6.0
+  - infra-network@1.4.0
+
+## 1.1.16
+
+### Patch Changes
+
+- Updated dependencies [3306206]
+  - om-ecs-dispatcher@1.5.4
+  - om-lambda-sender@1.2.1
+
+## 1.1.15
+
+### Patch Changes
+
+- Updated dependencies [00e8135]
+  - infra-domains-onemail-app@1.5.0
+
+## 1.1.14
+
+### Patch Changes
+
+- Updated dependencies [0240cd5]
+  - infra-domains-onemail-app@1.4.0
+
+## 1.1.13
+
+### Patch Changes
+
+- Updated dependencies [2df41d4]
+  - infra-domains-onemail-common@1.1.2
+
+## 1.1.12
+
+### Patch Changes
+
+- Updated dependencies [e87d616]
+  - infra-network@1.3.0
+
+## 1.1.11
+
+### Patch Changes
+
+- Updated dependencies [9d54f9f]
+  - infra-domains-onemail-common@1.1.1
+
+## 1.1.10
+
+### Patch Changes
+
+- Updated dependencies [e74abf3]
+  - infra-domains-onemail-common@1.1.0
+  - infra-domains-onemail-app@1.3.0
+  - infra-network@1.2.0
+
+## 1.1.9
+
+### Patch Changes
+
+- Updated dependencies [e19ea7d]
+- Updated dependencies [d7b628e]
+  - infra-domains-onemail-app@1.2.0
+  - om-ecs-dispatcher@1.5.3
+
+## 1.1.8
+
+### Patch Changes
+
+- fe201cd: update terraform lock with linux platform and dx dev container template
+- Updated dependencies [fe201cd]
+  - infra-domains-onemail-app@1.1.1
+
+## 1.1.7
+
+### Patch Changes
+
+- Updated dependencies [1e8b22d]
+  - infra-domains-onemail-app@1.1.0
+  - infra-network@1.1.0
+
 ## 1.1.6
 
 ### Patch Changes

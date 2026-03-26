@@ -33,7 +33,7 @@ module "api_gateway" {
   body = templatefile("${path.module}/${var.openapi_template_file}", {
     connection_id = aws_api_gateway_vpc_link.apigw.id
     uri           = "http://${data.aws_lb.nlb.dns_name}:3000"
-    server_url    = "api.${local.zone_name}"
+    server_url    = local.zone_name
   })
   endpoint_api_types        = ["PRIVATE"]
   endpoint_vpc_endpoint_ids = [data.aws_vpc_endpoint.api_gtw.id]
@@ -43,6 +43,21 @@ module "api_gateway" {
       "deployment_version" = var.api_gateway_deployment_version
     }
   )
+}
+
+resource "aws_api_gateway_domain_name" "main" {
+  domain_name              = local.zone_name
+  regional_certificate_arn = data.aws_acm_certificate.api_custom_domain.arn
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+
+resource "aws_api_gateway_base_path_mapping" "main" {
+  api_id      = module.api_gateway.rest_api_id
+  domain_name = aws_api_gateway_domain_name.main.domain_name
+  stage_name  = module.api_gateway.rest_api_stage_name
 }
 
 resource "aws_api_gateway_rest_api_policy" "main" {
