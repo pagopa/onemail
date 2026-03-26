@@ -54,6 +54,7 @@ resource "aws_sesv2_configuration_set" "config_set" {
 
 resource "aws_sesv2_configuration_set_event_destination" "to_eb" {
   #for_each               = var.tenants
+  count                  = var.enable_ses ? 1 : 0
   configuration_set_name = aws_sesv2_configuration_set.config_set[0].configuration_set_name
   event_destination_name = "dest-eb-${local.project_nodomain}"
 
@@ -67,7 +68,8 @@ resource "aws_sesv2_configuration_set_event_destination" "to_eb" {
 }
 
 resource "aws_cloudwatch_event_rule" "ses_rule" {
-  name = "ses-central-rule"
+  count = var.enable_ses ? 1 : 0
+  name  = "ses-central-rule"
   event_pattern = jsonencode({
     source      = ["aws.ses"],
     detail-type = ["SES Event"],
@@ -76,11 +78,13 @@ resource "aws_cloudwatch_event_rule" "ses_rule" {
 }
 
 resource "aws_cloudwatch_event_target" "sqs_target" {
-  rule = aws_cloudwatch_event_rule.ses_rule.name
-  arn  = aws_sqs_queue.sqs_set_processor.arn
+  count = var.enable_ses ? 1 : 0
+  rule  = aws_cloudwatch_event_rule.ses_rule.name
+  arn   = aws_sqs_queue.sqs_set_processor.arn
 }
 
 resource "aws_sqs_queue_policy" "eb_to_sqs" {
+  count     = var.enable_ses ? 1 : 0
   queue_url = aws_sqs_queue.sqs_set_processor.id
   policy = jsonencode({
     Version = "2012-10-17",
