@@ -33,6 +33,17 @@ data "aws_iam_policy_document" "ecs_task_policy" {
     ]
   }
 
+  statement {
+    sid = "SesSuppressionListRead"
+
+    actions = [
+      "ses:GetSuppressedDestination",
+      "ses:ListSuppressedDestinations"
+    ]
+
+    resources = ["*"]
+  }
+
   dynamic "statement" {
     for_each = local.dynamodb_kms_key_arn != null ? [local.dynamodb_kms_key_arn] : []
 
