@@ -133,7 +133,8 @@ pnpm run build:sender
 - `pnpm run format`: Format files with Prettier.
 - `pnpm run setup:hooks`: Install pre-commit hooks (runs `scripts/setup-pre-commit-hooks.sh`).
 - `pnpm run generate:openapi`: Generates the JSON OpenAPI documentation.
-- `pnpm run version`: Run Changesets to create package version bumps and update lockfile
+- `sync:openapi-template`: Generates the JSON OpenAPI documentation and synchronizes the OpenApi AWS API GATEWAY template `om.tpl.json`.
+- `pnpm run version`: Run Changesets to create package version bumps and update lockfile.
 
 \
 <br/>

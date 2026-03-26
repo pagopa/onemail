@@ -21,6 +21,7 @@
     "format": "turbo run format --filter=!onemail",
     "setup:hooks": "bash ./scripts/setup-pre-commit-hooks.sh",
     "generate:openapi": "pnpm --filter=om-ecs-dispatcher generate:openapi",
+    "sync:openapi-template": "pnpm run generate:openapi && bash scripts/syncOpenapiTemplateAI.sh",
     "version": "pnpm changeset version && pnpm install --lockfile-only"
   },
   "dependencies": {
