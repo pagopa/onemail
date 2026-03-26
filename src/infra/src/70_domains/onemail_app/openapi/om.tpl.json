@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.5.1",
+    "version": "1.5.6",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -21,7 +21,7 @@
     "/v1/emails/statuses": {
       "get": {
         "tags": ["Emails"],
-        "summary": "Get emails status",
+        "summary": "Get email status history",
         "parameters": [
           {
             "name": "requestId",
@@ -42,10 +42,10 @@
           "timeoutInMillis": 20000
         },
         "responses": {
-          "200": { "description": "Emails status retrieved successfully" },
-          "400": { "description": "Bad request" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden" },
+          "200": { "description": "Email status history retrieved successfully" },
+          "400": { "description": "Bad request - invalid data |" },
+          "401": { "description": "Unauthorized - authentication required or invalid credentials" },
+          "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
           "500": { "description": "Generic error" }
         }
@@ -56,15 +56,17 @@
         "tags": ["Emails"],
         "summary": "Send high priority single email",
         "parameters": [
-          {
-            "name": "dryRun",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "false"
+          %{ if env != "prod" }
+            {
+              "name": "dryRun",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "boolean",
+                "default": false
+              }
             }
-          }
+          %{ endif }
         ],
         "x-amazon-apigateway-integration": {
           "type": "HTTP_PROXY",
@@ -90,15 +92,17 @@
         "tags": ["Emails"],
         "summary": "Send low priority email with single or multiple recipients",
         "parameters": [
-          {
-            "name": "dryRun",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "false"
+          %{ if env != "prod" }
+            {
+              "name": "dryRun",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "boolean",
+                "default": false
+              }
             }
-          }
+          %{ endif }
         ],
         "x-amazon-apigateway-integration": {
           "type": "HTTP_PROXY",
@@ -111,29 +115,6 @@
         },
         "responses": {
           "202": { "description": "Email accepted for processing" },
-          "400": { "description": "Bad request" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden" },
-          "404": { "description": "Resource not found" },
-          "500": { "description": "Generic error" }
-        }
-      }
-    },
-    "/v1/emails/sanitize-html": {
-      "post": {
-        "tags": ["Emails"],
-        "summary": "Sanitize HTML content of the email",
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP_PROXY",
-          "httpMethod": "POST",
-          "uri": "${uri}/v1/emails/sanitize-html",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "timeoutInMillis": 20000
-        },
-        "responses": {
-          "200": { "description": "Email sanitized successfully" },
           "400": { "description": "Bad request" },
           "401": { "description": "Unauthorized" },
           "403": { "description": "Forbidden" },
@@ -157,6 +138,10 @@
         },
         "responses": {
           "200": { "description": "Service is ready" },
+          "400": { "description": "Bad request - invalid data |" },
+          "401": { "description": "Unauthorized - authentication required or invalid credentials" },
+          "403": { "description": "Forbidden - permission denied to perform the request" },
+          "404": { "description": "Resource not found" },
           "500": { "description": "Generic error" }
         }
       }
@@ -176,9 +161,38 @@
         },
         "responses": {
           "200": { "description": "Service is alive" },
+          "400": { "description": "Bad request - invalid data |" },
+          "401": { "description": "Unauthorized - authentication required or invalid credentials" },
+          "403": { "description": "Forbidden - permission denied to perform the request" },
+          "404": { "description": "Resource not found" },
           "500": { "description": "Generic error" }
         }
       }
     }
+    %{ if env != "prod" },
+      "/v1/emails/sanitize-html": {
+        "post": {
+          "tags": ["Emails"],
+          "summary": "Test HTML content sanitization of the email, only available in non-production environments",
+          "x-amazon-apigateway-integration": {
+            "type": "HTTP_PROXY",
+            "httpMethod": "POST",
+            "uri": "${uri}/v1/emails/sanitize-html",
+            "connectionType": "VPC_LINK",
+            "connectionId": "${connection_id}",
+            "passthroughBehavior": "WHEN_NO_TEMPLATES",
+            "timeoutInMillis": 20000
+          },
+          "responses": {
+            "200": { "description": "Email sanitized successfully" },
+            "400": { "description": "Bad request - invalid data |" },
+            "401": { "description": "Unauthorized - authentication required or invalid credentials" },
+            "403": { "description": "Forbidden - permission denied to perform the request" },
+            "404": { "description": "Resource not found" },
+            "500": { "description": "Generic error" }
+          }
+        }
+      }
+    %{ endif }
   }
 }

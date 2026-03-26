@@ -104,7 +104,8 @@ if (env.server.environment !== APP_ENV_VALUES.production) {
   registerOpenApiRoute({
     method: 'post',
     path: `${versionRoutePath.v1}/${prefix}/sanitize-html`,
-    summary: 'Test HTML content sanitization of the email',
+    summary:
+      'Test HTML content sanitization of the email, only available in non-production environments',
     tags: [tag],
     requestBody: SanitizeHtmlSchema,
     responses: {

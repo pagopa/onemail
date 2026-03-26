@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.5.4",
+    "version": "1.5.6",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -34,6 +34,7 @@
               "HardBounce",
               "Queued",
               "RejectedBySES",
+              "DryRunError",
               "SoftBounce"
             ],
             "description": "Current status of the email"
@@ -79,6 +80,7 @@
                     "HardBounce",
                     "Queued",
                     "RejectedBySES",
+                    "DryRunError",
                     "SoftBounce"
                   ],
                   "description": "Status value at this point in time"
@@ -1128,7 +1130,7 @@
         "tags": [
           "Emails"
         ],
-        "summary": "Test HTML content sanitization of the email",
+        "summary": "Test HTML content sanitization of the email, only available in non-production environments",
         "requestBody": {
           "description": "Request body",
           "content": {
