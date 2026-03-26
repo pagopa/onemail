@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.2.0
+
+### Minor Changes
+
+- 15d1b96: DynamoDB gsi for sesMessageId and SES ConfigurationSet event destination
+
 ## 1.1.2
 
 ### Patch Changes
