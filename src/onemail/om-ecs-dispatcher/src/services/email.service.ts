@@ -189,6 +189,7 @@ export async function getSuppressedEmails() {
     const response = await sesClient.send(
       new ListSuppressedDestinationsCommand({
         NextToken: nextToken,
+        Reasons: ['BOUNCE'],
       }),
     );
 
@@ -211,12 +212,19 @@ export async function isSuppressed(email: string) {
         EmailAddress: email,
       }),
     );
-
-    return {
-      suppressed: true,
-      reason: response.SuppressedDestination?.Reason ?? null,
-      lastUpdateTime: response.SuppressedDestination?.LastUpdateTime ?? null,
-    };
+    if (response.SuppressedDestination?.Reason === 'BOUNCE') {
+      return {
+        suppressed: true,
+        reason: response.SuppressedDestination?.Reason ?? null,
+        lastUpdateTime: response.SuppressedDestination?.LastUpdateTime ?? null,
+      };
+    } else {
+      return {
+        suppressed: false,
+        reason: null,
+        lastUpdateTime: null,
+      };
+    }
   } catch (error: NotFoundException | unknown) {
     if (error instanceof NotFoundException) {
       return {
