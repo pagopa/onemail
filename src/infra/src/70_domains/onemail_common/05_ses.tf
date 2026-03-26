@@ -1,9 +1,3 @@
-data "aws_route53_zone" "onemail" {
-  count        = var.enable_ses ? 1 : 0
-  name         = local.zone_name
-  private_zone = false
-}
-
 resource "aws_sesv2_email_identity" "tenant_identities" {
   count          = var.enable_ses ? 1 : 0
   email_identity = local.zone_name
