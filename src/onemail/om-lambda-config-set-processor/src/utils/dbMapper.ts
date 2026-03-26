@@ -6,8 +6,7 @@ import {
   SendEmailCommandInput,
 } from '@aws-sdk/client-sesv2';
 import { EmailStatusHistoryItem } from 'om-common/types';
-
-import { SES_SIMULATOR } from './constants.js';
+import { SES_SIMULATOR } from 'om-common/utils';
 
 export function mapDbHighPriorityItemToSesModel(
   item: EmailStatusHistoryItem,

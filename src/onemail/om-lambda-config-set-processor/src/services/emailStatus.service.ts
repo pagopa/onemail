@@ -62,8 +62,13 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       eventItem.bounce.bounceType === CapitalizedSesBounceType.Transient ||
       eventItem.bounce.bounceType === CapitalizedSesBounceType.Undetermined
     ) {
-      //todo
-      return;
+      //todo update this logic with the one in the confluence documents
+      await updateEmailStatusBySesMessageId(
+        eventItem.mail.messageId,
+        eventItem.mail.timestamp,
+        EmailStatus.SoftBounce,
+        eventItem.bounce.bounceSubType,
+      );
     }
     //Hard Bounce
     if (eventItem.bounce.bounceType === CapitalizedSesBounceType.Permanent) {
