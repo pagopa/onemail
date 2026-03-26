@@ -93,7 +93,7 @@ resource "aws_sqs_queue_policy" "eb_to_sqs" {
       Principal = { Service = "events.amazonaws.com" },
       Action    = "sqs:SendMessage",
       Resource  = aws_sqs_queue.sqs_set_processor.arn,
-      Condition = { ArnEquals = { "aws:SourceArn" = aws_cloudwatch_event_rule.ses_rule.arn } }
+      Condition = { ArnEquals = { "aws:SourceArn" = aws_cloudwatch_event_rule.ses_rule[0].arn } }
     }]
   })
 }
