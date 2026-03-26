@@ -76,7 +76,6 @@ export function mapEmailTransactionalToDbItem(
   requestId: string,
   clientId: string,
   dryRun: boolean,
-  suppressionReason?: string | null,
 ): EmailStatusHistoryItem {
   const now = new Date().toISOString();
 
@@ -84,7 +83,6 @@ export function mapEmailTransactionalToDbItem(
   let dbTemplate: TemplateContent | undefined;
   let dbBody: EmailContent | undefined;
   let dbEmailSubject: string | undefined;
-
   if ('templateContent' in body) {
     dbTemplate = {
       id: body.templateContent.templateId,
@@ -100,7 +98,6 @@ export function mapEmailTransactionalToDbItem(
     };
     dbEmailSubject = body.emailContent.subject;
   }
-
   // 2. Content builder
   const content: DbEmailContent = {
     subject: dbEmailSubject,
@@ -112,19 +109,7 @@ export function mapEmailTransactionalToDbItem(
   };
 
   // 3. Building the final DB item
-  // suppressionReason is defined when the recipient is in SES suppression list;
-  // in that case the email never enters the Queued state.
-  const suppressed = suppressionReason != null;
-  const initialStatus: EmailStatus = suppressed
-    ? EmailStatus.RejectedBySES
-    : EmailStatus.Queued;
-  const initialHistoryEntry = suppressed
-    ? {
-        status: EmailStatus.RejectedBySES,
-        changedAt: now,
-        reason: `Email address ${body.to.email} is in SES suppression list. Reason: ${suppressionReason}`,
-      }
-    : { status: EmailStatus.Queued, changedAt: now };
+  const initialStatus: EmailStatus = EmailStatus.Queued;
   const highPriority: EmailPriority = EmailPriority.HIGH;
   // TODO: add replyTo
   return {
@@ -132,7 +117,12 @@ export function mapEmailTransactionalToDbItem(
     requestId: requestId,
     priority: highPriority,
     status: initialStatus,
-    history: [initialHistoryEntry],
+    history: [
+      {
+        status: initialStatus,
+        changedAt: now,
+      },
+    ],
     content: content,
     tag: body.tag,
     clientId: clientId,
