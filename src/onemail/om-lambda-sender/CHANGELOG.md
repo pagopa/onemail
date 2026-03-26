@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.2.4
+
+### Patch Changes
+
+- 7af43f2: low priority add reply to and default templateData
+
 ## 1.2.3
 
 ### Patch Changes
