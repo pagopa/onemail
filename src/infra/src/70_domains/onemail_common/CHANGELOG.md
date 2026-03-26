@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.3.0
+
+### Minor Changes
+
+- ebaa5d4: Sqs visibility timeout to 60s
+
 ## 1.2.0
 
 ### Minor Changes
