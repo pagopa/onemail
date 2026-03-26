@@ -1,3 +1,5 @@
+import type { SQSRecord } from 'aws-lambda';
+
 import { logger } from '#config/logger';
 import {
   ConfSetEventItemSchema,
@@ -8,9 +10,8 @@ import {
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
 } from '#types/SesTypes';
-import { SQSRecord } from 'aws-lambda/trigger/sqs.js';
-import { isEmpty } from 'lodash';
-import { EmailStatus } from 'node_modules/om-common/src/types/EmailStatusHistory.js';
+import isEmpty from 'lodash-es/isEmpty.js';
+import { EmailStatus } from 'om-common/types';
 
 const validateRecord = (
   record: SQSRecord,
