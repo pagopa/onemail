@@ -218,7 +218,7 @@ export const batchUpdateEmailStatuses = async (
           ...item,
           status,
           updatedAt: now,
-          messageId: messageId ?? null,
+          sesMessageId: messageId ?? item.sesMessageId,
           history: updatedHistory,
         },
       },
