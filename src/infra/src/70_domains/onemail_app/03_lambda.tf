@@ -44,7 +44,7 @@ data "aws_iam_policy_document" "sender_policy" {
     ]
     resources = [
       data.aws_dynamodb_table.EmailStatusHistory.arn,
-      "${data.aws_dynamodb_table.main.arn}/index/${local.gsis["gsi_request_id_idx"].name}"
+      local.gsis["gsi_request_id_idx"].name
     ]
   }
 
@@ -107,7 +107,7 @@ module "lambda_sender" {
   reserved_concurrent_executions = var.lambda_sender.reserved_concurrent_executions
   environment_variables = {
     AWS_EMAIL_DB_TABLE          = data.aws_dynamodb_table.EmailStatusHistory.name
-    AWS_EMAIL_DB_REQUEST_ID_GSI = one(data.aws_dynamodb_table.EmailStatusHistory.global_secondary_index).name
+    AWS_EMAIL_DB_REQUEST_ID_GSI = local.gsis["gsi_request_id_idx"].name
     HIGH_PRIORITY_QUEUE_ARN     = data.aws_sqs_queue.high_priority.arn
     LOW_PRIORITY_QUEUE_ARN      = data.aws_sqs_queue.low_priority.arn
     NODE_ENV                    = "production"
@@ -152,7 +152,7 @@ data "aws_iam_policy_document" "set_processor_policy" {
     ]
     resources = [
       data.aws_dynamodb_table.EmailStatusHistory.arn,
-      "${data.aws_dynamodb_table.main.arn}/index/${local.gsis["gsi_ses_message_id_idx"].name}"
+      local.gsis["gsi_ses_message_id_idx"].name
     ]
   }
 
@@ -216,7 +216,7 @@ module "lambda_set_processor" {
   reserved_concurrent_executions = var.lambda_set_processor.reserved_concurrent_executions
   environment_variables = {
     AWS_EMAIL_DB_TABLE               = data.aws_dynamodb_table.EmailStatusHistory.name
-    AWS_EMAIL_DB_MESSAGE_ID_GSI      = "${data.aws_dynamodb_table.main.arn}/index/${local.gsis["gsi_ses_message_id_idx"].name}"
+    AWS_EMAIL_DB_MESSAGE_ID_GSI      = local.gsis["gsi_ses_message_id_idx"].name
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "AWS/SES"
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids

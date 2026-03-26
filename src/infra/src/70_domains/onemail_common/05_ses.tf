@@ -69,11 +69,11 @@ resource "aws_sesv2_configuration_set_event_destination" "to_eb" {
 
 resource "aws_cloudwatch_event_rule" "ses_rule" {
   count = var.enable_ses ? 1 : 0
-  name  = "ses-central-rule"
+  name  = "${local.project_nodomain}-${var.env}-ses-central-rule"
   event_pattern = jsonencode({
     source      = ["aws.ses"],
     detail-type = ["SES Event"],
-    detail      = { "configuration-set-name" = [{ prefix = "${local.project_nodomain}-configuration-set*" }] }
+    detail      = { "configuration-set-name" = [{ prefix = "${local.project_nodomain}-${var.env}-configuration-set" }] }
   })
 }
 
