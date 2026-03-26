@@ -90,3 +90,10 @@ variable "enable_ses" {
   description = "Enable SES identity-based restrictions for the sender Lambda policy. Disable it during early tests to keep broad SES permissions."
   default     = false
 }
+
+variable "lambda_set_processor" {
+  type = object({
+    package_path                   = string
+    reserved_concurrent_executions = optional(number)
+  })
+}

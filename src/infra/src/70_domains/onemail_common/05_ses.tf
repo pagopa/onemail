@@ -1,9 +1,3 @@
-data "aws_route53_zone" "onemail" {
-  count        = var.enable_ses ? 1 : 0
-  name         = local.zone_name
-  private_zone = false
-}
-
 resource "aws_sesv2_email_identity" "tenant_identities" {
   count          = var.enable_ses ? 1 : 0
   email_identity = local.zone_name
@@ -56,4 +50,50 @@ resource "aws_sesv2_configuration_set" "config_set" {
   delivery_options {
     tls_policy = "REQUIRE"
   }
+}
+
+resource "aws_sesv2_configuration_set_event_destination" "to_eb" {
+  #for_each               = var.tenants
+  count                  = var.enable_ses ? 1 : 0
+  configuration_set_name = aws_sesv2_configuration_set.config_set[0].configuration_set_name
+  event_destination_name = "dest-eb-${local.project_nodomain}"
+
+  event_destination {
+    enabled              = true
+    matching_event_types = ["SEND", "REJECT", "BOUNCE", "COMPLAINT", "DELIVERY"]
+    event_bridge_destination {
+      event_bus_arn = "arn:aws:events:${var.aws_region}:${data.aws_caller_identity.current.account_id}:event-bus/default"
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "ses_rule" {
+  count = var.enable_ses ? 1 : 0
+  name  = "${local.project_nodomain}-${var.env}-ses-central-rule"
+  event_pattern = jsonencode({
+    source      = ["aws.ses"],
+    detail-type = ["SES Event"],
+    detail      = { "configuration-set-name" = [{ prefix = "${local.project_nodomain}-${var.env}-configuration-set" }] }
+  })
+}
+
+resource "aws_cloudwatch_event_target" "sqs_target" {
+  count = var.enable_ses ? 1 : 0
+  rule  = aws_cloudwatch_event_rule.ses_rule[0].name
+  arn   = aws_sqs_queue.sqs_set_processor.arn
+}
+
+resource "aws_sqs_queue_policy" "eb_to_sqs" {
+  count     = var.enable_ses ? 1 : 0
+  queue_url = aws_sqs_queue.sqs_set_processor.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect    = "Allow",
+      Principal = { Service = "events.amazonaws.com" },
+      Action    = "sqs:SendMessage",
+      Resource  = aws_sqs_queue.sqs_set_processor.arn,
+      Condition = { ArnEquals = { "aws:SourceArn" = aws_cloudwatch_event_rule.ses_rule[0].arn } }
+    }]
+  })
 }
