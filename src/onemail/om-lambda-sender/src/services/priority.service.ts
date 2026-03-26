@@ -229,6 +229,7 @@ function validateRecord(
   schema: typeof SqsEventItemHighSchema | typeof SqsEventItemLowSchema,
 ): SqsEventItemHigh | SqsEventItemLow | undefined {
   if (isEmpty(record.body)) {
+    //todo add metrics
     logger.error('Invalid payload, discarding record', { record });
     return undefined;
   }

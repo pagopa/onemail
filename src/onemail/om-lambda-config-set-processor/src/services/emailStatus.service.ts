@@ -1,0 +1,77 @@
+import { logger } from '#config/logger';
+import {
+  ConfSetEventItemSchema,
+  HandledConfSetEventItem,
+} from '#dtos/confSetEventItem.dto';
+import { updateEmailStatusWithSesMessageId } from '#repositories/email.repository';
+import {
+  CapitalizedSesBounceType,
+  CapitalizedSesConfigurationSetEventType,
+} from '#types/SesTypes';
+import { SQSRecord } from 'aws-lambda/trigger/sqs.js';
+import { isEmpty } from 'lodash';
+import { EmailStatus } from 'node_modules/om-common/src/types/EmailStatusHistory.js';
+
+const validateRecord = (
+  record: SQSRecord,
+  schema: typeof ConfSetEventItemSchema,
+): HandledConfSetEventItem | undefined => {
+  if (isEmpty(record.body)) {
+    //todo add metrics
+    logger.error('Invalid payload, discarding record', { record });
+    return undefined;
+  }
+  const result = schema.safeParse(JSON.parse(record.body));
+  if (!result.success) {
+    //Todo add metrics
+    logger.error('Invalid payload, discarding record', { record });
+    return undefined;
+  }
+  if (
+    !Object.values(CapitalizedSesConfigurationSetEventType).includes(
+      result.data.eventType as CapitalizedSesConfigurationSetEventType,
+    )
+  ) {
+    return undefined;
+  }
+
+  return result.data as HandledConfSetEventItem;
+};
+
+export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
+  const eventItem = validateRecord(record, ConfSetEventItemSchema);
+  if (!eventItem) {
+    return;
+  }
+  // Delivered
+  if (
+    eventItem.eventType === CapitalizedSesConfigurationSetEventType.Delivery
+  ) {
+    await updateEmailStatusWithSesMessageId(
+      eventItem.mail.messageId,
+      eventItem.mail.timestamp,
+      EmailStatus.Delivered,
+    );
+  }
+
+  //Bounce
+  if (eventItem.eventType === CapitalizedSesConfigurationSetEventType.Bounce) {
+    // Soft Bounce
+    if (
+      eventItem.bounce.bounceType === CapitalizedSesBounceType.Transient ||
+      eventItem.bounce.bounceType === CapitalizedSesBounceType.Undetermined
+    ) {
+      //todo
+      return;
+    }
+    //Hard Bounce
+    if (eventItem.bounce.bounceType === CapitalizedSesBounceType.Permanent) {
+      await updateEmailStatusWithSesMessageId(
+        eventItem.mail.messageId,
+        eventItem.mail.timestamp,
+        EmailStatus.HardBounce,
+        eventItem.bounce.bounceSubType,
+      );
+    }
+  }
+};

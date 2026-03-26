@@ -1,0 +1,46 @@
+{
+  "name": "om-lambda-config-set-processor",
+  "version": "1.0.0",
+  "description": "Lambda that processes config sets for SES.",
+  "private": true,
+  "main": "dist/app.js",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "node dist/app.js",
+    "dev": "echo \"No dev start yet for config-set processor\"",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "echo \"No tests yet for config-set processor\"",
+    "type-check": "tsc --noEmit",
+    "lint:check": "eslint",
+    "lint": "eslint --fix",
+    "format:check": "prettier --check '**/*.{ts,js,mjs,json,yml,yaml}' --ignore-path ../../../.prettierignore",
+    "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}' --ignore-path ../../../.prettierignore"
+  },
+  "dependencies": {
+    "@aws-lambda-powertools/batch": "^2.31.0",
+    "@aws-lambda-powertools/logger": "^2.31.0",
+    "@aws-sdk/client-cloudwatch": "^3.1007.0",
+    "@aws-sdk/client-dynamodb": "^3.989.0",
+    "@aws-sdk/client-sesv2": "^3.1002.0",
+    "@aws-sdk/lib-dynamodb": "^3.989.0",
+    "lodash": "^4.17.23",
+    "om-common": "workspace:*",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "aws-lambda": "^1.0.7",
+    "@types/aws-lambda": "^8.10.160",
+    "@types/lodash": "^4.17.23",
+    "@types/node": "^24.10.12"
+  },
+  "imports": {
+    "#*": {
+      "local": "./src/*.js",
+      "default": "./dist/*.js"
+    }
+  },
+  "homepage": "https://github.com/pagopa/onemail/blob/main/src/onemail/om-lambda-config-set-processor/README.md"
+}
