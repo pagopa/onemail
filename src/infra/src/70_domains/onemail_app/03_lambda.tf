@@ -187,6 +187,16 @@ module "security_group_lambda_set_processor" {
   egress_prefix_list_ids = [
     data.aws_vpc_endpoint.dynamodb.prefix_list_id
   ]
+
+  egress_with_cidr_blocks = [
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      description = "HTTPS to VPC"
+      cidr_blocks = data.aws_vpc.core.cidr_block
+    }
+  ]
 }
 
 module "lambda_set_processor" {
