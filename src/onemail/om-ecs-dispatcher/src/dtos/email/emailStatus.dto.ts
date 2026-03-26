@@ -7,16 +7,19 @@ import {
   stringCheckedSchema,
 } from './common.dto.js';
 
-export const EmailStatusQueryParamsSchema = z
-  .object({
-    requestId: RequestIdSchema,
-  })
-  .openapi('EmailStatusQueryParamsDTO');
+export const EmailStatusQueryParamsSchema = z.object({
+  requestId: RequestIdSchema,
+});
+
+const EmailStatusSchema = z
+  .enum(EmailStatus)
+  .describe('Status of the email')
+  .openapi('EmailStatus');
 
 // Single status history event item
 const EmailEventSchema = z
   .object({
-    status: z.enum(EmailStatus).describe('Status value at this point in time'),
+    status: EmailStatusSchema,
     changedAt: z.iso
       .datetime()
       .describe('ISO 8601 timestamp of the status change event'),
@@ -30,7 +33,7 @@ const EmailEventSchema = z
 const EmailStatusItemSchema = z
   .object({
     emailId: z.string().describe('Unique identifier of the email'),
-    status: z.enum(EmailStatus).describe('Current status of the email'),
+    status: EmailStatusSchema,
     priority: z
       .enum(EmailPriority)
       .describe('Priority of the tracked email request'),
@@ -39,7 +42,7 @@ const EmailStatusItemSchema = z
       .array(EmailEventSchema)
       .describe('Chronological history of status changes'),
   })
-  .openapi('EmailStatusItemDTO');
+  .openapi('EmailStatusItemResponseDTO');
 
 export const EmailStatusResponseSchema = z.array(EmailStatusItemSchema);
 

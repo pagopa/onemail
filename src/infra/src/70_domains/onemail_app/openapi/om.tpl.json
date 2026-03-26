@@ -79,9 +79,9 @@
         },
         "responses": {
           "202": { "description": "Email accepted for processing" },
-          "400": { "description": "Bad request" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden" },
+          "400": { "description": "Bad request - invalid data |" },
+          "401": { "description": "Unauthorized - authentication required or invalid credentials" },
+          "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
           "500": { "description": "Generic error" }
         }
@@ -115,9 +115,9 @@
         },
         "responses": {
           "202": { "description": "Email accepted for processing" },
-          "400": { "description": "Bad request" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden" },
+          "400": { "description": "Bad request - invalid data |" },
+          "401": { "description": "Unauthorized - authentication required or invalid credentials" },
+          "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
           "500": { "description": "Generic error" }
         }

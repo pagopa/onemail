@@ -63,8 +63,7 @@ export type EmailHighPriorityQueryParams = z.infer<
   typeof EmailHighPriorityQueryParamsSchema
 >;
 
-export const EmailHighPriorityResponseSchema =
-  EmailSuccessResponseSchema.openapi('EmailHighPriorityResponseDTO');
+export const EmailHighPriorityResponseSchema = EmailSuccessResponseSchema;
 
 export type EmailHighPriorityResponseDTO = z.infer<
   typeof EmailHighPriorityResponseSchema
