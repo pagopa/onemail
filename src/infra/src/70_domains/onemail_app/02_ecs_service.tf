@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "ecs_task_policy" {
 
     resources = [
       data.aws_dynamodb_table.EmailStatusHistory.arn,
-      local.gsis["gsi_request_id_idx"].name
+      "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsis["gsi_request_id_idx"].name}"
     ]
   }
 

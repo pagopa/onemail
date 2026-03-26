@@ -44,7 +44,7 @@ data "aws_iam_policy_document" "sender_policy" {
     ]
     resources = [
       data.aws_dynamodb_table.EmailStatusHistory.arn,
-      local.gsis["gsi_request_id_idx"].name
+      "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsis["gsi_request_id_idx"].name}"
     ]
   }
 
@@ -152,7 +152,7 @@ data "aws_iam_policy_document" "set_processor_policy" {
     ]
     resources = [
       data.aws_dynamodb_table.EmailStatusHistory.arn,
-      local.gsis["gsi_ses_message_id_idx"].name
+      "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsis["gsi_ses_message_id_idx"].name}"
     ]
   }
 
