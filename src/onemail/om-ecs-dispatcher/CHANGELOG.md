@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.5.7
+
+### Patch Changes
+
+- 7af43f2: low priority add reply to and default templateData
+
 ## 1.5.6
 
 ### Patch Changes
