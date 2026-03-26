@@ -106,11 +106,12 @@ module "lambda_sender" {
   memory_size                    = 256
   reserved_concurrent_executions = var.lambda_sender.reserved_concurrent_executions
   environment_variables = {
-    AWS_EMAIL_DB_TABLE          = data.aws_dynamodb_table.EmailStatusHistory.name
-    AWS_EMAIL_DB_REQUEST_ID_GSI = local.gsis["gsi_request_id_idx"].name
-    HIGH_PRIORITY_QUEUE_ARN     = data.aws_sqs_queue.high_priority.arn
-    LOW_PRIORITY_QUEUE_ARN      = data.aws_sqs_queue.low_priority.arn
-    NODE_ENV                    = "production"
+    AWS_EMAIL_DB_TABLE               = data.aws_dynamodb_table.EmailStatusHistory.name
+    AWS_EMAIL_DB_REQUEST_ID_GSI      = local.gsis["gsi_request_id_idx"].name
+    HIGH_PRIORITY_QUEUE_ARN          = data.aws_sqs_queue.high_priority.arn
+    LOW_PRIORITY_QUEUE_ARN           = data.aws_sqs_queue.low_priority.arn
+    AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-sender"
+    NODE_ENV                         = "production"
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_sender.security_group_id]
@@ -217,7 +218,8 @@ module "lambda_set_processor" {
   environment_variables = {
     AWS_EMAIL_DB_TABLE               = data.aws_dynamodb_table.EmailStatusHistory.name
     AWS_EMAIL_DB_MESSAGE_ID_GSI      = local.gsis["gsi_ses_message_id_idx"].name
-    AWS_CLOUDWATCH_METRICS_NAMESPACE = "AWS/SES"
+    AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-config-set-processor"
+    NODE_ENV                         = "production"
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_set_processor.security_group_id]
