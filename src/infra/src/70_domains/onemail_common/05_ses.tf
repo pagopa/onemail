@@ -79,7 +79,7 @@ resource "aws_cloudwatch_event_rule" "ses_rule" {
 
 resource "aws_cloudwatch_event_target" "sqs_target" {
   count = var.enable_ses ? 1 : 0
-  rule  = aws_cloudwatch_event_rule.ses_rule.name
+  rule  = aws_cloudwatch_event_rule.ses_rule[0].name
   arn   = aws_sqs_queue.sqs_set_processor.arn
 }
 
