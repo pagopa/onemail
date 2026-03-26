@@ -9,7 +9,7 @@ export default {
       throwMissingRequiredEnvVar('AWS_EMAIL_DB_MESSAGE_ID_GSI'),
     cloudWatchMetricsNamespace:
       process.env.AWS_CLOUDWATCH_METRICS_NAMESPACE ||
-      'lambda-sender/ApplicationMetrics', //TODO: reimplement throw when infra is ready
+      'lambda-config-set-processor/ApplicationMetrics', //TODO: reimplement throw when infra is ready
     // ?? throwMissingRequiredEnvVar('AWS_CLOUDWATCH_METRICS_NAMESPACE'),
   },
 };
