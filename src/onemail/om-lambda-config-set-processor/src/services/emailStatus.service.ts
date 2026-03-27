@@ -50,7 +50,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
   ) {
     await updateEmailStatusBySesMessageId(
       eventItem.mail.messageId,
-      eventItem.mail.timestamp,
+      eventItem.delivery.timestamp,
       EmailStatus.Delivered,
     );
   }
@@ -65,7 +65,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       //todo update this logic with the one in the confluence documents
       await updateEmailStatusBySesMessageId(
         eventItem.mail.messageId,
-        eventItem.mail.timestamp,
+        eventItem.bounce.timestamp,
         EmailStatus.SoftBounce,
         eventItem.bounce.bounceSubType,
       );
@@ -74,7 +74,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     if (eventItem.bounce.bounceType === CapitalizedSesBounceType.Permanent) {
       await updateEmailStatusBySesMessageId(
         eventItem.mail.messageId,
-        eventItem.mail.timestamp,
+        eventItem.bounce.timestamp,
         EmailStatus.HardBounce,
         eventItem.bounce.bounceSubType,
       );

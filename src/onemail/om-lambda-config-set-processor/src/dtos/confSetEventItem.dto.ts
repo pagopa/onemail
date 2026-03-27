@@ -20,6 +20,7 @@ const BounceSchema = z.object({
       emailAddress: z.email(),
     }),
   ),
+  timestamp: z.string(),
 });
 
 const ComplaintSchema = z.object({
