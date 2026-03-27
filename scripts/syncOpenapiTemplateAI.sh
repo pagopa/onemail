@@ -28,6 +28,8 @@ PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 OPENAPI_FILE="$PACKAGE_ROOT/src/onemail/om-ecs-dispatcher/apidoc/openapi-docs.json"
 TEMPLATE_FILE="$(cd "$PACKAGE_ROOT/src/infra/src/70_domains/onemail_app/openapi" && pwd)/om.tpl.json"
 
+printf "\n%s\n\n" "------- Syncing OpenAPI template -------"
+
 # ─── Argument parsing ─────────────────────────────────────────────────────────
 
 while [[ $# -gt 0 ]]; do
@@ -42,7 +44,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       echo "❌ Unknown argument: $1" >&2
-      echo "Usage: bash scripts/syncOpenapiTemplateAI.sh | pnpm run sync:openapi-template [--model <model>]" >&2
+      echo "Usage: bash scripts/syncOpenapiTemplateAI.sh [--model <model>] | pnpm run sync:openapi-template [--model <model>]" >&2
       exit 1
       ;;
   esac
@@ -92,10 +94,15 @@ this is an example of an x-amazon-apigateway-integration block that must be on e
 
 RULES:
 1. If the OpenAPI spec file is unchanged, do not modify the template file.
+  - Use 'git diff' to check if 'openapi-docs.json' has changes compared to the main (prefer origin/main for local) branch.
+  - EXCLUDE changes for 'info' object of the json.
+  - If there is no changes (excluding info object mentioned above), skip the update and exit successfully.
 2. UPDATE doc info version from spec to template and leave other info fields unchanged.
 3. UPDATE routes (method, path, tags, params, summary, responses) from spec to template.
    - If a route is removed from the spec, remove it from the template.
    - If a route is added in the spec, add it to the template (before health routes).
+   - Do not add/edit 'description' and validation keywords in parameters schema
+   - Do not add 'requestBody', 'components', '\$ref'
 4. x-amazon-apigateway-integration:
    - Update 'httpMethod' and 'uri' as needed, if changed.
    - For NEW routes: add the integration block (type=HTTP_PROXY, connectionType=VPC_LINK, timeoutInMillis=20000 for data routes, 5000 for health routes).

@@ -16,7 +16,7 @@ async function generate() {
   const outputPath = resolve(root, CONFIG.OUTPUT_DIR, CONFIG.OUTPUT_FILE_NAME);
 
   try {
-    console.log('Generating OpenAPI documentation...');
+    console.log('\nGenerating OpenAPI documentation...');
 
     // Import the entry points to trigger OpenApi route registration and ZodOpenAPI extensions
     await import(resolve(root, CONFIG.ZOD_EXTEND));

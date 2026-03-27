@@ -1,0 +1,64 @@
+name: OpenAPI Sync Check
+
+permissions: {}
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - labeled
+      - unlabeled
+    paths:
+      - 'src/onemail/om-ecs-dispatcher/src/dtos/**'
+      - 'src/onemail/om-ecs-dispatcher/src/routes/**'
+
+jobs:
+  check-openapi-in-sync:
+    name: Check OpenAPI spec is up to date
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    if: ${{ github.event.pull_request.base.ref == 'main' && !startsWith(github.head_ref, 'changeset-release/') }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      # If the PR is labelled 'skip-openapi-check', the change intentionally does not affect the OpenAPI surface (e.g. import refactoring, internal logic).
+      - name: Skip if label 'skip-openapi-check' is present
+        id: check-label
+        run: |
+          LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
+          if echo "$LABELS" | jq -e 'index("skip-openapi-check") != null' > /dev/null; then
+            echo "Label 'skip-openapi-check' detected. Skipping OpenAPI sync check."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check if openapi-docs.json changed
+        if: ${{ steps.check-label.outputs.skip == 'false' }}
+        id: openapi-changed
+        uses: tj-actions/changed-files@039afcd1024c210363c9d3fc8fd07e1f3fcf2867 # v35
+        with:
+          files: src/onemail/om-ecs-dispatcher/apidoc/openapi-docs.json
+
+      # Routes changed but openapi-docs.json was not changed/committed.
+      # run 'pnpm run sync:openapi-template' and commit the result,
+      # or add the label 'skip-openapi-check' if the change does not affect the spec.
+      - name: Check openapi-docs.json sync result
+        if: ${{ steps.check-label.outputs.skip == 'false' }}
+        run: |
+          if [[ "${{ steps.openapi-changed.outputs.any_changed }}" != 'true' ]]; then
+            printf '%s\n' \
+              '❌ Routes changed but openapi-docs.json was not updated.' \
+              "   Run 'pnpm run sync:openapi-template' and commit the result," \
+              "   or add the label 'skip-openapi-check' to this PR if the change does not affect the OpenAPI spec." >&2
+            exit 1
+          fi
+          echo '✅ openapi doc is up to date.'
