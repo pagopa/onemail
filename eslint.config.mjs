@@ -15,6 +15,7 @@ export default [
         'error',
         { argsIgnorePattern: '^_' },
       ],
+      'perfectionist/sort-enums': 'off',
       'perfectionist/sort-interfaces': 'off',
       'perfectionist/sort-object-types': 'off',
       'perfectionist/sort-objects': 'off',

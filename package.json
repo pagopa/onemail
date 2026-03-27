@@ -10,10 +10,13 @@
     "build": "turbo run build --filter=!onemail",
     "dev:dispatcher": "turbo run dev --filter=om-ecs-dispatcher",
     "dev:sender": "turbo run dev --filter=om-lambda-sender",
+    "dev:config-set-processor": "turbo run dev --filter=om-lambda-config-set-processor",
     "build:dispatcher": "turbo run build --filter=om-ecs-dispatcher",
     "build:sender": "turbo run build --filter=om-lambda-sender",
+    "build:config-set-processor": "turbo run build --filter=om-lambda-config-set-processor",
     "package:dispatcher": "pnpm --filter=om-ecs-dispatcher deploy --prod dist-artifact/om-ecs-dispatcher",
     "package:sender": "bash scripts/package-sender.sh",
+    "package:config-set-processor": "bash scripts/package-config-set-processor.sh",
     "type-check": "turbo run type-check --filter=!onemail",
     "lint:check": "turbo run lint:check --filter=!onemail",
     "lint": "turbo run lint --filter=!onemail",
@@ -33,7 +36,8 @@
     "infra-domains-onemail-monitoring": "workspace:*",
     "om-common": "workspace:*",
     "om-ecs-dispatcher": "workspace:*",
-    "om-lambda-sender": "workspace:*"
+    "om-lambda-sender": "workspace:*",
+    "om-lambda-config-set-processor": "workspace:*"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
