@@ -1,6 +1,6 @@
 {
   "name": "om-lambda-config-set-processor",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Lambda that processes config sets for SES.",
   "private": true,
   "main": "dist/app.js",

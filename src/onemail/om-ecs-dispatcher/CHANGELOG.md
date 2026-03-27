@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.5.8
+
+### Patch Changes
+
+- 58d9a5a: Add lambda post configuration set
+
 ## 1.5.7
 
 ### Patch Changes
