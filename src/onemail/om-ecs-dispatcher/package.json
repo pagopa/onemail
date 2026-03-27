@@ -23,7 +23,7 @@
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.4.1",
     "@aws-sdk/client-dynamodb": "catalog:",
-    "@aws-sdk/client-sqs": "^3.1014.0",
+    "@aws-sdk/client-sqs": "catalog:",
     "@aws-sdk/lib-dynamodb": "catalog:",
     "dotenv": "^17.2.4",
     "express": "^5.2.1",
