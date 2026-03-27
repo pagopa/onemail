@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.2.5
+
+### Patch Changes
+
+- 58d9a5a: Add lambda post configuration set
+
 ## 1.2.4
 
 ### Patch Changes
