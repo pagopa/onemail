@@ -1,4 +1,3 @@
-import { errorMessage } from '#utils/constants';
 import z from 'zod';
 
 import {
@@ -41,7 +40,11 @@ export const EmailLowPriorityBodySchema = z
         if (duplicates.size > 0) {
           ctx.addIssue({
             code: 'custom',
-            message: `${errorMessage.duplicateRecipientAddressesPrefix}${[...duplicates].join(', ')}`,
+            message: `Duplicate recipient addresses are not allowed: ${[...duplicates].join(', ')}`,
+            params: {
+              kind: 'duplicateRecipientAddresses',
+              duplicates: [...duplicates],
+            },
           });
         }
       })

@@ -1,6 +1,5 @@
 import { ERROR_CODES } from '#dtos/error.dto';
 import { ApiError } from '#errors/ApiError';
-import { errorMessage } from '#utils/constants';
 import {
   ConditionalCheckFailedException,
   DynamoDBServiceException,
@@ -27,9 +26,9 @@ export const errorHandler = (
     const duplicateRecipientsError = err.issues.find(
       (issue) =>
         issue.code === 'custom' &&
-        issue.message.startsWith(
-          errorMessage.duplicateRecipientAddressesPrefix,
-        ),
+        // Use a structured discriminator on the custom Zod issue instead of parsing the message text.
+        (issue as unknown as { params?: { kind?: string } }).params?.kind ===
+          'duplicateRecipientAddresses',
     );
 
     errorResponse = new ApiError(
