@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.5.4",
+    "version": "1.5.7",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -19,7 +19,7 @@
   ],
   "components": {
     "schemas": {
-      "EmailStatusItemDTO": {
+      "EmailStatusItemResponseDTO": {
         "type": "object",
         "properties": {
           "emailId": {
@@ -27,16 +27,7 @@
             "description": "Unique identifier of the email"
           },
           "status": {
-            "type": "string",
-            "enum": [
-              "Delivered",
-              "Dispatched",
-              "HardBounce",
-              "Queued",
-              "RejectedBySES",
-              "SoftBounce"
-            ],
-            "description": "Current status of the email"
+            "$ref": "#/components/schemas/EmailStatus"
           },
           "priority": {
             "type": "string",
@@ -47,24 +38,7 @@
             "description": "Priority of the tracked email request"
           },
           "to": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 255,
-                "description": "Name associated with the email address"
-              },
-              "email": {
-                "type": "string",
-                "format": "email",
-                "description": "Email address"
-              }
-            },
-            "required": [
-              "email"
-            ],
-            "description": "Recipient email address"
+            "$ref": "#/components/schemas/EmailAddress"
           },
           "history": {
             "type": "array",
@@ -72,16 +46,7 @@
               "type": "object",
               "properties": {
                 "status": {
-                  "type": "string",
-                  "enum": [
-                    "Delivered",
-                    "Dispatched",
-                    "HardBounce",
-                    "Queued",
-                    "RejectedBySES",
-                    "SoftBounce"
-                  ],
-                  "description": "Status value at this point in time"
+                  "$ref": "#/components/schemas/EmailStatus"
                 },
                 "changedAt": {
                   "type": "string",
@@ -112,7 +77,62 @@
           "history"
         ]
       },
-      "EmailHighPriorityResponseDTO": {
+      "EmailStatus": {
+        "type": "string",
+        "enum": [
+          "Delivered",
+          "Dispatched",
+          "HardBounce",
+          "Queued",
+          "RejectedBySES",
+          "DryRunError",
+          "SoftBounce"
+        ],
+        "description": "Status of the email"
+      },
+      "EmailAddress": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": "^[^\\r\\n]+$",
+            "description": "Name associated with the email address"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "description": "Recipient email address"
+      },
+      "ErrorResponseDTO": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "errorCode": {
+            "type": "string",
+            "description": "Application-specific error code"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp of when the error occurred"
+          }
+        },
+        "required": [
+          "message",
+          "timestamp"
+        ]
+      },
+      "EmailSuccessResponseDTO": {
         "type": "object",
         "properties": {
           "requestId": {
@@ -132,67 +152,29 @@
             "type": "object",
             "properties": {
               "from": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 255,
-                    "description": "Name associated with the email address"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EmailAddress"
                   },
-                  "email": {
-                    "type": "string",
-                    "format": "email",
-                    "description": "Email address"
+                  {
+                    "description": "Sender of the email"
                   }
-                },
-                "required": [
-                  "email"
-                ],
-                "description": "Sender of the email"
+                ]
               },
               "to": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 255,
-                    "description": "Name associated with the email address"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EmailAddress"
                   },
-                  "email": {
-                    "type": "string",
-                    "format": "email",
-                    "description": "Email address"
+                  {
+                    "description": "Recipient of the email, ignored in case of dryRun"
                   }
-                },
-                "required": [
-                  "email"
-                ],
-                "description": "Recipient of the email, ignored in case of dryRun"
+                ]
               },
               "extendedHeaders": {
                 "type": "array",
                 "items": {
-                  "type": "object",
-                  "properties": {
-                    "N": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 126,
-                      "description": "Key"
-                    },
-                    "V": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 995,
-                      "description": "Value"
-                    }
-                  },
-                  "required": [
-                    "N",
-                    "V"
-                  ]
+                  "$ref": "#/components/schemas/NameValue"
                 },
                 "description": "Custom headers for the email"
               },
@@ -226,22 +208,7 @@
                         "description": "Identifier of the email template"
                       },
                       "templateAttributes": {
-                        "type": "object",
-                        "additionalProperties": {
-                          "description": "Value for the template attribute. Can be a string, number, boolean, object, or array."
-                        },
-                        "description": "Dynamic attributes for template rendering. Each key represents the attribute name used in the template (e.g., \"user_name\"), and its value will be substituted during rendering.",
-                        "example": {
-                          "user_name": "John Doe",
-                          "payment_id": 12345,
-                          "items": [
-                            "book",
-                            "pen"
-                          ],
-                          "metadata": {
-                            "source": "web"
-                          }
-                        }
+                        "$ref": "#/components/schemas/TemplateAttributes"
                       }
                     },
                     "required": [
@@ -294,42 +261,57 @@
           }
         ]
       },
-      "EmailLowPriorityResponseDTO": {
+      "NameValue": {
         "type": "object",
         "properties": {
-          "requestId": {
+          "N": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 255,
-            "description": "Unique identifier for the request, used for checking the status of the emails in the system"
+            "maxLength": 126,
+            "description": "Key"
+          },
+          "V": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 995,
+            "description": "Value"
           }
         },
         "required": [
-          "requestId"
+          "N",
+          "V"
         ]
+      },
+      "TemplateAttributes": {
+        "type": "object",
+        "additionalProperties": {
+          "description": "Value for the template attribute. Can be a string, number, boolean, object, or array."
+        },
+        "description": "Dynamic attributes for template rendering. Each key represents the attribute name used in the template (e.g., \"user_name\"), and its value will be substituted during rendering.",
+        "example": {
+          "user_name": "John Doe",
+          "payment_id": 12345,
+          "items": [
+            "book",
+            "pen"
+          ],
+          "metadata": {
+            "source": "web"
+          }
+        }
       },
       "EmailLowPriorityBodyDTO": {
         "type": "object",
         "properties": {
           "from": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 255,
-                "description": "Name associated with the email address"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmailAddress"
               },
-              "email": {
-                "type": "string",
-                "format": "email",
-                "description": "Email address"
+              {
+                "description": "Sender of the email"
               }
-            },
-            "required": [
-              "email"
-            ],
-            "description": "Sender of the email"
+            ]
           },
           "tag": {
             "type": "array",
@@ -341,24 +323,14 @@
             "description": "Custom tags/categories for the email"
           },
           "replyTo": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 255,
-                "description": "Name associated with the email address"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmailAddress"
               },
-              "email": {
-                "type": "string",
-                "format": "email",
-                "description": "Email address"
+              {
+                "description": "Reply-to address for the email"
               }
-            },
-            "required": [
-              "email"
-            ],
-            "description": "Reply-to address for the email"
+            ]
           },
           "templateId": {
             "type": "string",
@@ -372,67 +344,24 @@
               "type": "object",
               "properties": {
                 "to": {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 255,
-                      "description": "Name associated with the email address"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/EmailAddress"
                     },
-                    "email": {
-                      "type": "string",
-                      "format": "email",
-                      "description": "Email address"
+                    {
+                      "description": "Recipient of the email, ignored in case of dryRun"
                     }
-                  },
-                  "required": [
-                    "email"
-                  ],
-                  "description": "Recipient of the email, ignored in case of dryRun"
+                  ]
                 },
                 "extendedHeaders": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {
-                      "N": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 126,
-                        "description": "Key"
-                      },
-                      "V": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 995,
-                        "description": "Value"
-                      }
-                    },
-                    "required": [
-                      "N",
-                      "V"
-                    ]
+                    "$ref": "#/components/schemas/NameValue"
                   },
                   "description": "Custom headers for the email"
                 },
                 "templateAttributes": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "description": "Value for the template attribute. Can be a string, number, boolean, object, or array."
-                  },
-                  "description": "Dynamic attributes for template rendering. Each key represents the attribute name used in the template (e.g., \"user_name\"), and its value will be substituted during rendering.",
-                  "example": {
-                    "user_name": "John Doe",
-                    "payment_id": 12345,
-                    "items": [
-                      "book",
-                      "pen"
-                    ],
-                    "metadata": {
-                      "source": "web"
-                    }
-                  }
+                  "$ref": "#/components/schemas/TemplateAttributes"
                 }
               },
               "required": [
@@ -461,7 +390,7 @@
           "sanitizedHtml"
         ]
       },
-      "SanitizeHtmlDTO": {
+      "SanitizeHtmlBodyDTO": {
         "type": "object",
         "properties": {
           "htmlContent": {
@@ -480,15 +409,11 @@
         "type": "object",
         "properties": {
           "status": {
-            "type": "string",
-            "enum": [
-              "Healthy",
-              "Unhealthy"
-            ],
-            "description": "Overall health status of the service"
+            "$ref": "#/components/schemas/HealthStatus"
           },
           "timestamp": {
             "type": "string",
+            "format": "date-time",
             "description": "Timestamp of the health check"
           },
           "uptime": {
@@ -550,19 +475,23 @@
           "services"
         ]
       },
+      "HealthStatus": {
+        "type": "string",
+        "enum": [
+          "Healthy",
+          "Unhealthy"
+        ],
+        "description": "Overall health status of the service"
+      },
       "SimpleHealthResponseDTO": {
         "type": "object",
         "properties": {
           "status": {
-            "type": "string",
-            "enum": [
-              "Healthy",
-              "Unhealthy"
-            ],
-            "description": "Overall health status of the service"
+            "$ref": "#/components/schemas/HealthStatus"
           },
           "timestamp": {
             "type": "string",
+            "format": "date-time",
             "description": "Timestamp of the health check"
           },
           "uptime": {
@@ -608,36 +537,18 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/EmailStatusItemDTO"
+                    "$ref": "#/components/schemas/EmailStatusItemResponseDTO"
                   }
                 }
               }
             }
           },
           "400": {
-            "description": "Bad request - invalid data |",
+            "description": "Bad request - invalid data",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -647,25 +558,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -675,25 +568,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -703,25 +578,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -731,25 +588,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -792,35 +631,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EmailHighPriorityResponseDTO"
+                  "$ref": "#/components/schemas/EmailSuccessResponseDTO"
                 }
               }
             }
           },
           "400": {
-            "description": "Bad request - invalid data |",
+            "description": "Bad request - invalid data",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -830,25 +651,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -858,25 +661,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -886,25 +671,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -914,25 +681,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -975,35 +724,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EmailLowPriorityResponseDTO"
+                  "$ref": "#/components/schemas/EmailSuccessResponseDTO"
                 }
               }
             }
           },
           "400": {
-            "description": "Bad request - invalid data |",
+            "description": "Bad request - invalid data",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1013,25 +744,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1041,25 +754,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1069,25 +764,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1097,25 +774,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1128,13 +787,13 @@
         "tags": [
           "Emails"
         ],
-        "summary": "Test HTML content sanitization of the email",
+        "summary": "Test HTML content sanitization of the email, only available in non-production environments",
         "requestBody": {
           "description": "Request body",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SanitizeHtmlDTO"
+                "$ref": "#/components/schemas/SanitizeHtmlBodyDTO"
               }
             }
           }
@@ -1151,29 +810,11 @@
             }
           },
           "400": {
-            "description": "Bad request - invalid data |",
+            "description": "Bad request - invalid data",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1183,25 +824,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1211,25 +834,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1239,25 +844,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1267,25 +854,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1311,29 +880,11 @@
             }
           },
           "400": {
-            "description": "Bad request - invalid data |",
+            "description": "Bad request - invalid data",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1343,25 +894,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1371,25 +904,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1399,25 +914,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1427,25 +924,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1471,29 +950,11 @@
             }
           },
           "400": {
-            "description": "Bad request - invalid data |",
+            "description": "Bad request - invalid data",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1503,25 +964,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1531,25 +974,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1559,25 +984,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }
@@ -1587,25 +994,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message"
-                    },
-                    "errorCode": {
-                      "type": "string",
-                      "description": "Application-specific error code"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "description": "Timestamp of when the error occurred"
-                    }
-                  },
-                  "required": [
-                    "message",
-                    "timestamp"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
                 }
               }
             }

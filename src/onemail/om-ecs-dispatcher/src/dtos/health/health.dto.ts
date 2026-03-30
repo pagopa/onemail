@@ -11,9 +11,14 @@ export enum ServiceStatus {
   Unavailable = 'Unavailable',
 }
 
+const HealthStatusSchema = z
+  .enum(HealthStatus)
+  .describe('Overall health status of the service')
+  .openapi('HealthStatus');
+
 const HealthCommonSchema = z.object({
-  status: z.enum(HealthStatus).describe('Overall health status of the service'),
-  timestamp: z.string().describe('Timestamp of the health check'),
+  status: HealthStatusSchema,
+  timestamp: z.iso.datetime().describe('Timestamp of the health check'),
   uptime: z.number().describe('Uptime of the service in seconds'),
 });
 

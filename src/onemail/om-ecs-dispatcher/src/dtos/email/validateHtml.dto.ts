@@ -8,7 +8,7 @@ export const SanitizeHtmlSchema = z
       .describe('HTML content to be sanitized')
       .openapi({ example: '<p>Hello <strong>World</strong></p>' }),
   })
-  .openapi('SanitizeHtmlDTO');
+  .openapi('SanitizeHtmlBodyDTO');
 
 export type SanitizeHtmlDTO = z.infer<typeof SanitizeHtmlSchema>;
 

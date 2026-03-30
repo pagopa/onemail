@@ -21,21 +21,25 @@ export const stringCheckedSchema = ({
 };
 
 // Handles sender and recipients
-export const EmailAddressSchema = z.object({
-  name: stringCheckedSchema()
-    .regex(/^[^\r\n]+$/, {
-      message: 'Display name must not contain line breaks',
-    })
-    .optional()
-    .describe('Name associated with the email address'),
-  email: z.email().describe('Email address'),
-});
+export const EmailAddressSchema = z
+  .object({
+    name: stringCheckedSchema()
+      .regex(/^[^\r\n]+$/, {
+        message: 'Display name must not contain line breaks',
+      })
+      .optional()
+      .describe('Name associated with the email address'),
+    email: z.email().describe('Email address'),
+  })
+  .openapi('EmailAddress');
 
 // Used for custom headers
-export const NameValueSchema = z.object({
-  N: stringCheckedSchema({ max: 126 }).describe('Key'),
-  V: stringCheckedSchema({ max: 995 }).describe('Value'),
-});
+export const NameValueSchema = z
+  .object({
+    N: stringCheckedSchema({ max: 126 }).describe('Key'),
+    V: stringCheckedSchema({ max: 995 }).describe('Value'),
+  })
+  .openapi('NameValue');
 
 // Custom headers
 export const ExtendedHeadersSchema = z
@@ -50,7 +54,7 @@ export const TagSchema = z
 // Dynamic attributes for template rendering
 export const TemplateAttributesSchema = z
   .record(stringCheckedSchema().describe('Key'), z.any().describe('Value'))
-  .openapi({
+  .openapi('TemplateAttributes', {
     description:
       'Dynamic attributes for template rendering. Each key represents the attribute name used in the template (e.g., "user_name"), and its value will be substituted during rendering.',
     additionalProperties: {
@@ -96,9 +100,11 @@ export const RequestIdSchema = stringCheckedSchema().describe(
   'Unique identifier for the request, used for checking the status of the emails in the system',
 );
 
-export const EmailSuccessResponseSchema = z.object({
-  requestId: RequestIdSchema,
-});
+export const EmailSuccessResponseSchema = z
+  .object({
+    requestId: RequestIdSchema,
+  })
+  .openapi('EmailSuccessResponseDTO');
 
 export const htmlContentSchema = stringCheckedSchema({ min: 10, max: 150000 })
   .transform((html) => sanitizeHtml(html, emailSanitizerOptions))

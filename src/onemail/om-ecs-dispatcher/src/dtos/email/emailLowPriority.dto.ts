@@ -45,8 +45,7 @@ export type EmailLowPriorityQueryParams = z.infer<
   typeof EmailLowPriorityQueryParamsSchema
 >;
 
-export const EmailLowPriorityResponseSchema =
-  EmailSuccessResponseSchema.openapi('EmailLowPriorityResponseDTO');
+export const EmailLowPriorityResponseSchema = EmailSuccessResponseSchema;
 
 export type EmailLowPriorityResponseDTO = z.infer<
   typeof EmailLowPriorityResponseSchema

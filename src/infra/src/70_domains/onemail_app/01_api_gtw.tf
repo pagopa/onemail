@@ -34,6 +34,7 @@ module "api_gateway" {
     connection_id = aws_api_gateway_vpc_link.apigw.id
     uri           = "http://${data.aws_lb.nlb.dns_name}:3000"
     server_url    = local.zone_name
+    env           = var.env
   })
   endpoint_api_types        = ["PRIVATE"]
   endpoint_vpc_endpoint_ids = [data.aws_vpc_endpoint.api_gtw.id]
