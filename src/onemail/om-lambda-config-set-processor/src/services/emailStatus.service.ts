@@ -1,6 +1,6 @@
 import type { SQSRecord } from 'aws-lambda';
 
-import { logger } from '#config/logger';
+import { getLogger, getNamedLogger } from '#config/logger';
 import {
   ConfSetEventItemSchema,
   HandledConfSetEventItem,
@@ -12,6 +12,8 @@ import {
 } from '#types/SesTypes';
 import isEmpty from 'lodash-es/isEmpty.js';
 import { EmailStatus } from 'om-common/types';
+
+const logger = getLogger();
 
 const validateRecord = (
   record: SQSRecord,
@@ -40,6 +42,8 @@ const validateRecord = (
 };
 
 export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
+  const logger = getNamedLogger(sqsEventHandler.name);
+  logger.info('start');
   const eventItem = validateRecord(record, ConfSetEventItemSchema);
   if (!eventItem) {
     return;
@@ -80,4 +84,5 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       );
     }
   }
+  logger.info('end');
 };
