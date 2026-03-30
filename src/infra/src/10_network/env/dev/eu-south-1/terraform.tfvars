@@ -23,5 +23,12 @@ web_acl = {
 
 enable_ses_dns_records = true
 
+tenants = {
+  onemail = {
+    domain      = "dev.onemail.pagopa.it"
+    admin_email = "ops-dmarc-dev@onemail.pagopa.it"
+  }
+}
+
 
 
