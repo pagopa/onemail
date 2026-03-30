@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.8.1
+
+### Patch Changes
+
+- ea67eaf: Align AWS OpenAPI and API Gateway template synchronization script.
+
 ## 1.8.0
 
 ### Minor Changes

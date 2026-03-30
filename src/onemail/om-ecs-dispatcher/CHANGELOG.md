@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.5.9
+
+### Patch Changes
+
+- ea67eaf: Align AWS OpenAPI and API Gateway template synchronization script.
+
 ## 1.5.8
 
 ### Patch Changes
