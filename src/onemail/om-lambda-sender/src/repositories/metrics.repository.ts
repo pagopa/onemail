@@ -1,11 +1,13 @@
 import env from '#config/env';
-import { logger } from '#config/logger';
+import { getLogger } from '#config/logger';
 import { cloudWatchClient } from '#connector/cloudwatch.connector';
 import {
   type MetricDatum,
   PutMetricDataCommand,
 } from '@aws-sdk/client-cloudwatch';
 import isEmpty from 'lodash-es/isEmpty.js';
+
+const logger = getLogger();
 
 export enum SenderMetricName {
   EmailBatchNotFound = 'EmailBatchNotFound',

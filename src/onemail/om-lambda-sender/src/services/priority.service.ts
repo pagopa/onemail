@@ -1,6 +1,6 @@
 import type { SQSRecord } from 'aws-lambda';
 
-import { logger } from '#config/logger';
+import { getLogger, getNamedLogger } from '#config/logger';
 import {
   SqsEventItemHigh,
   SqsEventItemHighSchema,
@@ -32,8 +32,11 @@ import {
   sendLowPriorityEmail,
 } from './email.service.js';
 
+const logger = getLogger();
+
 export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
-  logger.info('handleHighPriority - start');
+  const logger = getNamedLogger(handleHighPriority.name);
+  logger.info('start');
 
   // 1. Validate the SQS record and parse the item
   const parsed = validateRecord(record, SqsEventItemHighSchema);
@@ -109,11 +112,12 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
     return;
   }
 
-  logger.info('handleHighPriority - end');
+  logger.info('end');
 };
 
 export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
-  logger.info('handleLowPriority - start');
+  const logger = getNamedLogger(handleLowPriority.name);
+  logger.info('start');
 
   // 1. Validate the SQS record and parse the item
   const parsed = validateRecord(record, SqsEventItemLowSchema);
@@ -234,7 +238,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
     throw error;
   }
 
-  logger.info('handleLowPriority - end');
+  logger.info('end');
 };
 
 function handleSesError(error: unknown): string | undefined {

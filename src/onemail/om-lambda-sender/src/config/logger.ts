@@ -1,11 +1,15 @@
+import type { Context } from 'aws-lambda';
+
 import { baseLogger } from 'om-common/logger';
 
-export const logger = baseLogger;
-
-export const getLogger = (methodName?: string) => {
+export const getNamedLogger = (methodName: string) => {
   const logger = baseLogger.createChild();
-  if (methodName) {
-    logger.appendKeys({ method: methodName });
-  }
+  logger.appendKeys({ method: methodName });
   return logger;
+};
+
+export const getLogger = () => baseLogger;
+
+export const addLambdaContextToLogger = (context: Context) => {
+  baseLogger.addContext(context);
 };
