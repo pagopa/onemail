@@ -122,8 +122,8 @@
           "500": { "description": "Generic error" }
         }
       }
-    }
-    %{ if env != "prod" },
+    },
+    %{ if env != "prod" }
       "/v1/emails/sanitize-html": {
         "post": {
           "tags": ["Emails"],
@@ -146,8 +146,8 @@
             "500": { "description": "Generic error" }
           }
         }
-      }
-    %{ endif },
+      },
+    %{ endif }
     "/health/ready": {
       "get": {
         "tags": ["Health"],

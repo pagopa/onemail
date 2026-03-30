@@ -44,7 +44,7 @@ jobs:
       - name: Check if openapi-docs.json changed
         if: ${{ steps.check-label.outputs.skip == 'false' }}
         id: openapi-changed
-        uses: tj-actions/changed-files@039afcd1024c210363c9d3fc8fd07e1f3fcf2867 # v35
+        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v47.0.5
         with:
           files: src/onemail/om-ecs-dispatcher/apidoc/openapi-docs.json
 
