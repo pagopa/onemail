@@ -1,4 +1,5 @@
 import env from '#config/env';
+import { getNamedLogger } from '#config/logger';
 import { dynamoClient } from '#connector/dynamo.connector';
 import { sqsClient } from '#connector/sqs.connector';
 import {
@@ -30,6 +31,8 @@ export const sendEmailTransactional = async (
   emailData: EmailHighPriorityBodyDTO,
   dryRun: boolean,
 ): Promise<EmailHighPriorityResponseDTO> => {
+  const logger = getNamedLogger(sendEmailTransactional.name);
+  logger.info('start');
   const requestId = randomUUID();
   const clientId = 'clientIdMock';
   const tableName = env.aws.emailDbTable;
@@ -57,6 +60,7 @@ export const sendEmailTransactional = async (
     }),
   );
 
+  logger.info('end');
   return { requestId };
 };
 
@@ -64,6 +68,8 @@ export const sendEmailLowPriority = async (
   emailData: EmailLowPriorityBodyDTO,
   dryRun: boolean,
 ): Promise<EmailLowPriorityResponseDTO> => {
+  const logger = getNamedLogger(sendEmailLowPriority.name);
+  logger.info('start');
   const requestId = randomUUID();
   const clientId = 'clientIdMock';
   const tableName = env.aws.emailDbTable;
@@ -107,12 +113,15 @@ export const sendEmailLowPriority = async (
     }),
   );
 
+  logger.info('end');
   return { requestId };
 };
 
 export const getEmailStatus = async (
   requestId: string,
 ): Promise<EmailStatusResponseDTO> => {
+  const logger = getNamedLogger(getEmailStatus.name);
+  logger.info('start');
   const result = await dynamoClient.send(
     new QueryCommand({
       TableName: env.aws.emailDbTable,
@@ -153,5 +162,6 @@ export const getEmailStatus = async (
     };
   });
 
+  logger.info('end');
   return mapped;
 };

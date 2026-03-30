@@ -1,5 +1,13 @@
 import { baseLogger } from 'om-common/logger';
 
-export const logger = baseLogger.createChild({
+const logger = baseLogger.createChild({
   serviceName: 'om-ecs-dispatcher',
 });
+
+export const getLogger = () => logger;
+
+export const getNamedLogger = (methodName: string) => {
+  const namedLogger = logger.createChild();
+  namedLogger.appendKeys({ method: methodName });
+  return namedLogger;
+};
