@@ -1,3 +1,4 @@
+import { errorMessage } from '#utils/constants';
 import z from 'zod';
 
 import {
@@ -29,6 +30,21 @@ export const EmailLowPriorityBodySchema = z
     sendingInfo: z
       .array(SendingInfoSchema)
       .max(50)
+      .superRefine((items, ctx) => {
+        const seen = new Set<string>();
+        const duplicates = new Set<string>();
+        for (const item of items) {
+          const email = item.to.email.trim().toLowerCase();
+          if (seen.has(email)) duplicates.add(email);
+          seen.add(email);
+        }
+        if (duplicates.size > 0) {
+          ctx.addIssue({
+            code: 'custom',
+            message: `${errorMessage.duplicateRecipientAddressesPrefix}${[...duplicates].join(', ')}`,
+          });
+        }
+      })
       .describe(
         'Information about the recipients and their template email content',
       ),

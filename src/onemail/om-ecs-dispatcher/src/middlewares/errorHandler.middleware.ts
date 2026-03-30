@@ -1,5 +1,6 @@
 import { ERROR_CODES } from '#dtos/error.dto';
 import { ApiError } from '#errors/ApiError';
+import { errorMessage } from '#utils/constants';
 import {
   ConditionalCheckFailedException,
   DynamoDBServiceException,
@@ -23,8 +24,16 @@ export const errorHandler = (
   let errorResponse: ApiError;
 
   if (err instanceof ZodError) {
+    const duplicateRecipientsError = err.issues.find(
+      (issue) =>
+        issue.code === 'custom' &&
+        issue.message.startsWith(
+          errorMessage.duplicateRecipientAddressesPrefix,
+        ),
+    );
+
     errorResponse = new ApiError(
-      'Invalid data',
+      duplicateRecipientsError?.message ?? 'Invalid data',
       StatusCodes.BAD_REQUEST,
       ERROR_CODES.INVALID_INPUT_DATA,
     );
