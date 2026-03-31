@@ -15,7 +15,7 @@ import {
 
 export const healthCheck = async (): Promise<HealthResponseDTO> => {
   const logger = getNamedLogger(healthCheck.name);
-  logger.debug('start');
+  logger.debug('Start');
   let dbStatus = ServiceStatus.Unavailable;
   let sqsHighStatus = ServiceStatus.Unavailable;
   let sqsLowStatus = ServiceStatus.Unavailable;
@@ -66,7 +66,7 @@ export const healthCheck = async (): Promise<HealthResponseDTO> => {
       ? HealthStatus.Healthy
       : HealthStatus.Unhealthy;
 
-  logger.debug('end');
+  logger.debug('End');
   return {
     status: overall,
     timestamp: new Date().toISOString(),
