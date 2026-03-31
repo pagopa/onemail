@@ -78,7 +78,7 @@ data "aws_lb_listener" "ecs_core" {
 
 data "aws_sesv2_configuration_set" "oml_config_set" {
   count                  = var.enable_ses ? 1 : 0
-  configuration_set_name = "${local.project_nodomain}-${var.env}-configuration-set"
+  configuration_set_name = "${local.project_nodomain}-${var.env}-configuration-set-onemail"
 }
 
 data "aws_caller_identity" "current" {}
