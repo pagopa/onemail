@@ -57,7 +57,7 @@ resource "aws_sesv2_tenant_resource_association" "identity_assoc" {
 resource "aws_sesv2_tenant_resource_association" "config_set_assoc" {
   for_each     = var.enable_ses ? var.tenants : {}
   tenant_name  = aws_sesv2_tenant.tenants[each.key].tenant_name
-  resource_arn = "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:configuration-set/${aws_sesv2_configuration_set.config_set[each.key].configuration_set_name}"
+  resource_arn = aws_sesv2_configuration_set.config_set[each.key].arn
 }
 
 resource "aws_sesv2_configuration_set_event_destination" "to_eb" {
