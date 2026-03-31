@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.4.0
+
+### Minor Changes
+
+- 402d456: AWS SES Tenants configuration
+
 ## 1.3.0
 
 ### Minor Changes
