@@ -3,7 +3,11 @@ import {
   mapDbHighPriorityItemToSesModel,
   mapDbLowPriorityItemToSesModel,
 } from '#utils/dbMapper';
-import { SendBulkEmailCommand, SendEmailCommand } from '@aws-sdk/client-sesv2';
+import {
+  BulkEmailStatus,
+  SendBulkEmailCommand,
+  SendEmailCommand,
+} from '@aws-sdk/client-sesv2';
 import { EmailStatusHistoryItem } from 'om-common/types';
 
 import { BulkSendResult } from '../types/bulkSendResult.js';
@@ -34,7 +38,7 @@ export const sendLowPriorityEmail = async (
   const result: BulkSendResult = { successful: [], failed: [] };
   BulkEmailEntryResults?.forEach((entryResult, index) => {
     const itemResult = { item: items[index], result: entryResult };
-    if (entryResult.Status === 'SUCCESS') {
+    if (entryResult.Status === BulkEmailStatus.SUCCESS) {
       result.successful.push(itemResult);
     } else {
       result.failed.push(itemResult);

@@ -122,7 +122,6 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       },
     ]);
   } else {
-    // TODO: retry or discard?
     logger.error('Email rejected by SES', {
       emailId,
       retryable: false,
@@ -280,7 +279,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       error: errorMessage,
       retryable: true,
     });
-    //todo update entries in dynamo (?)
+    // TODO: update entries in dynamo (?)
     throw error;
   }
 
