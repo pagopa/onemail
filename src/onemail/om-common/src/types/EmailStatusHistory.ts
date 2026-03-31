@@ -6,6 +6,7 @@ export const EmailStatus = {
   RejectedBySES: 'RejectedBySES',
   DryRunError: 'DryRunError',
   SoftBounce: 'SoftBounce',
+  Complaint: 'Complaint',
 } as const;
 
 export const EmailPriority = {

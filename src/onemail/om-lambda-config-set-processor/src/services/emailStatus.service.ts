@@ -79,4 +79,16 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       );
     }
   }
+
+  //Complaint
+  if (
+    eventItem.eventType === CapitalizedSesConfigurationSetEventType.Complaint
+  ) {
+    await updateEmailStatusBySesMessageId(
+      eventItem.mail.messageId,
+      eventItem.complaint.timestamp,
+      EmailStatus.Complaint,
+      eventItem.complaint.complaintSubType,
+    );
+  }
 };
