@@ -1,17 +1,17 @@
 packages:
-  - 'src/onemail/*'
-  - 'src/infra/src/**'
+  - src/onemail/*
+  - src/infra/src/**
   - '!**/.*/**'
-  - '.'
+  - .
 
-# shared libs
 catalog:
+  '@aws-sdk/client-cloudwatch': ^3.1017.0
   '@aws-sdk/client-dynamodb': ^3.1017.0
+  '@aws-sdk/client-scheduler': ^3.1020.0
+  '@aws-sdk/client-sesv2': ^3.1017.0
+  '@aws-sdk/client-sqs': ^3.1017.0
   '@aws-sdk/lib-dynamodb': ^3.1017.0
-  '@aws-sdk/client-sesv2': '^3.1017.0'
-  '@aws-sdk/client-cloudwatch': '^3.1017.0'
-  '@aws-sdk/client-sqs': '^3.1017.0'
-  'zod': ^4.3.6
-  'lodash-es': ^4.17.23
   '@types/lodash-es': ^4.17.12
   '@types/node': ^24.10.12
+  lodash-es: ^4.17.23
+  zod: ^4.3.6

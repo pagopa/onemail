@@ -9,13 +9,9 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 
-//todo check
-export const updateEmailStatusBySesMessageId = async (
+export const findEmailBySesMessageId = async (
   sesMessageId: string,
-  timestamp: string,
-  status: EmailStatus,
-  reason?: string,
-): Promise<void> => {
+): Promise<EmailStatusHistoryItem | undefined> => {
   // Query the email record by SES message ID using the GSI
   const queryResult = await dynamoClient.send(
     new QueryCommand({
@@ -35,7 +31,20 @@ export const updateEmailStatusBySesMessageId = async (
   const item = queryResult.Items?.[0] as EmailStatusHistoryItem | undefined;
   if (!item) {
     //todo metrics
-    logger.warn('No email record found for SES message id', { sesMessageId });
+    logger.warn('No email record found for SES message Id', { sesMessageId });
+  }
+
+  return item;
+};
+
+export const updateEmailStatusBySesMessageId = async (
+  sesMessageId: string,
+  timestamp: string,
+  status: EmailStatus,
+  reason?: string,
+): Promise<void> => {
+  const item = await findEmailBySesMessageId(sesMessageId);
+  if (!item) {
     return;
   }
 

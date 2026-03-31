@@ -6,6 +6,7 @@ import {
   HandledConfSetEventItem,
 } from '#dtos/confSetEventItem.dto';
 import { updateEmailStatusBySesMessageId } from '#repositories/email.repository';
+import { handleSoftBounceRetry } from '#services/bounceRetry.service';
 import {
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
@@ -62,11 +63,9 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       eventItem.bounce.bounceType === CapitalizedSesBounceType.Transient ||
       eventItem.bounce.bounceType === CapitalizedSesBounceType.Undetermined
     ) {
-      //todo update this logic with the one in the confluence documents
-      await updateEmailStatusBySesMessageId(
+      await handleSoftBounceRetry(
         eventItem.mail.messageId,
         eventItem.bounce.timestamp,
-        EmailStatus.SoftBounce,
         eventItem.bounce.bounceSubType,
       );
     }
