@@ -43,7 +43,7 @@ const validateRecord = (
 
 export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
   const logger = getNamedLogger(sqsEventHandler.name);
-  logger.info('start');
+  logger.info('Start');
   const eventItem = validateRecord(record, ConfSetEventItemSchema);
   if (!eventItem) {
     return;
@@ -84,5 +84,5 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       );
     }
   }
-  logger.info('end');
+  logger.info('End');
 };

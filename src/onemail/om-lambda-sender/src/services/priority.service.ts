@@ -36,7 +36,7 @@ const logger = getLogger();
 
 export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
   const logger = getNamedLogger(handleHighPriority.name);
-  logger.info('start');
+  logger.info('Start');
 
   // 1. Validate the SQS record and parse the item
   const parsed = validateRecord(record, SqsEventItemHighSchema);
@@ -139,12 +139,12 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
     return;
   }
 
-  logger.info('end');
+  logger.info('End');
 };
 
 export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
   const logger = getNamedLogger(handleLowPriority.name);
-  logger.info('start');
+  logger.info('Start');
 
   // 1. Validate the SQS record and parse the item
   const parsed = validateRecord(record, SqsEventItemLowSchema);
@@ -303,7 +303,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
     throw new Error('Retryable failures occurred');
   }
 
-  logger.info('end');
+  logger.info('End');
 };
 
 function handleSesError(

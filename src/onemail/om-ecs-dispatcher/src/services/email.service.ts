@@ -32,8 +32,10 @@ export const sendEmailTransactional = async (
   dryRun: boolean,
 ): Promise<EmailHighPriorityResponseDTO> => {
   const logger = getNamedLogger(sendEmailTransactional.name);
-  logger.info('start');
+  logger.info('Start');
+
   const requestId = randomUUID();
+  // TODO: implement this
   const clientId = 'clientIdMock';
   const tableName = env.aws.emailDbTable;
 
@@ -44,6 +46,7 @@ export const sendEmailTransactional = async (
     dryRun,
   );
 
+  logger.debug('Saving email to DynamoDB', { emailId: dbObj.emailId });
   await dynamoClient.send(
     new PutCommand({
       TableName: tableName,
@@ -53,6 +56,7 @@ export const sendEmailTransactional = async (
     }),
   );
 
+  logger.debug('Publishing message to SQS', { emailId: dbObj.emailId });
   await sqsClient.send(
     new SendMessageCommand({
       QueueUrl: env.aws.sqs.highPriorityQueueUrl,
@@ -60,7 +64,7 @@ export const sendEmailTransactional = async (
     }),
   );
 
-  logger.info('end');
+  logger.info('End');
   return { requestId };
 };
 
@@ -69,8 +73,10 @@ export const sendEmailLowPriority = async (
   dryRun: boolean,
 ): Promise<EmailLowPriorityResponseDTO> => {
   const logger = getNamedLogger(sendEmailLowPriority.name);
-  logger.info('start');
+  logger.info('Start');
+
   const requestId = randomUUID();
+  // TODO: implement this
   const clientId = 'clientIdMock';
   const tableName = env.aws.emailDbTable;
 
@@ -89,6 +95,7 @@ export const sendEmailLowPriority = async (
     batches.push(dbListObj.slice(i, i + DYNAMO_BATCH_LIMIT));
   }
 
+  logger.debug('Saving email batch to DynamoDB', { requestId });
   //TODO - handle unprocessed items in the response and retry logic if needed
   await Promise.all(
     batches.map((batch) =>
@@ -106,6 +113,7 @@ export const sendEmailLowPriority = async (
     ),
   );
 
+  logger.debug('Publishing message to SQS', { requestId });
   await sqsClient.send(
     new SendMessageCommand({
       QueueUrl: env.aws.sqs.lowPriorityQueueUrl,
@@ -113,7 +121,7 @@ export const sendEmailLowPriority = async (
     }),
   );
 
-  logger.info('end');
+  logger.info('End');
   return { requestId };
 };
 
@@ -121,7 +129,8 @@ export const getEmailStatus = async (
   requestId: string,
 ): Promise<EmailStatusResponseDTO> => {
   const logger = getNamedLogger(getEmailStatus.name);
-  logger.info('start');
+  logger.info('Start');
+
   const result = await dynamoClient.send(
     new QueryCommand({
       TableName: env.aws.emailDbTable,
@@ -139,6 +148,7 @@ export const getEmailStatus = async (
   const items = result.Items as EmailStatusHistoryItem[] | undefined;
 
   if (!items || items.length === 0) {
+    // TODO: not found metric
     throw new ApiError(
       `Email with requestId ${requestId} not found`,
       StatusCodes.NOT_FOUND,
@@ -162,6 +172,8 @@ export const getEmailStatus = async (
     };
   });
 
-  logger.info('end');
+  // TODO: success metric
+
+  logger.info('End');
   return mapped;
 };
