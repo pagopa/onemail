@@ -1,22 +1,18 @@
 # Route53 Hosted Zones Configuration
 
-data "aws_ses_domain_identity" "onemail" {
-  count  = var.enable_ses_dns_records ? 1 : 0
-  domain = local.zone_name
+data "aws_ses_domain_identity" "tenant" {
+  for_each = var.enable_ses_dns_records ? var.tenants : {}
+  domain   = each.value.domain
+}
+
+data "aws_sesv2_email_identity" "tenant" {
+  for_each       = var.enable_ses_dns_records ? var.tenants : {}
+  email_identity = each.value.domain
 }
 
 locals {
   # Build zone name based on environment
   zone_name = var.env == "prod" ? var.dns_zone_name : "${var.env}.${var.dns_zone_name}"
-
-  # SES DNS records are enabled only after SES resources are provisioned in onemail_common
-  ses_dns_enabled = var.enable_ses_dns_records
-
-  ses_verification_token  = local.ses_dns_enabled ? try(data.aws_ses_domain_identity.onemail[0].verification_token, null) : null
-  ses_mail_from_subdomain = local.ses_dns_enabled ? "bounce" : null
-  # Test posture: monitor only, with relaxed alignment to reduce false negatives while validating flows.
-  # Production target: add reporting (`rua`, optionally `ruf`) and move policy toward `quarantine` or `reject`.
-  ses_dmarc_value = local.ses_dns_enabled ? "v=DMARC1; p=none; adkim=r; aspf=r; fo=1; pct=100" : null
 
   # All possible DNS records with consistent object structure
   dns_records_base = {
@@ -56,64 +52,88 @@ locals {
       }
       include = true
     }
-    # SES verification TXT record
-    "ses_verification" = {
-      display_name = "ses_verification"
-      name         = "_amazonses"
-      type         = "TXT"
-      ttl          = 600
-      records      = local.ses_verification_token == null ? [] : [local.ses_verification_token]
-      is_alias     = false
-      alias_config = null
-      include      = local.ses_verification_token != null
-    }
-    # SES custom MAIL FROM MX record
-    "ses_mail_from_mx" = {
-      display_name = "ses_mail_from_mx"
-      name         = local.ses_mail_from_subdomain
-      type         = "MX"
-      ttl          = 600
-      records      = local.ses_mail_from_subdomain == null ? [] : ["10 feedback-smtp.${var.aws_region}.amazonses.com"]
-      is_alias     = false
-      alias_config = null
-      include      = local.ses_mail_from_subdomain != null
-    }
-    # SES custom MAIL FROM SPF record
-    "ses_mail_from_spf" = {
-      display_name = "ses_mail_from_spf"
-      name         = local.ses_mail_from_subdomain
-      type         = "TXT"
-      ttl          = 600
-      # Test posture: use soft fail until the MAIL FROM path is fully validated in every environment.
-      # Production target: change `~all` to `-all` if SES is the only legitimate sender for this subdomain.
-      records      = local.ses_mail_from_subdomain == null ? [] : ["v=spf1 include:amazonses.com ~all"]
-      is_alias     = false
-      alias_config = null
-      include      = local.ses_mail_from_subdomain != null
-    }
-    # SES DMARC TXT record
-    "ses_dmarc" = {
-      display_name = "ses_dmarc"
-      name         = "_dmarc"
-      type         = "TXT"
-      ttl          = 600
-      records      = local.ses_dmarc_value == null ? [] : [local.ses_dmarc_value]
-      is_alias     = false
-      alias_config = null
-      include      = local.ses_dmarc_value != null
-    }
   }
 
+  tenant_dns_records = var.enable_ses_dns_records && length(var.tenants) > 0 ? {
+    for record in concat(
+      [
+        for tenant_key, tenant_data in var.tenants : {
+          id            = "${tenant_key}-ses-verification"
+          name          = "_amazonses.${tenant_data.domain}"
+          type          = "TXT"
+          ttl           = 600
+          records       = [data.aws_ses_domain_identity.tenant[tenant_key].verification_token]
+          alias         = null
+          absolute_name = true
+        }
+      ],
+      flatten([
+        for tenant_key, tenant_data in var.tenants : [
+          for token in try(data.aws_sesv2_email_identity.tenant[tenant_key].dkim_signing_attributes[0].tokens, []) : {
+            id            = "${tenant_key}-dkim-${token}"
+            name          = "${token}._domainkey.${tenant_data.domain}"
+            type          = "CNAME"
+            ttl           = 600
+            records       = ["${token}.dkim.${var.aws_region}.amazonses.com"]
+            alias         = null
+            absolute_name = true
+          }
+        ]
+      ]),
+      [
+        for tenant_key, tenant_data in var.tenants : {
+          id            = "${tenant_key}-mail-from-mx"
+          name          = "bounce.${tenant_data.domain}"
+          type          = "MX"
+          ttl           = 600
+          records       = ["10 feedback-smtp.${var.aws_region}.amazonses.com"]
+          alias         = null
+          absolute_name = true
+        }
+      ],
+      [
+        for tenant_key, tenant_data in var.tenants : {
+          id            = "${tenant_key}-mail-from-spf"
+          name          = "bounce.${tenant_data.domain}"
+          type          = "TXT"
+          ttl           = 600
+          records       = ["v=spf1 include:amazonses.com ~all"]
+          alias         = null
+          absolute_name = true
+        }
+      ],
+      [
+        for tenant_key, tenant_data in var.tenants : {
+          id            = "${tenant_key}-dmarc"
+          name          = "_dmarc.${tenant_data.domain}"
+          type          = "TXT"
+          ttl           = 600
+          records       = ["v=DMARC1; p=none; adkim=r; aspf=r; fo=1; rua=mailto:${tenant_data.admin_email}"]
+          alias         = null
+          absolute_name = true
+        }
+      ]
+      ) : record.id => {
+      name          = record.name
+      type          = record.type
+      ttl           = record.ttl
+      records       = record.records
+      alias         = record.alias
+      absolute_name = record.absolute_name
+    }
+  } : {}
+
   # Filter records based on inclusion flag
-  all_dns_records = {
+  all_dns_records = merge({
     for k, v in local.dns_records_base : v.display_name => {
-      name    = v.name
-      type    = v.type
-      ttl     = v.ttl
-      records = v.records
-      alias   = v.alias_config
+      name          = v.name
+      type          = v.type
+      ttl           = v.ttl
+      records       = v.records
+      alias         = v.alias_config
+      absolute_name = try(v.absolute_name, false)
     } if v.include
-  }
+  }, local.tenant_dns_records)
 }
 
 module "zone" {
@@ -140,7 +160,7 @@ resource "aws_route53_record" "dns_records" {
   for_each = local.all_dns_records
 
   zone_id = module.zone.route53_zone_zone_id[local.zone_name]
-  name    = each.value.name == "" ? local.zone_name : "${each.value.name}.${local.zone_name}"
+  name    = each.value.absolute_name ? each.value.name : (each.value.name == "" ? local.zone_name : "${each.value.name}.${local.zone_name}")
   type    = each.value.type
 
   # For standard records (A, CNAME, NS, etc.)
