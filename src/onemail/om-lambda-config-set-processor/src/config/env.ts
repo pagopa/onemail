@@ -13,11 +13,11 @@ export default {
     // ?? throwMissingRequiredEnvVar('AWS_CLOUDWATCH_METRICS_NAMESPACE'),
     scheduler: {
       highPriorityQueueArn:
-        process.env.SQS_HIGH_PRIORITY_QUEUE_ARN ??
-        throwMissingRequiredEnvVar('SQS_HIGH_PRIORITY_QUEUE_ARN'),
+        process.env.HIGH_PRIORITY_QUEUE_ARN ??
+        throwMissingRequiredEnvVar('HIGH_PRIORITY_QUEUE_ARN'),
       lowPriorityQueueArn:
-        process.env.SQS_LOW_PRIORITY_QUEUE_ARN ??
-        throwMissingRequiredEnvVar('SQS_LOW_PRIORITY_QUEUE_ARN'),
+        process.env.LOW_PRIORITY_QUEUE_ARN ??
+        throwMissingRequiredEnvVar('LOW_PRIORITY_QUEUE_ARN'),
       roleArn:
         process.env.EVENTBRIDGE_SCHEDULER_ROLE_ARN ??
         throwMissingRequiredEnvVar('EVENTBRIDGE_SCHEDULER_ROLE_ARN'),
