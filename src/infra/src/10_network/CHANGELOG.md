@@ -1,5 +1,11 @@
 # infra-network
 
+## 1.5.0
+
+### Minor Changes
+
+- 402d456: AWS SES Tenants configuration
+
 ## 1.4.0
 
 ### Minor Changes
