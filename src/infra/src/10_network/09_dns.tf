@@ -74,7 +74,7 @@ locals {
             name          = "${token}._domainkey.${tenant_data.domain}"
             type          = "CNAME"
             ttl           = 600
-            records       = ["${token}.dkim.amazonses.com"]
+            records       = ["${token}.dkim.${var.aws_region}.amazonses.com"]
             alias         = null
             absolute_name = true
           }
