@@ -25,7 +25,7 @@ import {
   MessageRejected,
 } from '@aws-sdk/client-sesv2';
 import isEmpty from 'lodash-es/isEmpty.js';
-import { EmailStatus } from 'om-common/types';
+import { EmailPriority, EmailStatus } from 'om-common/types';
 
 import {
   sendHighPriorityEmail,
@@ -47,14 +47,18 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
   // 2. Fetch the email details from DB
   const email = await getEmailById(emailId);
   if (!email) {
+    logger.error('Email not found in DB', {
+      emailId,
+      retryable: false,
+    });
     await publishMetrics([
       {
         name: SenderMetricName.EmailNotFound,
       },
     ]);
-    logger.error('Email not found in DynamoDB', { emailId });
     return;
   }
+  logger.debug('Email fetched from DB', { emailId });
 
   // 3. Send the email with SES
   let sesMessageId: string | undefined;
@@ -62,8 +66,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
     sesMessageId = await sendHighPriorityEmail(email);
   } catch (error) {
     if (error instanceof DryRunValidationError) {
-      logger.error('Dry-run validation failed, marking email as rejected', {
-        emailId,
+      logger.error('Dry-run validation failed', {
         error: error.message,
         retryable: false,
       });
@@ -74,23 +77,40 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       return;
     }
 
-    const errorMessage = handleSesError(error);
+    const errorMessage = handleSesError(error, EmailPriority.HIGH);
     if (errorMessage) {
-      // TODO: add reason ?
-      await updateEmailStatus({ emailId, status: EmailStatus.RejectedBySES });
+      logger.error(`Rejected by SES`, {
+        emailId,
+        error: errorMessage,
+        retryable: false,
+      });
+      await updateEmailStatus({
+        emailId,
+        status: EmailStatus.RejectedBySES,
+        reason: errorMessage,
+      });
       await publishMetrics([
         {
           name: SenderMetricName.HighPriorityRejectedBySes,
         },
       ]);
-      logger.error(errorMessage);
       return;
     }
+
+    logger.error(`SES error`, {
+      emailId,
+      error,
+      retryable: true,
+    });
     throw error;
   }
 
   // 4. Update the email status in DB
   if (sesMessageId) {
+    logger.debug('Email accepted by SES', {
+      emailId,
+      sesMessageId,
+    });
     await updateEmailStatus({
       emailId,
       status: EmailStatus.Dispatched,
@@ -102,13 +122,21 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       },
     ]);
   } else {
-    await updateEmailStatus({ emailId, status: EmailStatus.RejectedBySES });
+    // TODO: retry or discard?
+    logger.error('Email rejected by SES', {
+      emailId,
+      retryable: false,
+    });
+    await updateEmailStatus({
+      emailId,
+      status: EmailStatus.RejectedBySES,
+      reason: 'Unknown SES error',
+    });
     await publishMetrics([
       {
         name: SenderMetricName.HighPriorityRejectedBySes,
       },
     ]);
-    logger.error('Rejected by SES when sending email', { emailId });
     return;
   }
 
@@ -128,21 +156,36 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
   // 2. Fetch all emails for this requestId from DB
   const emails = await getEmailsByRequestId(requestId);
   if (isEmpty(emails)) {
+    logger.error('handleLowPriority - emails not found in DB', {
+      requestId,
+      retryable: false,
+    });
     await publishMetrics([
       {
         name: SenderMetricName.EmailBatchNotFound,
       },
     ]);
-    logger.error('Emails not found in DynamoDB', { requestId });
     return;
   }
+  logger.debug('handleLowPriority - emails fetched from DB', {
+    requestId,
+    count: emails.length,
+  });
 
   // 3. Send bulk email with SES
+  let updates = [];
+  let successfulEmails = [];
+  const retryableFailures = [];
+  const nonRetryableFailures = [];
   try {
     const { successful, failed } = await sendLowPriorityEmail(emails);
+    logger.debug('handleLowPriority - email accepted by SES', {
+      requestId,
+      successful: successful.length,
+      failed: failed.length,
+    });
 
-    const retryableFailures: typeof failed = [];
-    const nonRetryableFailures: typeof failed = [];
+    successfulEmails = successful;
 
     for (const entry of failed) {
       if (
@@ -156,17 +199,22 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
     }
 
     // 4. Batch update statuses in DB
-    const updates = [
-      ...successful.map((entry) => ({
-        item: entry.item,
-        status: EmailStatus.Dispatched as EmailStatus,
-        messageId: entry.result.MessageId,
-      })),
-      ...nonRetryableFailures.map((entry) => {
-        logger.error('Bulk email entry failed', {
+    updates = [
+      ...successfulEmails.map((entry) => {
+        logger.debug('handleLowPriority - email accepted by SES', {
           emailId: entry.item.emailId,
-          status: EmailStatus.RejectedBySES,
+        });
+        return {
+          item: entry.item,
+          status: EmailStatus.Dispatched as EmailStatus,
+          messageId: entry.result.MessageId,
+        };
+      }),
+      ...nonRetryableFailures.map((entry) => {
+        logger.error('handleLowPriority - email rejected by SES', {
+          emailId: entry.item.emailId,
           error: entry.result.Error,
+          retryable: false,
         });
         return {
           item: entry.item,
@@ -174,28 +222,19 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
         };
       }),
       // TODO: align behavior between high and low priority - for high priority we do not update the status in case of retryable errors
-      ...retryableFailures.map((entry) => ({
-        item: entry.item,
-        status: EmailStatus.Queued as EmailStatus,
-      })),
+      ...retryableFailures.map((entry) => {
+        logger.error('handleLowPriority - email rejected by SES', {
+          emailId: entry.item.emailId,
+          error: entry.result.Error,
+          retryable: true,
+        });
+        return {
+          item: entry.item,
+          status: EmailStatus.Queued as EmailStatus,
+        };
+      }),
     ];
-
-    // TODO: add reason ?
-    await batchUpdateEmailStatuses(updates);
-    await publishMetrics([
-      {
-        name: SenderMetricName.LowPriorityDispatched,
-        value: successful.length,
-      },
-      {
-        name: SenderMetricName.LowPriorityRejectedBySes,
-        value: nonRetryableFailures.length,
-      },
-      {
-        name: SenderMetricName.LowPriorityRetryableFailure,
-        value: retryableFailures.length,
-      },
-    ]);
+    // TODO: if there are retryable failures, we should want throw an error to trigger the retry mechanism of the Lambda SQS instead of marking them as Queued in the DB
   } catch (error) {
     if (error instanceof DryRunValidationError) {
       logger.error('Dry-run validation failed, marking batch as rejected', {
@@ -203,6 +242,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
         error: error.message,
         retryable: false,
       });
+      // TODO: add reason ?
       await batchUpdateEmailStatuses(
         emails.map((email) => ({
           item: email,
@@ -217,8 +257,13 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       ]);
       return;
     }
-    const errorMessage = handleSesError(error);
+    const errorMessage = handleSesError(error, EmailPriority.LOW);
     if (errorMessage) {
+      logger.error(`handleLowPriority - SES error`, {
+        requestId,
+        error: errorMessage,
+        retryable: false,
+      });
       // Whole batch rejected — mark all items
       await batchUpdateEmailStatuses(
         emails.map((email) => ({
@@ -232,39 +277,71 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
           value: emails.length,
         },
       ]);
-      logger.error(errorMessage);
       return;
     }
+    logger.error(`handleLowPriority - SES error`, {
+      requestId,
+      error: errorMessage,
+      retryable: true,
+    });
     throw error;
   }
+
+  await batchUpdateEmailStatuses(updates);
+  await publishMetrics([
+    {
+      name: SenderMetricName.LowPriorityDispatched,
+      value: successfulEmails.length,
+    },
+    {
+      name: SenderMetricName.LowPriorityRejectedBySes,
+      value: nonRetryableFailures.length,
+    },
+    {
+      name: SenderMetricName.LowPriorityRetryableFailure,
+      value: retryableFailures.length,
+    },
+  ]);
 
   logger.info('end');
 };
 
-function handleSesError(error: unknown): string | undefined {
+function handleSesError(
+  error: unknown,
+  priority: EmailPriority,
+): string | undefined {
   if (error instanceof BadRequestException) {
     publishMetrics([
       {
-        name: SenderMetricName.LowPriorityRejectedBySes,
+        name:
+          priority === EmailPriority.HIGH
+            ? SenderMetricName.HighPriorityRejectedBySes
+            : SenderMetricName.LowPriorityRejectedBySes,
       },
     ]);
-    return `Rejected by SES - BadRequestException: ${error.message}`;
+    return `BadRequestException: ${error.message}`;
   }
   if (error instanceof MailFromDomainNotVerifiedException) {
     publishMetrics([
       {
-        name: SenderMetricName.LowPriorityRejectedBySes,
+        name:
+          priority === EmailPriority.HIGH
+            ? SenderMetricName.HighPriorityRejectedBySes
+            : SenderMetricName.LowPriorityRejectedBySes,
       },
     ]);
-    return `Rejected by SES - MailFromDomainNotVerifiedException: ${error.message}`;
+    return `MailFromDomainNotVerifiedException: ${error.message}`;
   }
   if (error instanceof MessageRejected) {
     publishMetrics([
       {
-        name: SenderMetricName.LowPriorityRejectedBySes,
+        name:
+          priority === EmailPriority.HIGH
+            ? SenderMetricName.HighPriorityRejectedBySes
+            : SenderMetricName.LowPriorityRejectedBySes,
       },
     ]);
-    return `Rejected by SES - MessageRejected: ${error.message}`;
+    return `MessageRejected: ${error.message}`;
   }
   return undefined;
 }
@@ -274,18 +351,25 @@ function validateRecord(
   schema: typeof SqsEventItemHighSchema | typeof SqsEventItemLowSchema,
 ): SqsEventItemHigh | SqsEventItemLow | undefined {
   if (isEmpty(record.body)) {
-    //todo add metrics
     logger.error('Invalid payload, discarding record', { record });
+    publishMetrics([
+      {
+        name: SenderMetricName.InvalidRecord,
+      },
+    ]);
     return undefined;
   }
   const result = schema.safeParse(JSON.parse(record.body));
   if (!result.success) {
+    const errors = result.error.issues.map((issue) => ({
+      message: `${issue.path.join('.')} - ${issue.message}`,
+    }));
+    logger.error('Invalid payload, discarding record', { record, errors });
     publishMetrics([
       {
-        name: SenderMetricName.InvalidRecord, //TODO: check if we want this level of detail
+        name: SenderMetricName.InvalidRecord,
       },
     ]);
-    logger.error('Invalid payload, discarding record', { record });
     return undefined;
   }
   return result.data;
