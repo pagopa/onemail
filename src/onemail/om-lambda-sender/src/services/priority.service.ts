@@ -156,7 +156,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
   // 2. Fetch all emails for this requestId from DB
   const emails = await getEmailsByRequestId(requestId);
   if (isEmpty(emails)) {
-    logger.error('handleLowPriority - emails not found in DB', {
+    logger.error('Emails not found in DB', {
       requestId,
       retryable: false,
     });
@@ -167,7 +167,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
     ]);
     return;
   }
-  logger.debug('handleLowPriority - emails fetched from DB', {
+  logger.debug('Emails fetched from DB', {
     requestId,
     count: emails.length,
   });
@@ -179,7 +179,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
   const nonRetryableFailures = [];
   try {
     const { successful, failed } = await sendLowPriorityEmail(emails);
-    logger.debug('handleLowPriority - email accepted by SES', {
+    logger.debug('Emails accepted by SES', {
       requestId,
       successful: successful.length,
       failed: failed.length,
@@ -200,18 +200,13 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
 
     // 4. Batch update statuses in DB
     updates = [
-      ...successfulEmails.map((entry) => {
-        logger.debug('handleLowPriority - email accepted by SES', {
-          emailId: entry.item.emailId,
-        });
-        return {
-          item: entry.item,
-          status: EmailStatus.Dispatched as EmailStatus,
-          messageId: entry.result.MessageId,
-        };
-      }),
+      ...successfulEmails.map((entry) => ({
+        item: entry.item,
+        status: EmailStatus.Dispatched as EmailStatus,
+        messageId: entry.result.MessageId,
+      })),
       ...nonRetryableFailures.map((entry) => {
-        logger.error('handleLowPriority - email rejected by SES', {
+        logger.error('Email rejected by SES', {
           emailId: entry.item.emailId,
           error: entry.result.Error,
           retryable: false,
@@ -219,11 +214,12 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
         return {
           item: entry.item,
           status: EmailStatus.RejectedBySES as EmailStatus,
+          reason: entry.result.Error,
         };
       }),
       // TODO: align behavior between high and low priority - for high priority we do not update the status in case of retryable errors
       ...retryableFailures.map((entry) => {
-        logger.error('handleLowPriority - email rejected by SES', {
+        logger.error('Email rejected by SES', {
           emailId: entry.item.emailId,
           error: entry.result.Error,
           retryable: true,
@@ -234,7 +230,6 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
         };
       }),
     ];
-    // TODO: if there are retryable failures, we should want throw an error to trigger the retry mechanism of the Lambda SQS instead of marking them as Queued in the DB
   } catch (error) {
     if (error instanceof DryRunValidationError) {
       logger.error('Dry-run validation failed, marking batch as rejected', {
@@ -242,7 +237,6 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
         error: error.message,
         retryable: false,
       });
-      // TODO: add reason ?
       await batchUpdateEmailStatuses(
         emails.map((email) => ({
           item: email,
@@ -257,9 +251,10 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       ]);
       return;
     }
+
     const errorMessage = handleSesError(error, EmailPriority.LOW);
     if (errorMessage) {
-      logger.error(`handleLowPriority - SES error`, {
+      logger.error(`Rejected by SES`, {
         requestId,
         error: errorMessage,
         retryable: false,
@@ -269,6 +264,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
         emails.map((email) => ({
           item: email,
           status: EmailStatus.RejectedBySES as EmailStatus,
+          reason: errorMessage,
         })),
       );
       await publishMetrics([
@@ -279,11 +275,12 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       ]);
       return;
     }
-    logger.error(`handleLowPriority - SES error`, {
+    logger.error(`SES error`, {
       requestId,
       error: errorMessage,
       retryable: true,
     });
+    //todo update entries in dynamo (?)
     throw error;
   }
 
@@ -302,6 +299,10 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       value: retryableFailures.length,
     },
   ]);
+
+  if (retryableFailures.length > 0) {
+    throw new Error('Retryable failures occurred');
+  }
 
   logger.info('end');
 };

@@ -13,6 +13,7 @@ export const sendHighPriorityEmail = async (
 ): Promise<string | undefined> => {
   //1. from dynamodb to ses model
   const sesInput = mapDbHighPriorityItemToSesModel(input);
+
   //2. send email with ses connector
   const command = new SendEmailCommand(sesInput);
   const { MessageId } = await sesClient.send(command);
@@ -24,13 +25,13 @@ export const sendLowPriorityEmail = async (
 ): Promise<BulkSendResult> => {
   //1. from dynamodb to ses model
   const sesInput = mapDbLowPriorityItemToSesModel(items);
+
   //2. send email with ses connector
   const command = new SendBulkEmailCommand(sesInput);
   const { BulkEmailEntryResults } = await sesClient.send(command);
 
   //3. correlate results with input items (positional mapping)
   const result: BulkSendResult = { successful: [], failed: [] };
-
   BulkEmailEntryResults?.forEach((entryResult, index) => {
     const itemResult = { item: items[index], result: entryResult };
     if (entryResult.Status === 'SUCCESS') {
