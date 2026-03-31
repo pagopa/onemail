@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.5.7",
+    "version": "1.5.9",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -61,6 +61,7 @@
               "name": "dryRun",
               "in": "query",
               "required": false,
+              "description": "Indicates whether the request is a dry run, ignored in production",
               "schema": {
                 "type": "boolean",
                 "default": false
@@ -97,6 +98,7 @@
               "name": "dryRun",
               "in": "query",
               "required": false,
+              "description": "Indicates whether the request is a dry run, ignored in production",
               "schema": {
                 "type": "boolean",
                 "default": false

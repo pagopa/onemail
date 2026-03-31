@@ -368,7 +368,7 @@
                 "to"
               ]
             },
-            "maxItems": 50,
+            "maxItems": 10,
             "description": "Information about the recipients and their template email content"
           }
         },
