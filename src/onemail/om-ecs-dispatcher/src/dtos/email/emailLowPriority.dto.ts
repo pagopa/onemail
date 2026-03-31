@@ -41,10 +41,6 @@ export const EmailLowPriorityBodySchema = z
           ctx.addIssue({
             code: 'custom',
             message: `Duplicate recipient addresses are not allowed: ${[...duplicates].join(', ')}`,
-            params: {
-              kind: 'duplicateRecipientAddresses',
-              duplicates: [...duplicates],
-            },
           });
         }
       })

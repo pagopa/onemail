@@ -23,16 +23,10 @@ export const errorHandler = (
   let errorResponse: ApiError;
 
   if (err instanceof ZodError) {
-    const duplicateRecipientsError = err.issues.find(
-      (issue) =>
-        issue.code === 'custom' &&
-        // Use a structured discriminator on the custom Zod issue instead of parsing the message text.
-        (issue as unknown as { params?: { kind?: string } }).params?.kind ===
-          'duplicateRecipientAddresses',
-    );
+    const customZodError = err.issues.find((issue) => issue.code === 'custom');
 
     errorResponse = new ApiError(
-      duplicateRecipientsError?.message ?? 'Invalid data',
+      customZodError?.message ?? 'Invalid data',
       StatusCodes.BAD_REQUEST,
       ERROR_CODES.INVALID_INPUT_DATA,
     );
