@@ -47,9 +47,11 @@ export const sendEmailLowPriority = async (
   >,
   res: Response<EmailLowPriorityResponseDTO>,
 ) => {
-  validateNoDuplicateRecipients(req.body.sendingInfo);
-
   const { dryRun } = req.query as unknown as EmailLowPriorityQueryParams;
+
+  if (!dryRun) {
+    validateNoDuplicateRecipients(req.body.sendingInfo);
+  }
   const result = await emailService.sendEmailLowPriority(req.body, dryRun);
   res.status(StatusCodes.ACCEPTED).json(result);
 };
