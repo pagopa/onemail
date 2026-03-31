@@ -28,7 +28,7 @@ export const EmailLowPriorityBodySchema = z
     templateId: TemplateIdSchema,
     sendingInfo: z
       .array(SendingInfoSchema)
-      .max(50)
+      .max(10)
       .superRefine((items, ctx) => {
         const seen = new Set<string>();
         const duplicates = new Set<string>();
