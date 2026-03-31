@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.6.0
+
+### Minor Changes
+
+- ab7b401: handle low priority address duplication + sendingInfo max size to 10
+
 ## 1.5.9
 
 ### Patch Changes
