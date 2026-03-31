@@ -195,7 +195,7 @@ const scheduleRetry = async (
 
   const scheduleTime = new Date(Date.now() + delayMinutes * 60 * 1000);
   const scheduleExpression = `at(${scheduleTime.toISOString().replace(/\.\d{3}Z$/, '')})`;
-  const scheduleName = `soft-bounce-retry-${emailId}-attempt-${attempt}`;
+  const scheduleName = `retry-${emailId}-attempt-${attempt}`;
 
   await schedulerClient.send(
     new CreateScheduleCommand({
