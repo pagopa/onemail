@@ -18,6 +18,8 @@ export const SendingInfoSchema = z.object({
   templateAttributes: TemplateAttributesSchema.optional(),
 });
 
+export type SendingInfoDTO = z.infer<typeof SendingInfoSchema>;
+
 export const EmailLowPriorityBodySchema = z
   .object({
     from: EmailAddressSchema.describe('Sender of the email'),
@@ -28,7 +30,7 @@ export const EmailLowPriorityBodySchema = z
     templateId: TemplateIdSchema,
     sendingInfo: z
       .array(SendingInfoSchema)
-      .max(50)
+      .max(10)
       .describe(
         'Information about the recipients and their template email content',
       ),

@@ -2,6 +2,7 @@ import z from 'zod';
 
 export const ERROR_CODES = {
   INVALID_INPUT_DATA: 'I001',
+  EMAIL_DUPLICATE_ERROR: 'E001',
   DB_ERROR: {
     GENERIC: 'D001',
     CONFLICT: 'D002',
@@ -9,7 +10,7 @@ export const ERROR_CODES = {
     THROTTLED: 'D004',
   },
   RESOURCE_NOT_FOUND: 'R001',
-  UNEXPECTED_ERROR: 'G001',
+  UNEXPECTED_ERROR: 'U001',
 };
 
 export const ErrorResponseSchema = z
