@@ -9,6 +9,7 @@ import {
 } from '#repositories/email.repository';
 import {
   ActionAfterCompletion,
+  ConflictException,
   CreateScheduleCommand,
   FlexibleTimeWindowMode,
 } from '@aws-sdk/client-scheduler';
@@ -110,13 +111,6 @@ const handleHighPriorityRetry = async (
     }
   }
 
-  await updateEmailStatusBySesMessageId(
-    sesMessageId,
-    bounceTimestamp,
-    EmailStatus.SoftBounce,
-    bounceSubType,
-  );
-
   const delayMinutes = calculateExponentialDelay(
     attempt,
     env.aws.softBounce.highPriorityBaseDelayMinutes,
@@ -128,6 +122,13 @@ const handleHighPriorityRetry = async (
     attempt,
     delayMinutes,
     env.aws.scheduler.highPriorityQueueArn,
+  );
+
+  await updateEmailStatusBySesMessageId(
+    sesMessageId,
+    bounceTimestamp,
+    EmailStatus.SoftBounce,
+    bounceSubType,
   );
 
   logger.info('handleHighPriorityRetry - end');
@@ -160,13 +161,6 @@ const handleLowPriorityRetry = async (
     return;
   }
 
-  await updateEmailStatusBySesMessageId(
-    sesMessageId,
-    bounceTimestamp,
-    EmailStatus.SoftBounce,
-    bounceSubType,
-  );
-
   const delayMinutes = calculateExponentialDelay(
     attempt,
     env.aws.softBounce.lowPriorityBaseDelayMinutes,
@@ -180,10 +174,18 @@ const handleLowPriorityRetry = async (
     env.aws.scheduler.lowPriorityQueueArn,
   );
 
+  await updateEmailStatusBySesMessageId(
+    sesMessageId,
+    bounceTimestamp,
+    EmailStatus.SoftBounce,
+    bounceSubType,
+  );
+
   logger.info('handleLowPriorityRetry - end');
 };
 
-//Schedule email retry via EventBridge Scheduler. Uses a one-time schedule with auto-delete after completion.
+// Schedule email retry via EventBridge Scheduler.
+// Uses a one-time schedule with auto-delete after completion.
 const scheduleRetry = async (
   emailId: string,
   priority: EmailPriority,
@@ -197,30 +199,43 @@ const scheduleRetry = async (
   const scheduleExpression = `at(${scheduleTime.toISOString().replace(/\.\d{3}Z$/, '')})`;
   const scheduleName = `retry-${emailId}-attempt-${attempt}`;
 
-  await schedulerClient.send(
-    new CreateScheduleCommand({
-      Name: scheduleName,
-      GroupName: env.aws.scheduler.groupName,
-      ScheduleExpression: scheduleExpression,
-      ScheduleExpressionTimezone: 'UTC',
-      FlexibleTimeWindow: { Mode: FlexibleTimeWindowMode.OFF },
-      ActionAfterCompletion: ActionAfterCompletion.DELETE,
-      Target: {
-        Arn: targetQueueArn,
-        RoleArn: env.aws.scheduler.roleArn,
-        Input: JSON.stringify({ emailId }),
-      },
-    }),
-  );
+  try {
+    await schedulerClient.send(
+      new CreateScheduleCommand({
+        Name: scheduleName,
+        GroupName: env.aws.scheduler.groupName,
+        ScheduleExpression: scheduleExpression,
+        ScheduleExpressionTimezone: 'UTC',
+        FlexibleTimeWindow: { Mode: FlexibleTimeWindowMode.OFF },
+        ActionAfterCompletion: ActionAfterCompletion.DELETE,
+        Target: {
+          Arn: targetQueueArn,
+          RoleArn: env.aws.scheduler.roleArn,
+          Input: JSON.stringify({ emailId }),
+        },
+      }),
+    );
 
-  logger.info('Soft bounce retry scheduled via EventBridge Scheduler', {
-    emailId,
-    priority,
-    attempt,
-    delayMinutes,
-    targetQueueArn,
-    scheduleTime: scheduleTime.toISOString(),
-  });
+    logger.info('Soft bounce retry scheduled via EventBridge Scheduler', {
+      emailId,
+      priority,
+      attempt,
+      delayMinutes,
+      targetQueueArn,
+      scheduleTime: scheduleTime.toISOString(),
+    });
+  } catch (error) {
+    if (error instanceof ConflictException) {
+      // Log the conflict but swallow the error to maintain idempotency.
+      logger.warn('Schedule already exists, proceeding to ensure idempotency', {
+        emailId,
+        attempt,
+        scheduleName,
+      });
+      return;
+    }
+    throw error;
+  }
 
   logger.info('scheduleRetry - end');
 };
