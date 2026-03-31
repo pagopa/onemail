@@ -7,6 +7,7 @@ import {
   EmailLowPriorityBodyDTO,
   EmailLowPriorityQueryParams,
   EmailLowPriorityResponseDTO,
+  SendingInfoDTO,
 } from '#dtos/email/emailLowPriority.dto';
 import {
   EmailStatusQueryParamsDTO,
@@ -16,6 +17,8 @@ import {
   SanitizeHtmlDTO,
   SanitizeHtmlResponseDTO,
 } from '#dtos/email/validateHtml.dto';
+import { ERROR_CODES } from '#dtos/error.dto';
+import { ApiError } from '#errors/ApiError';
 import * as emailService from '#services/email.service';
 import { AsStringQuery } from '#types/RequestType';
 import { Request, Response } from 'express';
@@ -44,6 +47,8 @@ export const sendEmailLowPriority = async (
   >,
   res: Response<EmailLowPriorityResponseDTO>,
 ) => {
+  validateNoDuplicateRecipients(req.body.sendingInfo);
+
   const { dryRun } = req.query as unknown as EmailLowPriorityQueryParams;
   const result = await emailService.sendEmailLowPriority(req.body, dryRun);
   res.status(StatusCodes.ACCEPTED).json(result);
@@ -69,3 +74,20 @@ export const getEmailStatus = async (
   const result = await emailService.getEmailStatus(requestId);
   res.status(StatusCodes.OK).json(result);
 };
+
+function validateNoDuplicateRecipients(sendingInfo: SendingInfoDTO[]) {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const item of sendingInfo) {
+    const email = item.to.email.trim().toLowerCase();
+    if (seen.has(email)) duplicates.add(email);
+    seen.add(email);
+  }
+  if (duplicates.size > 0) {
+    throw new ApiError(
+      `Duplicate recipient addresses are not allowed: ${[...duplicates].join(', ')}`,
+      StatusCodes.BAD_REQUEST,
+      ERROR_CODES.EMAIL_DUPLICATE_ERROR,
+    );
+  }
+}

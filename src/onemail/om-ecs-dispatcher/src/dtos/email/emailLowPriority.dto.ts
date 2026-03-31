@@ -18,6 +18,8 @@ export const SendingInfoSchema = z.object({
   templateAttributes: TemplateAttributesSchema.optional(),
 });
 
+export type SendingInfoDTO = z.infer<typeof SendingInfoSchema>;
+
 export const EmailLowPriorityBodySchema = z
   .object({
     from: EmailAddressSchema.describe('Sender of the email'),
@@ -29,21 +31,6 @@ export const EmailLowPriorityBodySchema = z
     sendingInfo: z
       .array(SendingInfoSchema)
       .max(10)
-      .superRefine((items, ctx) => {
-        const seen = new Set<string>();
-        const duplicates = new Set<string>();
-        for (const item of items) {
-          const email = item.to.email.trim().toLowerCase();
-          if (seen.has(email)) duplicates.add(email);
-          seen.add(email);
-        }
-        if (duplicates.size > 0) {
-          ctx.addIssue({
-            code: 'custom',
-            message: `Duplicate recipient addresses are not allowed: ${[...duplicates].join(', ')}`,
-          });
-        }
-      })
       .describe(
         'Information about the recipients and their template email content',
       ),

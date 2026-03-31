@@ -23,10 +23,8 @@ export const errorHandler = (
   let errorResponse: ApiError;
 
   if (err instanceof ZodError) {
-    const customZodError = err.issues.find((issue) => issue.code === 'custom');
-
     errorResponse = new ApiError(
-      customZodError?.message ?? 'Invalid data',
+      'Invalid data',
       StatusCodes.BAD_REQUEST,
       ERROR_CODES.INVALID_INPUT_DATA,
     );
