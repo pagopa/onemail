@@ -1,10 +1,7 @@
 import type {
   LogAttributes,
-  LogLevel,
   UnformattedAttributes,
 } from '@aws-lambda-powertools/logger/types';
-
-export type { LogLevel };
 
 import { LogFormatter, Logger, LogItem } from '@aws-lambda-powertools/logger';
 

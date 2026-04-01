@@ -18,9 +18,9 @@ import {
   SanitizeHtmlResponseDTO,
 } from '#dtos/email/validateHtml.dto';
 import { ERROR_CODES } from '#dtos/error.dto';
-import { ApiError } from '#errors/ApiError';
+import { ApiError } from '#errors/api.error';
 import * as emailService from '#services/email.service';
-import { AsStringQuery } from '#types/RequestType';
+import { AsStringQuery } from '#types/request.type';
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 

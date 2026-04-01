@@ -1,4 +1,4 @@
-import { DryRunValidationError } from '#errors/DryRunValidationError';
+import { DryRunValidationError } from '#errors/dryRunValidation.error';
 import {
   Body,
   BulkEmailEntry,

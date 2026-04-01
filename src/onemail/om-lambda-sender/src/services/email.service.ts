@@ -1,4 +1,4 @@
-import { sesClient } from '#connector/ses.connector';
+import { sesClient } from '#connectors/ses.connector';
 import {
   mapDbHighPriorityItemToSesModel,
   mapDbLowPriorityItemToSesModel,
@@ -10,7 +10,7 @@ import {
 } from '@aws-sdk/client-sesv2';
 import { EmailStatusHistoryItem } from 'om-common/types';
 
-import { BulkSendResult } from '../types/bulkSendResult.js';
+import { BulkSendResult } from '../types/bulkSendResult.type.js';
 
 export const sendHighPriorityEmail = async (
   input: EmailStatusHistoryItem,

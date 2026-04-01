@@ -6,8 +6,8 @@ import {
   SqsEventItemHighSchema,
   SqsEventItemLow,
   SqsEventItemLowSchema,
-} from '#dtos/sqsEventItem';
-import { DryRunValidationError } from '#errors/DryRunValidationError';
+} from '#dtos/sqsEventItem.dto';
+import { DryRunValidationError } from '#errors/dryRunValidation.error';
 import {
   batchUpdateEmailStatuses,
   getEmailById,
@@ -18,7 +18,7 @@ import {
   publishMetrics,
   SenderMetricName,
 } from '#repositories/metrics.repository';
-import { RetryableBulkEmailStatuses } from '#types/retryableSESStatus';
+import { RetryableBulkEmailStatuses } from '#types/retryableSESStatus.type';
 import {
   BadRequestException,
   MailFromDomainNotVerifiedException,
