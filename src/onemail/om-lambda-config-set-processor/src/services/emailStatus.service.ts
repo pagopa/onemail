@@ -49,11 +49,12 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
   if (
     eventItem.eventType === CapitalizedSesConfigurationSetEventType.Delivery
   ) {
-    await updateEmailStatusBySesMessageId(
-      eventItem.mail.messageId,
-      eventItem.delivery.timestamp,
-      EmailStatus.Delivered,
-    );
+    await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+      {
+        timestamp: eventItem.delivery.timestamp,
+        status: EmailStatus.Delivered,
+      },
+    ]);
   }
 
   //Bounce
@@ -71,12 +72,13 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     }
     //Hard Bounce
     if (eventItem.bounce.bounceType === CapitalizedSesBounceType.Permanent) {
-      await updateEmailStatusBySesMessageId(
-        eventItem.mail.messageId,
-        eventItem.bounce.timestamp,
-        EmailStatus.HardBounce,
-        eventItem.bounce.bounceSubType,
-      );
+      await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+        {
+          timestamp: eventItem.bounce.timestamp,
+          status: EmailStatus.HardBounce,
+          reason: eventItem.bounce.bounceSubType,
+        },
+      ]);
     }
   }
 
@@ -84,11 +86,12 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
   if (
     eventItem.eventType === CapitalizedSesConfigurationSetEventType.Complaint
   ) {
-    await updateEmailStatusBySesMessageId(
-      eventItem.mail.messageId,
-      eventItem.complaint.timestamp,
-      EmailStatus.Complaint,
-      eventItem.complaint.complaintSubType,
-    );
+    await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+      {
+        timestamp: eventItem.complaint.timestamp,
+        status: EmailStatus.Complaint,
+        reason: eventItem.complaint.complaintSubType,
+      },
+    ]);
   }
 };

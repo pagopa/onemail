@@ -39,14 +39,23 @@ export const findEmailBySesMessageId = async (
 
 export const updateEmailStatusBySesMessageId = async (
   sesMessageId: string,
-  timestamp: string,
-  status: EmailStatus,
-  reason?: string,
+  updates: {
+    timestamp: string;
+    status: EmailStatus;
+    reason?: string;
+  }[],
 ): Promise<void> => {
   const item = await findEmailBySesMessageId(sesMessageId);
   if (!item) {
     return;
   }
+
+  if (updates.length === 0) {
+    return;
+  }
+
+  //latest status to be saved
+  const currentUpdate = updates[updates.length - 1];
 
   // Update the email record with the new status and timestamp
   await dynamoClient.send(
@@ -54,17 +63,21 @@ export const updateEmailStatusBySesMessageId = async (
       TableName: env.aws.emailDbTable,
       Key: { emailId: item.emailId },
       UpdateExpression:
-        'SET #status = :status, #updatedAt = :updatedAt, #history = list_append(if_not_exists(#history, :emptyList), :newHistoryItem)',
+        'SET #status = :status, #updatedAt = :updatedAt, #history = list_append(if_not_exists(#history, :emptyList), :newHistoryItems)',
       ExpressionAttributeNames: {
         '#status': 'status',
         '#updatedAt': 'updatedAt',
         '#history': 'history',
       },
       ExpressionAttributeValues: {
-        ':status': status,
-        ':updatedAt': timestamp,
+        ':status': currentUpdate.status,
+        ':updatedAt': currentUpdate.timestamp,
         ':emptyList': [],
-        ':newHistoryItem': [{ status, changedAt: timestamp, reason }],
+        ':newHistoryItems': updates.map(({ status, timestamp, reason }) => ({
+          status,
+          changedAt: timestamp,
+          reason,
+        })),
       },
     }),
   );

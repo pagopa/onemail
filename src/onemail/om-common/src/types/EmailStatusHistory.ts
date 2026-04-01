@@ -7,6 +7,7 @@ export const EmailStatus = {
   DryRunError: 'DryRunError',
   SoftBounce: 'SoftBounce',
   Complaint: 'Complaint',
+  MaxRetriesReached: 'MaxRetriesReached',
 } as const;
 
 export const EmailPriority = {

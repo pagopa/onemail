@@ -51,7 +51,7 @@ export const handleSoftBounceRetry = async (
     return;
   }
 
-  const { emailId, priority, history } = emailRecord;
+  const { emailId, priority, history, requestId } = emailRecord;
   const softBounceCount = countSoftBounceAttempts(history);
   const newAttemptNumber = softBounceCount + 1;
 
@@ -67,6 +67,7 @@ export const handleSoftBounceRetry = async (
   } else {
     await handleLowPriorityRetry(
       emailId,
+      requestId,
       sesMessageId,
       bounceTimestamp,
       bounceSubType,
@@ -97,16 +98,17 @@ const handleHighPriorityRetry = async (
 
     if (!isWithinRetryWindow(firstSoftBounce, maxWindowMs)) {
       logger.warn(
-        'High-priority soft bounce retry window exceeded, escalating to HardBounce',
+        'High-priority soft bounce retry window exceeded, escalating to MaxRetriesReached',
         { emailId, sesMessageId, attempt, firstSoftBounce },
       );
 
-      await updateEmailStatusBySesMessageId(
-        sesMessageId,
-        bounceTimestamp,
-        EmailStatus.HardBounce,
-        `SoftBounce escalated to HardBounce after ${attempt} attempts — retry window expired (${bounceSubType})`,
-      );
+      await updateEmailStatusBySesMessageId(sesMessageId, [
+        {
+          timestamp: bounceTimestamp,
+          status: EmailStatus.MaxRetriesReached,
+          reason: `SoftBounce escalated to MaxRetriesReached after ${attempt} attempts — retry window expired (${bounceSubType})`,
+        },
+      ]);
       return;
     }
   }
@@ -122,14 +124,21 @@ const handleHighPriorityRetry = async (
     attempt,
     delayMinutes,
     env.aws.scheduler.highPriorityQueueArn,
+    { emailId },
   );
 
-  await updateEmailStatusBySesMessageId(
-    sesMessageId,
-    bounceTimestamp,
-    EmailStatus.SoftBounce,
-    bounceSubType,
-  );
+  await updateEmailStatusBySesMessageId(sesMessageId, [
+    {
+      timestamp: bounceTimestamp,
+      status: EmailStatus.SoftBounce,
+      reason: bounceSubType,
+    },
+    {
+      timestamp: new Date().toISOString(),
+      status: EmailStatus.Queued,
+      reason: `Queued for high-priority soft bounce retry attempt ${attempt}`,
+    },
+  ]);
 
   logger.info('handleHighPriorityRetry - end');
 };
@@ -137,6 +146,7 @@ const handleHighPriorityRetry = async (
 //Low priority: exponential backoff up to max attempts.
 const handleLowPriorityRetry = async (
   emailId: string,
+  requestId: string,
   sesMessageId: string,
   bounceTimestamp: string,
   bounceSubType: string,
@@ -148,16 +158,17 @@ const handleLowPriorityRetry = async (
 
   if (attempt > lowPriorityMaxAttempts) {
     logger.warn(
-      'Low-priority soft bounce max attempts reached, escalating to HardBounce',
+      'Low-priority soft bounce max attempts reached, escalating to MaxRetriesReached',
       { emailId, sesMessageId, attempt, lowPriorityMaxAttempts },
     );
 
-    await updateEmailStatusBySesMessageId(
-      sesMessageId,
-      bounceTimestamp,
-      EmailStatus.HardBounce,
-      `SoftBounce escalated to HardBounce after ${attempt} attempts (${bounceSubType})`,
-    );
+    await updateEmailStatusBySesMessageId(sesMessageId, [
+      {
+        timestamp: bounceTimestamp,
+        status: EmailStatus.MaxRetriesReached,
+        reason: `SoftBounce escalated to MaxRetriesReached after ${attempt} attempts (${bounceSubType})`,
+      },
+    ]);
     return;
   }
 
@@ -166,19 +177,26 @@ const handleLowPriorityRetry = async (
     env.aws.softBounce.lowPriorityBaseDelayMinutes,
   );
 
+  await updateEmailStatusBySesMessageId(sesMessageId, [
+    {
+      timestamp: bounceTimestamp,
+      status: EmailStatus.SoftBounce,
+      reason: bounceSubType,
+    },
+    {
+      timestamp: new Date().toISOString(),
+      status: EmailStatus.Queued,
+      reason: `Queued for low-priority soft bounce retry attempt ${attempt}`,
+    },
+  ]);
+
   await scheduleRetry(
-    emailId,
+    requestId,
     EmailPriority.LOW,
     attempt,
     delayMinutes,
     env.aws.scheduler.lowPriorityQueueArn,
-  );
-
-  await updateEmailStatusBySesMessageId(
-    sesMessageId,
-    bounceTimestamp,
-    EmailStatus.SoftBounce,
-    bounceSubType,
+    { requestId },
   );
 
   logger.info('handleLowPriorityRetry - end');
@@ -187,17 +205,18 @@ const handleLowPriorityRetry = async (
 // Schedule email retry via EventBridge Scheduler.
 // Uses a one-time schedule with auto-delete after completion.
 const scheduleRetry = async (
-  emailId: string,
+  scheduleKey: string,
   priority: EmailPriority,
   attempt: number,
   delayMinutes: number,
   targetQueueArn: string,
+  input: Record<string, string>,
 ): Promise<void> => {
   logger.info('scheduleRetry - start');
 
   const scheduleTime = new Date(Date.now() + delayMinutes * 60 * 1000);
   const scheduleExpression = `at(${scheduleTime.toISOString().replace(/\.\d{3}Z$/, '')})`;
-  const scheduleName = `retry-${emailId}-attempt-${attempt}`;
+  const scheduleName = `retry-${scheduleKey}-attempt-${attempt}`;
 
   try {
     await schedulerClient.send(
@@ -211,24 +230,25 @@ const scheduleRetry = async (
         Target: {
           Arn: targetQueueArn,
           RoleArn: env.aws.scheduler.roleArn,
-          Input: JSON.stringify({ emailId }),
+          Input: JSON.stringify(input),
         },
       }),
     );
 
     logger.info('Soft bounce retry scheduled via EventBridge Scheduler', {
-      emailId,
+      scheduleKey,
       priority,
       attempt,
       delayMinutes,
       targetQueueArn,
+      input,
       scheduleTime: scheduleTime.toISOString(),
     });
   } catch (error) {
     if (error instanceof ConflictException) {
       // Log the conflict but swallow the error to maintain idempotency.
       logger.warn('Schedule already exists, proceeding to ensure idempotency', {
-        emailId,
+        scheduleKey,
         attempt,
         scheduleName,
       });
