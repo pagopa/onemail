@@ -1,4 +1,5 @@
 import env from '#config/env';
+import { getNamedLogger } from '#config/logger';
 import { dynamoClient } from '#connector/dynamo.connector';
 import { sqsClient } from '#connector/sqs.connector';
 import {
@@ -13,11 +14,14 @@ import {
 } from '@aws-sdk/client-sqs';
 
 export const healthCheck = async (): Promise<HealthResponseDTO> => {
+  const logger = getNamedLogger(healthCheck.name);
+  logger.debug('Start');
   let dbStatus = ServiceStatus.Unavailable;
   let sqsHighStatus = ServiceStatus.Unavailable;
   let sqsLowStatus = ServiceStatus.Unavailable;
 
   // Lightweight call to verify dynamoDB connectivity
+  logger.debug('Checking DynamoDB connectivity');
   try {
     await dynamoClient.send(
       new DescribeTableCommand({ TableName: env.aws.emailDbTable }),
@@ -28,6 +32,7 @@ export const healthCheck = async (): Promise<HealthResponseDTO> => {
   }
 
   // Lightweight call to verify high priority SQS queue connectivity
+  logger.debug('Checking SQS HighPriority connectivity');
   try {
     await sqsClient.send(
       new GetQueueAttributesCommand({
@@ -41,6 +46,7 @@ export const healthCheck = async (): Promise<HealthResponseDTO> => {
   }
 
   // Lightweight call to verify low priority SQS queue connectivity
+  logger.debug('Checking SQS LowPriority connectivity');
   try {
     await sqsClient.send(
       new GetQueueAttributesCommand({
@@ -60,6 +66,7 @@ export const healthCheck = async (): Promise<HealthResponseDTO> => {
       ? HealthStatus.Healthy
       : HealthStatus.Unhealthy;
 
+  logger.debug('End');
   return {
     status: overall,
     timestamp: new Date().toISOString(),

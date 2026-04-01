@@ -51,8 +51,6 @@ export function mapDbHighPriorityItemToSesModel(
     Content: content_obj,
   };
 
-  //TODO - configuration set to be added
-
   //TODO - tenantName to be added
 
   return input;
@@ -115,8 +113,6 @@ export function mapDbLowPriorityItemToSesModel(
     },
     BulkEmailEntries: bulkEntries,
   };
-
-  //TODO - configuration set to be added
 
   //TODO - tenantName to be added
 

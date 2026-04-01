@@ -1,3 +1,4 @@
+import { getLogger } from '#config/logger';
 import { ERROR_CODES } from '#dtos/error.dto';
 import { ApiError } from '#errors/ApiError';
 import {
@@ -12,13 +13,15 @@ import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { ZodError } from 'zod';
 
+const logger = getLogger();
+
 export const errorHandler = (
   err: Error,
   _req: Request,
   res: Response,
   _next: NextFunction,
 ) => {
-  console.error('Error occurred:', err);
+  logger.error('Error occurred:', { error: err });
 
   let errorResponse: ApiError;
 

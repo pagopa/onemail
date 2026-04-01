@@ -1,7 +1,7 @@
 import type { EmailStatus, EmailStatusHistoryItem } from 'om-common/types';
 
 import env from '#config/env';
-import { logger } from '#config/logger';
+import { getLogger, getNamedLogger } from '#config/logger';
 import { dynamoClient } from '#connector/dynamo.connector';
 import {
   BatchWriteCommand,
@@ -11,6 +11,8 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 
 import { publishMetrics, SenderMetricName } from './metrics.repository.js';
+
+const logger = getLogger();
 
 // TODO: low timeout
 export const getEmailById = async (
@@ -50,8 +52,6 @@ export const getEmailsByRequestId = async (
   return (result.Items as EmailStatusHistoryItem[]) ?? [];
 };
 
-// update email status in db - to be implemented
-// add messageId
 export const updateEmailStatus = async ({
   emailId,
   status,
@@ -159,6 +159,7 @@ const processBatchWithRetry = async (
 export const batchUpdateEmailStatuses = async (
   updates: EmailStatusUpdate[],
 ): Promise<void> => {
+  const logger = getNamedLogger(batchUpdateEmailStatuses.name);
   const tableName = env.aws.emailDbTable;
   const now = new Date().toISOString();
 

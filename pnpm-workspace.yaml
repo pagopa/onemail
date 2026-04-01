@@ -6,11 +6,18 @@ packages:
 
 # shared libs
 catalog:
-  '@aws-sdk/client-dynamodb': ^3.1017.0
-  '@aws-sdk/lib-dynamodb': ^3.1017.0
-  '@aws-sdk/client-sesv2': '^3.1017.0'
-  '@aws-sdk/client-cloudwatch': '^3.1017.0'
-  '@aws-sdk/client-sqs': '^3.1017.0'
+  # AWS SDK v3
+  '@aws-sdk/client-dynamodb': &aws-sdk-v3 ^3.1017.0
+  '@aws-sdk/lib-dynamodb': *aws-sdk-v3
+  '@aws-sdk/client-cloudwatch': *aws-sdk-v3
+  '@aws-sdk/client-sesv2': *aws-sdk-v3
+  '@aws-sdk/client-sqs': *aws-sdk-v3
+  # AWS Lambda
+  '@aws-lambda-powertools/batch': &aws-powertools-v2 ^2.31.0
+  '@aws-lambda-powertools/logger': *aws-powertools-v2
+  'aws-lambda': '^1.0.7'
+  '@types/aws-lambda': '^8.10.160'
+  # other shared libs
   'zod': ^4.3.6
   'lodash-es': ^4.17.23
   '@types/lodash-es': ^4.17.12

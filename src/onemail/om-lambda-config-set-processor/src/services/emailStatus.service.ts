@@ -1,6 +1,6 @@
 import type { SQSRecord } from 'aws-lambda';
 
-import { logger } from '#config/logger';
+import { getLogger, getNamedLogger } from '#config/logger';
 import {
   ConfSetEventItemSchema,
   HandledConfSetEventItem,
@@ -13,16 +13,23 @@ import {
 import isEmpty from 'lodash-es/isEmpty.js';
 import { EmailStatus } from 'om-common/types';
 
+const logger = getLogger();
+
 const validateRecord = (
   record: SQSRecord,
   schema: typeof ConfSetEventItemSchema,
 ): HandledConfSetEventItem | undefined => {
-  if (isEmpty(record.body)) {
-    //todo add metrics
+  let parsedBody: unknown;
+  try {
+    if (isEmpty(record.body)) throw new Error('Empty body');
+    parsedBody = JSON.parse(record.body);
+  } catch {
     logger.error('Invalid payload, discarding record', { record });
+    //Todo add metrics
     return undefined;
   }
-  const result = schema.safeParse(JSON.parse(record.body));
+
+  const result = schema.safeParse(parsedBody);
   if (!result.success) {
     //Todo add metrics
     logger.error('Invalid payload, discarding record', { record });
@@ -40,6 +47,8 @@ const validateRecord = (
 };
 
 export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
+  const logger = getNamedLogger(sqsEventHandler.name);
+  logger.info('Start');
   const eventItem = validateRecord(record, ConfSetEventItemSchema);
   if (!eventItem) {
     return;
@@ -80,4 +89,5 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       );
     }
   }
+  logger.info('End');
 };
