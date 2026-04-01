@@ -1,5 +1,15 @@
 # onemail
 
+## 1.1.28
+
+### Patch Changes
+
+- Updated dependencies [545f2fa]
+  - om-ecs-dispatcher@1.6.1
+  - om-lambda-sender@1.2.6
+  - om-common@1.0.4
+  - om-lambda-config-set-processor@1.1.1
+
 ## 1.1.27
 
 ### Patch Changes
