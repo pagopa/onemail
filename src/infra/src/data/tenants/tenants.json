@@ -1,0 +1,10 @@
+{
+  "onemail": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": "onemail.pagopa.it"
+  },
+  "pippo": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": "pippo.pagopa.it"
+  }
+}
