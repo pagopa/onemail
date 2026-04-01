@@ -15,7 +15,7 @@ import {
   updateEmailStatus,
 } from '#repositories/email.repository';
 import {
-  publishMetrics as publishMetrics,
+  publishMetrics,
   SenderMetricName,
 } from '#repositories/metrics.repository';
 import { RetryableBulkEmailStatuses } from '#types/retryableSESStatus';
@@ -25,7 +25,7 @@ import {
   MessageRejected,
 } from '@aws-sdk/client-sesv2';
 import isEmpty from 'lodash-es/isEmpty.js';
-import { EmailPriority, EmailStatus } from 'om-common/types';
+import { EmailStatus } from 'om-common/types';
 
 import {
   sendHighPriorityEmail,
@@ -39,7 +39,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
   logger.info('Start');
 
   // 1. Validate the SQS record and parse the item
-  const parsed = validateRecord(record, SqsEventItemHighSchema);
+  const parsed = await validateRecord(record, SqsEventItemHighSchema);
   if (!parsed) return;
 
   const { emailId } = parsed as SqsEventItemHigh;
@@ -77,7 +77,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       return;
     }
 
-    const errorMessage = handleSesError(error, EmailPriority.HIGH);
+    const errorMessage = handleSesError(error);
     if (errorMessage) {
       logger.error(`Rejected by SES`, {
         emailId,
@@ -147,7 +147,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
   logger.info('Start');
 
   // 1. Validate the SQS record and parse the item
-  const parsed = validateRecord(record, SqsEventItemLowSchema);
+  const parsed = await validateRecord(record, SqsEventItemLowSchema);
   if (!parsed) return;
 
   const { requestId } = parsed as SqsEventItemLow;
@@ -251,7 +251,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       return;
     }
 
-    const errorMessage = handleSesError(error, EmailPriority.LOW);
+    const errorMessage = handleSesError(error);
     if (errorMessage) {
       logger.error(`Rejected by SES`, {
         requestId,
@@ -276,7 +276,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
     }
     logger.error(`SES error`, {
       requestId,
-      error: errorMessage,
+      error,
       retryable: true,
     });
     // TODO: update entries in dynamo (?)
@@ -306,66 +306,44 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
   logger.info('End');
 };
 
-function handleSesError(
-  error: unknown,
-  priority: EmailPriority,
-): string | undefined {
+function handleSesError(error: unknown): string | undefined {
   if (error instanceof BadRequestException) {
-    publishMetrics([
-      {
-        name:
-          priority === EmailPriority.HIGH
-            ? SenderMetricName.HighPriorityRejectedBySes
-            : SenderMetricName.LowPriorityRejectedBySes,
-      },
-    ]);
     return `BadRequestException: ${error.message}`;
   }
   if (error instanceof MailFromDomainNotVerifiedException) {
-    publishMetrics([
-      {
-        name:
-          priority === EmailPriority.HIGH
-            ? SenderMetricName.HighPriorityRejectedBySes
-            : SenderMetricName.LowPriorityRejectedBySes,
-      },
-    ]);
     return `MailFromDomainNotVerifiedException: ${error.message}`;
   }
   if (error instanceof MessageRejected) {
-    publishMetrics([
-      {
-        name:
-          priority === EmailPriority.HIGH
-            ? SenderMetricName.HighPriorityRejectedBySes
-            : SenderMetricName.LowPriorityRejectedBySes,
-      },
-    ]);
     return `MessageRejected: ${error.message}`;
   }
   return undefined;
 }
 
-function validateRecord(
+async function validateRecord(
   record: SQSRecord,
   schema: typeof SqsEventItemHighSchema | typeof SqsEventItemLowSchema,
-): SqsEventItemHigh | SqsEventItemLow | undefined {
-  if (isEmpty(record.body)) {
+): Promise<SqsEventItemHigh | SqsEventItemLow | undefined> {
+  let parsedBody: unknown;
+  try {
+    if (isEmpty(record.body)) throw new Error('Empty body');
+    parsedBody = JSON.parse(record.body);
+  } catch {
     logger.error('Invalid payload, discarding record', { record });
-    publishMetrics([
+    await publishMetrics([
       {
         name: SenderMetricName.InvalidRecord,
       },
     ]);
     return undefined;
   }
-  const result = schema.safeParse(JSON.parse(record.body));
+
+  const result = schema.safeParse(parsedBody);
   if (!result.success) {
     const errors = result.error.issues.map((issue) => ({
       message: `${issue.path.join('.')} - ${issue.message}`,
     }));
     logger.error('Invalid payload, discarding record', { record, errors });
-    publishMetrics([
+    await publishMetrics([
       {
         name: SenderMetricName.InvalidRecord,
       },

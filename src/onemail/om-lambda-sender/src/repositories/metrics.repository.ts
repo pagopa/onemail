@@ -41,9 +41,7 @@ const buildMetricDatum = ({
 export const publishMetrics = async (
   metrics: SenderMetricInput[],
 ): Promise<void> => {
-  const metricData = metrics
-    .filter((metric) => metric.value && metric.value > 0)
-    .map((metric) => buildMetricDatum(metric));
+  const metricData = metrics.map((metric) => buildMetricDatum(metric));
 
   if (isEmpty(metricData)) {
     return;

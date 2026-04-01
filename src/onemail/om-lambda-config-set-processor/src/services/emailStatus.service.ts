@@ -19,12 +19,17 @@ const validateRecord = (
   record: SQSRecord,
   schema: typeof ConfSetEventItemSchema,
 ): HandledConfSetEventItem | undefined => {
-  if (isEmpty(record.body)) {
-    //todo add metrics
+  let parsedBody: unknown;
+  try {
+    if (isEmpty(record.body)) throw new Error('Empty body');
+    parsedBody = JSON.parse(record.body);
+  } catch {
     logger.error('Invalid payload, discarding record', { record });
+    //Todo add metrics
     return undefined;
   }
-  const result = schema.safeParse(JSON.parse(record.body));
+
+  const result = schema.safeParse(parsedBody);
   if (!result.success) {
     //Todo add metrics
     logger.error('Invalid payload, discarding record', { record });
