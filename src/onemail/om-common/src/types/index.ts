@@ -1,1 +1,1 @@
-export * from './temp.js';
+export * from './emailStatusHistory.js';
