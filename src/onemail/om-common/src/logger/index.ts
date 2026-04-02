@@ -25,7 +25,6 @@ class OneMailLogFormatter extends LogFormatter {
             },
           }
         : {}),
-      sampling_rate: attributes.sampleRateValue,
       xray_trace_id: attributes.xRayTraceId,
     };
 
