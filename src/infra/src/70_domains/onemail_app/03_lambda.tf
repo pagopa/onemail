@@ -136,6 +136,7 @@ module "lambda_sender" {
     LOW_PRIORITY_QUEUE_ARN           = data.aws_sqs_queue.low_priority.arn
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-sender"
     NODE_ENV                         = "production"
+    POWERTOOLS_LOG_LEVEL             = "DEBUG"
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_sender.security_group_id]
@@ -244,6 +245,7 @@ module "lambda_set_processor" {
     AWS_EMAIL_DB_MESSAGE_ID_GSI      = local.gsis["gsi_ses_message_id_idx"].name
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-config-set-processor"
     NODE_ENV                         = "production"
+    POWERTOOLS_LOG_LEVEL             = "DEBUG"
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_set_processor.security_group_id]
