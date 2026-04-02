@@ -1,6 +1,6 @@
 import type { Context, SQSEvent, SQSHandler } from 'aws-lambda';
 
-import { logger } from '#config/logger';
+import { addLambdaContextToLogger } from '#config/logger';
 import { sqsEventHandler } from '#services/emailStatus.service';
 import {
   BatchProcessor,
@@ -14,7 +14,7 @@ export const handler: SQSHandler = async (
   event: SQSEvent,
   context: Context,
 ) => {
-  logger.addContext(context);
+  addLambdaContextToLogger(context);
 
   // TODO: idempotency with @aws-lambda-powertools/idempotency
   return processPartialResponse(event, sqsEventHandler, processor, {

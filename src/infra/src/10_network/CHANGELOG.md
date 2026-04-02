@@ -1,5 +1,17 @@
 # infra-network
 
+## 1.6.0
+
+### Minor Changes
+
+- fd7b3ac: Shared tenants json file and env vars for ECS and Lambda
+
+## 1.5.0
+
+### Minor Changes
+
+- 402d456: AWS SES Tenants configuration
+
 ## 1.4.0
 
 ### Minor Changes

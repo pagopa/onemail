@@ -1,6 +1,6 @@
 {
   "name": "om-lambda-sender",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Lambda that sends email requests to SES.",
   "private": true,
   "main": "dist/app.js",
@@ -20,8 +20,7 @@
     "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}' --ignore-path ../../../.prettierignore"
   },
   "dependencies": {
-    "@aws-lambda-powertools/batch": "^2.31.0",
-    "@aws-lambda-powertools/logger": "^2.31.0",
+    "@aws-lambda-powertools/batch": "catalog:",
     "@aws-sdk/client-cloudwatch": "catalog:",
     "@aws-sdk/client-dynamodb": "catalog:",
     "@aws-sdk/client-sesv2": "catalog:",
@@ -31,10 +30,10 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.160",
+    "@types/aws-lambda": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
-    "aws-lambda": "^1.0.7"
+    "aws-lambda": "catalog:"
   },
   "imports": {
     "#*": {

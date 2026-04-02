@@ -1,7 +1,7 @@
 import type { EmailEvent } from 'om-common/types';
 
 import env from '#config/env';
-import { logger } from '#config/logger';
+import { getLogger, getNamedLogger } from '#config/logger';
 import { schedulerClient } from '#connector/scheduler.connector';
 import {
   findEmailBySesMessageId,
@@ -14,6 +14,7 @@ import {
   FlexibleTimeWindowMode,
 } from '@aws-sdk/client-scheduler';
 import { EmailPriority, EmailStatus } from 'om-common/types';
+const logger = getLogger();
 
 const MILLISECONDS_PER_DAY = 86_400_000;
 
@@ -44,12 +45,13 @@ export const handleSoftBounceRetry = async (
   bounceTimestamp: string,
   bounceSubType: string,
 ): Promise<void> => {
-  logger.info('handleSoftBounceRetry - start');
-
   const emailRecord = await findEmailBySesMessageId(sesMessageId);
   if (!emailRecord) {
+    logger.error('Email record not found', { sesMessageId });
+    //TODO add metrics for missing email record
     return;
   }
+  logger.debug('Retrieved email record', { sesMessageId });
 
   const { emailId, priority, history, requestId } = emailRecord;
   const softBounceCount = countSoftBounceAttempts(history);
@@ -74,8 +76,6 @@ export const handleSoftBounceRetry = async (
       newAttemptNumber,
     );
   }
-
-  logger.info('handleSoftBounceRetry - end');
 };
 
 //High priority: exponential backoff for up to N days from the first SoftBounce. After N days, escalate to HardBounce.
@@ -87,7 +87,8 @@ const handleHighPriorityRetry = async (
   history: EmailEvent[],
   attempt: number,
 ): Promise<void> => {
-  logger.info('handleHighPriorityRetry - start');
+  const logger = getNamedLogger(handleHighPriorityRetry.name);
+  logger.info('Start');
 
   const firstSoftBounce = getFirstSoftBounceTimestamp(history);
 
@@ -140,7 +141,7 @@ const handleHighPriorityRetry = async (
     },
   ]);
 
-  logger.info('handleHighPriorityRetry - end');
+  logger.info('End');
 };
 
 //Low priority: exponential backoff up to max attempts.
@@ -152,7 +153,8 @@ const handleLowPriorityRetry = async (
   bounceSubType: string,
   attempt: number,
 ): Promise<void> => {
-  logger.info('handleLowPriorityRetry - start');
+  const logger = getNamedLogger(handleLowPriorityRetry.name);
+  logger.info('Start');
 
   const { lowPriorityMaxAttempts } = env.aws.softBounce;
 
@@ -199,7 +201,7 @@ const handleLowPriorityRetry = async (
     { requestId },
   );
 
-  logger.info('handleLowPriorityRetry - end');
+  logger.info('End');
 };
 
 // Schedule email retry via EventBridge Scheduler.
@@ -212,8 +214,6 @@ const scheduleRetry = async (
   targetQueueArn: string,
   input: Record<string, string>,
 ): Promise<void> => {
-  logger.info('scheduleRetry - start');
-
   const scheduleTime = new Date(Date.now() + delayMinutes * 60 * 1000);
   const scheduleExpression = `at(${scheduleTime.toISOString().replace(/\.\d{3}Z$/, '')})`;
   const scheduleName = `retry-${scheduleKey}-attempt-${attempt}`;
@@ -256,6 +256,4 @@ const scheduleRetry = async (
     }
     throw error;
   }
-
-  logger.info('scheduleRetry - end');
 };

@@ -1,11 +1,15 @@
-import { Logger } from '@aws-lambda-powertools/logger';
+import type { Context } from 'aws-lambda';
 
-// TODO: consider using a shared logger instance from a common package with dynamic service name based on env var or something else
-export const logger = new Logger();
+import { baseLogger } from 'om-common/logger';
 
-logger.appendPersistentKeys({
-  serviceName: 'om-lambda-sender',
-});
+export const getNamedLogger = (methodName: string) => {
+  const logger = baseLogger.createChild();
+  logger.appendKeys({ method: methodName });
+  return logger;
+};
 
-// TODO: check
-logger.removeKeys(['function_memory_size']);
+export const getLogger = () => baseLogger;
+
+export const addLambdaContextToLogger = (context: Context) => {
+  baseLogger.addContext(context);
+};

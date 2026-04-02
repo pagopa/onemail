@@ -1,7 +1,7 @@
 import type { Context, SQSEvent, SQSHandler } from 'aws-lambda';
 
 import env from '#config/env';
-import { logger } from '#config/logger';
+import { addLambdaContextToLogger } from '#config/logger';
 import {
   handleHighPriority,
   handleLowPriority,
@@ -19,7 +19,7 @@ export const handler: SQSHandler = async (
   event: SQSEvent,
   context: Context,
 ) => {
-  logger.addContext(context);
+  addLambdaContextToLogger(context);
   const isHighPriority = event.Records[0].eventSourceARN.includes(
     env.sqs.highPriorityQueueARN,
   );

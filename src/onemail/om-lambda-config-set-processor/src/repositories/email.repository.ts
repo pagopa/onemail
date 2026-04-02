@@ -1,13 +1,15 @@
 import type { EmailStatus, EmailStatusHistoryItem } from 'om-common/types';
 
 import env from '#config/env';
-import { logger } from '#config/logger';
+import { getLogger } from '#config/logger';
 import { dynamoClient } from '#connector/dynamo.connector';
 import {
   BatchWriteCommand,
   QueryCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
+
+const logger = getLogger();
 
 export const findEmailBySesMessageId = async (
   sesMessageId: string,

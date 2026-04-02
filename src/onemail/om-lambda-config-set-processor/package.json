@@ -1,6 +1,6 @@
 {
   "name": "om-lambda-config-set-processor",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Lambda that processes config sets for SES.",
   "private": true,
   "main": "dist/app.js",
@@ -20,8 +20,7 @@
     "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}' --ignore-path ../../../.prettierignore"
   },
   "dependencies": {
-    "@aws-lambda-powertools/batch": "^2.31.0",
-    "@aws-lambda-powertools/logger": "^2.31.0",
+    "@aws-lambda-powertools/batch": "catalog:",
     "@aws-sdk/client-cloudwatch": "catalog:",
     "@aws-sdk/client-dynamodb": "catalog:",
     "@aws-sdk/client-scheduler": "catalog:",
@@ -32,8 +31,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "aws-lambda": "^1.0.7",
-    "@types/aws-lambda": "^8.10.160",
+    "aws-lambda": "catalog:",
+    "@types/aws-lambda": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:"
   },

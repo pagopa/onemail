@@ -1,11 +1,13 @@
 import env from '#config/env';
-import { logger } from '#config/logger';
+import { getLogger } from '#config/logger';
 import { cloudWatchClient } from '#connector/cloudwatch.connector';
 import {
   type MetricDatum,
   PutMetricDataCommand,
 } from '@aws-sdk/client-cloudwatch';
 import isEmpty from 'lodash-es/isEmpty.js';
+
+const logger = getLogger();
 
 export enum SenderMetricName {
   EmailBatchNotFound = 'EmailBatchNotFound',
@@ -39,9 +41,7 @@ const buildMetricDatum = ({
 export const publishMetrics = async (
   metrics: SenderMetricInput[],
 ): Promise<void> => {
-  const metricData = metrics
-    .filter((metric) => metric.value && metric.value > 0)
-    .map((metric) => buildMetricDatum(metric));
+  const metricData = metrics.map((metric) => buildMetricDatum(metric));
 
   if (isEmpty(metricData)) {
     return;

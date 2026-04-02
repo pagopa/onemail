@@ -1,5 +1,19 @@
 # om-ecs-dispatcher
 
+## 1.6.1
+
+### Patch Changes
+
+- 545f2fa: logs
+- Updated dependencies [545f2fa]
+  - om-common@1.0.4
+
+## 1.6.0
+
+### Minor Changes
+
+- ab7b401: handle low priority address duplication + sendingInfo max size to 10
+
 ## 1.5.9
 
 ### Patch Changes

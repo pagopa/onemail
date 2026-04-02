@@ -1,4 +1,5 @@
 import '#config/zodExtend';
+import { getLogger } from '#config/logger';
 import { errorHandler } from '#middlewares/errorHandler.middleware';
 import express from 'express';
 
@@ -7,6 +8,7 @@ import routes from './routes/index.js';
 
 const app = express();
 const PORT = env.server.PORT;
+const logger = getLogger();
 
 // api response type middlewares
 app.use(express.json());
@@ -18,7 +20,7 @@ app.use('/', routes);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}...`);
+  logger.debug(`Server running on port ${PORT}...`);
 });
 
 // Check for graceful shutdown

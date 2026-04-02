@@ -1,5 +1,43 @@
 # onemail
 
+## 1.2.0
+
+### Minor Changes
+
+- fd7b3ac: Shared tenants json file and env vars for ECS and Lambda
+
+### Patch Changes
+
+- Updated dependencies [fd7b3ac]
+  - infra-domains-onemail-common@1.5.0
+  - infra-domains-onemail-app@1.9.0
+  - infra-network@1.6.0
+
+## 1.1.28
+
+### Patch Changes
+
+- Updated dependencies [545f2fa]
+  - om-ecs-dispatcher@1.6.1
+  - om-lambda-sender@1.2.6
+  - om-common@1.0.4
+  - om-lambda-config-set-processor@1.1.1
+
+## 1.1.27
+
+### Patch Changes
+
+- Updated dependencies [ab7b401]
+  - om-ecs-dispatcher@1.6.0
+
+## 1.1.26
+
+### Patch Changes
+
+- Updated dependencies [402d456]
+  - infra-domains-onemail-common@1.4.0
+  - infra-network@1.5.0
+
 ## 1.1.25
 
 ### Patch Changes
