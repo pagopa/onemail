@@ -189,8 +189,8 @@ data "aws_iam_policy_document" "set_processor_policy" {
       "scheduler:DeleteSchedule"
     ]
     resources = [
-      "${aws_scheduler_schedule_group.ses_retries.arn}/*",
-      aws_scheduler_schedule_group.ses_retries.arn
+      "${local.scheduler_group_arn}/*",
+      local.scheduler_group_arn
     ]
   }
 
@@ -198,7 +198,7 @@ data "aws_iam_policy_document" "set_processor_policy" {
     actions = [
       "iam:PassRole"
     ]
-    resources = [aws_iam_role.scheduler_role.arn]
+    resources = [local.scheduler_role_arn]
   }
 
   dynamic "statement" {
@@ -265,10 +265,10 @@ module "lambda_set_processor" {
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-config-set-processor"
     NODE_ENV                         = "production"
     POWERTOOLS_LOG_LEVEL             = "DEBUG"
-    EVENTBRIDGE_SCHEDULER_ROLE_ARN   = aws_iam_role.scheduler_role.arn
+    EVENTBRIDGE_SCHEDULER_ROLE_ARN   = local.scheduler_role_arn
     HIGH_PRIORITY_QUEUE_ARN          = data.aws_sqs_queue.high_priority.arn
     LOW_PRIORITY_QUEUE_ARN           = data.aws_sqs_queue.low_priority.arn
-    SCHEDULER_GROUP_NAME             = aws_scheduler_schedule_group.ses_retries.name
+    SCHEDULER_GROUP_NAME             = local.scheduler_group_name
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_set_processor.security_group_id]
