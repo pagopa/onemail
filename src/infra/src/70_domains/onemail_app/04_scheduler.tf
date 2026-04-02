@@ -18,6 +18,6 @@ resource "aws_iam_role_policy" "scheduler_sqs_policy" {
   })
 }
 
-resource "aws_scheduler_group" "ses_retries" {
+resource "aws_scheduler_schedule_group" "ses_retries" {
   name = "${local.project_nodomain}-ses-dynamic-retries-group"
 }
