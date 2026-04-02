@@ -189,8 +189,8 @@ data "aws_iam_policy_document" "set_processor_policy" {
       "scheduler:DeleteSchedule"
     ]
     resources = [
-      "${aws_scheduler_group.ses_retries.arn}/*", # Tutti gli schedule del gruppo
-      aws_scheduler_group.ses_retries.arn
+      "${aws_scheduler_schedule_group.ses_retries.arn}/*",
+      aws_scheduler_schedule_group.ses_retries.arn
     ]
   }
 
@@ -268,7 +268,7 @@ module "lambda_set_processor" {
     EVENTBRIDGE_SCHEDULER_ROLE_ARN   = aws_iam_role.scheduler_role.arn
     HIGH_PRIORITY_QUEUE_ARN          = data.aws_sqs_queue.high_priority.arn
     LOW_PRIORITY_QUEUE_ARN           = data.aws_sqs_queue.low_priority.arn
-    SCHEDULER_GROUP_NAME             = aws_scheduler_group.ses_retries.name
+    SCHEDULER_GROUP_NAME             = aws_scheduler_schedule_group.ses_retries.name
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_set_processor.security_group_id]
