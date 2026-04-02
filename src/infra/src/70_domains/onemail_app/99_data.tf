@@ -65,9 +65,9 @@ data "aws_route53_zone" "onemail" {
   private_zone = false
 }
 
-data "aws_ses_domain_identity" "onemail" {
-  count  = var.enable_ses ? 1 : 0
-  domain = local.zone_name
+data "aws_ses_domain_identity" "tenant" {
+  for_each = var.enable_ses ? local.tenants : {}
+  domain   = each.value.domain
 }
 
 
@@ -76,9 +76,9 @@ data "aws_lb_listener" "ecs_core" {
   port              = 3000
 }
 
-data "aws_sesv2_configuration_set" "oml_config_set" {
-  count                  = var.enable_ses ? 1 : 0
-  configuration_set_name = "${local.project_nodomain}-${var.env}-configuration-set-onemail"
+data "aws_sesv2_configuration_set" "tenant_config_set" {
+  for_each               = var.enable_ses ? local.tenants : {}
+  configuration_set_name = "${local.project_nodomain}-${var.env}-configuration-set-${each.key}"
 }
 
 data "aws_caller_identity" "current" {}

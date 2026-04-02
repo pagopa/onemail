@@ -90,15 +90,6 @@ variable "enable_ses_dns_records" {
   default     = false
 }
 
-variable "tenants" {
-  type = map(object({
-    domain      = string
-    admin_email = string
-  }))
-  default     = {}
-  description = "Tenants configuration with domain and admin email for reports. Provide via tfvars for each environment."
-}
-
 variable "web_acl" {
   type = object({
     cloudwatch_metrics_enabled = optional(bool, false)

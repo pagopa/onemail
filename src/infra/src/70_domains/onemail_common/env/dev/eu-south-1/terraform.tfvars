@@ -54,10 +54,3 @@ dynamodb_table_config = {
 enable_container_insights = false
 
 enable_ses = true
-
-tenants = {
-  onemail = {
-    domain      = "dev.onemail.pagopa.it"
-    admin_email = "ops-dmarc@dev.onemail.pagopa.it"
-  }
-}

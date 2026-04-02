@@ -97,6 +97,10 @@ module "ecs_service" {
     {
       name  = "SQS_LOW_PRIORITY_QUEUE_URL"
       value = data.aws_sqs_queue.low_priority.url
+    },
+    {
+      name  = "POWERTOOLS_LOG_LEVEL"
+      value = "DEBUG"
     }
   ]
 

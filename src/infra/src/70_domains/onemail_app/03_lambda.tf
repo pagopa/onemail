@@ -20,15 +20,39 @@ data "aws_iam_policy_document" "sender_policy" {
       "ses:SendBulkEmail",
       "ses:SendBulkTemplatedEmail"
     ]
-    resources = var.enable_ses && var.env != "dev" ? [data.aws_ses_domain_identity.onemail[0].arn, data.aws_sesv2_configuration_set.oml_config_set[0].arn, "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:template/*"] : ["*"]
+    resources = var.enable_ses ? distinct(concat(
+      ["arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:template/*"],
+      [for tenant_key, _ in local.tenants : data.aws_ses_domain_identity.tenant[tenant_key].arn],
+      [for tenant_key, _ in local.tenants : data.aws_sesv2_configuration_set.tenant_config_set[tenant_key].arn]
+    )) : ["*"]
 
     dynamic "condition" {
-      for_each = var.enable_ses ? [1] : []
+      for_each = var.enable_ses && length(local.tenants) > 0 ? [1] : []
+
+      content {
+        test     = "StringEquals"
+        variable = "ses:ConfigurationSetName"
+        values   = [for tenant_key, _ in local.tenants : data.aws_sesv2_configuration_set.tenant_config_set[tenant_key].configuration_set_name]
+      }
+    }
+
+    dynamic "condition" {
+      for_each = var.enable_ses && length(local.tenants) > 0 ? [1] : []
+
+      content {
+        test     = "StringEquals"
+        variable = "ses:TenantName"
+        values   = [for tenant_key, _ in local.tenants : "${local.project_nodomain}-${var.env}-tenant-${tenant_key}"]
+      }
+    }
+
+    dynamic "condition" {
+      for_each = var.enable_ses && length(local.tenants) > 0 ? [1] : []
 
       content {
         test     = "StringLike"
         variable = "ses:FromAddress"
-        values   = [local.ses_allowed_sender_pattern]
+        values   = [for tenant in values(local.tenants) : "*@${tenant.domain}"]
       }
     }
   }
@@ -112,6 +136,7 @@ module "lambda_sender" {
     LOW_PRIORITY_QUEUE_ARN           = data.aws_sqs_queue.low_priority.arn
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-sender"
     NODE_ENV                         = "production"
+    POWERTOOLS_LOG_LEVEL             = "DEBUG"
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_sender.security_group_id]
@@ -220,6 +245,7 @@ module "lambda_set_processor" {
     AWS_EMAIL_DB_MESSAGE_ID_GSI      = local.gsis["gsi_ses_message_id_idx"].name
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-config-set-processor"
     NODE_ENV                         = "production"
+    POWERTOOLS_LOG_LEVEL             = "DEBUG"
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_set_processor.security_group_id]

@@ -1,12 +1,12 @@
 # Tenants
 resource "aws_sesv2_tenant" "tenants" {
-  for_each    = var.enable_ses ? var.tenants : {}
+  for_each    = var.enable_ses ? local.tenants : {}
   tenant_name = "${local.project_nodomain}-${var.env}-tenant-${each.key}"
 }
 
 # Email identities for each tenant
 resource "aws_sesv2_email_identity" "tenant_identities" {
-  for_each       = var.enable_ses ? var.tenants : {}
+  for_each       = var.enable_ses ? local.tenants : {}
   email_identity = each.value.domain
 
   configuration_set_name = aws_sesv2_configuration_set.config_set[each.key].configuration_set_name
@@ -18,7 +18,7 @@ resource "aws_sesv2_email_identity" "tenant_identities" {
 
 # Custom MAIL FROM domain for SPF and DMARC alignment per tenant
 resource "aws_ses_domain_mail_from" "tenant_mail_from" {
-  for_each         = var.enable_ses ? var.tenants : {}
+  for_each         = var.enable_ses ? local.tenants : {}
   domain           = aws_sesv2_email_identity.tenant_identities[each.key].email_identity
   mail_from_domain = "bounce.${each.value.domain}"
   # In test phase: allow SES fallback if the custom MAIL FROM MX is not ready yet.
@@ -32,7 +32,7 @@ resource "aws_ses_domain_mail_from" "tenant_mail_from" {
 # }
 
 resource "aws_sesv2_configuration_set" "config_set" {
-  for_each               = var.enable_ses ? var.tenants : {}
+  for_each               = var.enable_ses ? local.tenants : {}
   configuration_set_name = "${local.project_nodomain}-${var.env}-configuration-set-${each.key}"
 
   sending_options {
@@ -49,19 +49,19 @@ resource "aws_sesv2_configuration_set" "config_set" {
 }
 
 resource "aws_sesv2_tenant_resource_association" "identity_assoc" {
-  for_each     = var.enable_ses ? var.tenants : {}
+  for_each     = var.enable_ses ? local.tenants : {}
   tenant_name  = aws_sesv2_tenant.tenants[each.key].tenant_name
   resource_arn = aws_sesv2_email_identity.tenant_identities[each.key].arn
 }
 
 resource "aws_sesv2_tenant_resource_association" "config_set_assoc" {
-  for_each     = var.enable_ses ? var.tenants : {}
+  for_each     = var.enable_ses ? local.tenants : {}
   tenant_name  = aws_sesv2_tenant.tenants[each.key].tenant_name
   resource_arn = aws_sesv2_configuration_set.config_set[each.key].arn
 }
 
 resource "aws_sesv2_configuration_set_event_destination" "to_eb" {
-  for_each               = var.enable_ses ? var.tenants : {}
+  for_each               = var.enable_ses ? local.tenants : {}
   configuration_set_name = aws_sesv2_configuration_set.config_set[each.key].configuration_set_name
   event_destination_name = "dest-eb-${local.project_nodomain}-${each.key}"
 
