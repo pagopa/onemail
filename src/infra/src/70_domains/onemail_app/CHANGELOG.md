@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.9.0
+
+### Minor Changes
+
+- fd7b3ac: Shared tenants json file and env vars for ECS and Lambda
+
 ## 1.8.1
 
 ### Patch Changes
