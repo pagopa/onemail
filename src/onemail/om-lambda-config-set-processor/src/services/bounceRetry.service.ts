@@ -8,6 +8,12 @@ import {
   updateEmailStatusBySesMessageId,
 } from '#repositories/email.repository';
 import {
+  BACKOFF_FACTOR,
+  ESCALATION_THRESHOLD_MINUTES,
+  MILLISECONDS_PER_DAY,
+  MILLISECONDS_PER_MINUTE,
+} from '#utils/constants';
+import {
   ActionAfterCompletion,
   ConflictException,
   CreateScheduleCommand,
@@ -16,28 +22,39 @@ import {
 import { EmailPriority, EmailStatus } from 'om-common/types';
 const logger = getLogger();
 
-const MILLISECONDS_PER_DAY = 86_400_000;
-
-export const countSoftBounceAttempts = (history: EmailEvent[]): number =>
+const countSoftBounceAttempts = (history: EmailEvent[]): number =>
   history.filter((event) => event.status === EmailStatus.SoftBounce).length;
 
-export const calculateExponentialDelay = (
+const calculateExponentialDelay = (
   attempt: number,
   baseDelay: number,
-): number => baseDelay * Math.pow(2, attempt - 1);
+  factor: number,
+): number => baseDelay * Math.pow(factor, attempt - 1);
 
-export const getFirstSoftBounceTimestamp = (
+const getFirstSoftBounceTimestamp = (
   history: EmailEvent[],
 ): string | undefined =>
-  history.find((event) => event.status === EmailStatus.SoftBounce)?.changedAt;
+  history
+    .filter((event) => event.status === EmailStatus.SoftBounce)
+    .map((event) => event.changedAt)
+    .sort()[0];
 
-export const isWithinRetryWindow = (
-  firstSoftBounceTimestamp: string,
-  maxWindowMs: number,
-  now: number = Date.now(),
-): boolean => {
-  const elapsed = now - new Date(firstSoftBounceTimestamp).getTime();
-  return elapsed < maxWindowMs;
+const getHighPriorityBaseDelay = (
+  firstBounceMs: number | null,
+  currentBounceMs: number,
+): number => {
+  // If there's no previous bounce, use the standard base delay
+  if (!firstBounceMs) {
+    return env.aws.softBounce.highPriorityBaseDelayMinutes;
+  }
+
+  const elapsedMs = currentBounceMs - firstBounceMs;
+  const escalationThresholdMs =
+    ESCALATION_THRESHOLD_MINUTES * MILLISECONDS_PER_MINUTE;
+
+  return elapsedMs >= escalationThresholdMs
+    ? env.aws.softBounce.highPriorityEscalatedBaseDelayMinutes
+    : env.aws.softBounce.highPriorityBaseDelayMinutes;
 };
 
 export const handleSoftBounceRetry = async (
@@ -78,7 +95,7 @@ export const handleSoftBounceRetry = async (
   }
 };
 
-//High priority: exponential backoff for up to N days from the first SoftBounce. After N days, escalate to HardBounce.
+//High priority: exponential backoff for up to N days from the first SoftBounce. After N days, escalate to MaxRetriesReached.
 const handleHighPriorityRetry = async (
   emailId: string,
   sesMessageId: string,
@@ -92,18 +109,31 @@ const handleHighPriorityRetry = async (
 
   const firstSoftBounce = getFirstSoftBounceTimestamp(history);
 
-  // If there is a previous SoftBounce, verify that the retry is within the allowed window.
-  if (firstSoftBounce) {
+  const firstBounceMs = firstSoftBounce
+    ? new Date(firstSoftBounce).getTime()
+    : null;
+
+  const currentBounceMs = new Date(bounceTimestamp).getTime();
+
+  // 1. Check if the max window has expired
+  if (firstBounceMs) {
     const maxWindowMs =
       env.aws.softBounce.highPriorityMaxWindowDays * MILLISECONDS_PER_DAY;
 
-    if (!isWithinRetryWindow(firstSoftBounce, maxWindowMs)) {
+    const isWindowExpired = currentBounceMs - firstBounceMs >= maxWindowMs;
+
+    if (isWindowExpired) {
       logger.warn(
         'High-priority soft bounce retry window exceeded, escalating to MaxRetriesReached',
         { emailId, sesMessageId, attempt, firstSoftBounce },
       );
 
       await updateEmailStatusBySesMessageId(sesMessageId, [
+        {
+          timestamp: bounceTimestamp,
+          status: EmailStatus.SoftBounce,
+          reason: bounceSubType,
+        },
         {
           timestamp: bounceTimestamp,
           status: EmailStatus.MaxRetriesReached,
@@ -114,11 +144,18 @@ const handleHighPriorityRetry = async (
     }
   }
 
+  // 2. Calculate the delay
+  const baseDelayMinutes = getHighPriorityBaseDelay(
+    firstBounceMs,
+    currentBounceMs,
+  );
   const delayMinutes = calculateExponentialDelay(
     attempt,
-    env.aws.softBounce.highPriorityBaseDelayMinutes,
+    baseDelayMinutes,
+    BACKOFF_FACTOR.HIGH_PRIORITY,
   );
 
+  // 3. Eventbridge schedule
   await scheduleRetry(
     emailId,
     EmailPriority.HIGH,
@@ -128,6 +165,7 @@ const handleHighPriorityRetry = async (
     { emailId },
   );
 
+  // 4. db update
   await updateEmailStatusBySesMessageId(sesMessageId, [
     {
       timestamp: bounceTimestamp,
@@ -158,6 +196,7 @@ const handleLowPriorityRetry = async (
 
   const { lowPriorityMaxAttempts } = env.aws.softBounce;
 
+  // 1. Check if max attempts reached
   if (attempt > lowPriorityMaxAttempts) {
     logger.warn(
       'Low-priority soft bounce max attempts reached, escalating to MaxRetriesReached',
@@ -167,6 +206,11 @@ const handleLowPriorityRetry = async (
     await updateEmailStatusBySesMessageId(sesMessageId, [
       {
         timestamp: bounceTimestamp,
+        status: EmailStatus.SoftBounce,
+        reason: bounceSubType,
+      },
+      {
+        timestamp: bounceTimestamp,
         status: EmailStatus.MaxRetriesReached,
         reason: `SoftBounce escalated to MaxRetriesReached after ${attempt} attempts (${bounceSubType})`,
       },
@@ -174,11 +218,24 @@ const handleLowPriorityRetry = async (
     return;
   }
 
+  // 2. Calculate the delay
   const delayMinutes = calculateExponentialDelay(
     attempt,
     env.aws.softBounce.lowPriorityBaseDelayMinutes,
+    BACKOFF_FACTOR.LOW_PRIORITY,
   );
 
+  // 3. Eventbridge schedule
+  await scheduleRetry(
+    requestId,
+    EmailPriority.LOW,
+    attempt,
+    delayMinutes,
+    env.aws.scheduler.lowPriorityQueueArn,
+    { requestId },
+  );
+
+  // 4. db update
   await updateEmailStatusBySesMessageId(sesMessageId, [
     {
       timestamp: bounceTimestamp,
@@ -191,15 +248,6 @@ const handleLowPriorityRetry = async (
       reason: `Queued for low-priority soft bounce retry attempt ${attempt}`,
     },
   ]);
-
-  await scheduleRetry(
-    requestId,
-    EmailPriority.LOW,
-    attempt,
-    delayMinutes,
-    env.aws.scheduler.lowPriorityQueueArn,
-    { requestId },
-  );
 
   logger.info('End');
 };

@@ -26,10 +26,14 @@ export default {
     softBounce: {
       highPriorityBaseDelayMinutes:
         Number(process.env.SOFT_BOUNCE_HIGH_PRIORITY_BASE_DELAY_MINUTES) || 1,
-      lowPriorityBaseDelayMinutes:
-        Number(process.env.SOFT_BOUNCE_LOW_PRIORITY_BASE_DELAY_MINUTES) || 15,
+      highPriorityEscalatedBaseDelayMinutes:
+        Number(
+          process.env.SOFT_BOUNCE_HIGH_PRIORITY_ESCALATED_BASE_DELAY_MINUTES,
+        ) || 5,
       highPriorityMaxWindowDays:
         Number(process.env.SOFT_BOUNCE_HIGH_PRIORITY_MAX_WINDOW_DAYS) || 30,
+      lowPriorityBaseDelayMinutes:
+        Number(process.env.SOFT_BOUNCE_LOW_PRIORITY_BASE_DELAY_MINUTES) || 60,
       lowPriorityMaxAttempts:
         Number(process.env.SOFT_BOUNCE_LOW_PRIORITY_MAX_ATTEMPTS) || 5,
     },

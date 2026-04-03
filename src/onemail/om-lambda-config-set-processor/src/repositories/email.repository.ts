@@ -8,6 +8,8 @@ import {
   QueryCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
+import isEmpty from 'lodash-es/isEmpty.js';
+import last from 'lodash-es/last.js';
 
 const logger = getLogger();
 
@@ -47,17 +49,19 @@ export const updateEmailStatusBySesMessageId = async (
     reason?: string;
   }[],
 ): Promise<void> => {
+  if (isEmpty(updates)) {
+    return;
+  }
   const item = await findEmailBySesMessageId(sesMessageId);
   if (!item) {
     return;
   }
 
-  if (updates.length === 0) {
+  //latest status to be saved
+  const currentUpdate = last(updates);
+  if (!currentUpdate) {
     return;
   }
-
-  //latest status to be saved
-  const currentUpdate = updates[updates.length - 1];
 
   // Update the email record with the new status and timestamp
   await dynamoClient.send(
@@ -154,7 +158,7 @@ export const batchUpdateEmailStatuses = async (
   const tableName = env.aws.emailDbTable;
   const now = new Date().toISOString();
 
-  if (updates.length === 0) {
+  if (isEmpty(updates)) {
     return;
   }
 
