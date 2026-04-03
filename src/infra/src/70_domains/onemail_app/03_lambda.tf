@@ -20,7 +20,7 @@ data "aws_iam_policy_document" "sender_policy" {
       "ses:SendBulkEmail",
       "ses:SendBulkTemplatedEmail"
     ]
-    resources = var.enable_ses ? distinct(concat(
+    resources = var.enable_ses && var.env != "dev" ? distinct(concat(
       ["arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:template/*"],
       [for tenant_key, _ in local.tenants : data.aws_ses_domain_identity.tenant[tenant_key].arn],
       [for tenant_key, _ in local.tenants : data.aws_sesv2_configuration_set.tenant_config_set[tenant_key].arn]
@@ -182,6 +182,25 @@ data "aws_iam_policy_document" "set_processor_policy" {
     ]
   }
 
+  statement {
+    actions = [
+      "scheduler:CreateSchedule",
+      "scheduler:GetSchedule",
+      "scheduler:DeleteSchedule"
+    ]
+    resources = [
+      "${local.scheduler_group_arn}/*",
+      local.scheduler_group_arn
+    ]
+  }
+
+  statement {
+    actions = [
+      "iam:PassRole"
+    ]
+    resources = [local.scheduler_role_arn]
+  }
+
   dynamic "statement" {
     for_each = local.dynamodb_kms_key_arn != null ? [local.dynamodb_kms_key_arn] : []
 
@@ -246,6 +265,10 @@ module "lambda_set_processor" {
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-config-set-processor"
     NODE_ENV                         = "production"
     POWERTOOLS_LOG_LEVEL             = "DEBUG"
+    EVENTBRIDGE_SCHEDULER_ROLE_ARN   = local.scheduler_role_arn
+    HIGH_PRIORITY_QUEUE_ARN          = data.aws_sqs_queue.high_priority.arn
+    LOW_PRIORITY_QUEUE_ARN           = data.aws_sqs_queue.low_priority.arn
+    SCHEDULER_GROUP_NAME             = local.scheduler_group_name
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_set_processor.security_group_id]
