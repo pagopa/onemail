@@ -36,7 +36,7 @@ You are an expert Node.js and TypeScript developer. When generating code, answer
   - Controllers: `*.controller.ts` (e.g., `email.controller.ts`)
   - Services: `*.service.ts` (e.g., `email.service.ts`)
   - Repositories: `*.repository.ts` (e.g., `email.repository.ts`)
-  - Types/Interfaces: `*.type.ts` (e.g., `bulk-send-result.type.ts`)
+  - Types/Interfaces: `*.type.ts` (e.g., `bulkSendResult.type.ts`)
   - DTOs/Zod schemas: `*.dto.ts`
 - **Never** use PascalCase or kebab-case or snake_case for file names.
 

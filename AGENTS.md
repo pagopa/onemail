@@ -109,6 +109,7 @@ This inventory reflects the desired managed baseline plus repository-owned inter
 ### Prompts
 - `.github/prompts/internal-onemail-change.prompt.md`
 - `.github/prompts/tech-ai-add-unit-tests.prompt.md`
+- `.github/prompts/tech-ai-add-unit-tests-nodejs.prompt.md`
 - `.github/prompts/tech-ai-bash-script.prompt.md`
 - `.github/prompts/tech-ai-cloud-policy.prompt.md`
 - `.github/prompts/tech-ai-data-registry.prompt.md`
@@ -116,6 +117,7 @@ This inventory reflects the desired managed baseline plus repository-owned inter
 - `.github/prompts/tech-ai-github-composite-action.prompt.md`
 - `.github/prompts/tech-ai-pr-description.prompt.md`
 - `.github/prompts/tech-ai-python-script.prompt.md`
+- `.github/prompts/tech-ai-nodejs.prompt.md`
 - `.github/prompts/tech-ai-python.prompt.md`
 - `.github/prompts/tech-ai-terraform.prompt.md`
 
@@ -123,9 +125,11 @@ This inventory reflects the desired managed baseline plus repository-owned inter
 - `.github/skills/internal-onemail-repo-context/SKILL.md`
 - `.github/skills/tech-ai-cicd-workflow/SKILL.md`
 - `.github/skills/tech-ai-cloud-policy/SKILL.md`
+- `.github/skills/tech-ai-code-review/SKILL.md`
 - `.github/skills/tech-ai-composite-action/SKILL.md`
 - `.github/skills/tech-ai-data-registry/SKILL.md`
 - `.github/skills/tech-ai-pr-editor/SKILL.md`
+- `.github/skills/tech-ai-project-nodejs/SKILL.md`
 - `.github/skills/tech-ai-project-python/SKILL.md`
 - `.github/skills/tech-ai-script-bash/SKILL.md`
 - `.github/skills/tech-ai-script-python/SKILL.md`
