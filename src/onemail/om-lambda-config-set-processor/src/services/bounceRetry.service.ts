@@ -7,12 +7,13 @@ import {
   findEmailBySesMessageId,
   updateEmailStatusBySesMessageId,
 } from '#repositories/email.repository';
+import { BACKOFF_FACTOR, MILLISECONDS_PER_DAY } from '#utils/constants';
 import {
-  BACKOFF_FACTOR,
-  ESCALATION_THRESHOLD_MINUTES,
-  MILLISECONDS_PER_DAY,
-  MILLISECONDS_PER_MINUTE,
-} from '#utils/constants';
+  calculateExponentialDelay,
+  countSoftBounceAttempts,
+  getFirstSoftBounceTimestamp,
+  getHighPriorityBaseDelay,
+} from '#utils/exponentialBackoffUtils';
 import {
   ActionAfterCompletion,
   ConflictException,
@@ -20,42 +21,8 @@ import {
   FlexibleTimeWindowMode,
 } from '@aws-sdk/client-scheduler';
 import { EmailPriority, EmailStatus } from 'om-common/types';
+
 const logger = getLogger();
-
-const countSoftBounceAttempts = (history: EmailEvent[]): number =>
-  history.filter((event) => event.status === EmailStatus.SoftBounce).length;
-
-const calculateExponentialDelay = (
-  attempt: number,
-  baseDelay: number,
-  factor: number,
-): number => baseDelay * Math.pow(factor, attempt - 1);
-
-const getFirstSoftBounceTimestamp = (
-  history: EmailEvent[],
-): string | undefined =>
-  history
-    .filter((event) => event.status === EmailStatus.SoftBounce)
-    .map((event) => event.changedAt)
-    .sort()[0];
-
-const getHighPriorityBaseDelay = (
-  firstBounceMs: number | null,
-  currentBounceMs: number,
-): number => {
-  // If there's no previous bounce, use the standard base delay
-  if (!firstBounceMs) {
-    return env.aws.softBounce.highPriorityBaseDelayMinutes;
-  }
-
-  const elapsedMs = currentBounceMs - firstBounceMs;
-  const escalationThresholdMs =
-    ESCALATION_THRESHOLD_MINUTES * MILLISECONDS_PER_MINUTE;
-
-  return elapsedMs >= escalationThresholdMs
-    ? env.aws.softBounce.highPriorityEscalatedBaseDelayMinutes
-    : env.aws.softBounce.highPriorityBaseDelayMinutes;
-};
 
 export const handleSoftBounceRetry = async (
   sesMessageId: string,
