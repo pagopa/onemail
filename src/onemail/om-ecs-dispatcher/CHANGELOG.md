@@ -1,5 +1,13 @@
 # om-ecs-dispatcher
 
+## 1.6.2
+
+### Patch Changes
+
+- 180d469: standardize folder and file naming conventions
+- Updated dependencies [180d469]
+  - om-common@1.0.5
+
 ## 1.6.1
 
 ### Patch Changes
