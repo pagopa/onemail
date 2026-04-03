@@ -12,6 +12,7 @@
 - `chore`: Tooling/maintenance
 
 ## Rules
+- Use conventional commits and follow commitlint rules.
 - Use imperative mood.
 - Keep summary concise (<= 72 chars preferred).
 - Scope should match changed area (for example `terraform`, `scripts`, `workflows`, `docs`).
