@@ -1,6 +1,6 @@
 import { getLogger } from '#config/logger';
 import { ERROR_CODES } from '#dtos/error.dto';
-import { ApiError } from '#errors/ApiError';
+import { ApiError } from '#errors/api.error';
 import {
   ConditionalCheckFailedException,
   DynamoDBServiceException,

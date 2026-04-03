@@ -1,15 +1,19 @@
 # Code Review Instructions
 
 ## Objective
+
 - Keep findings concise, severity-ordered, and tied to concrete evidence.
 - Preserve requested behavior first, then improve security, maintainability, and token efficiency.
 
 ## Reviewer non-negotiables
+
 - Ignore `TODO`, `FIXME`, or similar technical debt markers in the code. Do not flag them unless they introduce immediate security or correctness risks.
+- Make sure the comments match the code in which they are inserted.
 - Ignore the presence, lack of specificity, formatting, or typos within comments (e.g. `#`, `//`, `/** */`).
 - If there is a need to flag typos and naming inconsistencies issues, flag them only when found in executable/functional code (variables, functions, strings, etc.) and not in comments.
 
 ## Review output format
+
 - `Critical`: must-fix issues such as security flaws, correctness bugs, or data-loss risk.
 - `Major`: high-risk improvements such as mandatory rule violations, unsafe defaults, or missing validation.
 - `Minor`: worthwhile improvements that reduce technical debt or clarify intent.
@@ -17,6 +21,7 @@
 - `Notes`: assumptions, follow-ups, or scope clarifications.
 
 ## Baseline checks
+
 1. Security and least privilege.
 2. No hardcoded secrets or credentials.
 3. Consistency with repository naming and structure conventions.
@@ -24,22 +29,27 @@
 5. Documentation updates when behavior changes (excluding `README.md` unless explicitly requested).
 
 ## Escalation rules
+
 - Any repeated anti-pattern (3+ times in the same diff) escalates one severity level.
 - Any deviation from the matching `instructions/*.instructions.md` file is at minimum a `Nit`.
 - Any violation of `security-baseline.md` is at minimum a `Major`.
 
 ## Token-aware review protocol
+
 - Load only the diff, directly related files, and the matching instruction files.
-- Use `.github/skills/tech-ai-code-review/SKILL.md` as the detailed anti-pattern catalog for Python, Bash, and Terraform.
+- Use `.github/skills/tech-ai-code-review/SKILL.md` as the detailed anti-pattern catalog for Node, Bash, and Terraform.
 - Do not inline long language-specific catalogs when the `code-review` skill is available.
 
 ## Focus by area
+
 - Terraform: drift risk, lifecycle safety, variable typing, plan readability, and provider pinning.
 - Workflows: SHA pinning, minimal permissions, environment protection, and deterministic checks.
 - Scripts: input validation, early returns, readable control flow, and English logs.
 - Copilot customization assets: reusable wording, prompt/skill/agent consistency, and low-noise token usage.
 
 ## Minimum language guardrails
+
 - Python: flag hardcoded secrets, `eval()`/`exec()`, unsafe `pickle`, bare `except`, `shell=True`, and missing tests for new logic.
+- Node.js/TypeScript: flag hardcoded secrets, `eval()`, unsafe `child_process.exec()`, excessive `any` types, unhandled promise rejections, missing input validation, SQL injection risks, and missing tests for new logic.
 - Bash: flag hardcoded secrets, `eval`, unsafe temp files, missing `set -euo pipefail`, unquoted variables, and missing dependency checks.
 - Terraform: flag hardcoded secrets, wildcard IAM, missing state-locking expectations, unpinned providers, and hardcoded environment-specific identifiers.

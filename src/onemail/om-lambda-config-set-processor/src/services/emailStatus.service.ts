@@ -9,7 +9,7 @@ import { updateEmailStatusBySesMessageId } from '#repositories/email.repository'
 import {
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
-} from '#types/SesTypes';
+} from '#types/ses.type';
 import isEmpty from 'lodash-es/isEmpty.js';
 import { EmailStatus } from 'om-common/types';
 

@@ -6,8 +6,8 @@ import {
   SqsEventItemHighSchema,
   SqsEventItemLow,
   SqsEventItemLowSchema,
-} from '#dtos/sqsEventItem';
-import { DryRunValidationError } from '#errors/DryRunValidationError';
+} from '#dtos/sqsEventItem.dto';
+import { DryRunValidationError } from '#errors/dryRunValidation.error';
 import {
   batchUpdateEmailStatuses,
   getEmailById,
@@ -18,7 +18,7 @@ import {
   publishMetrics,
   SenderMetricName,
 } from '#repositories/metrics.repository';
-import { RetryableBulkEmailStatuses } from '#types/retryableSESStatus';
+import { RetryableBulkEmailStatuses } from '#types/retryableSESStatus.type';
 import {
   BadRequestException,
   MailFromDomainNotVerifiedException,
@@ -201,7 +201,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
     updates = [
       ...successfulEmails.map((entry) => ({
         item: entry.item,
-        status: EmailStatus.Dispatched as EmailStatus,
+        status: EmailStatus.Dispatched,
         messageId: entry.result.MessageId,
       })),
       ...nonRetryableFailures.map((entry) => {
@@ -212,7 +212,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
         });
         return {
           item: entry.item,
-          status: EmailStatus.RejectedBySES as EmailStatus,
+          status: EmailStatus.RejectedBySES,
           reason: entry.result.Error,
         };
       }),
@@ -225,7 +225,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
         });
         return {
           item: entry.item,
-          status: EmailStatus.Queued as EmailStatus,
+          status: EmailStatus.Queued,
         };
       }),
     ];
@@ -239,7 +239,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       await batchUpdateEmailStatuses(
         emails.map((email) => ({
           item: email,
-          status: EmailStatus.DryRunError as EmailStatus,
+          status: EmailStatus.DryRunError,
         })),
       );
       await publishMetrics([
@@ -262,7 +262,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       await batchUpdateEmailStatuses(
         emails.map((email) => ({
           item: email,
-          status: EmailStatus.RejectedBySES as EmailStatus,
+          status: EmailStatus.RejectedBySES,
           reason: errorMessage,
         })),
       );

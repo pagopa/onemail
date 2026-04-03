@@ -1,17 +1,17 @@
-export const EmailStatus = {
-  Delivered: 'Delivered',
-  Dispatched: 'Dispatched',
-  HardBounce: 'HardBounce',
-  Queued: 'Queued',
-  RejectedBySES: 'RejectedBySES',
-  DryRunError: 'DryRunError',
-  SoftBounce: 'SoftBounce',
-} as const;
+export enum EmailPriority {
+  HIGH = 'HIGH',
+  LOW = 'LOW',
+}
 
-export const EmailPriority = {
-  HIGH: 'HIGH',
-  LOW: 'LOW',
-} as const;
+export enum EmailStatus {
+  Delivered = 'Delivered',
+  Dispatched = 'Dispatched',
+  HardBounce = 'HardBounce',
+  Queued = 'Queued',
+  RejectedBySES = 'RejectedBySES',
+  DryRunError = 'DryRunError',
+  SoftBounce = 'SoftBounce',
+}
 
 export interface DbEmailContent {
   subject?: string;
@@ -38,10 +38,6 @@ export interface EmailEvent {
   changedAt: string; // Timestamp
   reason?: string;
 }
-
-export type EmailPriority = (typeof EmailPriority)[keyof typeof EmailPriority];
-
-export type EmailStatus = (typeof EmailStatus)[keyof typeof EmailStatus];
 
 export interface EmailStatusHistoryItem {
   emailId: string; // PK
