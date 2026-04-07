@@ -131,14 +131,9 @@ const handleHighPriorityRetry = async (
   );
 
   // 3. Eventbridge schedule
-  await scheduleRetry(
+  await scheduleRetry(emailId, EmailPriority.HIGH, attempt, delayMinutes, {
     emailId,
-    EmailPriority.HIGH,
-    attempt,
-    delayMinutes,
-    env.aws.scheduler.highPriorityQueueArn,
-    { emailId },
-  );
+  });
 
   // 4. db update
   await updateEmailStatusBySesMessageId(sesMessageId, [
@@ -169,7 +164,8 @@ const handleLowPriorityRetry = async (
   const logger = getNamedLogger(handleLowPriorityRetry.name);
   logger.info('Start');
 
-  const { lowPriorityMaxAttempts } = env.aws.softBounce;
+  const { lowPriorityMaxAttempts, lowPriorityBaseDelayMinutes } =
+    env.aws.softBounce;
 
   // 1. Check if max attempts reached
   if (attempt > lowPriorityMaxAttempts) {
@@ -187,7 +183,7 @@ const handleLowPriorityRetry = async (
       {
         timestamp: bounceTimestamp,
         status: EmailStatus.MaxRetriesReached,
-        reason: `SoftBounce escalated to MaxRetriesReached after ${attempt} attempts (${bounceSubType})`,
+        reason: `SoftBounce escalated to MaxRetriesReached after ${attempt} attempts`,
       },
     ]);
     return;
@@ -196,19 +192,14 @@ const handleLowPriorityRetry = async (
   // 2. Calculate the delay
   const delayMinutes = calculateExponentialDelay(
     attempt,
-    env.aws.softBounce.lowPriorityBaseDelayMinutes,
+    lowPriorityBaseDelayMinutes,
     BACKOFF_FACTOR.LOW_PRIORITY,
   );
 
   // 3. Eventbridge schedule
-  await scheduleRetry(
+  await scheduleRetry(requestId, EmailPriority.LOW, attempt, delayMinutes, {
     requestId,
-    EmailPriority.LOW,
-    attempt,
-    delayMinutes,
-    env.aws.scheduler.lowPriorityQueueArn,
-    { requestId },
-  );
+  });
 
   // 4. db update
   await updateEmailStatusBySesMessageId(sesMessageId, [
@@ -234,12 +225,11 @@ const scheduleRetry = async (
   priority: EmailPriority,
   attempt: number,
   delayMinutes: number,
-  targetQueueArn: string,
   input: Record<string, string>,
 ): Promise<void> => {
   const scheduleTime = new Date(Date.now() + delayMinutes * 60 * 1000);
   const scheduleExpression = `at(${scheduleTime.toISOString().replace(/\.\d{3}Z$/, '')})`;
-  const scheduleName = `retry-${scheduleKey}-attempt-${attempt}`;
+  const scheduleName = `retry-${scheduleKey}`;
 
   try {
     await schedulerClient.send(
@@ -250,8 +240,12 @@ const scheduleRetry = async (
         ScheduleExpressionTimezone: 'UTC',
         FlexibleTimeWindow: { Mode: FlexibleTimeWindowMode.OFF },
         ActionAfterCompletion: ActionAfterCompletion.DELETE,
+        Description: `Schedule for retrying email with key ${scheduleKey} (attempt ${attempt}, priority ${priority})`,
         Target: {
-          Arn: targetQueueArn,
+          Arn:
+            priority === EmailPriority.HIGH
+              ? env.aws.scheduler.highPriorityQueueArn
+              : env.aws.scheduler.lowPriorityQueueArn,
           RoleArn: env.aws.scheduler.roleArn,
           Input: JSON.stringify(input),
         },
@@ -263,7 +257,6 @@ const scheduleRetry = async (
       priority,
       attempt,
       delayMinutes,
-      targetQueueArn,
       input,
       scheduleTime: scheduleTime.toISOString(),
     });
