@@ -10,10 +10,8 @@ import {
 import { BACKOFF_FACTOR, MILLISECONDS_PER_DAY } from '#utils/constants';
 import {
   calculateExponentialDelay,
-  countSoftBounceAttempts,
-  getFirstSoftBounceTimestamp,
   getHighPriorityBaseDelay,
-} from '#utils/exponentialBackoffUtils';
+} from '#utils/exponentialBackoff';
 import {
   ActionAfterCompletion,
   ConflictException,
@@ -23,6 +21,16 @@ import {
 import { EmailPriority, EmailStatus } from 'om-common/types';
 
 const logger = getLogger();
+
+const getFirstSoftBounceTimestamp = (
+  history: EmailEvent[],
+): string | undefined =>
+  history
+    .filter((event) => event.status === EmailStatus.SoftBounce)
+    .sort((a, b) => a.changedAt.localeCompare(b.changedAt))[0]?.changedAt;
+
+const countSoftBounceAttempts = (history: EmailEvent[]): number =>
+  history.filter((event) => event.status === EmailStatus.SoftBounce).length;
 
 export const handleSoftBounceRetry = async (
   sesMessageId: string,

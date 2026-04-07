@@ -3,24 +3,12 @@ import {
   ESCALATION_THRESHOLD_MINUTES,
   MILLISECONDS_PER_MINUTE,
 } from '#utils/constants';
-import { EmailEvent, EmailStatus } from 'om-common/types';
-
-export const countSoftBounceAttempts = (history: EmailEvent[]): number =>
-  history.filter((event) => event.status === EmailStatus.SoftBounce).length;
 
 export const calculateExponentialDelay = (
   attempt: number,
   baseDelay: number,
   factor: number,
 ): number => baseDelay * Math.pow(factor, attempt - 1);
-
-export const getFirstSoftBounceTimestamp = (
-  history: EmailEvent[],
-): string | undefined =>
-  history
-    .filter((event) => event.status === EmailStatus.SoftBounce)
-    .map((event) => event.changedAt)
-    .sort()[0];
 
 export const getHighPriorityBaseDelay = (
   firstBounceMs: number | null,
