@@ -1,7 +1,7 @@
 import env from '#config/env';
 import { getNamedLogger } from '#config/logger';
-import { dynamoClient } from '#connector/dynamo.connector';
-import { sqsClient } from '#connector/sqs.connector';
+import { dynamoClient } from '#connectors/dynamo.connector';
+import { sqsClient } from '#connectors/sqs.connector';
 import {
   EmailHighPriorityBodyDTO,
   EmailHighPriorityResponseDTO,
@@ -12,7 +12,7 @@ import {
 } from '#dtos/email/emailLowPriority.dto';
 import { EmailStatusResponseDTO } from '#dtos/email/emailStatus.dto';
 import { ERROR_CODES } from '#dtos/error.dto';
-import { ApiError } from '#errors/ApiError';
+import { ApiError } from '#errors/api.error';
 import {
   mapEmailLowPriorityToDbItem,
   mapEmailTransactionalToDbItem,

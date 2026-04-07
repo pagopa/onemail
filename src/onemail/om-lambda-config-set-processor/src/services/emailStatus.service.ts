@@ -10,7 +10,7 @@ import { handleSoftBounceRetry } from '#services/bounceRetry.service';
 import {
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
-} from '#types/SesTypes';
+} from '#types/ses.type';
 import isEmpty from 'lodash-es/isEmpty.js';
 import { EmailStatus } from 'om-common/types';
 

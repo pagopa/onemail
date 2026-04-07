@@ -2,7 +2,7 @@ import {
   CapitalizedSesBounceSubType,
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
-} from '#types/SesTypes';
+} from '#types/ses.type';
 import z from 'zod';
 
 // TODO: consider moving this schema and this type to a shared package on common package

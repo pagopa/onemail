@@ -2,7 +2,7 @@ import type { EmailEvent } from 'om-common/types';
 
 import env from '#config/env';
 import { getLogger, getNamedLogger } from '#config/logger';
-import { schedulerClient } from '#connector/scheduler.connector';
+import { schedulerClient } from '#connectors/scheduler.connector';
 import {
   findEmailBySesMessageId,
   updateEmailStatusBySesMessageId,

@@ -2,7 +2,7 @@ import type { EmailStatus, EmailStatusHistoryItem } from 'om-common/types';
 
 import env from '#config/env';
 import { getLogger, getNamedLogger } from '#config/logger';
-import { dynamoClient } from '#connector/dynamo.connector';
+import { dynamoClient } from '#connectors/dynamo.connector';
 import {
   BatchWriteCommand,
   GetCommand,

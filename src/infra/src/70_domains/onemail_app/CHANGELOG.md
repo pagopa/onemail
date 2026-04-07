@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.10.0
+
+### Minor Changes
+
+- 1002add: Retry Policy Configuration
+
 ## 1.9.0
 
 ### Minor Changes

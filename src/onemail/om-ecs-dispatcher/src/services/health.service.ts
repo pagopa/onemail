@@ -1,7 +1,7 @@
 import env from '#config/env';
 import { getNamedLogger } from '#config/logger';
-import { dynamoClient } from '#connector/dynamo.connector';
-import { sqsClient } from '#connector/sqs.connector';
+import { dynamoClient } from '#connectors/dynamo.connector';
+import { sqsClient } from '#connectors/sqs.connector';
 import {
   HealthResponseDTO,
   HealthStatus,

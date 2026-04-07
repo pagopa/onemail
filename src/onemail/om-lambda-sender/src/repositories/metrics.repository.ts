@@ -1,6 +1,6 @@
 import env from '#config/env';
 import { getLogger } from '#config/logger';
-import { cloudWatchClient } from '#connector/cloudwatch.connector';
+import { cloudWatchClient } from '#connectors/cloudwatch.connector';
 import {
   type MetricDatum,
   PutMetricDataCommand,

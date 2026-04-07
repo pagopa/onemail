@@ -1,5 +1,11 @@
 # om-common
 
+## 1.0.5
+
+### Patch Changes
+
+- 180d469: standardize folder and file naming conventions
+
 ## 1.0.4
 
 ### Patch Changes

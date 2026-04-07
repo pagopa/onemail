@@ -1,1 +1,1 @@
-export * from './EmailStatusHistory.js';
+export * from './emailStatusHistory.js';
