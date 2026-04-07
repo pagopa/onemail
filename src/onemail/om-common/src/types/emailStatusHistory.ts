@@ -11,6 +11,8 @@ export enum EmailStatus {
   RejectedBySES = 'RejectedBySES',
   DryRunError = 'DryRunError',
   SoftBounce = 'SoftBounce',
+  Complaint = 'Complaint',
+  MaxRetriesReached = 'MaxRetriesReached',
 }
 
 export interface DbEmailContent {

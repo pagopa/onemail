@@ -1,24 +1,24 @@
 packages:
-  - 'src/onemail/*'
-  - 'src/infra/src/**'
+  - src/onemail/*
+  - src/infra/src/**
   - '!**/.*/**'
-  - '.'
+  - .
 
-# shared libs
 catalog:
   # AWS SDK v3
-  '@aws-sdk/client-dynamodb': &aws-sdk-v3 ^3.1017.0
+  '@aws-sdk/client-dynamodb': &aws-sdk-v3 ^3.1025.0
   '@aws-sdk/lib-dynamodb': *aws-sdk-v3
   '@aws-sdk/client-cloudwatch': *aws-sdk-v3
   '@aws-sdk/client-sesv2': *aws-sdk-v3
   '@aws-sdk/client-sqs': *aws-sdk-v3
+  '@aws-sdk/client-scheduler': *aws-sdk-v3
   # AWS Lambda
   '@aws-lambda-powertools/batch': &aws-powertools-v2 ^2.31.0
   '@aws-lambda-powertools/logger': *aws-powertools-v2
   'aws-lambda': '^1.0.7'
   '@types/aws-lambda': '^8.10.160'
   # other shared libs
-  'zod': ^4.3.6
-  'lodash-es': ^4.17.23
   '@types/lodash-es': ^4.17.12
   '@types/node': ^24.10.12
+  lodash-es: ^4.17.23
+  zod: ^4.3.6

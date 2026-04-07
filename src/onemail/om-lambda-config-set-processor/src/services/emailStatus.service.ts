@@ -6,6 +6,7 @@ import {
   HandledConfSetEventItem,
 } from '#dtos/confSetEventItem.dto';
 import { updateEmailStatusBySesMessageId } from '#repositories/email.repository';
+import { handleSoftBounceRetry } from '#services/bounceRetry.service';
 import {
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
@@ -57,37 +58,50 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
   if (
     eventItem.eventType === CapitalizedSesConfigurationSetEventType.Delivery
   ) {
-    await updateEmailStatusBySesMessageId(
-      eventItem.mail.messageId,
-      eventItem.delivery.timestamp,
-      EmailStatus.Delivered,
-    );
-  }
-
-  //Bounce
-  if (eventItem.eventType === CapitalizedSesConfigurationSetEventType.Bounce) {
+    await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+      {
+        timestamp: eventItem.delivery.timestamp,
+        status: EmailStatus.Delivered,
+      },
+    ]);
+  } else if (
+    // Bounce
+    eventItem.eventType === CapitalizedSesConfigurationSetEventType.Bounce
+  ) {
     // Soft Bounce
     if (
       eventItem.bounce.bounceType === CapitalizedSesBounceType.Transient ||
       eventItem.bounce.bounceType === CapitalizedSesBounceType.Undetermined
     ) {
-      //todo update this logic with the one in the confluence documents
-      await updateEmailStatusBySesMessageId(
+      await handleSoftBounceRetry(
         eventItem.mail.messageId,
         eventItem.bounce.timestamp,
-        EmailStatus.SoftBounce,
         eventItem.bounce.bounceSubType,
       );
+    } else if (
+      // Hard Bounce
+      eventItem.bounce.bounceType === CapitalizedSesBounceType.Permanent
+    ) {
+      await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+        {
+          timestamp: eventItem.bounce.timestamp,
+          status: EmailStatus.HardBounce,
+          reason: eventItem.bounce.bounceSubType,
+        },
+      ]);
     }
-    //Hard Bounce
-    if (eventItem.bounce.bounceType === CapitalizedSesBounceType.Permanent) {
-      await updateEmailStatusBySesMessageId(
-        eventItem.mail.messageId,
-        eventItem.bounce.timestamp,
-        EmailStatus.HardBounce,
-        eventItem.bounce.bounceSubType,
-      );
-    }
+  } else if (
+    // Complaint
+    eventItem.eventType === CapitalizedSesConfigurationSetEventType.Complaint
+  ) {
+    await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+      {
+        timestamp: eventItem.complaint.timestamp,
+        status: EmailStatus.Complaint,
+        reason: eventItem.complaint.complaintSubType,
+      },
+    ]);
   }
+
   logger.info('End');
 };

@@ -8,16 +8,14 @@ import {
   QueryCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
+import isEmpty from 'lodash-es/isEmpty.js';
+import last from 'lodash-es/last.js';
 
 const logger = getLogger();
 
-//todo check
-export const updateEmailStatusBySesMessageId = async (
+export const findEmailBySesMessageId = async (
   sesMessageId: string,
-  timestamp: string,
-  status: EmailStatus,
-  reason?: string,
-): Promise<void> => {
+): Promise<EmailStatusHistoryItem | undefined> => {
   // Query the email record by SES message ID using the GSI
   const queryResult = await dynamoClient.send(
     new QueryCommand({
@@ -37,7 +35,31 @@ export const updateEmailStatusBySesMessageId = async (
   const item = queryResult.Items?.[0] as EmailStatusHistoryItem | undefined;
   if (!item) {
     //todo metrics
-    logger.warn('No email record found for SES message id', { sesMessageId });
+    logger.warn('No email record found for SES message Id', { sesMessageId });
+  }
+
+  return item;
+};
+
+export const updateEmailStatusBySesMessageId = async (
+  sesMessageId: string,
+  updates: {
+    timestamp: string;
+    status: EmailStatus;
+    reason?: string;
+  }[],
+): Promise<void> => {
+  if (isEmpty(updates)) {
+    return;
+  }
+  const item = await findEmailBySesMessageId(sesMessageId);
+  if (!item) {
+    return;
+  }
+
+  //latest status to be saved
+  const currentUpdate = last(updates);
+  if (!currentUpdate) {
     return;
   }
 
@@ -47,17 +69,21 @@ export const updateEmailStatusBySesMessageId = async (
       TableName: env.aws.emailDbTable,
       Key: { emailId: item.emailId },
       UpdateExpression:
-        'SET #status = :status, #updatedAt = :updatedAt, #history = list_append(if_not_exists(#history, :emptyList), :newHistoryItem)',
+        'SET #status = :status, #updatedAt = :updatedAt, #history = list_append(if_not_exists(#history, :emptyList), :newHistoryItems)',
       ExpressionAttributeNames: {
         '#status': 'status',
         '#updatedAt': 'updatedAt',
         '#history': 'history',
       },
       ExpressionAttributeValues: {
-        ':status': status,
-        ':updatedAt': timestamp,
+        ':status': currentUpdate.status,
+        ':updatedAt': currentUpdate.timestamp,
         ':emptyList': [],
-        ':newHistoryItem': [{ status, changedAt: timestamp, reason }],
+        ':newHistoryItems': updates.map(({ status, timestamp, reason }) => ({
+          status,
+          changedAt: timestamp,
+          reason,
+        })),
       },
     }),
   );
@@ -132,7 +158,7 @@ export const batchUpdateEmailStatuses = async (
   const tableName = env.aws.emailDbTable;
   const now = new Date().toISOString();
 
-  if (updates.length === 0) {
+  if (isEmpty(updates)) {
     return;
   }
 
