@@ -1,5 +1,11 @@
 # om-common
 
+## 1.1.0
+
+### Minor Changes
+
+- 6eebbc4: Add implementation of retry policy for Soft Bounces and handling for Complaints
+
 ## 1.0.5
 
 ### Patch Changes

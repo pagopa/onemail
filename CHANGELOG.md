@@ -1,5 +1,19 @@
 # onemail
 
+## 1.3.0
+
+### Minor Changes
+
+- 6eebbc4: Add implementation of retry policy for Soft Bounces and handling for Complaints
+
+### Patch Changes
+
+- Updated dependencies [6eebbc4]
+  - om-lambda-config-set-processor@1.2.0
+  - om-common@1.1.0
+  - om-ecs-dispatcher@1.6.3
+  - om-lambda-sender@1.2.8
+
 ## 1.2.2
 
 ### Patch Changes
