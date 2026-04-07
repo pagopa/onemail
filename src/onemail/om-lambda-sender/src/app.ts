@@ -2,6 +2,7 @@ import type { Context, SQSEvent, SQSHandler } from 'aws-lambda';
 
 import env from '#config/env';
 import { addLambdaContextToLogger } from '#config/logger';
+import { flushMetrics } from '#repositories/metrics.repository';
 import {
   handleHighPriority,
   handleLowPriority,
@@ -11,14 +12,12 @@ import {
   EventType,
   processPartialResponse,
 } from '@aws-lambda-powertools/batch';
+import middy from '@middy/core';
 
 const processor = new BatchProcessor(EventType.SQS);
 
 //todo do error handler but exclude some SES errors
-export const handler: SQSHandler = async (
-  event: SQSEvent,
-  context: Context,
-) => {
+const lambdaHandler: SQSHandler = async (event: SQSEvent, context: Context) => {
   addLambdaContextToLogger(context);
   const isHighPriority = event.Records[0].eventSourceARN.includes(
     env.sqs.highPriorityQueueARN,
@@ -31,3 +30,5 @@ export const handler: SQSHandler = async (
     context,
   });
 };
+
+export const handler = middy(lambdaHandler).use(flushMetrics);

@@ -1,13 +1,7 @@
-import env from '#config/env';
-import { getLogger } from '#config/logger';
-import { cloudWatchClient } from '#connectors/cloudwatch.connector';
-import {
-  type MetricDatum,
-  PutMetricDataCommand,
-} from '@aws-sdk/client-cloudwatch';
+import { metricsClient } from '#connectors/cloudwatch.connector';
+import { MetricUnit } from '@aws-lambda-powertools/metrics';
+import { logMetrics } from '@aws-lambda-powertools/metrics/middleware';
 import isEmpty from 'lodash-es/isEmpty.js';
-
-const logger = getLogger();
 
 export enum SenderMetricName {
   EmailBatchNotFound = 'EmailBatchNotFound',
@@ -28,36 +22,14 @@ interface SenderMetricInput {
   value?: number;
 }
 
-const buildMetricDatum = ({
-  name,
-  value = 1,
-}: SenderMetricInput): MetricDatum => ({
-  MetricName: name,
-  Unit: 'Count',
-  Value: value,
-  Timestamp: new Date(),
-});
-
-export const publishMetrics = async (
-  metrics: SenderMetricInput[],
-): Promise<void> => {
-  const metricData = metrics.map((metric) => buildMetricDatum(metric));
-
-  if (isEmpty(metricData)) {
+export const publishMetrics = (metricsInput: SenderMetricInput[]): void => {
+  if (isEmpty(metricsInput)) {
     return;
   }
 
-  try {
-    await cloudWatchClient.send(
-      new PutMetricDataCommand({
-        Namespace: env.aws.cloudWatchMetricsNamespace,
-        MetricData: metricData,
-      }),
-    );
-  } catch (error) {
-    logger.warn('Failed to publish CloudWatch metrics', {
-      metricNames: metricData.map((metric) => metric.MetricName),
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
+  metricsInput.forEach((metric) =>
+    metricsClient.addMetric(metric.name, MetricUnit.Count, metric.value ?? 1),
+  );
 };
+
+export const flushMetrics = logMetrics([metricsClient]);
