@@ -22,3 +22,5 @@ catalog:
   '@types/node': ^24.10.12
   lodash-es: ^4.17.23
   zod: ^4.3.6
+
+cleanupUnusedCatalogs: true
