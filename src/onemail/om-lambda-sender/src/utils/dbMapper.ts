@@ -43,15 +43,19 @@ export function mapDbHighPriorityItemToSesModel(
     };
   }
 
+  const tenantName = process.env.TMP_TENANT_NAME;
+
+  const configurationSetName = process.env.TMP_CONFIGURATION_SET_NAME;
+
   const input: SendEmailCommandInput = {
     FromEmailAddress: formatEmailAddress(content.from),
     Destination: {
       ToAddresses: [formatEmailAddress(content.to)],
     },
     Content: content_obj,
+    TenantName: tenantName,
+    ConfigurationSetName: configurationSetName,
   };
-
-  //TODO - tenantName to be added
 
   return input;
 }

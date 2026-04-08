@@ -135,6 +135,8 @@ module "lambda_sender" {
     HIGH_PRIORITY_QUEUE_ARN          = data.aws_sqs_queue.high_priority.arn
     LOW_PRIORITY_QUEUE_ARN           = data.aws_sqs_queue.low_priority.arn
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-sender"
+    TMP_CONFIGURATION_SET_NAME       = "${local.project_nodomain}-${var.env}-configuration-set-onemail"
+    TMP_TENANT_NAME                  = "${local.project_nodomain}-${var.env}-tenant-onemail"
     NODE_ENV                         = "production"
     POWERTOOLS_LOG_LEVEL             = "DEBUG"
   }

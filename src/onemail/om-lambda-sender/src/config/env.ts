@@ -13,6 +13,12 @@ export default {
       process.env.AWS_CLOUDWATCH_METRICS_NAMESPACE ||
       'lambda-sender/ApplicationMetrics', //TODO: reimplement throw when infra is ready
     // ?? throwMissingRequiredEnvVar('AWS_CLOUDWATCH_METRICS_NAMESPACE'),
+    configurationSetName:
+      process.env.TMP_CONFIGURATION_SET_NAME ??
+      throwMissingRequiredEnvVar('TMP_CONFIGURATION_SET_NAME'),
+    tenantName:
+      process.env.TMP_TENANT_NAME ??
+      throwMissingRequiredEnvVar('TMP_TENANT_NAME'),
   },
   sqs: {
     highPriorityQueueARN:
