@@ -13,6 +13,7 @@
 
 ## Rules
 - Use conventional commits and follow commitlint rules.
+- Type should reflect the changes and not the branch name.
 - Use imperative mood.
 - Keep summary concise (<= 72 chars preferred).
 - Scope should match changed area (for example `terraform`, `scripts`, `workflows`, `docs`).

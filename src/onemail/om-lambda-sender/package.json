@@ -20,20 +20,20 @@
     "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}' --ignore-path ../../../.prettierignore"
   },
   "dependencies": {
-    "@aws-lambda-powertools/batch": "catalog:",
-    "@aws-sdk/client-cloudwatch": "catalog:",
-    "@aws-sdk/client-dynamodb": "catalog:",
-    "@aws-sdk/client-sesv2": "catalog:",
-    "@aws-sdk/lib-dynamodb": "catalog:",
+    "@aws-lambda-powertools/batch": "catalog:aws-lambda",
+    "@aws-sdk/client-cloudwatch": "catalog:aws-sdk",
+    "@aws-sdk/client-dynamodb": "catalog:aws-sdk",
+    "@aws-sdk/client-sesv2": "catalog:aws-sdk",
+    "@aws-sdk/lib-dynamodb": "catalog:aws-sdk",
     "lodash-es": "catalog:",
     "om-common": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/aws-lambda": "catalog:",
+    "@types/aws-lambda": "catalog:aws-lambda",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
-    "aws-lambda": "catalog:"
+    "aws-lambda": "catalog:aws-lambda"
   },
   "imports": {
     "#*": {
