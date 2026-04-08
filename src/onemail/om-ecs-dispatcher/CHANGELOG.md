@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.6.5
+
+### Patch Changes
+
+- 042de61: remove .npmrc reference from dockerfile
+
 ## 1.6.4
 
 ### Patch Changes
