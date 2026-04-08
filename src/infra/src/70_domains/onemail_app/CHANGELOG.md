@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.11.0
+
+### Minor Changes
+
+- dad8f85: Lambda IAM policy condition config-set deletion
+
 ## 1.10.0
 
 ### Minor Changes
