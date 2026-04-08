@@ -14,7 +14,7 @@
     "build:dispatcher": "turbo run build --filter=om-ecs-dispatcher",
     "build:sender": "turbo run build --filter=om-lambda-sender",
     "build:config-set-processor": "turbo run build --filter=om-lambda-config-set-processor",
-    "package:dispatcher": "pnpm --filter=om-ecs-dispatcher deploy --prod dist-artifact/om-ecs-dispatcher",
+    "package:dispatcher": "pnpm --filter=om-ecs-dispatcher deploy --prod --config.inject-workspace-packages=true dist-artifact/om-ecs-dispatcher",
     "package:sender": "bash scripts/package-sender.sh",
     "package:config-set-processor": "bash scripts/package-config-set-processor.sh",
     "type-check": "turbo run type-check --filter=!onemail",
