@@ -23,10 +23,15 @@ RUN corepack enable pnpm
 FROM base AS installer
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY tsconfig.json ./
+# copy only the package.json files related to the dispatcher (dispatcher itself and its dependencies) to not pollute the layer cache with changes in other packages
 COPY src/onemail/om-ecs-dispatcher/package.json ./src/onemail/om-ecs-dispatcher/
 COPY src/onemail/om-common/package.json          ./src/onemail/om-common/
+# installing dependencies with --frozen-lockfile ensures:
+#     exact and consistent dependency installation based on the existing pnpm-lock.yaml file
+#     the installation doesn't fail if other package.json files of workspace are missing
+# installing dependencies with cleanupUnusedCatalogs=false prevents pnpm from removing packages that are not currently needed from pnpm workspace catalog, ensuring that the workspace remains consistent with the lockfile and preventing potential mismatch issues from pnpm deploy script
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile -config.cleanupUnusedCatalogs=false
 
 # ---------- builder ----------
 FROM installer AS builder
