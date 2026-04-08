@@ -1,5 +1,13 @@
 # om-lambda-sender
 
+## 1.2.9
+
+### Patch Changes
+
+- 398f5a5: pnpm dependencies update and pnpm config fix
+- Updated dependencies [398f5a5]
+  - om-common@1.1.1
+
 ## 1.2.8
 
 ### Patch Changes
