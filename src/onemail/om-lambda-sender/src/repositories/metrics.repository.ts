@@ -20,6 +20,7 @@ export enum SenderMetricName {
 interface SenderMetricInput {
   name: SenderMetricName;
   value?: number;
+  dimensions?: Record<string, string>;
 }
 
 export const publishMetrics = (metricsInput: SenderMetricInput[]): void => {
@@ -27,9 +28,12 @@ export const publishMetrics = (metricsInput: SenderMetricInput[]): void => {
     return;
   }
 
-  metricsInput.forEach((metric) =>
-    metricsClient.addMetric(metric.name, MetricUnit.Count, metric.value ?? 1),
-  );
+  const singleMetric = metricsClient.singleMetric();
+
+  metricsInput.forEach((metric) => {
+    singleMetric.addDimensions(metric.dimensions ?? {});
+    singleMetric.addMetric(metric.name, MetricUnit.Count, metric.value ?? 1);
+  });
 };
 
 export const flushMetrics = logMetrics([metricsClient]);

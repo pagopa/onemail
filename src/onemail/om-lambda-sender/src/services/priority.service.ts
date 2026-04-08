@@ -51,7 +51,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       emailId,
       retryable: false,
     });
-    await publishMetrics([
+    publishMetrics([
       {
         name: SenderMetricName.EmailNotFound,
       },
@@ -71,9 +71,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
         retryable: false,
       });
       await updateEmailStatus({ emailId, status: EmailStatus.DryRunError });
-      await publishMetrics([
-        { name: SenderMetricName.HighPriorityDryRunError },
-      ]);
+      publishMetrics([{ name: SenderMetricName.HighPriorityDryRunError }]);
       return;
     }
 
@@ -89,7 +87,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
         status: EmailStatus.RejectedBySES,
         reason: errorMessage,
       });
-      await publishMetrics([
+      publishMetrics([
         {
           name: SenderMetricName.HighPriorityRejectedBySes,
         },
@@ -116,9 +114,21 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       status: EmailStatus.Dispatched,
       messageId: sesMessageId,
     });
-    await publishMetrics([
+    publishMetrics([
       {
         name: SenderMetricName.HighPriorityDispatched,
+        dimensions: {
+          clientId: email.clientId,
+        },
+      },
+    ]);
+
+    publishMetrics([
+      {
+        name: SenderMetricName.HighPriorityDispatched,
+        dimensions: {
+          test: 'testDimension',
+        },
       },
     ]);
   } else {
@@ -131,7 +141,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       status: EmailStatus.RejectedBySES,
       reason: 'Unknown SES error',
     });
-    await publishMetrics([
+    publishMetrics([
       {
         name: SenderMetricName.HighPriorityRejectedBySes,
       },
@@ -159,7 +169,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       requestId,
       retryable: false,
     });
-    await publishMetrics([
+    publishMetrics([
       {
         name: SenderMetricName.EmailBatchNotFound,
       },
@@ -242,7 +252,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
           status: EmailStatus.DryRunError,
         })),
       );
-      await publishMetrics([
+      publishMetrics([
         {
           name: SenderMetricName.LowPriorityDryRunError,
           value: emails.length,
@@ -266,7 +276,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
           reason: errorMessage,
         })),
       );
-      await publishMetrics([
+      publishMetrics([
         {
           name: SenderMetricName.LowPriorityRejectedBySes,
           value: emails.length,
@@ -284,7 +294,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
   }
 
   await batchUpdateEmailStatuses(updates);
-  await publishMetrics([
+  publishMetrics([
     {
       name: SenderMetricName.LowPriorityDispatched,
       value: successfulEmails.length,
@@ -329,7 +339,7 @@ async function validateRecord(
     parsedBody = JSON.parse(record.body);
   } catch {
     logger.error('Invalid payload, discarding record', { record });
-    await publishMetrics([
+    publishMetrics([
       {
         name: SenderMetricName.InvalidRecord,
       },
@@ -343,7 +353,7 @@ async function validateRecord(
       message: `${issue.path.join('.')} - ${issue.message}`,
     }));
     logger.error('Invalid payload, discarding record', { record, errors });
-    await publishMetrics([
+    publishMetrics([
       {
         name: SenderMetricName.InvalidRecord,
       },
