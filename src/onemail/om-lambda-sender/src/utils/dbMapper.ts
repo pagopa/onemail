@@ -1,3 +1,4 @@
+import env from '#config/env';
 import { DryRunValidationError } from '#errors/dryRunValidation.error';
 import {
   Body,
@@ -43,9 +44,9 @@ export function mapDbHighPriorityItemToSesModel(
     };
   }
 
-  const tenantName = process.env.TMP_TENANT_NAME;
+  const tenantName = env.aws.tenantName;
 
-  const configurationSetName = process.env.TMP_CONFIGURATION_SET_NAME;
+  const configurationSetName = env.aws.configurationSetName;
 
   const input: SendEmailCommandInput = {
     FromEmailAddress: formatEmailAddress(content.from),
