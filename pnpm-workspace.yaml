@@ -5,23 +5,24 @@ packages:
   - .
 
 catalog:
-  # AWS SDK v3
-  '@aws-sdk/client-dynamodb': &aws-sdk-v3 ^3.1025.0
-  '@aws-sdk/lib-dynamodb': *aws-sdk-v3
-  '@aws-sdk/client-cloudwatch': *aws-sdk-v3
-  '@aws-sdk/client-sesv2': *aws-sdk-v3
-  '@aws-sdk/client-sqs': *aws-sdk-v3
-  '@aws-sdk/client-scheduler': *aws-sdk-v3
-  # AWS Lambda
-  '@aws-lambda-powertools/batch': &aws-powertools-v2 ^2.31.0
-  '@aws-lambda-powertools/logger': *aws-powertools-v2
-  'aws-lambda': '^1.0.7'
-  '@types/aws-lambda': '^8.10.160'
-  # other shared libs
-  '@types/lodash-es': ^4.17.12
-  '@types/node': ^24.10.12
+  '@types/lodash-es': ^4.14.191
   lodash-es: ^4.17.23
+  '@types/node': ^24.10.12
   zod: ^4.3.6
+
+catalogs:
+  aws-sdk:
+    '@aws-sdk/client-dynamodb': 3.1025.0
+    '@aws-sdk/lib-dynamodb': 3.1025.0
+    '@aws-sdk/client-cloudwatch': 3.1025.0
+    '@aws-sdk/client-sesv2': 3.1025.0
+    '@aws-sdk/client-sqs': 3.1025.0
+    '@aws-sdk/client-scheduler': 3.1025.0
+  aws-lambda:
+    '@aws-lambda-powertools/batch': 2.32.0
+    '@aws-lambda-powertools/logger': 2.32.0
+    aws-lambda: '^1.0.7'
+    '@types/aws-lambda': '^8.10.160'
 
 minimumReleaseAge: 1440
 cleanupUnusedCatalogs: true
