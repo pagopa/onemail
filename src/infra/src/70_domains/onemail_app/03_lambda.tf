@@ -26,15 +26,6 @@ data "aws_iam_policy_document" "sender_policy" {
       [for tenant_key, _ in local.tenants : data.aws_sesv2_configuration_set.tenant_config_set[tenant_key].arn]
     )) : ["*"]
 
-    dynamic "condition" {
-      for_each = var.enable_ses && length(local.tenants) > 0 ? [1] : []
-
-      content {
-        test     = "StringEquals"
-        variable = "ses:ConfigurationSetName"
-        values   = [for tenant_key, _ in local.tenants : data.aws_sesv2_configuration_set.tenant_config_set[tenant_key].configuration_set_name]
-      }
-    }
 
     dynamic "condition" {
       for_each = var.enable_ses && length(local.tenants) > 0 ? [1] : []
