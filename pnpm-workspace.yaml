@@ -23,4 +23,5 @@ catalog:
   lodash-es: ^4.17.23
   zod: ^4.3.6
 
+minimumReleaseAge: 1440
 cleanupUnusedCatalogs: true
