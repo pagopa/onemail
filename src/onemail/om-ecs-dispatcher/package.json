@@ -1,6 +1,6 @@
 {
   "name": "om-ecs-dispatcher",
-  "version": "1.6.3",
+  "version": "1.6.5",
   "description": "RESTful API that sorts requests into queues based on priority",
   "private": true,
   "main": "dist/app.js",
@@ -22,9 +22,9 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.4.1",
-    "@aws-sdk/client-dynamodb": "catalog:",
-    "@aws-sdk/client-sqs": "catalog:",
-    "@aws-sdk/lib-dynamodb": "catalog:",
+    "@aws-sdk/client-dynamodb": "catalog:aws-sdk",
+    "@aws-sdk/client-sqs": "catalog:aws-sdk",
+    "@aws-sdk/lib-dynamodb": "catalog:aws-sdk",
     "dotenv": "^17.2.4",
     "express": "^5.2.1",
     "http-status-codes": "^2.3.0",

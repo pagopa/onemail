@@ -12,7 +12,7 @@ rm -rf "$ZIP_NAME"
 rm -rf "$ARTIFACT_DIR"
 
 echo -e "\n📦 Packaging..."
-pnpm --filter="$APP_NAME" deploy --prod "$ARTIFACT_DIR"
+pnpm --filter="$APP_NAME" deploy --prod --config.inject-workspace-packages=true "$ARTIFACT_DIR"
 
 echo -e "\n📁 Creating ZIP archive..."
 (

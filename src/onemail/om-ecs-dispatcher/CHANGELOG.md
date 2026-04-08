@@ -1,5 +1,19 @@
 # om-ecs-dispatcher
 
+## 1.6.5
+
+### Patch Changes
+
+- 042de61: remove .npmrc reference from dockerfile
+
+## 1.6.4
+
+### Patch Changes
+
+- 398f5a5: pnpm dependencies update and pnpm config fix
+- Updated dependencies [398f5a5]
+  - om-common@1.1.1
+
 ## 1.6.3
 
 ### Patch Changes

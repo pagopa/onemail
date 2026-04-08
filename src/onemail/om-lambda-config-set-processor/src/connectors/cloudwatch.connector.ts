@@ -1,3 +1,7 @@
-import { CloudWatchClient } from '@aws-sdk/client-cloudwatch';
+import env from '#config/env';
+import { Metrics } from '@aws-lambda-powertools/metrics';
 
-export const cloudWatchClient = new CloudWatchClient({});
+export const metricsClient = new Metrics({
+  namespace: 'lambda',
+  serviceName: env.aws.cloudWatchMetricsNamespace,
+});

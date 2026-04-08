@@ -1,5 +1,13 @@
 # om-lambda-config-set-processor
 
+## 1.2.1
+
+### Patch Changes
+
+- 398f5a5: pnpm dependencies update and pnpm config fix
+- Updated dependencies [398f5a5]
+  - om-common@1.1.1
+
 ## 1.2.0
 
 ### Minor Changes
