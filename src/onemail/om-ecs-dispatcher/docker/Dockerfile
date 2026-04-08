@@ -21,7 +21,7 @@ RUN corepack enable pnpm
 
 # ---------- installer ----------
 FROM base AS installer
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc turbo.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY tsconfig.json ./
 COPY src/onemail/om-ecs-dispatcher/package.json ./src/onemail/om-ecs-dispatcher/
 COPY src/onemail/om-common/package.json          ./src/onemail/om-common/
