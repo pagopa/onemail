@@ -1,5 +1,11 @@
 # om-common
 
+## 1.1.1
+
+### Patch Changes
+
+- 398f5a5: pnpm dependencies update and pnpm config fix
+
 ## 1.1.0
 
 ### Minor Changes
