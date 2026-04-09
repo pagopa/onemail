@@ -45,8 +45,8 @@ catalogs:
       specifier: ^24.10.12
       version: 24.10.12
     lodash-es:
-      specifier: ^4.17.23
-      version: 4.17.23
+      specifier: ^4.18.1
+      version: 4.18.1
     zod:
       specifier: ^4.3.6
       version: 4.3.6
@@ -159,7 +159,7 @@ importers:
         version: 2.3.0
       lodash-es:
         specifier: 'catalog:'
-        version: 4.17.23
+        version: 4.18.1
       om-common:
         specifier: workspace:*
         version: link:../om-common
@@ -214,7 +214,7 @@ importers:
         version: 3.1025.0(@aws-sdk/client-dynamodb@3.1025.0)
       lodash-es:
         specifier: 'catalog:'
-        version: 4.17.23
+        version: 4.18.1
       om-common:
         specifier: workspace:*
         version: link:../om-common
@@ -254,7 +254,7 @@ importers:
         version: 3.1025.0(@aws-sdk/client-dynamodb@3.1025.0)
       lodash-es:
         specifier: 'catalog:'
-        version: 4.17.23
+        version: 4.18.1
       om-common:
         specifier: workspace:*
         version: link:../om-common
@@ -1890,8 +1890,8 @@ packages:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
     engines: {node: '>=10'}
 
-  lodash-es@4.17.23:
-    resolution: {integrity: sha512-kVI48u3PZr38HdYz98UmfPnXl2DXrpdctLrFLCd3kOx1xUkOmpFPx7gCWWM5MPkL/fD8zb+Ph0QzjGFs4+hHWg==}
+  lodash-es@4.18.1:
+    resolution: {integrity: sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==}
 
   lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
@@ -4746,7 +4746,7 @@ snapshots:
     dependencies:
       p-locate: 5.0.0
 
-  lodash-es@4.17.23: {}
+  lodash-es@4.18.1: {}
 
   lodash.camelcase@4.3.0: {}
 
