@@ -19,6 +19,8 @@ export default {
     tenantName:
       process.env.TMP_TENANT_NAME ??
       throwMissingRequiredEnvVar('TMP_TENANT_NAME'),
+    lambdaPrefix:
+      process.env.LAMBDA_PREFIX ?? throwMissingRequiredEnvVar('LAMBDA_PREFIX'),
   },
   sqs: {
     highPriorityQueueARN:

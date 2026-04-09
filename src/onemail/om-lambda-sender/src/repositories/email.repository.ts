@@ -129,7 +129,7 @@ const processBatchWithRetry = async (
     pendingRequests = unprocessedRequests;
 
     if (retryCount > MAX_RETRIES) {
-      await publishMetrics([
+      publishMetrics([
         {
           name: SenderMetricName.EmailStatusBatchUpdateFailed,
         },

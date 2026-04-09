@@ -60,6 +60,8 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
   }
   logger.debug('Email fetched from DB', { emailId });
 
+  const clientIdDimension = { clientId: email.clientId };
+
   // 3. Send the email with SES
   let sesMessageId: string | undefined;
   try {
@@ -71,7 +73,12 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
         retryable: false,
       });
       await updateEmailStatus({ emailId, status: EmailStatus.DryRunError });
-      publishMetrics([{ name: SenderMetricName.HighPriorityDryRunError }]);
+      publishMetrics([
+        {
+          name: SenderMetricName.HighPriorityDryRunError,
+          dimensions: clientIdDimension,
+        },
+      ]);
       return;
     }
 
@@ -90,6 +97,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       publishMetrics([
         {
           name: SenderMetricName.HighPriorityRejectedBySes,
+          dimensions: clientIdDimension,
         },
       ]);
       return;
@@ -117,18 +125,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
     publishMetrics([
       {
         name: SenderMetricName.HighPriorityDispatched,
-        dimensions: {
-          clientId: email.clientId,
-        },
-      },
-    ]);
-
-    publishMetrics([
-      {
-        name: SenderMetricName.HighPriorityDispatched,
-        dimensions: {
-          test: 'testDimension',
-        },
+        dimensions: clientIdDimension,
       },
     ]);
   } else {
@@ -144,6 +141,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
     publishMetrics([
       {
         name: SenderMetricName.HighPriorityRejectedBySes,
+        dimensions: clientIdDimension,
       },
     ]);
     return;
