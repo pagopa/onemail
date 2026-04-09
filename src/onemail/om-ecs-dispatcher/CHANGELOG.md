@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.6.6
+
+### Patch Changes
+
+- 0d7f3f0: Bump lodash-es from 4.17.23 to 4.18.1
+
 ## 1.6.5
 
 ### Patch Changes
