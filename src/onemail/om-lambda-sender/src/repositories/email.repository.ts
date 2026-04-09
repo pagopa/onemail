@@ -1,5 +1,3 @@
-import type { EmailStatus, EmailStatusHistoryItem } from 'om-common/types';
-
 import env from '#config/env';
 import { getLogger, getNamedLogger } from '#config/logger';
 import { dynamoClient } from '#connectors/dynamo.connector';
@@ -9,8 +7,13 @@ import {
   QueryCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
+import {
+  type EmailStatus,
+  type EmailStatusHistoryItem,
+  SenderMetricName,
+} from 'om-common/types';
 
-import { publishMetrics, SenderMetricName } from './metrics.repository.js';
+import { publishMetrics } from './metrics.repository.js';
 
 const logger = getLogger();
 

@@ -1,19 +1,18 @@
 import type { Context, SQSEvent, SQSHandler } from 'aws-lambda';
 
 import { addLambdaContextToLogger } from '#config/logger';
+import { flushMetrics } from '#repositories/metrics.repository';
 import { sqsEventHandler } from '#services/emailStatus.service';
 import {
   BatchProcessor,
   EventType,
   processPartialResponse,
 } from '@aws-lambda-powertools/batch';
+import middy from '@middy/core';
 
 const processor = new BatchProcessor(EventType.SQS);
 
-export const handler: SQSHandler = async (
-  event: SQSEvent,
-  context: Context,
-) => {
+const lambdaHandler: SQSHandler = async (event: SQSEvent, context: Context) => {
   addLambdaContextToLogger(context);
 
   // TODO: idempotency with @aws-lambda-powertools/idempotency
@@ -21,3 +20,5 @@ export const handler: SQSHandler = async (
     context,
   });
 };
+
+export const handler = middy(lambdaHandler).use(flushMetrics);

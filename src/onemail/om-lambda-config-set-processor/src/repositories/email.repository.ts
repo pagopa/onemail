@@ -1,5 +1,3 @@
-import type { EmailStatus, EmailStatusHistoryItem } from 'om-common/types';
-
 import env from '#config/env';
 import { getLogger } from '#config/logger';
 import { dynamoClient } from '#connectors/dynamo.connector';
@@ -10,6 +8,13 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import isEmpty from 'lodash-es/isEmpty.js';
 import last from 'lodash-es/last.js';
+import {
+  ConfigSetProcessorMetricName,
+  type EmailStatus,
+  type EmailStatusHistoryItem,
+} from 'om-common/types';
+
+import { publishMetrics } from './metrics.repository.js';
 
 const logger = getLogger();
 
@@ -34,7 +39,11 @@ export const findEmailBySesMessageId = async (
 
   const item = queryResult.Items?.[0] as EmailStatusHistoryItem | undefined;
   if (!item) {
-    //todo metrics
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.EmailNotFound,
+      },
+    ]);
     logger.warn('No email record found for SES message Id', { sesMessageId });
   }
 

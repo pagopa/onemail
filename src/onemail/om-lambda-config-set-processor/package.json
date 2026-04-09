@@ -26,6 +26,7 @@
     "@aws-sdk/client-scheduler": "catalog:aws-sdk",
     "@aws-sdk/client-sesv2": "catalog:aws-sdk",
     "@aws-sdk/lib-dynamodb": "catalog:aws-sdk",
+    "@middy/core": "catalog:",
     "lodash-es": "catalog:",
     "om-common": "workspace:*",
     "zod": "catalog:"

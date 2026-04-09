@@ -14,10 +14,7 @@ import {
   getEmailsByRequestId,
   updateEmailStatus,
 } from '#repositories/email.repository';
-import {
-  publishMetrics,
-  SenderMetricName,
-} from '#repositories/metrics.repository';
+import { publishMetrics } from '#repositories/metrics.repository';
 import { RetryableBulkEmailStatuses } from '#types/retryableSESStatus.type';
 import {
   BadRequestException,
@@ -25,7 +22,7 @@ import {
   MessageRejected,
 } from '@aws-sdk/client-sesv2';
 import isEmpty from 'lodash-es/isEmpty.js';
-import { EmailStatus } from 'om-common/types';
+import { EmailStatus, SenderMetricName } from 'om-common/types';
 
 import {
   sendHighPriorityEmail,
@@ -96,7 +93,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       });
       publishMetrics([
         {
-          name: SenderMetricName.HighPriorityRejectedBySes,
+          name: SenderMetricName.HighPriorityRejectedBySES,
           dimensions: clientIdDimension,
         },
       ]);
@@ -140,7 +137,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
     });
     publishMetrics([
       {
-        name: SenderMetricName.HighPriorityRejectedBySes,
+        name: SenderMetricName.HighPriorityRejectedBySES,
         dimensions: clientIdDimension,
       },
     ]);
@@ -276,7 +273,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       );
       publishMetrics([
         {
-          name: SenderMetricName.LowPriorityRejectedBySes,
+          name: SenderMetricName.LowPriorityRejectedBySES,
           value: emails.length,
         },
       ]);
@@ -298,7 +295,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       value: successfulEmails.length,
     },
     {
-      name: SenderMetricName.LowPriorityRejectedBySes,
+      name: SenderMetricName.LowPriorityRejectedBySES,
       value: nonRetryableFailures.length,
     },
     {
