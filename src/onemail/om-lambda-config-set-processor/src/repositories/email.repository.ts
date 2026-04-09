@@ -10,11 +10,9 @@ import isEmpty from 'lodash-es/isEmpty.js';
 import last from 'lodash-es/last.js';
 import {
   ConfigSetProcessorMetricName,
-  type EmailStatus,
-  type EmailStatusHistoryItem,
-} from 'om-common/types';
-
-import { publishMetrics } from './metrics.repository.js';
+  publishMetrics,
+} from 'om-common/repositories';
+import { type EmailStatus, type EmailStatusHistoryItem } from 'om-common/types';
 
 const logger = getLogger();
 

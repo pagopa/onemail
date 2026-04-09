@@ -14,7 +14,6 @@ import {
   getEmailsByRequestId,
   updateEmailStatus,
 } from '#repositories/email.repository';
-import { publishMetrics } from '#repositories/metrics.repository';
 import { RetryableBulkEmailStatuses } from '#types/retryableSESStatus.type';
 import {
   BadRequestException,
@@ -22,7 +21,8 @@ import {
   MessageRejected,
 } from '@aws-sdk/client-sesv2';
 import isEmpty from 'lodash-es/isEmpty.js';
-import { EmailStatus, SenderMetricName } from 'om-common/types';
+import { publishMetrics, SenderMetricName } from 'om-common/repositories';
+import { EmailStatus } from 'om-common/types';
 
 import {
   sendHighPriorityEmail,

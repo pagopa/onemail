@@ -9,18 +9,12 @@ export default {
     emailDbRequestIdGSI:
       process.env.AWS_EMAIL_DB_REQUEST_ID_GSI ??
       throwMissingRequiredEnvVar('AWS_EMAIL_DB_REQUEST_ID_GSI'),
-    cloudWatchMetricsNamespace:
-      process.env.AWS_CLOUDWATCH_METRICS_NAMESPACE ||
-      'lambda-sender/ApplicationMetrics', //TODO: reimplement throw when infra is ready
-    // ?? throwMissingRequiredEnvVar('AWS_CLOUDWATCH_METRICS_NAMESPACE'),
     configurationSetName:
       process.env.TMP_CONFIGURATION_SET_NAME ??
       throwMissingRequiredEnvVar('TMP_CONFIGURATION_SET_NAME'),
     tenantName:
       process.env.TMP_TENANT_NAME ??
       throwMissingRequiredEnvVar('TMP_TENANT_NAME'),
-    lambdaPrefix:
-      process.env.LAMBDA_PREFIX ?? throwMissingRequiredEnvVar('LAMBDA_PREFIX'),
   },
   sqs: {
     highPriorityQueueARN:

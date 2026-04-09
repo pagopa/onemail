@@ -1,7 +1,6 @@
 import type { Context, SQSEvent, SQSHandler } from 'aws-lambda';
 
 import { addLambdaContextToLogger } from '#config/logger';
-import { flushMetrics } from '#repositories/metrics.repository';
 import { sqsEventHandler } from '#services/emailStatus.service';
 import {
   BatchProcessor,
@@ -9,6 +8,7 @@ import {
   processPartialResponse,
 } from '@aws-lambda-powertools/batch';
 import middy from '@middy/core';
+import { flushMetrics } from 'om-common/repositories';
 
 const processor = new BatchProcessor(EventType.SQS);
 

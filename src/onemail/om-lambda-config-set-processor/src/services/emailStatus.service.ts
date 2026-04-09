@@ -6,14 +6,17 @@ import {
   HandledConfSetEventItem,
 } from '#dtos/confSetEventItem.dto';
 import { updateEmailStatusBySesMessageId } from '#repositories/email.repository';
-import { publishMetrics } from '#repositories/metrics.repository';
 import { handleSoftBounceRetry } from '#services/bounceRetry.service';
 import {
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
 import isEmpty from 'lodash-es/isEmpty.js';
-import { ConfigSetProcessorMetricName, EmailStatus } from 'om-common/types';
+import {
+  ConfigSetProcessorMetricName,
+  publishMetrics,
+} from 'om-common/repositories';
+import { EmailStatus } from 'om-common/types';
 
 const logger = getLogger();
 
@@ -83,7 +86,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       eventItem.bounce.bounceType === CapitalizedSesBounceType.Transient ||
       eventItem.bounce.bounceType === CapitalizedSesBounceType.Undetermined
     ) {
-      // Metrics published inside handleSoftBounceRetry to differentiate between different Retry
+      // Metrics published inside handleSoftBounceRetry to differentiate between different retry
       await handleSoftBounceRetry(
         eventItem.mail.messageId,
         eventItem.bounce.timestamp,

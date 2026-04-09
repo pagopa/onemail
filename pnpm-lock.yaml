@@ -136,6 +136,16 @@ importers:
       '@aws-lambda-powertools/logger':
         specifier: catalog:aws-lambda
         version: 2.32.0(@middy/core@7.2.1)
+      '@aws-lambda-powertools/metrics':
+        specifier: catalog:aws-lambda
+        version: 2.32.0(@middy/core@7.2.1)
+    devDependencies:
+      '@types/lodash-es':
+        specifier: 'catalog:'
+        version: 4.17.12
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.10.12
 
   src/onemail/om-ecs-dispatcher:
     dependencies:

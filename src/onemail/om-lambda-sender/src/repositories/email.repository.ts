@@ -7,13 +7,8 @@ import {
   QueryCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
-import {
-  type EmailStatus,
-  type EmailStatusHistoryItem,
-  SenderMetricName,
-} from 'om-common/types';
-
-import { publishMetrics } from './metrics.repository.js';
+import { publishMetrics, SenderMetricName } from 'om-common/repositories';
+import { type EmailStatus, type EmailStatusHistoryItem } from 'om-common/types';
 
 const logger = getLogger();
 

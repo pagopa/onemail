@@ -7,7 +7,6 @@ import {
   findEmailBySesMessageId,
   updateEmailStatusBySesMessageId,
 } from '#repositories/email.repository';
-import { publishMetrics } from '#repositories/metrics.repository';
 import { BACKOFF_FACTOR, MILLISECONDS_PER_DAY } from '#utils/constants';
 import {
   calculateExponentialDelay,
@@ -21,9 +20,9 @@ import {
 } from '@aws-sdk/client-scheduler';
 import {
   ConfigSetProcessorMetricName,
-  EmailPriority,
-  EmailStatus,
-} from 'om-common/types';
+  publishMetrics,
+} from 'om-common/repositories';
+import { EmailPriority, EmailStatus } from 'om-common/types';
 
 const logger = getLogger();
 
@@ -168,7 +167,14 @@ const handleHighPriorityRetry = async (
     },
   ]);
 
-  //TODO what kind of metric do we want to publish here?
+  publishMetrics([
+    {
+      name: ConfigSetProcessorMetricName.EmailHighPriorityRetry,
+      dimensions: {
+        attempt: attempt.toString(),
+      },
+    },
+  ]);
 
   logger.info('End');
 };
@@ -244,7 +250,14 @@ const handleLowPriorityRetry = async (
     },
   ]);
 
-  //TODO what kind of metric do we want to publish here?
+  publishMetrics([
+    {
+      name: ConfigSetProcessorMetricName.EmailLowPriorityRetry,
+      dimensions: {
+        attempt: attempt.toString(),
+      },
+    },
+  ]);
 
   logger.info('End');
 };
@@ -311,7 +324,6 @@ const scheduleRetry = async (
 
       return;
     }
-    //TODO do we want to publish a metric for this case?
     throw error;
   }
 };

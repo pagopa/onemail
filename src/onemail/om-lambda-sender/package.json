@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "@aws-lambda-powertools/batch": "catalog:aws-lambda",
-    "@aws-lambda-powertools/metrics": "catalog:aws-lambda",
     "@aws-sdk/client-dynamodb": "catalog:aws-sdk",
     "@aws-sdk/client-sesv2": "catalog:aws-sdk",
     "@aws-sdk/lib-dynamodb": "catalog:aws-sdk",
