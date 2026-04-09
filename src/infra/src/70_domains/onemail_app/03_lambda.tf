@@ -257,6 +257,7 @@ module "lambda_set_processor" {
     AWS_EMAIL_DB_TABLE               = data.aws_dynamodb_table.EmailStatusHistory.name
     AWS_EMAIL_DB_MESSAGE_ID_GSI      = local.gsis["gsi_ses_message_id_idx"].name
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-config-set-processor"
+    LAMBDA_PREFIX                    = "${local.project_nodomain}"
     NODE_ENV                         = "production"
     POWERTOOLS_LOG_LEVEL             = "DEBUG"
     EVENTBRIDGE_SCHEDULER_ROLE_ARN   = local.scheduler_role_arn

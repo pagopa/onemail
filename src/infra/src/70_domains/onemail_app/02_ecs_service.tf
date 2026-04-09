@@ -33,6 +33,17 @@ data "aws_iam_policy_document" "ecs_task_policy" {
     ]
   }
 
+  statement {
+    sid = "CloudWatchMetricsAccess"
+
+    actions = [
+      "cloudwatch:PutMetricData"
+    ]
+
+    resources = ["*"]
+
+  }
+
   dynamic "statement" {
     for_each = local.dynamodb_kms_key_arn != null ? [local.dynamodb_kms_key_arn] : []
 
@@ -101,6 +112,14 @@ module "ecs_service" {
     {
       name  = "POWERTOOLS_LOG_LEVEL"
       value = "DEBUG"
+    },
+    {
+      name  = "ECS_PREFIX"
+      value = "${local.project_nodomain}"
+    },
+    {
+      name  = "AWS_CLOUDWATCH_METRICS_NAMESPACE"
+      value = "${local.project_nodomain}-ecs-dispatcher"
     }
   ]
 
