@@ -128,6 +128,8 @@ module "lambda_sender" {
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-sender"
     NODE_ENV                         = "production"
     POWERTOOLS_LOG_LEVEL             = "DEBUG"
+    TMP_CONFIGURATION_SET_NAME       = "${local.project_nodomain}-configuration-set-onemail"
+    TMP_TENANT_NAME                  = "${local.project_nodomain}-tenant-onemail"
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_sender.security_group_id]
