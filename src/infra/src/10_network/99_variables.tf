@@ -86,7 +86,7 @@ variable "dns_zone_name" {
 
 variable "enable_ses_dns_records" {
   type        = bool
-  description = "Enable SES-related DNS records and SES data lookups. Set to true only after SES resources are created in onemail_common."
+  description = "Enable SES-related DNS records and SES data lookups only for tenants allowlisted in the network stack. Set to true only after SES resources are created in onemail_common."
   default     = false
 }
 

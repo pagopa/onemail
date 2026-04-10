@@ -6,24 +6,25 @@ packages:
 
 catalog:
   '@types/lodash-es': ^4.14.191
-  lodash-es: ^4.17.23
   '@types/node': ^24.10.12
+  lodash-es: ^4.18.1
   zod: ^4.3.6
   '@middy/core': '^7.2.1'
 
 catalogs:
-  aws-sdk:
-    '@aws-sdk/client-dynamodb': 3.1025.0
-    '@aws-sdk/lib-dynamodb': 3.1025.0
-    '@aws-sdk/client-sesv2': 3.1025.0
-    '@aws-sdk/client-sqs': 3.1025.0
-    '@aws-sdk/client-scheduler': 3.1025.0
   aws-lambda:
     '@aws-lambda-powertools/batch': 2.32.0
     '@aws-lambda-powertools/logger': 2.32.0
     '@aws-lambda-powertools/metrics': 2.32.0
-    aws-lambda: '^1.0.7'
-    '@types/aws-lambda': '^8.10.160'
+    '@types/aws-lambda': ^8.10.160
+    aws-lambda: ^1.0.7
+  aws-sdk:
+    '@aws-sdk/client-dynamodb': 3.1025.0
+    '@aws-sdk/client-scheduler': 3.1025.0
+    '@aws-sdk/client-sesv2': 3.1025.0
+    '@aws-sdk/client-sqs': 3.1025.0
+    '@aws-sdk/lib-dynamodb': 3.1025.0
+
+cleanupUnusedCatalogs: true
 
 minimumReleaseAge: 1440
-cleanupUnusedCatalogs: true
