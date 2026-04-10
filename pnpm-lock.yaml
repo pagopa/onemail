@@ -9,6 +9,9 @@ catalogs:
     '@aws-lambda-powertools/batch':
       specifier: 2.32.0
       version: 2.32.0
+    '@aws-lambda-powertools/commons':
+      specifier: 2.32.0
+      version: 2.32.0
     '@aws-lambda-powertools/logger':
       specifier: 2.32.0
       version: 2.32.0
@@ -140,6 +143,9 @@ importers:
         specifier: catalog:aws-lambda
         version: 2.32.0(@middy/core@7.2.1)
     devDependencies:
+      '@aws-lambda-powertools/commons':
+        specifier: catalog:aws-lambda
+        version: 2.32.0
       '@types/node':
         specifier: 'catalog:'
         version: 24.10.12

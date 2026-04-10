@@ -1,3 +1,5 @@
+import type { MiddlewareLikeObj } from '@aws-lambda-powertools/commons/types';
+
 import { MetricUnit } from '@aws-lambda-powertools/metrics';
 import { logMetrics } from '@aws-lambda-powertools/metrics/middleware';
 
@@ -17,9 +19,7 @@ export const publishMetrics = (metricsInput: MetricInput[]): void => {
   });
 };
 
-export const flushMetrics: ReturnType<typeof logMetrics> = logMetrics([
-  metricsClient,
-]);
+export const flushMetrics: MiddlewareLikeObj = logMetrics([metricsClient]);
 
 const PriorityPrefix = {
   [EmailPriority.HIGH]: 'HighPriority',

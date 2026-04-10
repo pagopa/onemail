@@ -17,6 +17,7 @@ catalogs:
     '@aws-lambda-powertools/logger': 2.32.0
     '@aws-lambda-powertools/metrics': 2.32.0
     '@types/aws-lambda': ^8.10.160
+    '@aws-lambda-powertools/commons': 2.32.0
     aws-lambda: ^1.0.7
   aws-sdk:
     '@aws-sdk/client-dynamodb': 3.1025.0
