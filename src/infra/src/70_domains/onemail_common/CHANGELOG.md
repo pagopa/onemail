@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.6.0
+
+### Minor Changes
+
+- 36d6594: Add Env vars to lambda config set processor and fix eventbridge rule
+
 ## 1.5.0
 
 ### Minor Changes
