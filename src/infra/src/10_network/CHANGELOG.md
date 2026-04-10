@@ -1,5 +1,11 @@
 # infra-network
 
+## 1.7.0
+
+### Minor Changes
+
+- 11a432d: Remove SES dns records creation for no managed zones
+
 ## 1.6.0
 
 ### Minor Changes
