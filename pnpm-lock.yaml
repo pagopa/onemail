@@ -213,9 +213,6 @@ importers:
       '@aws-lambda-powertools/batch':
         specifier: catalog:aws-lambda
         version: 2.32.0
-      '@aws-lambda-powertools/metrics':
-        specifier: catalog:aws-lambda
-        version: 2.32.0(@middy/core@7.2.1)
       '@aws-sdk/client-dynamodb':
         specifier: catalog:aws-sdk
         version: 3.1025.0
@@ -259,9 +256,6 @@ importers:
       '@aws-lambda-powertools/batch':
         specifier: catalog:aws-lambda
         version: 2.32.0
-      '@aws-lambda-powertools/metrics':
-        specifier: catalog:aws-lambda
-        version: 2.32.0(@middy/core@7.2.1)
       '@aws-sdk/client-dynamodb':
         specifier: catalog:aws-sdk
         version: 3.1025.0
