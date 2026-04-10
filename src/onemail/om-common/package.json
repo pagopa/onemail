@@ -41,7 +41,6 @@
     "@aws-lambda-powertools/metrics": "catalog:aws-lambda"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@types/lodash-es": "catalog:"
+    "@types/node": "catalog:"
   }
 }

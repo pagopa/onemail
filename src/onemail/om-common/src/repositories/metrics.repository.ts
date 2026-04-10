@@ -1,13 +1,11 @@
 import { MetricUnit } from '@aws-lambda-powertools/metrics';
 import { logMetrics } from '@aws-lambda-powertools/metrics/middleware';
-import isEmpty from 'lodash-es/isEmpty.js';
 
 import { metricsClient } from '../connectors/cloudwatch.connector.js';
 import { EmailPriority, EmailStatus } from '../types/emailStatusHistory.js';
-import { MetricInput } from '../types/metric.js';
 
 export const publishMetrics = (metricsInput: MetricInput[]): void => {
-  if (isEmpty(metricsInput)) {
+  if (metricsInput.length === 0) {
     return;
   }
 
@@ -63,3 +61,17 @@ export const SenderMetricName = {
   EmailStatusBatchUpdateFailed: 'EmailStatusBatchUpdateFailed',
   InvalidRecord: 'InvalidRecord',
 } as const;
+
+interface MetricInput {
+  name: AllMetricNames;
+  value?: number;
+  dimensions?: Record<string, string>;
+}
+
+type AllMetricNames = ConfigSetProcessorMetricName | SenderMetricName;
+
+type ConfigSetProcessorMetricName =
+  (typeof ConfigSetProcessorMetricName)[keyof typeof ConfigSetProcessorMetricName];
+
+type SenderMetricName =
+  (typeof SenderMetricName)[keyof typeof SenderMetricName];
