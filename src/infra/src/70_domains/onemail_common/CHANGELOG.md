@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.7.0
+
+### Minor Changes
+
+- d35259a: Remove env from tenant and config-set name
+
 ## 1.6.0
 
 ### Minor Changes
