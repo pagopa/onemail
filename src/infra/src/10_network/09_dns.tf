@@ -1,12 +1,12 @@
 # Route53 Hosted Zones Configuration
 
 data "aws_ses_domain_identity" "tenant" {
-  for_each = var.enable_ses_dns_records ? local.tenants : {}
+  for_each = var.enable_ses_dns_records ? local.tenants_with_managed_ses_dns_records : {}
   domain   = each.value.domain
 }
 
 data "aws_sesv2_email_identity" "tenant" {
-  for_each       = var.enable_ses_dns_records ? local.tenants : {}
+  for_each       = var.enable_ses_dns_records ? local.tenants_with_managed_ses_dns_records : {}
   email_identity = each.value.domain
 }
 
@@ -54,10 +54,10 @@ locals {
     }
   }
 
-  tenant_dns_records = var.enable_ses_dns_records && length(local.tenants) > 0 ? {
+  tenant_dns_records = var.enable_ses_dns_records && length(local.tenants_with_managed_ses_dns_records) > 0 ? {
     for record in concat(
       [
-        for tenant_key, tenant_data in local.tenants : {
+        for tenant_key, tenant_data in local.tenants_with_managed_ses_dns_records : {
           id            = "${tenant_key}-ses-verification"
           name          = "_amazonses.${tenant_data.domain}"
           type          = "TXT"
@@ -68,7 +68,7 @@ locals {
         }
       ],
       flatten([
-        for tenant_key, tenant_data in local.tenants : [
+        for tenant_key, tenant_data in local.tenants_with_managed_ses_dns_records : [
           for token in try(data.aws_sesv2_email_identity.tenant[tenant_key].dkim_signing_attributes[0].tokens, []) : {
             id            = "${tenant_key}-dkim-${token}"
             name          = "${token}._domainkey.${tenant_data.domain}"
@@ -81,7 +81,7 @@ locals {
         ]
       ]),
       [
-        for tenant_key, tenant_data in local.tenants : {
+        for tenant_key, tenant_data in local.tenants_with_managed_ses_dns_records : {
           id            = "${tenant_key}-mail-from-mx"
           name          = "bounce.${tenant_data.domain}"
           type          = "MX"
@@ -92,7 +92,7 @@ locals {
         }
       ],
       [
-        for tenant_key, tenant_data in local.tenants : {
+        for tenant_key, tenant_data in local.tenants_with_managed_ses_dns_records : {
           id            = "${tenant_key}-mail-from-spf"
           name          = "bounce.${tenant_data.domain}"
           type          = "TXT"
@@ -103,7 +103,7 @@ locals {
         }
       ],
       [
-        for tenant_key, tenant_data in local.tenants : {
+        for tenant_key, tenant_data in local.tenants_with_managed_ses_dns_records : {
           id            = "${tenant_key}-dmarc"
           name          = "_dmarc.${tenant_data.domain}"
           type          = "TXT"

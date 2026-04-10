@@ -79,8 +79,14 @@ resource "aws_cloudwatch_event_rule" "ses_rule" {
   name  = "${local.project_nodomain}-${var.env}-ses-central-rule"
   event_pattern = jsonencode({
     source      = ["aws.ses"],
-    detail-type = ["SES Event"],
-    detail      = { "configuration-set-name" = [{ prefix = "${local.project_nodomain}-${var.env}-configuration-set-" }] }
+    detail-type = ["Email Delivered", "Email Complaint Received", "Email Bounced", "Email Rejected", "Email Delivery Delayed"],
+    detail = {
+      mail = {
+        tenant = {
+          tenantName = [{ prefix = "${local.project_nodomain}-${var.env}-tenant-" }]
+        }
+      }
+    }
   })
 }
 
