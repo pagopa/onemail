@@ -19,7 +19,9 @@ export const publishMetrics = (metricsInput: MetricInput[]): void => {
   });
 };
 
-export const flushMetrics = logMetrics([metricsClient]);
+export const flushMetrics: ReturnType<typeof logMetrics> = logMetrics([
+  metricsClient,
+]);
 
 const PriorityPrefix = {
   [EmailPriority.HIGH]: 'HighPriority',
