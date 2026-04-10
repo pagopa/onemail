@@ -24,8 +24,8 @@ lambda_sender = {
 
 #Lambda Config Set Processor
 lambda_set_processor = {
-  package_path                   = "lambda/hello-nodejs/hello-nodejs.zip"
-  reserved_concurrent_executions = -1 #Set based on expected load, Use -1 for unlimited concurrency for now
+  package_path                                           = "lambda/hello-nodejs/hello-nodejs.zip"
+  reserved_concurrent_executions                         = -1 #Set based on expected load, Use -1 for unlimited concurrency for now
   soft_bounce_high_priority_base_delay_minutes           = 1
   soft_bounce_high_priority_escalated_base_delay_minutes = 5
   soft_bounce_high_priority_max_window_days              = 30
