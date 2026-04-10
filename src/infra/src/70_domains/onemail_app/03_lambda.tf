@@ -128,6 +128,8 @@ module "lambda_sender" {
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-sender"
     NODE_ENV                         = "production"
     POWERTOOLS_LOG_LEVEL             = "DEBUG"
+    TMP_CONFIGURATION_SET_NAME       = "${local.project_nodomain}-configuration-set-onemail"
+    TMP_TENANT_NAME                  = "${local.project_nodomain}-tenant-onemail"
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_sender.security_group_id]
@@ -251,15 +253,21 @@ module "lambda_set_processor" {
   memory_size                    = 256
   reserved_concurrent_executions = var.lambda_set_processor.reserved_concurrent_executions
   environment_variables = {
-    AWS_EMAIL_DB_TABLE               = data.aws_dynamodb_table.EmailStatusHistory.name
-    AWS_EMAIL_DB_MESSAGE_ID_GSI      = local.gsis["gsi_ses_message_id_idx"].name
-    AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-config-set-processor"
-    NODE_ENV                         = "production"
-    POWERTOOLS_LOG_LEVEL             = "DEBUG"
-    EVENTBRIDGE_SCHEDULER_ROLE_ARN   = local.scheduler_role_arn
-    HIGH_PRIORITY_QUEUE_ARN          = data.aws_sqs_queue.high_priority.arn
-    LOW_PRIORITY_QUEUE_ARN           = data.aws_sqs_queue.low_priority.arn
-    SCHEDULER_GROUP_NAME             = local.scheduler_group_name
+    AWS_EMAIL_DB_TABLE                                     = data.aws_dynamodb_table.EmailStatusHistory.name
+    AWS_EMAIL_DB_MESSAGE_ID_GSI                            = local.gsis["gsi_ses_message_id_idx"].name
+    AWS_CLOUDWATCH_METRICS_NAMESPACE                       = "${local.project_nodomain}-lambda-config-set-processor"
+    NODE_ENV                                               = "production"
+    POWERTOOLS_LOG_LEVEL                                   = "DEBUG"
+    EVENTBRIDGE_SCHEDULER_ROLE_ARN                         = local.scheduler_role_arn
+    HIGH_PRIORITY_QUEUE_ARN                                = data.aws_sqs_queue.high_priority.arn
+    LOW_PRIORITY_QUEUE_ARN                                 = data.aws_sqs_queue.low_priority.arn
+    SCHEDULER_GROUP_NAME                                   = local.scheduler_group_name
+    SOFT_BOUNCE_HIGH_PRIORITY_BASE_DELAY_MINUTES           = var.lambda_set_processor.soft_bounce_high_priority_base_delay_minutes
+    SOFT_BOUNCE_HIGH_PRIORITY_ESCALATED_BASE_DELAY_MINUTES = var.lambda_set_processor.soft_bounce_high_priority_escalated_base_delay_minutes
+    SOFT_BOUNCE_HIGH_PRIORITY_MAX_WINDOW_DAYS              = var.lambda_set_processor.soft_bounce_high_priority_max_window_days
+    SOFT_BOUNCE_LOW_PRIORITY_BASE_DELAY_MINUTES            = var.lambda_set_processor.soft_bounce_low_priority_base_delay_minutes
+    SOFT_BOUNCE_LOW_PRIORITY_MAX_ATTEMPTS                  = var.lambda_set_processor.soft_bounce_low_priority_max_attempts
+
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_set_processor.security_group_id]
