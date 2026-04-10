@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.13.0
+
+### Minor Changes
+
+- d35259a: Remove env from tenant and config-set name
+
 ## 1.12.0
 
 ### Minor Changes
