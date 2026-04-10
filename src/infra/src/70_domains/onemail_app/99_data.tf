@@ -78,7 +78,7 @@ data "aws_lb_listener" "ecs_core" {
 
 data "aws_sesv2_configuration_set" "tenant_config_set" {
   for_each               = var.enable_ses ? local.tenants : {}
-  configuration_set_name = "${local.project_nodomain}-${var.env}-configuration-set-${each.key}"
+  configuration_set_name = each.value.configuration_set_name
 }
 
 data "aws_caller_identity" "current" {}
