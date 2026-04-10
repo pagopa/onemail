@@ -25,30 +25,38 @@
     "setup:hooks": "bash ./scripts/setup-pre-commit-hooks.sh",
     "generate:openapi": "pnpm --filter=om-ecs-dispatcher generate:openapi",
     "sync:openapi-template": "pnpm run generate:openapi && bash scripts/syncOpenapiTemplateAI.sh",
-    "version": "pnpm changeset version && pnpm install --lockfile-only"
+    "version": "pnpm changeset version && pnpm install --lockfile-only",
+    "test": "turbo run test --filter=!onemail",
+    "test:watch": "turbo run test:watch --parallel --filter=!onemail",
+    "test:coverage": "turbo run test:coverage --filter=!onemail",
+    "test:dispatcher": "turbo run test --filter=om-ecs-dispatcher",
+    "test:sender": "turbo run test --filter=om-lambda-sender",
+    "test:config-set-processor": "turbo run test --filter=om-lambda-config-set-processor"
   },
   "dependencies": {
-    "infra-iam": "workspace:*",
-    "infra-network": "workspace:*",
     "infra-core": "workspace:*",
-    "infra-security": "workspace:*",
     "infra-domains-onemail-app": "workspace:*",
     "infra-domains-onemail-common": "workspace:*",
     "infra-domains-onemail-monitoring": "workspace:*",
+    "infra-iam": "workspace:*",
+    "infra-network": "workspace:*",
+    "infra-security": "workspace:*",
     "om-common": "workspace:*",
     "om-ecs-dispatcher": "workspace:*",
-    "om-lambda-sender": "workspace:*",
-    "om-lambda-config-set-processor": "workspace:*"
+    "om-lambda-config-set-processor": "workspace:*",
+    "om-lambda-sender": "workspace:*"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
     "@commitlint/cli": "^20.4.1",
     "@commitlint/config-conventional": "^20.4.1",
     "@pagopa/eslint-config": "^5.1.2",
+    "@vitest/coverage-v8": "^4.1.3",
     "eslint": "^10.0.0",
     "prettier": "^3.8.1",
     "turbo": "^2.8.12",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.3"
   },
   "repository": {
     "type": "git",
