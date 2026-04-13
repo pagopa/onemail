@@ -32,6 +32,7 @@ export default defineConfig({
         fromPackage('./src/services/**/*.ts'),
         fromPackage('./src/utils/**/*.ts'),
       ],
+      exclude: [fromPackage('./src/utils/constants.ts')],
       thresholds: {
         statements: 80,
         branches: 80,
