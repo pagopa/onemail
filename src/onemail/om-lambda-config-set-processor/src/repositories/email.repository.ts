@@ -46,7 +46,7 @@ export const updateEmailStatusBySesMessageId = async (
   updates: {
     timestamp: string;
     status: EmailStatus;
-    reason?: string;
+    reason?: string | null;
   }[],
 ): Promise<void> => {
   if (isEmpty(updates)) {
@@ -82,7 +82,7 @@ export const updateEmailStatusBySesMessageId = async (
         ':newHistoryItems': updates.map(({ status, timestamp, reason }) => ({
           status,
           changedAt: timestamp,
-          reason,
+          reason: reason ?? undefined,
         })),
       },
     }),
