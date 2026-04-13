@@ -6,6 +6,7 @@ const fromPackage = (path: string) =>
 
 const dispatcherSrcRoot = fromPackage('./src');
 const dispatcherTestsGlob = fromPackage('./tests/**/*.test.ts');
+const omCommonSrcRoot = fromPackage('../om-common/src');
 
 export default defineConfig({
   resolve: {
@@ -13,6 +14,10 @@ export default defineConfig({
       {
         find: /^#(.+)$/,
         replacement: `${dispatcherSrcRoot}/$1`,
+      },
+      {
+        find: 'om-common',
+        replacement: omCommonSrcRoot,
       },
     ],
     conditions: ['local'],
