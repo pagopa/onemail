@@ -42,8 +42,6 @@ const RejectSchema = z.object({
   reason: z.string(),
 });
 
-const EventDetailSchema = z.object({});
-
 const EventBaseSchema = z.object({
   mail: MailSchema,
 });
@@ -64,10 +62,6 @@ export const ConfSetEventItemSchema = z.discriminatedUnion('eventType', [
   EventBaseSchema.extend({
     eventType: z.literal(CapitalizedSesConfigurationSetEventType.Delivery),
     delivery: DeliverySchema,
-  }),
-  EventBaseSchema.extend({
-    eventType: z.literal(CapitalizedSesConfigurationSetEventType.Send),
-    send: EventDetailSchema,
   }),
   EventBaseSchema.extend({
     eventType: z.literal(CapitalizedSesConfigurationSetEventType.Reject),
