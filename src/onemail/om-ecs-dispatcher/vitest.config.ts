@@ -5,7 +5,6 @@ const fromPackage = (path: string) =>
   fileURLToPath(new URL(path, import.meta.url));
 
 const dispatcherSrcRoot = fromPackage('./src');
-const dispatcherTestsGlob = fromPackage('./tests/**/*.test.ts');
 const omCommonSrcRoot = fromPackage('../om-common/src');
 
 export default defineConfig({
@@ -24,21 +23,15 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: [dispatcherTestsGlob],
-    setupFiles: [
-      fromPackage('./tests/setup/vi.test.base.ts'),
-      fromPackage('./src/config/zodExtend.ts'),
-    ],
+    setupFiles: [fromPackage('./tests/setup/vi.test.base.ts')],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
-      reportsDirectory: fromPackage('./coverage'),
       include: [
         fromPackage('./src/controllers/**/*.ts'),
         fromPackage('./src/services/**/*.ts'),
         fromPackage('./src/utils/**/*.ts'),
       ],
-      exclude: [dispatcherTestsGlob],
       thresholds: {
         statements: 80,
         branches: 80,
