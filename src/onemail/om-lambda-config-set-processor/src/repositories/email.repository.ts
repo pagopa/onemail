@@ -58,10 +58,13 @@ export const updateEmailStatusBySesMessageId = async (
   }
 
   //latest status to be saved
+  // TODO: replace last with a more robust method (get the latest update based on timestamp instead of relying on order in the array)
   const currentUpdate = last(updates);
   if (!currentUpdate) {
     return;
   }
+
+  // TODO: skip update if new status is delivery and current status is complaint or bounce
 
   // Update the email record with the new status and timestamp
   await dynamoClient.send(
