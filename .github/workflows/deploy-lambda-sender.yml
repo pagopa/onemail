@@ -28,91 +28,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  setup-matrix:
-    name: Setup Environment Matrix
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-
-      - name: Setup Matrix
-        id: matrix
-        uses: ./.github/actions/env-matrix
-        with:
-          event_name: ${{ github.event_name }}
-          environment_input: ${{ github.event.inputs.environment }}
-
-  build:
-    name: Build Lambda Artifact
-    runs-on: ubuntu-22.04
-    timeout-minutes: 20
-    needs: setup-matrix
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-
-      - name: Setup Node.js
-        uses: ./.github/actions/node-setup
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build Lambda Sender
-        run: |
-          pnpm run build:sender
-
-      - name: Create Lambda zip package
-        run: |
-          pnpm run package:sender
-
-      - name: Archive build artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
-        with:
-          name: om-lambda-sender
-          path: ./om-lambda-sender.zip
-
   deploy:
-    name: Deploy Lambda OneMail Sender ${{ matrix.environment }}
-    timeout-minutes: 20
-    if: ${{ needs.setup-matrix.outputs.matrix != '' }}
-    runs-on: ubuntu-22.04
-    needs: [setup-matrix, build]
-    strategy:
-      matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
-    continue-on-error: false
-    environment: ${{ matrix.environment }}
-    env:
-      ENV_SHORT: ${{ fromJSON('{"dev":"d","uat":"u","prod":"p"}')[matrix.environment] }}
-      LAMBDA_NAME: oml-${{ fromJSON('{"dev":"d","uat":"u","prod":"p"}')[matrix.environment] }}-eus1-lambda-sender
+    uses: ./.github/workflows/deploy-lambda.yml
     permissions:
       id-token: write
       contents: read
-    steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e
-        with:
-          name: om-lambda-sender
-          path: .
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
-        with:
-          role-to-assume: ${{ vars.IAM_ROLE_DEPLOY_LAMBDA }}
-          aws-region: ${{ matrix.region }}
-
-      - name: Upload Lambda zip to S3
-        run: |
-          aws s3 cp ./om-lambda-sender.zip s3://${{ vars.LAMBDA_CODE_BUCKET_NAME }}/${{ vars.LAMBDA_SENDER_KEY }}
-
-      - name: Deploy Lambda function
-        run: |
-          aws lambda update-function-code \
-            --function-name ${{ env.LAMBDA_NAME }} \
-            --s3-bucket ${{ vars.LAMBDA_CODE_BUCKET_NAME }} \
-            --s3-key ${{ vars.LAMBDA_SENDER_KEY }}
+    with:
+      lambda_name: sender
+      build_script: build:sender
+      package_script: package:sender
+      lambda_s3_key_var: LAMBDA_SENDER_KEY
+      event_name: ${{ github.event_name }}
+      environment_input: ${{ inputs.environment || '' }}
