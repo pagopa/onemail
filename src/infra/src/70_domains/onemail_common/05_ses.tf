@@ -1,7 +1,7 @@
 # Tenants
 resource "aws_sesv2_tenant" "tenants" {
   for_each    = var.enable_ses ? local.tenants : {}
-  tenant_name = "${local.project_nodomain}-tenant-${each.key}"
+  tenant_name = each.value.tenant_name
 }
 
 # Email identities for each tenant
@@ -33,7 +33,7 @@ resource "aws_ses_domain_mail_from" "tenant_mail_from" {
 
 resource "aws_sesv2_configuration_set" "config_set" {
   for_each               = var.enable_ses ? local.tenants : {}
-  configuration_set_name = "${local.project_nodomain}-configuration-set-${each.key}"
+  configuration_set_name = each.value.configuration_set_name
 
   sending_options {
     sending_enabled = true
@@ -84,7 +84,7 @@ resource "aws_cloudwatch_event_rule" "ses_rule" {
     detail = {
       mail = {
         tenant = {
-          tenantName = [{ prefix = "${local.project_nodomain}-${var.env}-tenant-" }]
+          tenantName = [{ prefix = "${local.tenant_name_prefix}-" }]
         }
       }
     }

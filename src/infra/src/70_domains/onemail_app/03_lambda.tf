@@ -33,7 +33,7 @@ data "aws_iam_policy_document" "sender_policy" {
       content {
         test     = "StringEquals"
         variable = "ses:TenantName"
-        values   = [for tenant_key, _ in local.tenants : "${local.project_nodomain}-${var.env}-tenant-${tenant_key}"]
+        values   = [for tenant in values(local.tenants) : tenant.tenant_name]
       }
     }
 

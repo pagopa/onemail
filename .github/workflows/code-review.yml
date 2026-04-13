@@ -52,8 +52,7 @@ jobs:
         id: type-check
         run: pnpm run type-check
 
-      # TODO
       # run unit tests
-      # - name: Unit tests
-      #   id: unit-tests
-      #   run: pnpm run test:silent
+      - name: Unit tests
+        id: unit-tests
+        run: pnpm run test:coverage
