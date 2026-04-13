@@ -17,6 +17,16 @@
       "url": "${server_url}"
     }
   ],
+  "x-amazon-apigateway-api-key-source": "HEADER",
+  "components": {
+    "securitySchemes": {
+      "api_key": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
+      }
+    }
+  },
   "paths": {
     "/v1/emails/statuses": {
       "get": {
@@ -55,6 +65,7 @@
       "post": {
         "tags": ["Emails"],
         "summary": "Send high priority single email",
+        "security": [{ "api_key": [] }],
         "parameters": [
           %{ if env != "prod" }
             {
@@ -69,12 +80,15 @@
           %{ endif }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "HTTP_PROXY",
+          "type": "HTTP",
           "httpMethod": "POST",
           "uri": "${uri}/v1/emails/send/high",
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
+          "requestTemplates": {
+            "application/json": ${tenant_request_template}
+          },
+          "passthroughBehavior": "WHEN_NO_MATCH",
           "timeoutInMillis": 20000
         },
         "responses": {
@@ -91,6 +105,7 @@
       "post": {
         "tags": ["Emails"],
         "summary": "Send low priority email with single or multiple recipients",
+        "security": [{ "api_key": [] }],
         "parameters": [
           %{ if env != "prod" }
             {
@@ -105,12 +120,15 @@
           %{ endif }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "HTTP_PROXY",
+          "type": "HTTP",
           "httpMethod": "POST",
           "uri": "${uri}/v1/emails/send/low",
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
+          "requestTemplates": {
+            "application/json": ${tenant_request_template}
+          },
+          "passthroughBehavior": "WHEN_NO_MATCH",
           "timeoutInMillis": 20000
         },
         "responses": {

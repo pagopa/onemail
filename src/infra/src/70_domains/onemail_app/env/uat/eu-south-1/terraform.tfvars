@@ -9,6 +9,10 @@ aws_region     = "eu-south-1"
 
 # API Gateway
 api_gateway_deployment_version = "1.0.0"
+api_gateway_usage_plan_throttle = {
+  burst_limit = 500
+  rate_limit  = 100
+}
 
 # ECS Service
 ecs_service_image_name        = "core"
