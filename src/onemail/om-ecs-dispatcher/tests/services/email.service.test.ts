@@ -1,3 +1,4 @@
+import env from '#config/env';
 import { ApiError } from '#errors/api.error';
 import { EmailPriority, EmailStatus } from 'om-common/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -14,23 +15,10 @@ import {
 import { createMockLogger } from '../setup/loggerMocks.js';
 
 const setupEmailServiceDependencies = () => {
-  const envMock = {
-    aws: {
-      emailDbTable: 'email-table',
-      emailDbRequestIdGSI: 'request-id-gsi',
-      sqs: {
-        highPriorityQueueUrl: 'https://sqs.local/high',
-        lowPriorityQueueUrl: 'https://sqs.local/low',
-      },
-    },
-  };
   const loggerMock = createMockLogger();
   const dynamoClientMock = createMockAwsClient();
   const sqsClientMock = createMockAwsClient();
 
-  vi.doMock('#config/env', () => ({
-    default: envMock,
-  }));
   vi.doMock('#config/logger', () => ({
     getNamedLogger: vi.fn(() => loggerMock),
   }));
@@ -44,7 +32,6 @@ const setupEmailServiceDependencies = () => {
 
   return {
     dynamoClientMock,
-    envMock,
     loggerMock,
     sqsClientMock,
   };
@@ -57,7 +44,7 @@ describe('email.service', () => {
 
   describe('sendEmailTransactional', () => {
     it('persists the email and publishes the high priority message', async () => {
-      const { envMock, loggerMock, dynamoClientMock, sqsClientMock } =
+      const { loggerMock, dynamoClientMock, sqsClientMock } =
         setupEmailServiceDependencies();
       const randomUUID = vi
         .fn()
@@ -78,7 +65,7 @@ describe('email.service', () => {
       const putCommand = expectCommandInput(
         dynamoClientMock.send,
         {
-          TableName: envMock.aws.emailDbTable,
+          TableName: env.aws.emailDbTable,
         },
         0,
       );
@@ -98,7 +85,7 @@ describe('email.service', () => {
       expectCommandInput(
         sqsClientMock.send,
         {
-          QueueUrl: envMock.aws.sqs.highPriorityQueueUrl,
+          QueueUrl: env.aws.sqs.highPriorityQueueUrl,
           MessageBody: JSON.stringify({ emailId: 'email-id-1' }),
         },
         0,
@@ -110,7 +97,7 @@ describe('email.service', () => {
 
   describe('sendEmailLowPriority', () => {
     it('splits low priority batches over the DynamoDB write limit', async () => {
-      const { envMock, dynamoClientMock, sqsClientMock } =
+      const { dynamoClientMock, sqsClientMock } =
         setupEmailServiceDependencies();
       const randomUUID = vi.fn();
 
@@ -147,17 +134,17 @@ describe('email.service', () => {
         input: { RequestItems: Record<string, unknown[]> };
       };
 
-      expect(
-        firstBatch.input.RequestItems[envMock.aws.emailDbTable],
-      ).toHaveLength(25);
-      expect(
-        secondBatch.input.RequestItems[envMock.aws.emailDbTable],
-      ).toHaveLength(1);
+      expect(firstBatch.input.RequestItems[env.aws.emailDbTable]).toHaveLength(
+        25,
+      );
+      expect(secondBatch.input.RequestItems[env.aws.emailDbTable]).toHaveLength(
+        1,
+      );
 
       expectCommandInput(
         sqsClientMock.send,
         {
-          QueueUrl: envMock.aws.sqs.lowPriorityQueueUrl,
+          QueueUrl: env.aws.sqs.lowPriorityQueueUrl,
           MessageBody: JSON.stringify({ requestId: 'request-id-2' }),
         },
         0,
@@ -167,7 +154,7 @@ describe('email.service', () => {
 
   describe('getEmailStatus', () => {
     it('returns the history sorted in descending timestamp order', async () => {
-      const { envMock, dynamoClientMock } = setupEmailServiceDependencies();
+      const { dynamoClientMock } = setupEmailServiceDependencies();
 
       dynamoClientMock.send.mockResolvedValue({
         Items: [
@@ -203,8 +190,8 @@ describe('email.service', () => {
       expectCommandInput(
         dynamoClientMock.send,
         {
-          TableName: envMock.aws.emailDbTable,
-          IndexName: envMock.aws.emailDbRequestIdGSI,
+          TableName: env.aws.emailDbTable,
+          IndexName: env.aws.emailDbRequestIdGSI,
         },
         0,
       );

@@ -8,17 +8,6 @@ const setupHealthServiceDependencies = () => {
   const dynamoClientMock = createMockAwsClient();
   const sqsClientMock = createMockAwsClient();
 
-  vi.doMock('#config/env', () => ({
-    default: {
-      aws: {
-        emailDbTable: 'email-table',
-        sqs: {
-          highPriorityQueueUrl: 'https://sqs.local/high',
-          lowPriorityQueueUrl: 'https://sqs.local/low',
-        },
-      },
-    },
-  }));
   vi.doMock('#config/logger', () => ({
     getNamedLogger: vi.fn(() => loggerMock),
   }));
