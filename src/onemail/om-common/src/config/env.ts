@@ -4,8 +4,9 @@ export default {
     cloudWatchMetricsNamespace:
       process.env.AWS_CLOUDWATCH_METRICS_NAMESPACE ??
       throwMissingRequiredEnvVar('AWS_CLOUDWATCH_METRICS_NAMESPACE'),
-    lambdaPrefix:
-      process.env.LAMBDA_PREFIX ?? throwMissingRequiredEnvVar('LAMBDA_PREFIX'),
+    servicePrefix:
+      process.env.SERVICE_PREFIX ??
+      throwMissingRequiredEnvVar('SERVICE_PREFIX'),
   },
 };
 
