@@ -1,5 +1,12 @@
 # om-ecs-dispatcher
 
+## 1.6.7
+
+### Patch Changes
+
+- 50b0d0b: fix yaml override conflicts lock file
+- 96ad737: add vitest and ecs dispatcher ut
+
 ## 1.6.6
 
 ### Patch Changes
