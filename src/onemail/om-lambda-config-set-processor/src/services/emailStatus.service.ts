@@ -18,10 +18,14 @@ import { EmailStatus } from 'om-common/types';
 const logger = getLogger();
 
 const validateRecord = (record: SQSRecord): ConfSetEventItem | undefined => {
-  let parsedBody: unknown;
+  let parsedBody: Record<string, unknown>;
   try {
     if (isEmpty(record.body)) throw new Error('Empty body');
     parsedBody = JSON.parse(record.body);
+    parsedBody =
+      'detail' in parsedBody
+        ? (parsedBody.detail as Record<string, unknown>)
+        : parsedBody;
   } catch {
     logger.error('Invalid payload, discarding record', { record });
     //Todo add metrics
