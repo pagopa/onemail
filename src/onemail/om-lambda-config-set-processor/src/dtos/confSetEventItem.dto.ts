@@ -17,7 +17,7 @@ const BounceSchema = z.object({
   feedbackId: z.string(),
   bouncedRecipients: z.array(
     z.object({
-      emailAddress: z.email(),
+      emailAddress: z.string(),
     }),
   ),
   timestamp: z.string(),
@@ -26,7 +26,7 @@ const BounceSchema = z.object({
 const ComplaintSchema = z.object({
   complainedRecipients: z.array(
     z.object({
-      emailAddress: z.email(),
+      emailAddress: z.string(),
     }),
   ),
   timestamp: z.string(),
