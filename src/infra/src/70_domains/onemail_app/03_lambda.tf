@@ -125,7 +125,7 @@ module "lambda_sender" {
     AWS_EMAIL_DB_REQUEST_ID_GSI      = local.gsis["gsi_request_id_idx"].name
     HIGH_PRIORITY_QUEUE_ARN          = data.aws_sqs_queue.high_priority.arn
     LOW_PRIORITY_QUEUE_ARN           = data.aws_sqs_queue.low_priority.arn
-    LAMBDA_PREFIX                    = "${local.project_nodomain}"
+    SERVICE_PREFIX                   = "${local.project_nodomain}"
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-sender"
     TMP_CONFIGURATION_SET_NAME       = "${local.project_nodomain}-configuration-set-onemail"
     TMP_TENANT_NAME                  = "${local.project_nodomain}-tenant-onemail"
@@ -259,7 +259,7 @@ module "lambda_set_processor" {
     AWS_EMAIL_DB_TABLE                                     = data.aws_dynamodb_table.EmailStatusHistory.name
     AWS_EMAIL_DB_MESSAGE_ID_GSI                            = local.gsis["gsi_ses_message_id_idx"].name
     AWS_CLOUDWATCH_METRICS_NAMESPACE                       = "${local.project_nodomain}-lambda-config-set-processor"
-    LAMBDA_PREFIX                                          = "${local.project_nodomain}"
+    SERVICE_PREFIX                                         = "${local.project_nodomain}"
     NODE_ENV                                               = "production"
     POWERTOOLS_LOG_LEVEL                                   = "DEBUG"
     EVENTBRIDGE_SCHEDULER_ROLE_ARN                         = local.scheduler_role_arn

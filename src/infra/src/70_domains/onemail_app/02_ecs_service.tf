@@ -114,7 +114,7 @@ module "ecs_service" {
       value = "DEBUG"
     },
     {
-      name  = "ECS_PREFIX"
+      name  = "SERVICE_PREFIX"
       value = "${local.project_nodomain}"
     },
     {
