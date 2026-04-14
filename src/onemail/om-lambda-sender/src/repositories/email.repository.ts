@@ -1,5 +1,3 @@
-import type { EmailStatus, EmailStatusHistoryItem } from 'om-common/types';
-
 import env from '#config/env';
 import { getLogger, getNamedLogger } from '#config/logger';
 import { dynamoClient } from '#connectors/dynamo.connector';
@@ -9,8 +7,8 @@ import {
   QueryCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
-
-import { publishMetrics, SenderMetricName } from './metrics.repository.js';
+import { publishMetrics, SenderMetricName } from 'om-common/repositories';
+import { type EmailStatus, type EmailStatusHistoryItem } from 'om-common/types';
 
 const logger = getLogger();
 
@@ -129,7 +127,7 @@ const processBatchWithRetry = async (
     pendingRequests = unprocessedRequests;
 
     if (retryCount > MAX_RETRIES) {
-      await publishMetrics([
+      publishMetrics([
         {
           name: SenderMetricName.EmailStatusBatchUpdateFailed,
         },
