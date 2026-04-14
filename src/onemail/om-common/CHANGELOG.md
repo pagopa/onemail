@@ -1,5 +1,11 @@
 # om-common
 
+## 1.2.0
+
+### Minor Changes
+
+- 0a10a3e: Update metrics handling
+
 ## 1.1.1
 
 ### Patch Changes

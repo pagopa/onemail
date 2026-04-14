@@ -1,5 +1,20 @@
 # onemail
 
+## 1.4.0
+
+### Minor Changes
+
+- 0a10a3e: Update metrics handling
+
+### Patch Changes
+
+- Updated dependencies [0a10a3e]
+  - om-lambda-config-set-processor@1.3.0
+  - infra-domains-onemail-app@1.14.0
+  - om-ecs-dispatcher@1.7.0
+  - om-lambda-sender@1.3.0
+  - om-common@1.2.0
+
 ## 1.3.8
 
 ### Patch Changes

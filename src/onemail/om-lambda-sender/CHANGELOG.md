@@ -1,5 +1,16 @@
 # om-lambda-sender
 
+## 1.3.0
+
+### Minor Changes
+
+- 0a10a3e: Update metrics handling
+
+### Patch Changes
+
+- Updated dependencies [0a10a3e]
+  - om-common@1.2.0
+
 ## 1.2.10
 
 ### Patch Changes
