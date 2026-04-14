@@ -80,8 +80,9 @@ Read the OpenAPI spec at '$OPENAPI_FILE' and the Terraform template for AWS API 
 Follow the existing routes on the template to edit/integrate the file.
 
 ## x-amazon-apigateway-integration block rules
-this is an example of an x-amazon-apigateway-integration block that must be on every path in the template:
+These are examples of the two x-amazon-apigateway-integration patterns used in the template.
 
+HTTP_PROXY pattern (used for routes without VTL body mapping):
   \"x-amazon-apigateway-integration\": {
     \"type\": \"HTTP_PROXY\",
     \"httpMethod\": \"GET\",
@@ -92,21 +93,66 @@ this is an example of an x-amazon-apigateway-integration block that must be on e
     \"timeoutInMillis\": 20000
   },
 
+HTTP pattern (used for routes with VTL body mapping):
+  \"x-amazon-apigateway-integration\": {
+    \"type\": \"HTTP\",
+    \"httpMethod\": \"POST\",
+    \"uri\": \"\${uri}/v1/emails/send/high\",
+    \"connectionType\": \"VPC_LINK\",
+    \"connectionId\": \"\${connection_id}\",
+    \"requestParameters\": {
+      \"integration.request.querystring.dryRun\": \"method.request.querystring.dryRun\"
+    },
+    \"requestTemplates\": {
+      \"application/json\": \${tenant_request_template}
+    },
+    \"passthroughBehavior\": \"WHEN_NO_MATCH\",
+    \"timeoutInMillis\": 20000,
+    \"responses\": {
+      \"4\\\\d{2}\": { \"statusCode\": \"400\" },
+      \"5\\\\d{2}\": { \"statusCode\": \"500\" },
+      \"202\": { \"statusCode\": \"202\" },
+      \"400\": { \"statusCode\": \"400\" },
+      \"401\": { \"statusCode\": \"401\" },
+      \"403\": { \"statusCode\": \"403\" },
+      \"404\": { \"statusCode\": \"404\" },
+      \"409\": { \"statusCode\": \"409\" },
+      \"429\": { \"statusCode\": \"429\" },
+      \"500\": { \"statusCode\": \"500\" }
+    }
+  },
+
 RULES:
 1. If the OpenAPI spec file is unchanged, do not modify the template file.
   - Use 'git diff' to check if 'openapi-docs.json' has changes compared to the main (prefer origin/main for local) branch.
   - EXCLUDE changes for 'info' object of the json.
   - If there is no changes (excluding info object mentioned above), skip the update and exit successfully.
 2. UPDATE doc info version from spec to template and leave other info fields unchanged.
-3. UPDATE routes (method, path, tags, params, summary, responses) from spec to template.
+3. UPDATE routes (method, path, tags, params, summary, security, responses) from spec to template.
    - If a route is removed from the spec, remove it from the template.
    - If a route is added in the spec, add it to the template (before health routes).
+   - If a route is modified in the spec, update the route block in the template accordingly.
    - Do not add/edit 'description' and validation keywords in parameters schema
    - Do not add 'requestBody', 'components', '\$ref'
+   - SECURITY: sync the route-level 'security' field from spec to template.
+     * If the spec has "security": [{"api_key": []}], add or keep "security": [{"api_key": []}] on the route.
+     * If the spec has "security": [] or no security field, remove any existing 'security' field from that route in the template.
 4. x-amazon-apigateway-integration:
    - Update 'httpMethod' and 'uri' as needed, if changed.
-   - For NEW routes: add the integration block (type=HTTP_PROXY, connectionType=VPC_LINK, timeoutInMillis=20000 for data routes, 5000 for health routes).
+   - For NEW routes: add the integration block (connectionType=VPC_LINK, timeoutInMillis=20000 for data routes, 5000 for health routes). Use type=HTTP only if the route requires VTL body mapping (i.e. it needs tenant injection like /send/*); use type=HTTP_PROXY otherwise.
    - NEVER change connectionId, connectionType, passthroughBehavior.
+   - Routes that already have type=HTTP must KEEP type=HTTP; routes that already have type=HTTP_PROXY must KEEP type=HTTP_PROXY
+   - If the route has type=HTTP:
+      - requestTemplates: keep the existing requestTemplates reference exactly as-is; never remove it.
+      - Add or update or remove a requestParameters mapping for each query parameter defined on the route. If there are NO query parameters at all, omit the requestParameters field entirely.
+      - If the description of the request parameter contains 'ignored in production' or 'non-production', wrap it in a %{ if env != \"prod\" } / %{ endif } block.
+      - responses: at the end add or modify a 'responses' object inside the integration block. Build it from the HTTP status codes present in the route's OpenAPI 'responses' field. Each entry must be: \"<statusCode>\": { \"statusCode\": \"<statusCode>\" }.
+        At the very start of the responses block, ALWAYS as the first two entries, add the catch-all fallback entries:
+          \"4\\\\d{2}\": { \"statusCode\": \"400\" },
+          \"5\\\\d{2}\": { \"statusCode\": \"500\" }
+   - If the route has type=HTTP_PROXY:
+      - Do NOT add a 'responses' field inside the integration block, even if there are HTTP status codes in the OpenAPI spec.
+      - Do not add requestParameters or requestTemplates; keep the integration block as simple as possible with just type, httpMethod, uri, connectionType, connectionId, passthroughBehavior, timeoutInMillis.
 5. For EXISTING paths:
    - If a route has NOT changed in the spec, leave the route block in the template as-is.
 6. IMMUTABILITY:
