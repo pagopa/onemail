@@ -186,7 +186,9 @@ data "aws_iam_policy_document" "set_processor_policy" {
     ]
     resources = [
       "${local.scheduler_group_arn}/*",
-      local.scheduler_group_arn
+      local.scheduler_group_arn,
+      "${local.schedule_arn_prefix}/retry-*",
+      "${local.schedule_arn_prefix}/*"
     ]
   }
 

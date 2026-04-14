@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.5.9",
+    "version": "1.6.7",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -17,11 +17,22 @@
       "url": "${server_url}"
     }
   ],
+  "x-amazon-apigateway-api-key-source": "HEADER",
+  "components": {
+    "securitySchemes": {
+      "api_key": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
+      }
+    }
+  },
   "paths": {
     "/v1/emails/statuses": {
       "get": {
         "tags": ["Emails"],
         "summary": "Get email status history",
+        "security": [{ "api_key": [] }],
         "parameters": [
           {
             "name": "requestId",
@@ -47,6 +58,8 @@
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
+          "409": { "description": "Conflict - resource already exists" },
+          "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
       }
@@ -55,6 +68,7 @@
       "post": {
         "tags": ["Emails"],
         "summary": "Send high priority single email",
+        "security": [{ "api_key": [] }],
         "parameters": [
           %{ if env != "prod" }
             {
@@ -69,13 +83,31 @@
           %{ endif }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "HTTP_PROXY",
+          "type": "HTTP",
           "httpMethod": "POST",
           "uri": "${uri}/v1/emails/send/high",
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "timeoutInMillis": 20000
+          %{ if env != "prod" }
+          "requestParameters": {
+            "integration.request.querystring.dryRun": "method.request.querystring.dryRun"
+          },
+          %{ endif }
+          "requestTemplates": {
+            "application/json": ${tenant_request_template}
+          },
+          "passthroughBehavior": "WHEN_NO_MATCH",
+          "timeoutInMillis": 20000,
+          "responses": {
+            "202": { "statusCode": "202" },
+            "400": { "statusCode": "400" },
+            "401": { "statusCode": "401" },
+            "403": { "statusCode": "403" },
+            "404": { "statusCode": "404" },
+            "409": { "statusCode": "409" },
+            "429": { "statusCode": "429" },
+            "500": { "statusCode": "500" }
+          }
         },
         "responses": {
           "202": { "description": "Email accepted for processing" },
@@ -83,6 +115,8 @@
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
+          "409": { "description": "Conflict - resource already exists" },
+          "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
       }
@@ -91,6 +125,7 @@
       "post": {
         "tags": ["Emails"],
         "summary": "Send low priority email with single or multiple recipients",
+        "security": [{ "api_key": [] }],
         "parameters": [
           %{ if env != "prod" }
             {
@@ -105,13 +140,31 @@
           %{ endif }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "HTTP_PROXY",
+          "type": "HTTP",
           "httpMethod": "POST",
           "uri": "${uri}/v1/emails/send/low",
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "timeoutInMillis": 20000
+          %{ if env != "prod" }
+          "requestParameters": {
+            "integration.request.querystring.dryRun": "method.request.querystring.dryRun"
+          },
+          %{ endif }
+          "requestTemplates": {
+            "application/json": ${tenant_request_template}
+          },
+          "passthroughBehavior": "WHEN_NO_MATCH",
+          "timeoutInMillis": 20000,
+          "responses": {
+            "202": { "statusCode": "202" },
+            "400": { "statusCode": "400" },
+            "401": { "statusCode": "401" },
+            "403": { "statusCode": "403" },
+            "404": { "statusCode": "404" },
+            "409": { "statusCode": "409" },
+            "429": { "statusCode": "429" },
+            "500": { "statusCode": "500" }
+          }
         },
         "responses": {
           "202": { "description": "Email accepted for processing" },
@@ -119,6 +172,8 @@
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
+          "409": { "description": "Conflict - resource already exists" },
+          "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
       }
@@ -143,6 +198,8 @@
             "401": { "description": "Unauthorized - authentication required or invalid credentials" },
             "403": { "description": "Forbidden - permission denied to perform the request" },
             "404": { "description": "Resource not found" },
+            "409": { "description": "Conflict - resource already exists" },
+            "429": { "description": "Too many requests" },
             "500": { "description": "Generic error" }
           }
         }
@@ -167,6 +224,8 @@
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
+          "409": { "description": "Conflict - resource already exists" },
+          "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
       }
@@ -190,6 +249,8 @@
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
+          "409": { "description": "Conflict - resource already exists" },
+          "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
       }
