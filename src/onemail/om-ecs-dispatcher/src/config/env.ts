@@ -21,8 +21,9 @@ export default {
     cloudWatchMetricsNamespace:
       process.env.AWS_CLOUDWATCH_METRICS_NAMESPACE ||
       'ecs-dispatcher/ApplicationMetrics',
-    ecsPrefix:
-      process.env.ECS_PREFIX ?? throwMissingRequiredEnvVar('ECS_PREFIX'),
+    servicePrefix:
+      process.env.SERVICE_PREFIX ??
+      throwMissingRequiredEnvVar('SERVICE_PREFIX'),
     localDynamoDb: {
       endpoint: process.env.AWS_DYNAMODB_ENDPOINT || 'http://localhost:8000',
       accessKeyId: process.env.AWS_DYNAMODB_ACCESS_KEY_ID || 'local',
