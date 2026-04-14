@@ -99,8 +99,6 @@
           "passthroughBehavior": "WHEN_NO_MATCH",
           "timeoutInMillis": 20000,
           "responses": {
-            "4\\d{2}": { "statusCode": "400" },
-            "5\\d{2}": { "statusCode": "500" },
             "202": { "statusCode": "202" },
             "400": { "statusCode": "400" },
             "401": { "statusCode": "401" },
@@ -158,8 +156,6 @@
           "passthroughBehavior": "WHEN_NO_MATCH",
           "timeoutInMillis": 20000,
           "responses": {
-            "4\\d{2}": { "statusCode": "400" },
-            "5\\d{2}": { "statusCode": "500" },
             "202": { "statusCode": "202" },
             "400": { "statusCode": "400" },
             "401": { "statusCode": "401" },

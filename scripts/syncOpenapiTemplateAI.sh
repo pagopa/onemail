@@ -109,8 +109,6 @@ HTTP pattern (used for routes with VTL body mapping):
     \"passthroughBehavior\": \"WHEN_NO_MATCH\",
     \"timeoutInMillis\": 20000,
     \"responses\": {
-      \"4\\\\d{2}\": { \"statusCode\": \"400\" },
-      \"5\\\\d{2}\": { \"statusCode\": \"500\" },
       \"202\": { \"statusCode\": \"202\" },
       \"400\": { \"statusCode\": \"400\" },
       \"401\": { \"statusCode\": \"401\" },
@@ -147,9 +145,6 @@ RULES:
       - Add or update or remove a requestParameters mapping for each query parameter defined on the route. If there are NO query parameters at all, omit the requestParameters field entirely.
       - If the description of the request parameter contains 'ignored in production' or 'non-production', wrap it in a %{ if env != \"prod\" } / %{ endif } block.
       - responses: at the end add or modify a 'responses' object inside the integration block. Build it from the HTTP status codes present in the route's OpenAPI 'responses' field. Each entry must be: \"<statusCode>\": { \"statusCode\": \"<statusCode>\" }.
-        At the very start of the responses block, ALWAYS as the first two entries, add the catch-all fallback entries:
-          \"4\\\\d{2}\": { \"statusCode\": \"400\" },
-          \"5\\\\d{2}\": { \"statusCode\": \"500\" }
    - If the route has type=HTTP_PROXY:
       - Do NOT add a 'responses' field inside the integration block, even if there are HTTP status codes in the OpenAPI spec.
       - Do not add requestParameters or requestTemplates; keep the integration block as simple as possible with just type, httpMethod, uri, connectionType, connectionId, passthroughBehavior, timeoutInMillis.
