@@ -27,7 +27,10 @@ const getFirstSoftBounceTimestamp = (
 ): string | undefined =>
   history
     .filter((event) => event.status === EmailStatus.SoftBounce)
-    .sort((a, b) => a.changedAt.localeCompare(b.changedAt))[0]?.changedAt;
+    .sort(
+      (a, b) =>
+        new Date(a.changedAt).getTime() - new Date(b.changedAt).getTime(),
+    )[0]?.changedAt;
 
 const countSoftBounceAttempts = (history: EmailEvent[]): number =>
   history.filter((event) => event.status === EmailStatus.SoftBounce).length;
