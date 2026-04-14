@@ -872,7 +872,6 @@
           "Emails"
         ],
         "summary": "Test HTML content sanitization of the email, only available in non-production environments",
-        "security": [],
         "requestBody": {
           "description": "Request body",
           "content": {
@@ -973,7 +972,6 @@
           "Health"
         ],
         "summary": "Perform readiness check of the service",
-        "security": [],
         "responses": {
           "200": {
             "description": "Service is ready",
@@ -1064,7 +1062,6 @@
           "Health"
         ],
         "summary": "Perform liveness check of the service",
-        "security": [],
         "responses": {
           "200": {
             "description": "Service is alive",

@@ -116,7 +116,7 @@ export const registerOpenApiRoute = ({
     path,
     tags,
     summary,
-    security: isAuthenticated ? [{ api_key: [] }] : [],
+    ...(isAuthenticated && { security: [{ api_key: [] }] }),
     request: {
       // add request body only if it exists
       ...(requestBodyConfig
