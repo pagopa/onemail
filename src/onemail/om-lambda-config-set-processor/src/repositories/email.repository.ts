@@ -9,7 +9,6 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import isEmpty from 'lodash-es/isEmpty.js';
-import last from 'lodash-es/last.js';
 
 const logger = getLogger();
 
@@ -57,11 +56,14 @@ export const updateEmailStatusBySesMessageId = async (
     return;
   }
 
-  //latest status to be saved
-  const currentUpdate = last(updates);
-  if (!currentUpdate) {
-    return;
-  }
+  // Latest status: ne timestamp
+  // Takes the timestamp closest to the present. In the event of a tie, it takes the last one in the array
+  const currentUpdate = updates.reduce((latest, current) =>
+    new Date(current.timestamp).getTime() >=
+    new Date(latest.timestamp).getTime()
+      ? current
+      : latest,
+  );
 
   // Update the email record with the new status and timestamp
   await dynamoClient.send(
