@@ -32,6 +32,7 @@
       "get": {
         "tags": ["Emails"],
         "summary": "Get email status history",
+        "security": [{ "api_key": [] }],
         "parameters": [
           {
             "name": "requestId",
