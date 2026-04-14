@@ -57,6 +57,8 @@
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
+          "409": { "description": "Conflict - resource already exists" },
+          "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
       }
@@ -85,11 +87,26 @@
           "uri": "${uri}/v1/emails/send/high",
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
+          %{ if env != "prod" }
+          "requestParameters": {
+            "integration.request.querystring.dryRun": "method.request.querystring.dryRun"
+          },
+          %{ endif }
           "requestTemplates": {
             "application/json": ${tenant_request_template}
           },
           "passthroughBehavior": "WHEN_NO_MATCH",
-          "timeoutInMillis": 20000
+          "timeoutInMillis": 20000,
+          "responses": {
+            "202": { "description": "Email accepted for processing" },
+            "400": { "description": "Bad request - invalid data" },
+            "401": { "description": "Unauthorized - authentication required or invalid credentials" },
+            "403": { "description": "Forbidden - permission denied to perform the request" },
+            "404": { "description": "Resource not found" },
+            "409": { "description": "Conflict - resource already exists" },
+            "429": { "description": "Too many requests" },
+            "500": { "description": "Generic error" }
+          }
         },
         "responses": {
           "202": { "description": "Email accepted for processing" },
@@ -97,6 +114,8 @@
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
+          "409": { "description": "Conflict - resource already exists" },
+          "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
       }
@@ -125,11 +144,26 @@
           "uri": "${uri}/v1/emails/send/low",
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
+          %{ if env != "prod" }
+          "requestParameters": {
+            "integration.request.querystring.dryRun": "method.request.querystring.dryRun"
+          },
+          %{ endif }
           "requestTemplates": {
             "application/json": ${tenant_request_template}
           },
           "passthroughBehavior": "WHEN_NO_MATCH",
-          "timeoutInMillis": 20000
+          "timeoutInMillis": 20000,
+          "responses": {
+            "202": { "description": "Email accepted for processing" },
+            "400": { "description": "Bad request - invalid data" },
+            "401": { "description": "Unauthorized - authentication required or invalid credentials" },
+            "403": { "description": "Forbidden - permission denied to perform the request" },
+            "404": { "description": "Resource not found" },
+            "409": { "description": "Conflict - resource already exists" },
+            "429": { "description": "Too many requests" },
+            "500": { "description": "Generic error" }
+          }
         },
         "responses": {
           "202": { "description": "Email accepted for processing" },
@@ -137,6 +171,8 @@
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
+          "409": { "description": "Conflict - resource already exists" },
+          "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
       }
@@ -161,6 +197,8 @@
             "401": { "description": "Unauthorized - authentication required or invalid credentials" },
             "403": { "description": "Forbidden - permission denied to perform the request" },
             "404": { "description": "Resource not found" },
+            "409": { "description": "Conflict - resource already exists" },
+            "429": { "description": "Too many requests" },
             "500": { "description": "Generic error" }
           }
         }
@@ -185,6 +223,8 @@
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
+          "409": { "description": "Conflict - resource already exists" },
+          "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
       }
@@ -208,6 +248,8 @@
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
+          "409": { "description": "Conflict - resource already exists" },
+          "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
       }
