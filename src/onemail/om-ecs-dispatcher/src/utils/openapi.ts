@@ -32,6 +32,14 @@ const defaultErrorResponses = {
     description: 'Resource not found',
     content: { [applicationJsonContentType]: { schema: ErrorResponseSchema } },
   },
+  [StatusCodes.CONFLICT]: {
+    description: 'Conflict - resource already exists',
+    content: { [applicationJsonContentType]: { schema: ErrorResponseSchema } },
+  },
+  [StatusCodes.TOO_MANY_REQUESTS]: {
+    description: 'Too many requests',
+    content: { [applicationJsonContentType]: { schema: ErrorResponseSchema } },
+  },
   [StatusCodes.INTERNAL_SERVER_ERROR]: {
     description: 'Generic error',
     content: { [applicationJsonContentType]: { schema: ErrorResponseSchema } },
@@ -88,6 +96,7 @@ export const registerOpenApiRoute = ({
   queryParams,
   responses,
   tags,
+  isAuthenticated = false,
 }: {
   method: 'get' | 'post' | 'put' | 'delete' | 'patch';
   path: string;
@@ -97,6 +106,7 @@ export const registerOpenApiRoute = ({
   queryParams?: z.ZodObject;
   responses: OpenApiResponses;
   tags?: string[];
+  isAuthenticated?: boolean;
 }) => {
   const requestBodyConfig =
     requestBody instanceof z.ZodType ? { schema: requestBody } : requestBody;
@@ -106,6 +116,7 @@ export const registerOpenApiRoute = ({
     path,
     tags,
     summary,
+    security: isAuthenticated ? [{ api_key: [] }] : [],
     request: {
       // add request body only if it exists
       ...(requestBodyConfig

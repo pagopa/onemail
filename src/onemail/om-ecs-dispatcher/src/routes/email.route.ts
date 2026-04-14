@@ -38,6 +38,7 @@ registerOpenApiRoute({
   path: `${versionRoutePath.v1}/${prefix}/statuses`,
   summary: 'Get email status history',
   tags: [tag],
+  isAuthenticated: true,
   queryParams: EmailStatusQueryParamsSchema,
   responses: {
     [StatusCodes.OK]: {
@@ -60,6 +61,7 @@ registerOpenApiRoute({
   path: `${versionRoutePath.v1}/${prefix}/send/high`,
   summary: 'Send high priority single email',
   tags: [tag],
+  isAuthenticated: true,
   queryParams: EmailHighPriorityQueryParamsSchema,
   requestBody: EmailHighPriorityBodySchema,
   responses: {
@@ -83,6 +85,7 @@ registerOpenApiRoute({
   path: `${versionRoutePath.v1}/${prefix}/send/low`,
   summary: 'Send low priority email with single or multiple recipients',
   tags: [tag],
+  isAuthenticated: true,
   queryParams: EmailLowPriorityQueryParamsSchema,
   requestBody: EmailLowPriorityBodySchema,
   responses: {

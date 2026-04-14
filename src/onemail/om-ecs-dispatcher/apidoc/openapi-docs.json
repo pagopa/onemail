@@ -18,6 +18,13 @@
     }
   ],
   "components": {
+    "securitySchemes": {
+      "api_key": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
+      }
+    },
     "schemas": {
       "EmailStatusItemResponseDTO": {
         "type": "object",
@@ -517,6 +524,11 @@
           "Emails"
         ],
         "summary": "Get email status history",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
         "parameters": [
           {
             "schema": {
@@ -585,6 +597,26 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Generic error",
             "content": {
@@ -604,6 +636,11 @@
           "Emails"
         ],
         "summary": "Send high priority single email",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
         "parameters": [
           {
             "schema": {
@@ -678,6 +715,26 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Generic error",
             "content": {
@@ -697,6 +754,11 @@
           "Emails"
         ],
         "summary": "Send low priority email with single or multiple recipients",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
         "parameters": [
           {
             "schema": {
@@ -771,6 +833,26 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Generic error",
             "content": {
@@ -790,6 +872,7 @@
           "Emails"
         ],
         "summary": "Test HTML content sanitization of the email, only available in non-production environments",
+        "security": [],
         "requestBody": {
           "description": "Request body",
           "content": {
@@ -851,6 +934,26 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Generic error",
             "content": {
@@ -870,6 +973,7 @@
           "Health"
         ],
         "summary": "Perform readiness check of the service",
+        "security": [],
         "responses": {
           "200": {
             "description": "Service is ready",
@@ -921,6 +1025,26 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Generic error",
             "content": {
@@ -940,6 +1064,7 @@
           "Health"
         ],
         "summary": "Perform liveness check of the service",
+        "security": [],
         "responses": {
           "200": {
             "description": "Service is alive",
@@ -983,6 +1108,26 @@
           },
           "404": {
             "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
             "content": {
               "application/json": {
                 "schema": {
