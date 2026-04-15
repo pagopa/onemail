@@ -1,5 +1,13 @@
 # onemail
 
+## 1.4.2
+
+### Patch Changes
+
+- Updated dependencies [ec483b4]
+  - infra-domains-onemail-common@1.8.0
+  - infra-network@1.8.0
+
 ## 1.4.1
 
 ### Patch Changes
