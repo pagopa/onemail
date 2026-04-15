@@ -1,0 +1,34 @@
+name: Security Gates
+
+# Security gate - skip resolution logic:
+# 1. If workflow_call event (e.g. workflow_dispatch from another workflow) → use manual bypass input (default false)
+# 2. If automated event (push/PR) → use BYPASS_SECURITY_CHECKS repository variable (default false)
+# 3. Empty/null values normalize to false (secure default)
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  workflow_call:
+    inputs:
+      bypass_security_checks_manual:
+        description: 'Manual bypass flag from workflow_dispatch input'
+        type: boolean
+        default: false
+        required: false
+
+jobs:
+  security-gates-oer:
+    name: Security Gates OER
+    if: ${{ github.event_name == 'workflow_call' || github.event.pull_request.base.ref == 'main' }}
+    # Uses private organization reusable workflow - IDE may show warning because the repo is not publicly discoverable
+    # force_release input is used to decide if security gates check should be bypassed
+    uses: pagopa/prodsec-security-gates@cf92482741b7b7d10feae58460bf1ebfeb3bbfbb
+    with:
+      force_release: ${{ inputs.bypass_security_checks_manual == true || vars.BYPASS_SECURITY_CHECKS == 'true' }}

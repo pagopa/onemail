@@ -20,6 +20,10 @@ on:
           - dev
           - uat
           - prod
+      bypass_security_checks:
+        type: boolean
+        default: false
+        description: 'Force deploy bypassing security checks: use only with proper authorization'
 
 # Never cancel an in-flight deploy to avoid leaving ECS in a partial state
 # It prevents issues where multiple commits are pushed in a short time, which would trigger multiple deploys and cancel the previous ones, potentially leaving the app in a broken state if the last deploy fails.
@@ -38,18 +42,24 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Setup Matrix
         id: matrix
         uses: ./.github/actions/env-matrix
         with:
           event_name: ${{ github.event_name }}
-          environment_input: ${{ github.event.inputs.environment }}
+          environment_input: ${{ inputs.environment }}
+
+  security-checks:
+    name: Security Checks
+    uses: ./.github/workflows/security-gates.yml
+    with:
+      bypass_security_checks_manual: ${{ inputs.bypass_security_checks }}
 
   deploy:
     name: Deploy on ECS ${{ matrix.environment }}-${{ matrix.region }}
-    needs: setup
+    needs: [setup, security-checks]
     if: ${{ needs.setup.outputs.matrix != '' }}
     runs-on: ubuntu-22.04
     timeout-minutes: 30

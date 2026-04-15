@@ -28,6 +28,11 @@ on:
         type: string
         required: false
         default: ''
+      bypass_security_checks_manual:
+        description: 'Bypass security checks flag from workflow_dispatch input: use only with proper authorization'
+        type: boolean
+        required: false
+        default: false
 
 permissions: {}
 
@@ -51,12 +56,18 @@ jobs:
           event_name: ${{ inputs.event_name }}
           environment_input: ${{ inputs.environment_input }}
 
+  security-checks:
+    name: Security Checks
+    uses: ./.github/workflows/security-gates.yml
+    with:
+      bypass_security_checks_manual: ${{ inputs.bypass_security_checks_manual }}
+
   build:
     name: Build Lambda Artifact
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     # Depends on setup-matrix to skip the build when matrix resolution fails
-    needs: setup-matrix
+    needs: [setup-matrix, security-checks]
     permissions:
       contents: read
     steps:
@@ -90,7 +101,7 @@ jobs:
     timeout-minutes: 20
     if: ${{ needs.setup-matrix.outputs.matrix != '' }}
     runs-on: ubuntu-22.04
-    needs: [setup-matrix, build]
+    needs: [setup-matrix, security-checks, build]
     strategy:
       matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
     continue-on-error: false
