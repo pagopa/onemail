@@ -145,6 +145,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       },
     ]);
   }
+  // TODO: implement reject handling
 
   logger.info('End');
 };
