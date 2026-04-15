@@ -1,17 +1,12 @@
 import { configDotenv } from 'dotenv';
 import { fileURLToPath, URL } from 'node:url';
-import { afterEach, beforeEach, vi } from 'vitest';
 import '#config/zodExtend';
+
+import { registerVitestBaseHooks } from '../../../viTestBase.shared.js';
 
 configDotenv({
   path: fileURLToPath(new URL('../../.env.test', import.meta.url)),
   quiet: true,
 });
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
+registerVitestBaseHooks();

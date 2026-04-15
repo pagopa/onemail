@@ -1,9 +1,3 @@
-import { afterEach, beforeEach, vi } from 'vitest';
+import { registerVitestBaseHooks } from '../../../viTestBase.shared.js';
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
+registerVitestBaseHooks();

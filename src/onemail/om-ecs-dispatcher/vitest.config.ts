@@ -1,45 +1,14 @@
-import { fileURLToPath, URL } from 'node:url';
-import { defineConfig } from 'vitest/config';
+import { createPackageVitestConfig } from '../vitest.shared.js';
 
-const fromPackage = (path: string) =>
-  fileURLToPath(new URL(path, import.meta.url));
-
-const dispatcherSrcRoot = fromPackage('./src');
-const omCommonSrcRoot = fromPackage('../om-common/src');
-
-export default defineConfig({
-  resolve: {
-    alias: [
-      {
-        find: /^#(.+)$/,
-        replacement: `${dispatcherSrcRoot}/$1`,
-      },
-      {
-        find: 'om-common',
-        replacement: omCommonSrcRoot,
-      },
-    ],
-    conditions: ['local'],
-  },
-  test: {
-    environment: 'node',
-    setupFiles: [fromPackage('./tests/setup/vi.test.base.ts')],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html'],
-      include: [
-        fromPackage('./src/controllers/**/*.ts'),
-        fromPackage('./src/middlewares/**/*.ts'),
-        fromPackage('./src/services/**/*.ts'),
-        fromPackage('./src/utils/**/*.ts'),
-      ],
-      exclude: [fromPackage('./src/utils/constants.ts')],
-      thresholds: {
-        statements: 80,
-        branches: 80,
-        functions: 80,
-        lines: 80,
-      },
-    },
-  },
+export default createPackageVitestConfig({
+  packageUrl: import.meta.url,
+  srcRoot: './src',
+  testsInclude: ['./tests/**/*.test.ts'],
+  setupFiles: ['./tests/setup/vi.test.base.ts'],
+  coverageInclude: [
+    './src/controllers/**/*.ts',
+    './src/middlewares/**/*.ts',
+    './src/services/**/*.ts',
+    './src/utils/**/*.ts',
+  ],
 });
