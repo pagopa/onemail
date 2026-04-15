@@ -1,5 +1,3 @@
-import type { EmailStatus, EmailStatusHistoryItem } from 'om-common/types';
-
 import env from '#config/env';
 import { getLogger } from '#config/logger';
 import { dynamoClient } from '#connectors/dynamo.connector';
@@ -9,6 +7,7 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import isEmpty from 'lodash-es/isEmpty.js';
+import { EmailStatus, EmailStatusHistoryItem } from 'om-common/types';
 
 const logger = getLogger();
 
@@ -56,7 +55,6 @@ export const updateEmailStatusBySesMessageId = async (
     return;
   }
 
-  // Latest status: ne timestamp
   // Takes the timestamp closest to the present. In the event of a tie, it takes the last one in the array
   const currentUpdate = updates.reduce((latest, current) =>
     new Date(current.timestamp).getTime() >=
@@ -64,6 +62,16 @@ export const updateEmailStatusBySesMessageId = async (
       ? current
       : latest,
   );
+
+  // Guard: skip update for Delivered if the current status is not Dispatched.
+  // Prevents a late delivery event from overwriting a bounce/complaint that arrived first
+  // e.g. queued → dispatched → complaint → [late] delivered -- in this case should stay complaint
+  if (
+    currentUpdate.status === EmailStatus.Delivered &&
+    item.status !== EmailStatus.Dispatched
+  ) {
+    return;
+  }
 
   // Update the email record with the new status and timestamp
   await dynamoClient.send(
