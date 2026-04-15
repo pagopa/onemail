@@ -1,5 +1,11 @@
 # om-lambda-config-set-processor
 
+## 1.3.1
+
+### Patch Changes
+
+- 869c0be: fix processor input validation and remove duplicate env var
+
 ## 1.3.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # onemail
 
+## 1.4.1
+
+### Patch Changes
+
+- Updated dependencies [869c0be]
+  - om-lambda-config-set-processor@1.3.1
+  - infra-domains-onemail-app@1.14.1
+
 ## 1.4.0
 
 ### Minor Changes
