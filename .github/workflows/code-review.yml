@@ -52,7 +52,67 @@ jobs:
         id: type-check
         run: pnpm run type-check
 
-      # run unit tests
+      # detect impacted packages for targeted unit tests
+      - name: Detect impacted packages
+        id: changed-packages
+        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v47.0.5 https://github.com/tj-actions/changed-files/releases/tag/v47.0.5
+        with:
+          files_yaml: |
+            shared:
+              - package.json
+              - pnpm-lock.yaml
+              - tsconfig.json
+              - tsconfig.*.json
+              - src/onemail/om-common/**
+              - src/onemail/viTestBase.shared.ts
+              - src/onemail/vitest.shared.ts
+              - src/onemail/tsconfig.package.json
+              - src/onemail/tsconfig.package.build.json
+            sender:
+              - src/onemail/om-lambda-sender/**
+            dispatcher:
+              - src/onemail/om-ecs-dispatcher/**
+            config_set_processor:
+              - src/onemail/om-lambda-config-set-processor/**
+            all_onemail:
+              - src/onemail/**
+
+      # run unit tests only for impacted packages; fallback to full run for shared changes
       - name: Unit tests
         id: unit-tests
-        run: pnpm run test:coverage
+        run: |
+          if [[ "${{ steps.changed-packages.outputs.shared_any_changed }}" == "true" ]]; then
+            echo "Shared/global changes detected. Running full test coverage suite."
+            pnpm run test:coverage
+            exit 0
+          fi
+
+          ran_any_test="false"
+
+          if [[ "${{ steps.changed-packages.outputs.sender_any_changed }}" == "true" ]]; then
+            echo "Running sender test coverage."
+            pnpm --filter om-lambda-sender test:coverage
+            ran_any_test="true"
+          fi
+
+          if [[ "${{ steps.changed-packages.outputs.dispatcher_any_changed }}" == "true" ]]; then
+            echo "Running ecs dispatcher test coverage."
+            pnpm --filter om-ecs-dispatcher test:coverage
+            ran_any_test="true"
+          fi
+
+          if [[ "${{ steps.changed-packages.outputs.config_set_processor_any_changed }}" == "true" ]]; then
+            echo "Running config-set-processor test coverage."
+            pnpm --filter om-lambda-config-set-processor test:coverage
+            ran_any_test="true"
+          fi
+
+          if [[ "$ran_any_test" == "false" && "${{ steps.changed-packages.outputs.all_onemail_any_changed }}" == "true" ]]; then
+            echo "Detected onemail changes outside known package mapping. Running full test coverage suite."
+            pnpm run test:coverage
+            ran_any_test="true"
+          fi
+
+          if [[ "$ran_any_test" == "false" ]]; then
+            echo "No impacted package requires unit tests in this workflow scope."
+          fi

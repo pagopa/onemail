@@ -106,7 +106,7 @@ describe('dbMapper high priority utils', () => {
             to: { email: 'user@example.com' },
             template: {
               id: 'template-id',
-              matchedAttributes: '{"name":"Alice"}',
+              matchedAttributes: '{"name":"Test name"}',
             },
             extendedHeaders: [{ N: 'X-Test', V: 'value' }],
           },
@@ -117,7 +117,7 @@ describe('dbMapper high priority utils', () => {
         Content: {
           Template: {
             TemplateName: 'template-id',
-            TemplateData: '{"name":"Alice"}',
+            TemplateData: '{"name":"Test name"}',
             Headers: [{ Name: 'X-Test', Value: 'value' }],
           },
         },
@@ -151,7 +151,7 @@ describe('dbMapper low priority utils', () => {
           replyTo: { email: 'reply@example.com' },
           template: {
             id: 'template-id',
-            matchedAttributes: '{"name":"Alice"}',
+            matchedAttributes: '{"name":"Test name"}',
           },
           extendedHeaders: [{ N: 'X-First', V: '1' }],
         },
@@ -166,7 +166,7 @@ describe('dbMapper low priority utils', () => {
           to: { email: SES_SIMULATOR.BOUNCE },
           template: {
             id: 'template-id',
-            matchedAttributes: '{"name":"Bob"}',
+            matchedAttributes: '{"name":"Test second name"}',
           },
         },
       }),
@@ -186,7 +186,7 @@ describe('dbMapper low priority utils', () => {
           Destination: { ToAddresses: [SES_SIMULATOR.SUCCESS] },
           ReplacementEmailContent: {
             ReplacementTemplate: {
-              ReplacementTemplateData: '{"name":"Alice"}',
+              ReplacementTemplateData: '{"name":"Test name"}',
             },
           },
           ReplacementHeaders: [{ Name: 'X-First', Value: '1' }],
@@ -195,7 +195,7 @@ describe('dbMapper low priority utils', () => {
           Destination: { ToAddresses: [SES_SIMULATOR.BOUNCE] },
           ReplacementEmailContent: {
             ReplacementTemplate: {
-              ReplacementTemplateData: '{"name":"Bob"}',
+              ReplacementTemplateData: '{"name":"Test second name"}',
             },
           },
           ReplacementHeaders: undefined,
