@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.14.1
+
+### Patch Changes
+
+- 869c0be: fix processor input validation and remove duplicate env var
+
 ## 1.14.0
 
 ### Minor Changes
