@@ -67,7 +67,7 @@ resource "aws_sesv2_configuration_set_event_destination" "to_eb" {
 
   event_destination {
     enabled              = true
-    matching_event_types = ["SEND", "REJECT", "BOUNCE", "COMPLAINT", "DELIVERY"]
+    matching_event_types = ["REJECT", "BOUNCE", "COMPLAINT", "DELIVERY"]
     event_bridge_destination {
       event_bus_arn = "arn:aws:events:${var.aws_region}:${data.aws_caller_identity.current.account_id}:event-bus/default"
     }
