@@ -7,7 +7,11 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import isEmpty from 'lodash-es/isEmpty.js';
-import { EmailStatus, EmailStatusHistoryItem } from 'om-common/types';
+import {
+  ConfigSetProcessorMetricName,
+  publishMetrics,
+} from 'om-common/repositories';
+import { EmailStatus, type EmailStatusHistoryItem } from 'om-common/types';
 
 const logger = getLogger();
 
@@ -32,7 +36,11 @@ export const findEmailBySesMessageId = async (
 
   const item = queryResult.Items?.[0] as EmailStatusHistoryItem | undefined;
   if (!item) {
-    //todo metrics
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.EmailNotFound,
+      },
+    ]);
     logger.warn('No email record found for SES message Id', { sesMessageId });
   }
 
@@ -44,7 +52,7 @@ export const updateEmailStatusBySesMessageId = async (
   updates: {
     timestamp: string;
     status: EmailStatus;
-    reason?: string;
+    reason?: string | null;
   }[],
 ): Promise<void> => {
   if (isEmpty(updates)) {
@@ -73,6 +81,8 @@ export const updateEmailStatusBySesMessageId = async (
     return;
   }
 
+  // TODO: skip update if new status is delivery and current status is complaint or bounce
+
   // Update the email record with the new status and timestamp
   await dynamoClient.send(
     new UpdateCommand({
@@ -92,7 +102,7 @@ export const updateEmailStatusBySesMessageId = async (
         ':newHistoryItems': updates.map(({ status, timestamp, reason }) => ({
           status,
           changedAt: timestamp,
-          reason,
+          reason: reason ?? undefined,
         })),
       },
     }),

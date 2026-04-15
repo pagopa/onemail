@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.14.0
+
+### Minor Changes
+
+- 0a10a3e: Update metrics handling
+
 ## 1.13.0
 
 ### Minor Changes

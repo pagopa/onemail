@@ -9,15 +9,17 @@ catalog:
   '@types/node': ^24.10.12
   lodash-es: ^4.18.1
   zod: ^4.3.6
+  '@middy/core': '^7.2.1'
 
 catalogs:
   aws-lambda:
     '@aws-lambda-powertools/batch': 2.32.0
     '@aws-lambda-powertools/logger': 2.32.0
+    '@aws-lambda-powertools/metrics': 2.32.0
     '@types/aws-lambda': ^8.10.160
+    '@aws-lambda-powertools/commons': 2.32.0
     aws-lambda: ^1.0.7
   aws-sdk:
-    '@aws-sdk/client-cloudwatch': 3.1025.0
     '@aws-sdk/client-dynamodb': 3.1025.0
     '@aws-sdk/client-scheduler': 3.1025.0
     '@aws-sdk/client-sesv2': 3.1025.0
