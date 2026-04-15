@@ -58,7 +58,6 @@ const validateRecord = (record: SQSRecord): ConfSetEventItem | undefined => {
 
   const result = ConfSetEventItemSchema.safeParse(parsedBody);
   if (!result.success) {
-    //Todo add metrics
     logger.error('Invalid payload for known event type, discarding record', {
       record,
       eventType,
