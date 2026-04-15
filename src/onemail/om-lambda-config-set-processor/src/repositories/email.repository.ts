@@ -53,7 +53,7 @@ export const updateEmailStatusBySesMessageId = async (
   updates: {
     timestamp: string;
     status: EmailStatus;
-    reason?: string;
+    reason?: string | null;
   }[],
 ): Promise<void> => {
   if (isEmpty(updates)) {
@@ -65,10 +65,13 @@ export const updateEmailStatusBySesMessageId = async (
   }
 
   //latest status to be saved
+  // TODO: replace last with a more robust method (get the latest update based on timestamp instead of relying on order in the array)
   const currentUpdate = last(updates);
   if (!currentUpdate) {
     return;
   }
+
+  // TODO: skip update if new status is delivery and current status is complaint or bounce
 
   // Update the email record with the new status and timestamp
   await dynamoClient.send(
@@ -89,7 +92,7 @@ export const updateEmailStatusBySesMessageId = async (
         ':newHistoryItems': updates.map(({ status, timestamp, reason }) => ({
           status,
           changedAt: timestamp,
-          reason,
+          reason: reason ?? undefined,
         })),
       },
     }),

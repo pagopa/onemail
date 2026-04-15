@@ -39,7 +39,7 @@ const countSoftBounceAttempts = (history: EmailEvent[]): number =>
 export const handleSoftBounceRetry = async (
   sesMessageId: string,
   bounceTimestamp: string,
-  bounceSubType: string,
+  bounceSubType?: string | null,
 ): Promise<void> => {
   const emailRecord = await findEmailBySesMessageId(sesMessageId);
   // Error
@@ -59,12 +59,13 @@ export const handleSoftBounceRetry = async (
   const softBounceCount = countSoftBounceAttempts(history);
   const newAttemptNumber = softBounceCount + 1;
 
+  const bSubType = bounceSubType ?? undefined;
   if (priority === EmailPriority.HIGH) {
     await handleHighPriorityRetry(
       emailId,
       sesMessageId,
       bounceTimestamp,
-      bounceSubType,
+      bSubType,
       history,
       newAttemptNumber,
     );
@@ -74,7 +75,7 @@ export const handleSoftBounceRetry = async (
       requestId,
       sesMessageId,
       bounceTimestamp,
-      bounceSubType,
+      bSubType,
       newAttemptNumber,
     );
   }
@@ -86,7 +87,7 @@ const handleHighPriorityRetry = async (
   emailId: string,
   sesMessageId: string,
   bounceTimestamp: string,
-  bounceSubType: string,
+  bounceSubType: string | undefined,
   history: EmailEvent[],
   attempt: number,
 ): Promise<void> => {
@@ -185,7 +186,7 @@ const handleLowPriorityRetry = async (
   requestId: string,
   sesMessageId: string,
   bounceTimestamp: string,
-  bounceSubType: string,
+  bounceSubType: string | undefined,
   attempt: number,
 ): Promise<void> => {
   const logger = getNamedLogger(handleLowPriorityRetry.name);
