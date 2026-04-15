@@ -13,11 +13,11 @@ const MailSchema = z.object({
 
 const BounceSchema = z.object({
   bounceType: z.enum(CapitalizedSesBounceType),
-  bounceSubType: z.enum(CapitalizedSesBounceSubType),
+  bounceSubType: z.enum(CapitalizedSesBounceSubType).nullish(),
   feedbackId: z.string(),
   bouncedRecipients: z.array(
     z.object({
-      emailAddress: z.email(),
+      emailAddress: z.string(), // string because could be name <email>
     }),
   ),
   timestamp: z.string(),
@@ -26,12 +26,12 @@ const BounceSchema = z.object({
 const ComplaintSchema = z.object({
   complainedRecipients: z.array(
     z.object({
-      emailAddress: z.email(),
+      emailAddress: z.string(), // string because could be name <email>
     }),
   ),
   timestamp: z.string(),
   feedbackId: z.string(),
-  complaintSubType: z.string(),
+  complaintSubType: z.string().nullish(),
 });
 
 const DeliverySchema = z.object({
@@ -42,13 +42,15 @@ const RejectSchema = z.object({
   reason: z.string(),
 });
 
-const EventDetailSchema = z.object({});
-
 const EventBaseSchema = z.object({
   mail: MailSchema,
 });
 
-const HandledConfSetEventItemSchema = z.discriminatedUnion('eventType', [
+export const EventTypeSchema = z.object({
+  eventType: z.string(),
+});
+
+export const ConfSetEventItemSchema = z.discriminatedUnion('eventType', [
   EventBaseSchema.extend({
     eventType: z.literal(CapitalizedSesConfigurationSetEventType.Bounce),
     bounce: BounceSchema,
@@ -62,25 +64,9 @@ const HandledConfSetEventItemSchema = z.discriminatedUnion('eventType', [
     delivery: DeliverySchema,
   }),
   EventBaseSchema.extend({
-    eventType: z.literal(CapitalizedSesConfigurationSetEventType.Send),
-    send: EventDetailSchema,
-  }),
-  EventBaseSchema.extend({
     eventType: z.literal(CapitalizedSesConfigurationSetEventType.Reject),
     reject: RejectSchema,
   }),
 ]);
 
-const UnhandledConfSetEventItemSchema = z.object({
-  eventType: z.string(),
-});
-
-export const ConfSetEventItemSchema = z.union([
-  HandledConfSetEventItemSchema,
-  UnhandledConfSetEventItemSchema,
-]);
-
 export type ConfSetEventItem = z.infer<typeof ConfSetEventItemSchema>;
-export type HandledConfSetEventItem = z.infer<
-  typeof HandledConfSetEventItemSchema
->;

@@ -20,6 +20,5 @@ export enum CapitalizedSesConfigurationSetEventType {
   Bounce = 'Bounce',
   Complaint = 'Complaint',
   Delivery = 'Delivery',
-  Send = 'Send',
   Reject = 'Reject',
 }

@@ -2,8 +2,9 @@ import type { SQSRecord } from 'aws-lambda';
 
 import { getLogger, getNamedLogger } from '#config/logger';
 import {
+  ConfSetEventItem,
   ConfSetEventItemSchema,
-  HandledConfSetEventItem,
+  EventTypeSchema,
 } from '#dtos/confSetEventItem.dto';
 import { updateEmailStatusBySesMessageId } from '#repositories/email.repository';
 import { handleSoftBounceRetry } from '#services/bounceRetry.service';
@@ -20,40 +21,58 @@ import { EmailStatus } from 'om-common/types';
 
 const logger = getLogger();
 
-const validateRecord = (
-  record: SQSRecord,
-  schema: typeof ConfSetEventItemSchema,
-): HandledConfSetEventItem | undefined => {
-  let parsedBody: unknown;
+const extractEventPayload = (recordBody: string): Record<string, unknown> => {
+  const parsedRecordBody = JSON.parse(recordBody);
+  return Object.hasOwn(parsedRecordBody, 'detail')
+    ? parsedRecordBody.detail
+    : parsedRecordBody;
+};
+
+const validateRecord = (record: SQSRecord): ConfSetEventItem | undefined => {
+  let parsedBody: Record<string, unknown>;
   try {
     if (isEmpty(record.body)) throw new Error('Empty body');
-    parsedBody = JSON.parse(record.body);
+    parsedBody = extractEventPayload(record.body);
   } catch {
     logger.error('Invalid payload, discarding record', { record });
     return undefined;
   }
 
-  const result = schema.safeParse(parsedBody);
-  if (!result.success) {
+  // Stage 1: extract eventType only
+  const eventTypeResult = EventTypeSchema.safeParse(parsedBody);
+  if (!eventTypeResult.success) {
     logger.error('Invalid payload, discarding record', { record });
     return undefined;
   }
-  if (
-    !Object.values(CapitalizedSesConfigurationSetEventType).includes(
-      result.data.eventType as CapitalizedSesConfigurationSetEventType,
-    )
-  ) {
+
+  const { eventType } = eventTypeResult.data;
+
+  // Stage 2: if eventType is known, parse with the full schema — failure is an error
+  const isKnownEventType = Object.values(
+    CapitalizedSesConfigurationSetEventType,
+  ).includes(eventType as CapitalizedSesConfigurationSetEventType);
+
+  if (!isKnownEventType) {
     return undefined;
   }
 
-  return result.data as HandledConfSetEventItem;
+  const result = ConfSetEventItemSchema.safeParse(parsedBody);
+  if (!result.success) {
+    logger.error('Invalid payload for known event type, discarding record', {
+      record,
+      eventType,
+      errors: result.error.issues,
+    });
+    return undefined;
+  }
+
+  return result.data;
 };
 
 export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
   const logger = getNamedLogger(sqsEventHandler.name);
   logger.info('Start');
-
-  const eventItem = validateRecord(record, ConfSetEventItemSchema);
+  const eventItem = validateRecord(record);
   if (!eventItem) {
     publishMetrics([
       {
@@ -117,7 +136,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       {
         timestamp: eventItem.complaint.timestamp,
         status: EmailStatus.Complaint,
-        reason: eventItem.complaint.complaintSubType,
+        reason: eventItem.complaint.complaintSubType ?? undefined,
       },
     ]);
     publishMetrics([
