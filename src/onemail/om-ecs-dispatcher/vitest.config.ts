@@ -29,6 +29,7 @@ export default defineConfig({
       reporter: ['text', 'html'],
       include: [
         fromPackage('./src/controllers/**/*.ts'),
+        fromPackage('./src/middlewares/**/*.ts'),
         fromPackage('./src/services/**/*.ts'),
         fromPackage('./src/utils/**/*.ts'),
       ],
