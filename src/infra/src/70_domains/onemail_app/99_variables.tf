@@ -63,6 +63,14 @@ variable "api_gateway_deployment_version" {
   default     = "1.0.0"
 }
 
+variable "api_gateway_usage_plan_throttle" {
+  description = "Throttle configuration applied to API Gateway usage plans."
+  type = object({
+    burst_limit = number
+    rate_limit  = number
+  })
+}
+
 variable "ecs_service_image_name" {
   type        = string
   description = "Logical ECR repository key for the ECS service image."

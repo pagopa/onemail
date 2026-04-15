@@ -13,6 +13,10 @@ import {
   CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
 import isEmpty from 'lodash-es/isEmpty.js';
+import {
+  ConfigSetProcessorMetricName,
+  publishMetrics,
+} from 'om-common/repositories';
 import { EmailStatus } from 'om-common/types';
 
 const logger = getLogger();
@@ -31,7 +35,6 @@ const validateRecord = (record: SQSRecord): ConfSetEventItem | undefined => {
     parsedBody = extractEventPayload(record.body);
   } catch {
     logger.error('Invalid payload, discarding record', { record });
-    //Todo add metrics
     return undefined;
   }
 
@@ -72,6 +75,11 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
   logger.info('Start');
   const eventItem = validateRecord(record);
   if (!eventItem) {
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.InvalidRecord,
+      },
+    ]);
     return;
   }
   // Delivered
@@ -84,6 +92,11 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
         status: EmailStatus.Delivered,
       },
     ]);
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.EmailDelivered,
+      },
+    ]);
   } else if (
     // Bounce
     eventItem.eventType === CapitalizedSesConfigurationSetEventType.Bounce
@@ -93,6 +106,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       eventItem.bounce.bounceType === CapitalizedSesBounceType.Transient ||
       eventItem.bounce.bounceType === CapitalizedSesBounceType.Undetermined
     ) {
+      // Metrics published inside handleSoftBounceRetry to differentiate between different retry
       await handleSoftBounceRetry(
         eventItem.mail.messageId,
         eventItem.bounce.timestamp,
@@ -109,6 +123,11 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
           reason: eventItem.bounce.bounceSubType,
         },
       ]);
+      publishMetrics([
+        {
+          name: ConfigSetProcessorMetricName.EmailHardBounce,
+        },
+      ]);
     }
   } else if (
     // Complaint
@@ -119,6 +138,11 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
         timestamp: eventItem.complaint.timestamp,
         status: EmailStatus.Complaint,
         reason: eventItem.complaint.complaintSubType ?? undefined,
+      },
+    ]);
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.EmailComplaint,
       },
     ]);
   }

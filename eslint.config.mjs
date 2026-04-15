@@ -17,6 +17,7 @@ export default [
       ],
       'perfectionist/sort-enums': 'off',
       'perfectionist/sort-interfaces': 'off',
+      'perfectionist/sort-modules': 'off',
       'perfectionist/sort-object-types': 'off',
       'perfectionist/sort-objects': 'off',
       'perfectionist/sort-union-types': 'off',

@@ -18,6 +18,10 @@ import {
   CreateScheduleCommand,
   FlexibleTimeWindowMode,
 } from '@aws-sdk/client-scheduler';
+import {
+  ConfigSetProcessorMetricName,
+  publishMetrics,
+} from 'om-common/repositories';
 import { EmailPriority, EmailStatus } from 'om-common/types';
 
 const logger = getLogger();
@@ -38,13 +42,19 @@ export const handleSoftBounceRetry = async (
   bounceSubType?: string | null,
 ): Promise<void> => {
   const emailRecord = await findEmailBySesMessageId(sesMessageId);
+  // Error
   if (!emailRecord) {
     logger.error('Email record not found', { sesMessageId });
-    //TODO add metrics for missing email record
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.MissingEmailRecordForRetry,
+      },
+    ]);
     return;
   }
   logger.debug('Retrieved email record', { sesMessageId });
 
+  // Retry logic
   const { emailId, priority, history, requestId } = emailRecord;
   const softBounceCount = countSoftBounceAttempts(history);
   const newAttemptNumber = softBounceCount + 1;
@@ -71,7 +81,8 @@ export const handleSoftBounceRetry = async (
   }
 };
 
-//High priority: exponential backoff for up to N days from the first SoftBounce. After N days, escalate to MaxRetriesReached.
+//High priority: exponential backoff for up to N days from the first SoftBounce.
+// After N days, escalate to MaxRetriesReached.
 const handleHighPriorityRetry = async (
   emailId: string,
   sesMessageId: string,
@@ -83,8 +94,8 @@ const handleHighPriorityRetry = async (
   const logger = getNamedLogger(handleHighPriorityRetry.name);
   logger.info('Start');
 
+  // Get the timestamp of the first soft bounce, if any
   const firstSoftBounce = getFirstSoftBounceTimestamp(history);
-
   const firstBounceMs = firstSoftBounce
     ? new Date(firstSoftBounce).getTime()
     : null;
@@ -98,12 +109,13 @@ const handleHighPriorityRetry = async (
 
     const isWindowExpired = currentBounceMs - firstBounceMs >= maxWindowMs;
 
+    // If the retry window has expired, escalate to MaxRetriesReached without scheduling another retry
     if (isWindowExpired) {
       logger.warn(
         'High-priority soft bounce retry window exceeded, escalating to MaxRetriesReached',
         { emailId, sesMessageId, attempt, firstSoftBounce },
       );
-
+      // Update status to SoftBounce and then MaxRetriesReached with appropriate reasons
       await updateEmailStatusBySesMessageId(sesMessageId, [
         {
           timestamp: bounceTimestamp,
@@ -114,6 +126,12 @@ const handleHighPriorityRetry = async (
           timestamp: bounceTimestamp,
           status: EmailStatus.MaxRetriesReached,
           reason: `SoftBounce escalated to MaxRetriesReached after ${attempt} attempts — retry window expired (${bounceSubType})`,
+        },
+      ]);
+      // Publish MaxRetriesReached metric for high priority
+      publishMetrics([
+        {
+          name: ConfigSetProcessorMetricName.HighPriorityEmailMaxRetriesReached,
         },
       ]);
       return;
@@ -136,7 +154,7 @@ const handleHighPriorityRetry = async (
     emailId,
   });
 
-  // 4. db update
+  // 4. DB update
   await updateEmailStatusBySesMessageId(sesMessageId, [
     {
       timestamp: bounceTimestamp,
@@ -147,6 +165,15 @@ const handleHighPriorityRetry = async (
       timestamp: new Date().toISOString(),
       status: EmailStatus.Queued,
       reason: `Queued for high-priority soft bounce retry attempt ${attempt}`,
+    },
+  ]);
+
+  publishMetrics([
+    {
+      name: ConfigSetProcessorMetricName.EmailHighPriorityRetry,
+      dimensions: {
+        attempt: attempt.toString(),
+      },
     },
   ]);
 
@@ -187,6 +214,14 @@ const handleLowPriorityRetry = async (
         reason: `SoftBounce escalated to MaxRetriesReached after ${attempt} attempts`,
       },
     ]);
+
+    // Publish MaxRetriesReached metric for low priority
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.LowPriorityEmailMaxRetriesReached,
+      },
+    ]);
+
     return;
   }
 
@@ -202,7 +237,7 @@ const handleLowPriorityRetry = async (
     requestId,
   });
 
-  // 4. db update
+  // 4. DB update
   await updateEmailStatusBySesMessageId(sesMessageId, [
     {
       timestamp: bounceTimestamp,
@@ -213,6 +248,15 @@ const handleLowPriorityRetry = async (
       timestamp: new Date().toISOString(),
       status: EmailStatus.Queued,
       reason: `Queued for low-priority soft bounce retry attempt ${attempt}`,
+    },
+  ]);
+
+  publishMetrics([
+    {
+      name: ConfigSetProcessorMetricName.EmailLowPriorityRetry,
+      dimensions: {
+        attempt: attempt.toString(),
+      },
     },
   ]);
 
@@ -269,6 +313,16 @@ const scheduleRetry = async (
         attempt,
         scheduleName,
       });
+
+      publishMetrics([
+        {
+          name: ConfigSetProcessorMetricName.ScheduleRetryFailed,
+          dimensions: {
+            reason: 'ScheduleAlreadyExists',
+          },
+        },
+      ]);
+
       return;
     }
     throw error;

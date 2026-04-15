@@ -24,20 +24,21 @@ locals {
 }
 
 module "api_gateway" {
-  #source = "./.terraform/modules/aws_modules/IDVH/api_gateway"
   source             = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/api_gateway?ref=main"
   env                = var.env
   product_name       = "onemail"
   idvh_resource_tier = "standard"
   name               = "${local.project_nodomain}-api-gateway"
   body = templatefile("${path.module}/${var.openapi_template_file}", {
-    connection_id = aws_api_gateway_vpc_link.apigw.id
-    uri           = "http://${data.aws_lb.nlb.dns_name}:3000"
-    server_url    = local.zone_name
-    env           = var.env
+    connection_id           = aws_api_gateway_vpc_link.apigw.id
+    env                     = var.env
+    server_url              = local.zone_name
+    tenant_request_template = jsonencode(local.api_gateway_tenant_request_template)
+    uri                     = "http://${data.aws_lb.nlb.dns_name}:3000"
   })
   endpoint_api_types        = ["PRIVATE"]
   endpoint_vpc_endpoint_ids = [data.aws_vpc_endpoint.api_gtw.id]
+  stage_variables           = local.api_gateway_stage_variables
 
   tags = merge(
     {
@@ -70,4 +71,33 @@ resource "aws_api_gateway_vpc_link" "apigw" {
   name        = "ApiGwVPCLink"
   description = "VPC link to the private network load balancer."
   target_arns = [data.aws_lb.nlb.arn]
+}
+
+# Api Gateway API Keys for each tenant
+resource "aws_api_gateway_api_key" "api_keys" {
+  for_each = local.api_key_list
+  name     = each.value.api_key_name
+}
+
+resource "aws_api_gateway_usage_plan" "api_keys" {
+  for_each    = local.api_key_list
+  name        = each.value.usage_plan_name
+  description = "Usage plan for ${each.value.tenant_name}"
+
+  api_stages {
+    api_id = module.api_gateway.rest_api_id
+    stage  = module.api_gateway.rest_api_stage_name
+  }
+
+  throttle_settings {
+    burst_limit = each.value.burst_limit
+    rate_limit  = each.value.rate_limit
+  }
+}
+
+resource "aws_api_gateway_usage_plan_key" "api_keys" {
+  for_each      = local.api_key_list
+  key_id        = aws_api_gateway_api_key.api_keys[each.key].id
+  key_type      = "API_KEY"
+  usage_plan_id = aws_api_gateway_usage_plan.api_keys[each.key].id
 }

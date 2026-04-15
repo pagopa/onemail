@@ -1,6 +1,6 @@
 {
   "name": "om-common",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Shared types and utilities for OneMail services",
   "private": true,
   "main": "dist/index.js",
@@ -14,6 +14,11 @@
     "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}' --ignore-path ../../../.prettierignore"
   },
   "exports": {
+    "./repositories": {
+      "local": "./src/repositories/index.ts",
+      "types": "./dist/repositories/index.d.ts",
+      "default": "./dist/repositories/index.js"
+    },
     "./types": {
       "local": "./src/types/index.ts",
       "types": "./dist/types/index.d.ts",
@@ -32,6 +37,11 @@
   },
   "homepage": "https://github.com/pagopa/onemail/blob/main/src/onemail/om-common/README.md",
   "dependencies": {
-    "@aws-lambda-powertools/logger": "catalog:aws-lambda"
+    "@aws-lambda-powertools/logger": "catalog:aws-lambda",
+    "@aws-lambda-powertools/metrics": "catalog:aws-lambda"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@aws-lambda-powertools/commons": "catalog:aws-lambda"
   }
 }

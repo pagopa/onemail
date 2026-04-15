@@ -5,6 +5,12 @@ import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 // global registry to collect dtos and routes
 export const registry = new OpenAPIRegistry();
 
+registry.registerComponent('securitySchemes', 'api_key', {
+  type: 'apiKey',
+  name: 'x-api-key',
+  in: 'header',
+});
+
 // function that generate openapi docs
 export const generateSwaggerDocs = () => {
   const generator = new OpenApiGeneratorV3(registry.definitions, {

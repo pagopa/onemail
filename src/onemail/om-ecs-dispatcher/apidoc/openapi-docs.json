@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.5.9",
+    "version": "1.6.7",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -18,6 +18,13 @@
     }
   ],
   "components": {
+    "securitySchemes": {
+      "api_key": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
+      }
+    },
     "schemas": {
       "EmailStatusItemResponseDTO": {
         "type": "object",
@@ -86,7 +93,9 @@
           "Queued",
           "RejectedBySES",
           "DryRunError",
-          "SoftBounce"
+          "SoftBounce",
+          "Complaint",
+          "MaxRetriesReached"
         ],
         "description": "Status of the email"
       },
@@ -515,6 +524,11 @@
           "Emails"
         ],
         "summary": "Get email status history",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
         "parameters": [
           {
             "schema": {
@@ -583,6 +597,26 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Generic error",
             "content": {
@@ -602,6 +636,11 @@
           "Emails"
         ],
         "summary": "Send high priority single email",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
         "parameters": [
           {
             "schema": {
@@ -676,6 +715,26 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Generic error",
             "content": {
@@ -695,6 +754,11 @@
           "Emails"
         ],
         "summary": "Send low priority email with single or multiple recipients",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
         "parameters": [
           {
             "schema": {
@@ -761,6 +825,26 @@
           },
           "404": {
             "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
             "content": {
               "application/json": {
                 "schema": {
@@ -849,6 +933,26 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Generic error",
             "content": {
@@ -919,6 +1023,26 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Generic error",
             "content": {
@@ -981,6 +1105,26 @@
           },
           "404": {
             "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
             "content": {
               "application/json": {
                 "schema": {
