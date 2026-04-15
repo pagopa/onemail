@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.8.0
+
+### Minor Changes
+
+- ec483b4: Matched Event SES removal and Scheduler VPC Endpoint add
+
 ## 1.7.0
 
 ### Minor Changes
