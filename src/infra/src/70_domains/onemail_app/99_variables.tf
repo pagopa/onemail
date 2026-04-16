@@ -101,12 +101,7 @@ variable "enable_ses" {
 
 variable "lambda_set_processor" {
   type = object({
-    package_path                                           = string
-    reserved_concurrent_executions                         = optional(number)
-    soft_bounce_high_priority_base_delay_minutes           = optional(number)
-    soft_bounce_high_priority_escalated_base_delay_minutes = optional(number)
-    soft_bounce_high_priority_max_window_days              = optional(number)
-    soft_bounce_low_priority_base_delay_minutes            = optional(number)
-    soft_bounce_low_priority_max_attempts                  = optional(number)
+    package_path                   = string
+    reserved_concurrent_executions = optional(number)
   })
 }

@@ -41,6 +41,7 @@ const EmailStatusItemSchema = z
     history: z
       .array(EmailEventSchema)
       .describe('Chronological history of status changes'),
+    attempts: z.number().int().min(0).describe('Number of dispatch attempts'),
   })
   .openapi('EmailStatusItemResponseDTO');
 

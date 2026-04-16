@@ -132,14 +132,6 @@ module "vpc_endpoints" {
       security_group_ids  = [aws_security_group.vpce_tls.id]
       tags                = { Name = "${local.project}-email-endpoint" }
     }
-
-    scheduler = {
-      service             = "scheduler"
-      private_dns_enabled = true
-      subnet_ids          = module.vpc.private_subnets
-      security_group_ids  = [aws_security_group.vpce_tls.id]
-      tags                = { Name = "${local.project}-scheduler-endpoint" }
-    }
   }
 
   tags = module.tag_config.tags

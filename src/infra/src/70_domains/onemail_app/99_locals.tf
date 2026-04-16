@@ -37,11 +37,4 @@ locals {
     one(data.aws_dynamodb_table.EmailStatusHistory.server_side_encryption).kms_key_arn,
     null
   )
-
-  # Deterministic ARNs for scheduler resources (avoids count errors with lambda_policy_json)
-  scheduler_role_name  = "${local.project_nodomain}-scheduler-sqs-role"
-  scheduler_group_name = "${local.project_nodomain}-ses-dynamic-retries-group"
-  scheduler_role_arn   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.scheduler_role_name}"
-  scheduler_group_arn  = "arn:aws:scheduler:${var.aws_region}:${data.aws_caller_identity.current.account_id}:schedule-group/${local.scheduler_group_name}"
-  schedule_arn_prefix  = "arn:aws:scheduler:${var.aws_region}:${data.aws_caller_identity.current.account_id}:schedule/${local.scheduler_group_name}"
 }
