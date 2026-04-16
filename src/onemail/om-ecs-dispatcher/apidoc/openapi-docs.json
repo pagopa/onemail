@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.6.7",
+    "version": "1.7.0",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -74,6 +74,11 @@
               "description": "Single history event for the email status"
             },
             "description": "Chronological history of status changes"
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of dispatch attempts"
           }
         },
         "required": [
@@ -81,7 +86,8 @@
           "status",
           "priority",
           "to",
-          "history"
+          "history",
+          "attempts"
         ]
       },
       "EmailStatus": {
