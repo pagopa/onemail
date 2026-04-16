@@ -1,7 +1,6 @@
 export default {
   projectVersion: process.env.npm_package_version || '1.0.0',
   aws: {
-    region: process.env.AWS_REGION ?? throwMissingRequiredEnvVar('AWS_REGION'),
     emailDbTable:
       process.env.AWS_EMAIL_DB_TABLE ??
       throwMissingRequiredEnvVar('AWS_EMAIL_DB_TABLE'),
