@@ -19,6 +19,3 @@ provider "aws" {
   region = var.aws_region
 }
 
-module "aws_modules" {
-  source = "git::https://github.com/pagopa/technology-aws-modules.git?ref=main"
-}
