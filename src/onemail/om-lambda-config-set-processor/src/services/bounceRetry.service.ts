@@ -80,13 +80,10 @@ const handleHighPriorityRetry = async (
   logger.info('Start');
 
   if (attempt > HIGH_PRIORITY_MAX_ATTEMPTS) {
-    logger.warn(
+    logger.error(
       'High-priority soft bounce max attempts reached, escalating to MaxRetriesReached',
       {
         emailId,
-        sesMessageId,
-        attempt,
-        highPriorityMaxAttempts: HIGH_PRIORITY_MAX_ATTEMPTS,
       },
     );
 
@@ -106,6 +103,7 @@ const handleHighPriorityRetry = async (
     publishMetrics([
       {
         name: ConfigSetProcessorMetricName.HighPriorityEmailMaxRetriesReached,
+        //TODO: add clientId dimension
       },
     ]);
     return;
@@ -156,13 +154,10 @@ const handleLowPriorityRetry = async (
 
   // 1. Check if max attempts reached
   if (attempt > LOW_PRIORITY_MAX_ATTEMPTS) {
-    logger.warn(
+    logger.error(
       'Low-priority soft bounce max attempts reached, escalating to MaxRetriesReached',
       {
         emailId,
-        sesMessageId,
-        attempt,
-        lowPriorityMaxAttempts: LOW_PRIORITY_MAX_ATTEMPTS,
       },
     );
 
@@ -183,6 +178,7 @@ const handleLowPriorityRetry = async (
     publishMetrics([
       {
         name: ConfigSetProcessorMetricName.LowPriorityEmailMaxRetriesReached,
+        //TODO: add clientId dimension
       },
     ]);
 
