@@ -1,5 +1,12 @@
 # onemail
 
+## 1.4.4
+
+### Patch Changes
+
+- Updated dependencies [cb90a06]
+  - om-lambda-config-set-processor@1.4.1
+
 ## 1.4.3
 
 ### Patch Changes
