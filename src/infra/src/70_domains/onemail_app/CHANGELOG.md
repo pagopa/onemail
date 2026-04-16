@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.15.0
+
+### Minor Changes
+
+- e3aefad: refactor config-set-processor to implement retry scheduling handled by ses
+
 ## 1.14.1
 
 ### Patch Changes

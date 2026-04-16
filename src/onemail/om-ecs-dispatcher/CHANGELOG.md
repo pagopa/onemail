@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.8.0
+
+### Minor Changes
+
+- dde8d37: Add number of attempts to /status route
+
 ## 1.7.0
 
 ### Minor Changes
