@@ -1,5 +1,11 @@
 # om-lambda-config-set-processor
 
+## 1.4.1
+
+### Patch Changes
+
+- cb90a06: avoid delivered status post complaint/bounce
+
 ## 1.4.0
 
 ### Minor Changes
