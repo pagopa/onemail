@@ -6,14 +6,14 @@ resource "aws_cloudwatch_metric_alarm" "bounce_rate_per_tenant" {
   evaluation_periods  = "1"
   metric_name         = "Reputation.BounceRate"
   namespace           = "AWS/SES"
-  period              = "300" # 5 minuti
+  period              = "300"
   statistic           = "Average"
   threshold           = "0.05" # 5%
   alarm_description   = "The bounce rate for tenant ${each.key} has exceeded 5%."
-  alarm_actions       = [aws_sns_topic.alerts.arn]
+  alarm_actions       = [aws_sns_topic.alerts[0].arn]
 
   dimensions = {
-    ConfigurationSet = "config-${each.key}"
+    ConfigurationSet = each.value.configuration_set_name
   }
 }
 
@@ -29,9 +29,9 @@ resource "aws_cloudwatch_metric_alarm" "complaint_rate_per_tenant" {
   statistic           = "Average"
   threshold           = "0.001" # 0.1%
   alarm_description   = "The complaint rate (spam) for tenant ${each.key} has exceeded 0.1%."
-  alarm_actions       = [aws_sns_topic.alerts.arn]
+  alarm_actions       = [aws_sns_topic.alerts[0].arn]
 
   dimensions = {
-    ConfigurationSet = "config-${each.key}"
+    ConfigurationSet = each.value.configuration_set_name
   }
 }

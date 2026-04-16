@@ -1,0 +1,61 @@
+name: Terraform Apply - OneMail Monitoring
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/infra/src/70_domains/onemail_monitoring/CHANGELOG.md'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to apply'
+        required: true
+        type: choice
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+  setup-matrix:
+    name: Setup Environment Matrix
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1 https://github.com/actions/checkout/releases/tag/v4.3.1
+
+      - name: Setup Matrix
+        id: matrix
+        uses: ./.github/actions/env-matrix
+        with:
+          event_name: ${{ github.event_name }}
+          environment_input: ${{ github.event.inputs.environment }}
+
+  terraform-apply:
+    name: Terraform Apply ${{ matrix.environment }}
+    runs-on: ubuntu-22.04
+    needs: setup-matrix
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
+    environment: ${{ matrix.environment }}
+    concurrency: terraform-onemail-monitoring-${{ matrix.environment }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1 https://github.com/actions/checkout/releases/tag/v4.3.1
+
+      - name: Run Terraform Apply
+        uses: ./.github/actions/terraform-apply
+        with:
+          module: 70_domains/onemail_monitoring
+          environment: ${{ matrix.environment }}
+          region: ${{ matrix.region }}
+          iac_role_arn: ${{ vars.IAM_ROLE_IAC }}

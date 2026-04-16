@@ -9,4 +9,4 @@ aws_region     = "eu-south-1"
 
 
 enable_ses        = true
-alarm_subscribers = "alarm-subscriber"
+alarm_subscribers = "alarm-subscribers"
