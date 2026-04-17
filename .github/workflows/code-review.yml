@@ -66,8 +66,6 @@ jobs:
               - src/onemail/om-common/**
               - src/onemail/viTestBase.shared.ts
               - src/onemail/vitest.shared.ts
-              - src/onemail/tsconfig.package.json
-              - src/onemail/tsconfig.package.build.json
             sender:
               - src/onemail/om-lambda-sender/**
             dispatcher:

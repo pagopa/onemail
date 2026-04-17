@@ -1,6 +1,7 @@
 {
-  "extends": "../tsconfig.package.json",
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "customConditions": ["local"],
     "types": ["node"]
   },
   "include": ["src", "tests"]
