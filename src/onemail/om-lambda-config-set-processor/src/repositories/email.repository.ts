@@ -63,6 +63,15 @@ export const updateEmailStatusBySesMessageId = async (
     return;
   }
 
+  // If the current status is Queued and the updates include Queued,
+  // skip the update.
+  if (
+    EmailStatus.Queued === item.status &&
+    updates.some((update) => update.status === EmailStatus.Queued)
+  ) {
+    return;
+  }
+
   // Takes the timestamp closest to the present. In the event of a tie, it takes the last one in the array
   const currentUpdate = updates.reduce((latest, current) =>
     new Date(current.timestamp).getTime() >=
