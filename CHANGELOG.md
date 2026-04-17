@@ -1,5 +1,12 @@
 # onemail
 
+## 1.4.6
+
+### Patch Changes
+
+- Updated dependencies [925e2f8]
+  - infra-domains-onemail-monitoring@1.1.0
+
 ## 1.4.5
 
 ### Patch Changes
