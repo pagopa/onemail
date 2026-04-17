@@ -1,6 +1,5 @@
 ---
 'om-ecs-dispatcher': minor
-'onemail': minor
 'om-common': patch
 ---
 
