@@ -144,8 +144,23 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
         name: ConfigSetProcessorMetricName.EmailComplaint,
       },
     ]);
+  } else if (
+    // Reject
+    eventItem.eventType === CapitalizedSesConfigurationSetEventType.Reject
+  ) {
+    await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+      {
+        timestamp: new Date().toISOString(),
+        status: EmailStatus.Rejected,
+        reason: eventItem.reject.reason ?? 'Bad content',
+      },
+    ]);
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.EmailRejected,
+      },
+    ]);
   }
-  // TODO: implement reject handling
 
   logger.info('End');
 };

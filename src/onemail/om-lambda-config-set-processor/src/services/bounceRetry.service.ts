@@ -84,6 +84,7 @@ const handleHighPriorityRetry = async (
       'High-priority soft bounce max attempts reached, escalating to MaxRetriesReached',
       {
         emailId,
+        attempts: HIGH_PRIORITY_MAX_ATTEMPTS,
       },
     );
 
@@ -158,6 +159,7 @@ const handleLowPriorityRetry = async (
       'Low-priority soft bounce max attempts reached, escalating to MaxRetriesReached',
       {
         emailId,
+        attempts: LOW_PRIORITY_MAX_ATTEMPTS,
       },
     );
 

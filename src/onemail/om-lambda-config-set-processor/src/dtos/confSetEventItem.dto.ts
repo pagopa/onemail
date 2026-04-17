@@ -39,7 +39,7 @@ const DeliverySchema = z.object({
 });
 
 const RejectSchema = z.object({
-  reason: z.string(),
+  reason: z.string().nullable(),
 });
 
 const EventBaseSchema = z.object({
