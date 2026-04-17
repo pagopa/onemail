@@ -104,7 +104,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     );
     publishMetrics([
       {
-        name: ConfigSetProcessorMetricName.EmailAlreadyQueuedForRetry,
+        name: ConfigSetProcessorMetricName.EmailAlreadyQueued,
       },
     ]);
     return;
