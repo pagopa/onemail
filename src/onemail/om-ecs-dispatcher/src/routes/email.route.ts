@@ -1,5 +1,6 @@
 import env from '#config/env';
 import * as EmailController from '#controllers/email.controller';
+import { TenantIdHeaderSchema } from '#dtos/email/common.dto';
 import {
   EmailHighPriorityBodySchema,
   EmailHighPriorityQueryParamsSchema,
@@ -53,6 +54,7 @@ router.post(
   validate({
     body: EmailHighPriorityBodySchema,
     query: EmailHighPriorityQueryParamsSchema,
+    headers: TenantIdHeaderSchema,
   }),
   EmailController.sendEmailTransactional,
 );
@@ -77,6 +79,7 @@ router.post(
   validate({
     body: EmailLowPriorityBodySchema,
     query: EmailLowPriorityQueryParamsSchema,
+    headers: TenantIdHeaderSchema,
   }),
   EmailController.sendEmailLowPriority,
 );
