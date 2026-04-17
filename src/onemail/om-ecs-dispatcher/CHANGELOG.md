@@ -1,5 +1,16 @@
 # om-ecs-dispatcher
 
+## 1.9.0
+
+### Minor Changes
+
+- 1cc0f21: Add metrics flushing and dispatcher metrics tracking
+
+### Patch Changes
+
+- Updated dependencies [1cc0f21]
+  - om-common@1.2.1
+
 ## 1.8.0
 
 ### Minor Changes

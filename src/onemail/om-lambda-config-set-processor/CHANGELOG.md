@@ -1,5 +1,12 @@
 # om-lambda-config-set-processor
 
+## 1.4.2
+
+### Patch Changes
+
+- Updated dependencies [1cc0f21]
+  - om-common@1.2.1
+
 ## 1.4.1
 
 ### Patch Changes
