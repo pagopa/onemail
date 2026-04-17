@@ -47,8 +47,9 @@ export const findEmailBySesMessageId = async (
   return item;
 };
 
-export const updateEmailStatusBySesMessageId = async (
-  sesMessageId: string,
+export const updateEmailStatus = async (
+  emailId: string,
+  currentStatus: EmailStatus,
   updates: {
     timestamp: string;
     status: EmailStatus;
@@ -58,15 +59,11 @@ export const updateEmailStatusBySesMessageId = async (
   if (isEmpty(updates)) {
     return;
   }
-  const item = await findEmailBySesMessageId(sesMessageId);
-  if (!item) {
-    return;
-  }
 
   // If the current status is Queued and the updates include Queued,
   // skip the update.
   if (
-    EmailStatus.Queued === item.status &&
+    EmailStatus.Queued === currentStatus &&
     updates.some((update) => update.status === EmailStatus.Queued)
   ) {
     return;
@@ -85,18 +82,16 @@ export const updateEmailStatusBySesMessageId = async (
   // e.g. queued → dispatched → complaint → [late] delivered -- in this case should stay complaint
   if (
     currentUpdate.status === EmailStatus.Delivered &&
-    item.status !== EmailStatus.Dispatched
+    currentStatus !== EmailStatus.Dispatched
   ) {
     return;
   }
-
-  // TODO: skip update if new status is delivery and current status is complaint or bounce
 
   // Update the email record with the new status and timestamp
   await dynamoClient.send(
     new UpdateCommand({
       TableName: env.aws.emailDbTable,
-      Key: { emailId: item.emailId },
+      Key: { emailId },
       UpdateExpression:
         'SET #status = :status, #updatedAt = :updatedAt, #history = list_append(if_not_exists(#history, :emptyList), :newHistoryItems)',
       ExpressionAttributeNames: {

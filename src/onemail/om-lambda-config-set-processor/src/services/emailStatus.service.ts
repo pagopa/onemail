@@ -6,7 +6,10 @@ import {
   ConfSetEventItemSchema,
   EventTypeSchema,
 } from '#dtos/confSetEventItem.dto';
-import { updateEmailStatusBySesMessageId } from '#repositories/email.repository';
+import {
+  findEmailBySesMessageId,
+  updateEmailStatus,
+} from '#repositories/email.repository';
 import { handleSoftBounceRetry } from '#services/bounceRetry.service';
 import {
   CapitalizedSesBounceType,
@@ -85,7 +88,11 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
   if (
     eventItem.eventType === CapitalizedSesConfigurationSetEventType.Delivery
   ) {
-    await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+    const deliveryRecord = await findEmailBySesMessageId(
+      eventItem.mail.messageId,
+    );
+    if (!deliveryRecord) return;
+    await updateEmailStatus(deliveryRecord.emailId, deliveryRecord.status, [
       {
         timestamp: eventItem.delivery.timestamp,
         status: EmailStatus.Delivered,
@@ -115,7 +122,11 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       // Hard Bounce
       eventItem.bounce.bounceType === CapitalizedSesBounceType.Permanent
     ) {
-      await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+      const bounceRecord = await findEmailBySesMessageId(
+        eventItem.mail.messageId,
+      );
+      if (!bounceRecord) return;
+      await updateEmailStatus(bounceRecord.emailId, bounceRecord.status, [
         {
           timestamp: eventItem.bounce.timestamp,
           status: EmailStatus.HardBounce,
@@ -132,7 +143,11 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     // Complaint
     eventItem.eventType === CapitalizedSesConfigurationSetEventType.Complaint
   ) {
-    await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+    const complaintRecord = await findEmailBySesMessageId(
+      eventItem.mail.messageId,
+    );
+    if (!complaintRecord) return;
+    await updateEmailStatus(complaintRecord.emailId, complaintRecord.status, [
       {
         timestamp: eventItem.complaint.timestamp,
         status: EmailStatus.Complaint,

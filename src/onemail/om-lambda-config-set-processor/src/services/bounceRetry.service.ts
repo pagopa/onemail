@@ -5,7 +5,7 @@ import { getLogger, getNamedLogger } from '#config/logger';
 import { sqsClient } from '#connectors/sqs.connector';
 import {
   findEmailBySesMessageId,
-  updateEmailStatusBySesMessageId,
+  updateEmailStatus,
 } from '#repositories/email.repository';
 import { SendMessageCommand } from '@aws-sdk/client-sqs';
 import {
@@ -29,7 +29,9 @@ export const handleSoftBounceRetry = async (
   bounceTimestamp: string,
   bounceSubType?: string | null,
 ): Promise<void> => {
+  // Retrieve email record by SES message ID
   const emailRecord = await findEmailBySesMessageId(sesMessageId);
+
   // Error
   if (!emailRecord) {
     logger.error('Email record not found', { sesMessageId });
@@ -42,8 +44,22 @@ export const handleSoftBounceRetry = async (
   }
   logger.debug('Retrieved email record', { sesMessageId });
 
+  // Skip if current status is already Queued to avoid duplicate retries
+  if (EmailStatus.Queued === emailRecord.status) {
+    logger.error(
+      'Email already queued for retry, skipping additional retry scheduling',
+      { sesMessageId, emailId: emailRecord.emailId },
+    );
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.EmailAlreadyQueuedForRetry,
+      },
+    ]);
+    return;
+  }
+
   // Retry logic
-  const { emailId, priority, history, requestId } = emailRecord;
+  const { emailId, priority, history, requestId, status } = emailRecord;
   const softBounceCount = countSoftBounceAttempts(history);
   const newAttemptNumber = softBounceCount + 1;
 
@@ -51,7 +67,7 @@ export const handleSoftBounceRetry = async (
   if (priority === EmailPriority.HIGH) {
     await handleHighPriorityRetry(
       emailId,
-      sesMessageId,
+      status,
       bounceTimestamp,
       bSubType,
       newAttemptNumber,
@@ -59,8 +75,8 @@ export const handleSoftBounceRetry = async (
   } else {
     await handleLowPriorityRetry(
       emailId,
+      status,
       requestId,
-      sesMessageId,
       bounceTimestamp,
       bSubType,
       newAttemptNumber,
@@ -71,7 +87,7 @@ export const handleSoftBounceRetry = async (
 //High priority
 const handleHighPriorityRetry = async (
   emailId: string,
-  sesMessageId: string,
+  currentStatus: EmailStatus,
   bounceTimestamp: string,
   bounceSubType: string | undefined,
   attempt: number,
@@ -87,7 +103,7 @@ const handleHighPriorityRetry = async (
       },
     );
 
-    await updateEmailStatusBySesMessageId(sesMessageId, [
+    await updateEmailStatus(emailId, currentStatus, [
       {
         timestamp: bounceTimestamp,
         status: EmailStatus.SoftBounce,
@@ -115,7 +131,7 @@ const handleHighPriorityRetry = async (
   });
 
   // 3. DB update
-  await updateEmailStatusBySesMessageId(sesMessageId, [
+  await updateEmailStatus(emailId, currentStatus, [
     {
       timestamp: bounceTimestamp,
       status: EmailStatus.SoftBounce,
@@ -143,8 +159,8 @@ const handleHighPriorityRetry = async (
 //Low priority
 const handleLowPriorityRetry = async (
   emailId: string,
+  currentStatus: EmailStatus,
   requestId: string,
-  sesMessageId: string,
   bounceTimestamp: string,
   bounceSubType: string | undefined,
   attempt: number,
@@ -161,7 +177,7 @@ const handleLowPriorityRetry = async (
       },
     );
 
-    await updateEmailStatusBySesMessageId(sesMessageId, [
+    await updateEmailStatus(emailId, currentStatus, [
       {
         timestamp: bounceTimestamp,
         status: EmailStatus.SoftBounce,
@@ -191,7 +207,7 @@ const handleLowPriorityRetry = async (
   });
 
   // 3. DB update
-  await updateEmailStatusBySesMessageId(sesMessageId, [
+  await updateEmailStatus(emailId, currentStatus, [
     {
       timestamp: bounceTimestamp,
       status: EmailStatus.SoftBounce,
