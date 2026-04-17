@@ -3,12 +3,9 @@ import { defineConfig } from 'vitest/config';
 
 type CreatePackageVitestConfigInput = {
   packageUrl: string;
-  srcRoot?: string;
-  omCommonSrcRoot?: string;
-  setupFiles: string[];
+  setupFiles?: string[];
   coverageInclude: string[];
   coverageExclude?: string[];
-  coverageReportsDirectory?: string;
 };
 
 const fromPackage = (packageUrl: string, path: string): string =>
@@ -16,15 +13,12 @@ const fromPackage = (packageUrl: string, path: string): string =>
 
 export const createPackageVitestConfig = ({
   packageUrl,
-  srcRoot = './src',
-  omCommonSrcRoot = '../om-common/src',
-  setupFiles,
+  setupFiles = ['./tests/setup/vi.test.base.ts'],
   coverageInclude,
   coverageExclude = ['./src/utils/constants.ts'],
-  coverageReportsDirectory = './coverage',
 }: CreatePackageVitestConfigInput) => {
-  const absoluteSrcRoot = fromPackage(packageUrl, srcRoot);
-  const absoluteOmCommonSrcRoot = fromPackage(packageUrl, omCommonSrcRoot);
+  const absoluteSrcRoot = fromPackage(packageUrl, './src');
+  const absoluteOmCommonSrcRoot = fromPackage(packageUrl, '../om-common/src');
 
   return defineConfig({
     resolve: {
@@ -46,14 +40,6 @@ export const createPackageVitestConfig = ({
       coverage: {
         provider: 'v8',
         reporter: ['text', 'html'],
-        ...(coverageReportsDirectory
-          ? {
-              reportsDirectory: fromPackage(
-                packageUrl,
-                coverageReportsDirectory,
-              ),
-            }
-          : {}),
         include: coverageInclude.map((path) => fromPackage(packageUrl, path)),
         exclude: coverageExclude.map((path) => fromPackage(packageUrl, path)),
         thresholds: {
