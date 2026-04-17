@@ -6,6 +6,16 @@ import { logMetrics } from '@aws-lambda-powertools/metrics/middleware';
 import { metricsClient } from '../connectors/cloudwatch.connector.js';
 import { EmailPriority, EmailStatus } from '../types/emailStatusHistory.js';
 
+/**
+ * Explicitly flush all stored metrics.
+ * Use in long-running processes (e.g. ECS tasks) where there is no
+ * Lambda-invocation boundary and the middy `logMetrics` middleware
+ * is not available.
+ */
+export const forceFlushMetrics = (): void => {
+  metricsClient.publishStoredMetrics();
+};
+
 export const publishMetrics = (metricsInput: MetricInput[]): void => {
   if (metricsInput.length === 0) {
     return;
@@ -62,16 +72,28 @@ export const SenderMetricName = {
   InvalidRecord: 'InvalidRecord',
 } as const;
 
+export const DispatcherMetricName = {
+  HighPriorityAccepted: `${PriorityPrefix[EmailPriority.HIGH]}Accepted`,
+  LowPriorityAccepted: `${PriorityPrefix[EmailPriority.LOW]}Accepted`,
+  EmailStatusNotFound: 'EmailStatusNotFound',
+} as const;
+
 interface MetricInput {
   name: AllMetricNames;
   value?: number;
   dimensions?: Record<string, string>;
 }
 
-type AllMetricNames = ConfigSetProcessorMetricName | SenderMetricName;
+type AllMetricNames =
+  | ConfigSetProcessorMetricName
+  | DispatcherMetricName
+  | SenderMetricName;
 
 type ConfigSetProcessorMetricName =
   (typeof ConfigSetProcessorMetricName)[keyof typeof ConfigSetProcessorMetricName];
+
+type DispatcherMetricName =
+  (typeof DispatcherMetricName)[keyof typeof DispatcherMetricName];
 
 type SenderMetricName =
   (typeof SenderMetricName)[keyof typeof SenderMetricName];
