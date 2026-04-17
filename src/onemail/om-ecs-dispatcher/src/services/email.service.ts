@@ -41,15 +41,7 @@ export const sendEmailTransactional = async (
   logger.info('Start');
 
   // get tenant configuration for clientId and configSetName
-  const tenantConfiguration = await getTenantConfiguration(tenantId);
-  // TODO: METRIC
-  if (!tenantConfiguration) {
-    throw new ApiError(
-      `Tenant configuration not found for tenantId ${tenantId}`,
-      StatusCodes.BAD_REQUEST,
-      ERROR_CODES.INVALID_TENANT,
-    );
-  }
+  const tenantConfiguration = await validateTenantId(tenantId);
 
   const requestId = randomUUID();
   // add get clientId and configSetName from tenant table
@@ -83,6 +75,7 @@ export const sendEmailTransactional = async (
   publishMetrics([
     {
       name: DispatcherMetricName.HighPriorityAccepted,
+      dimensions: { tenantName: tenantId },
     },
   ]);
 
@@ -99,15 +92,7 @@ export const sendEmailLowPriority = async (
   logger.info('Start');
 
   // get tenant configuration for clientId and configSetName
-  const tenantConfiguration = await getTenantConfiguration(tenantId);
-  // TODO: METRIC
-  if (!tenantConfiguration) {
-    throw new ApiError(
-      `Tenant configuration not found for tenantId ${tenantId}`,
-      StatusCodes.BAD_REQUEST,
-      ERROR_CODES.INVALID_TENANT,
-    );
-  }
+  const tenantConfiguration = await validateTenantId(tenantId);
   const requestId = randomUUID();
   const tableName = env.aws.emailDbTable;
 
@@ -156,6 +141,7 @@ export const sendEmailLowPriority = async (
     {
       name: DispatcherMetricName.LowPriorityAccepted,
       value: dbListObj.length,
+      dimensions: { tenantName: tenantId },
     },
   ]);
 
@@ -170,15 +156,7 @@ export const getEmailStatus = async (
   const logger = getNamedLogger(getEmailStatus.name);
   logger.info('Start');
 
-  const tenantConfiguration = await getTenantConfiguration(tenantId);
-  // TODO: METRIC
-  if (!tenantConfiguration) {
-    throw new ApiError(
-      `Tenant configuration not found for tenantId ${tenantId}`,
-      StatusCodes.BAD_REQUEST,
-      ERROR_CODES.INVALID_TENANT,
-    );
-  }
+  await validateTenantId(tenantId);
 
   const result = await dynamoClient.send(
     new QueryCommand({
@@ -200,6 +178,7 @@ export const getEmailStatus = async (
     publishMetrics([
       {
         name: DispatcherMetricName.EmailStatusNotFound,
+        dimensions: { tenantName: tenantId },
       },
     ]);
     throw new ApiError(
@@ -234,6 +213,20 @@ export const getEmailStatus = async (
   return mapped;
 };
 
+const validateTenantId = async (
+  tenantId: string,
+): Promise<TenantConfigurationItem> => {
+  const tenantConfiguration = await getTenantConfiguration(tenantId);
+  if (!tenantConfiguration) {
+    throw new ApiError(
+      `Tenant configuration not found for tenantId ${tenantId}`,
+      StatusCodes.BAD_REQUEST,
+      ERROR_CODES.INVALID_TENANT,
+    );
+  }
+  return tenantConfiguration;
+};
+
 export const getTenantConfiguration = async (
   tenantName: string,
 ): Promise<TenantConfigurationItem | undefined> => {
@@ -255,15 +248,23 @@ export const getTenantConfiguration = async (
     (result.Items as TenantConfigurationItem[] | undefined) ?? [];
 
   if (tenantConfigurations.length === 0) {
+    publishMetrics([
+      {
+        name: DispatcherMetricName.TenantConfigurationNotFound,
+        dimensions: { tenantName },
+      },
+    ]);
     return undefined;
   }
-  // TODO: metric for multiple tenant configurations found with same tenantName
+
   if (tenantConfigurations.length > 1) {
-    throw new ApiError(
-      `Multiple tenant configurations found for tenantName ${tenantName}`,
-      StatusCodes.CONFLICT,
-      ERROR_CODES.INVALID_TENANT,
-    );
+    publishMetrics([
+      {
+        name: DispatcherMetricName.MultipleTenantForClient,
+        dimensions: { tenantName },
+      },
+    ]);
+    return undefined;
   }
 
   const [tenantConfiguration] = tenantConfigurations;

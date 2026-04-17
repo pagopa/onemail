@@ -76,6 +76,8 @@ export const DispatcherMetricName = {
   HighPriorityAccepted: `${PriorityPrefix[EmailPriority.HIGH]}Accepted`,
   LowPriorityAccepted: `${PriorityPrefix[EmailPriority.LOW]}Accepted`,
   EmailStatusNotFound: 'EmailStatusNotFound',
+  MultipleTenantForClient: 'MultipleTenantForClient',
+  TenantConfigurationNotFound: 'TenantConfigurationNotFound',
 } as const;
 
 interface MetricInput {
