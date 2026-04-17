@@ -1,5 +1,11 @@
 # om-lambda-config-set-processor
 
+## 1.4.3
+
+### Patch Changes
+
+- bcd64ba: Reject event handling
+
 ## 1.4.2
 
 ### Patch Changes
