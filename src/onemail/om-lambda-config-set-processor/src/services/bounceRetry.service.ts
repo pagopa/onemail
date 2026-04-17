@@ -1,12 +1,9 @@
-import type { EmailEvent } from 'om-common/types';
+import type { EmailEvent, EmailStatusHistoryItem } from 'om-common/types';
 
 import env from '#config/env';
 import { getLogger, getNamedLogger } from '#config/logger';
 import { sqsClient } from '#connectors/sqs.connector';
-import {
-  findEmailBySesMessageId,
-  updateEmailStatus,
-} from '#repositories/email.repository';
+import { updateEmailStatus } from '#repositories/email.repository';
 import { SendMessageCommand } from '@aws-sdk/client-sqs';
 import {
   ConfigSetProcessorMetricName,
@@ -25,30 +22,15 @@ const countSoftBounceAttempts = (history: EmailEvent[]): number =>
   history.filter((event) => event.status === EmailStatus.SoftBounce).length;
 
 export const handleSoftBounceRetry = async (
-  sesMessageId: string,
+  emailRecord: EmailStatusHistoryItem,
   bounceTimestamp: string,
   bounceSubType?: string | null,
 ): Promise<void> => {
-  // Retrieve email record by SES message ID
-  const emailRecord = await findEmailBySesMessageId(sesMessageId);
-
-  // Error
-  if (!emailRecord) {
-    logger.error('Email record not found', { sesMessageId });
-    publishMetrics([
-      {
-        name: ConfigSetProcessorMetricName.MissingEmailRecordForRetry,
-      },
-    ]);
-    return;
-  }
-  logger.debug('Retrieved email record', { sesMessageId });
-
   // Skip if current status is already Queued to avoid duplicate retries
   if (EmailStatus.Queued === emailRecord.status) {
     logger.error(
       'Email already queued for retry, skipping additional retry scheduling',
-      { sesMessageId, emailId: emailRecord.emailId },
+      { emailId: emailRecord.emailId },
     );
     publishMetrics([
       {
