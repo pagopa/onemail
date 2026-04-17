@@ -1,9 +1,9 @@
-name: Terraform Plan - Core
+name: Terraform Plan - OneMail Monitoring
 
 on:
   pull_request:
     paths:
-      - 'src/infra/src/20_core/**'
+      - 'src/infra/src/70_domains/onemail_monitoring/**'
   workflow_dispatch:
     inputs:
       environment:
@@ -25,7 +25,7 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1 https://github.com/actions/checkout/releases/tag/v4.3.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7 https://github.com/actions/checkout/releases/tag/v4.1.7
 
       - name: Setup Matrix
         id: matrix
@@ -48,12 +48,12 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1 https://github.com/actions/checkout/releases/tag/v4.3.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7 https://github.com/actions/checkout/releases/tag/v4.1.7
 
       - name: Run Terraform Plan
         uses: ./.github/actions/terraform-plan
         with:
-          module: 20_core
+          module: 70_domains/onemail_monitoring
           environment: ${{ matrix.environment }}
           region: ${{ matrix.region }}
           iac_role_plan_arn: ${{ vars.IAM_ROLE_IAC_PLAN }}

@@ -25,6 +25,7 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { StatusCodes } from 'http-status-codes';
 import { randomUUID } from 'node:crypto';
+import { DispatcherMetricName, publishMetrics } from 'om-common/repositories';
 import {
   EmailStatus,
   EmailStatusHistoryItem,
@@ -78,6 +79,12 @@ export const sendEmailTransactional = async (
       MessageBody: JSON.stringify({ emailId: dbObj.emailId }),
     }),
   );
+
+  publishMetrics([
+    {
+      name: DispatcherMetricName.HighPriorityAccepted,
+    },
+  ]);
 
   logger.info('End');
   return { requestId };
@@ -145,6 +152,13 @@ export const sendEmailLowPriority = async (
     }),
   );
 
+  publishMetrics([
+    {
+      name: DispatcherMetricName.LowPriorityAccepted,
+      value: dbListObj.length,
+    },
+  ]);
+
   logger.info('End');
   return { requestId };
 };
@@ -183,7 +197,11 @@ export const getEmailStatus = async (
   const items = result.Items as EmailStatusHistoryItem[] | undefined;
 
   if (!items || items.length === 0) {
-    // TODO: not found metric
+    publishMetrics([
+      {
+        name: DispatcherMetricName.EmailStatusNotFound,
+      },
+    ]);
     throw new ApiError(
       `Email with requestId ${requestId} not found`,
       StatusCodes.NOT_FOUND,
@@ -211,8 +229,6 @@ export const getEmailStatus = async (
       attempts,
     };
   });
-
-  // TODO: success metric
 
   logger.info('End');
   return mapped;
