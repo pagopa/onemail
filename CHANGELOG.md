@@ -1,5 +1,11 @@
 # onemail
 
+## 1.4.5
+
+### Patch Changes
+
+- 33290ca: security gate pipeline
+
 ## 1.4.4
 
 ### Patch Changes
