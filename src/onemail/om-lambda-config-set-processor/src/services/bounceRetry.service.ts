@@ -26,20 +26,6 @@ export const handleSoftBounceRetry = async (
   bounceTimestamp: string,
   bounceSubType?: string | null,
 ): Promise<void> => {
-  // Skip if current status is already Queued to avoid duplicate retries
-  if (EmailStatus.Queued === emailRecord.status) {
-    logger.error(
-      'Email already queued for retry, skipping additional retry scheduling',
-      { emailId: emailRecord.emailId },
-    );
-    publishMetrics([
-      {
-        name: ConfigSetProcessorMetricName.EmailAlreadyQueuedForRetry,
-      },
-    ]);
-    return;
-  }
-
   // Retry logic
   const { emailId, priority, history, requestId, status } = emailRecord;
   const softBounceCount = countSoftBounceAttempts(history);

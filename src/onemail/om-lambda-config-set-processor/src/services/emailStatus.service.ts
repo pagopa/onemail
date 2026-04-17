@@ -96,6 +96,19 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     ]);
     return;
   }
+  // Skip if current status is already Queued to avoid duplicate retries
+  if (EmailStatus.Queued === emailRecord.status) {
+    logger.error(
+      'Email already queued for retry, skipping additional retry scheduling',
+      { emailId: emailRecord.emailId },
+    );
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.EmailAlreadyQueuedForRetry,
+      },
+    ]);
+    return;
+  }
 
   // Delivered
   if (
