@@ -96,6 +96,7 @@ export const registerOpenApiRoute = ({
   queryParams,
   responses,
   tags,
+  headers,
   isAuthenticated = false,
 }: {
   method: 'get' | 'post' | 'put' | 'delete' | 'patch';
@@ -106,6 +107,7 @@ export const registerOpenApiRoute = ({
   queryParams?: z.ZodObject;
   responses: OpenApiResponses;
   tags?: string[];
+  headers?: z.ZodObject;
   isAuthenticated?: boolean;
 }) => {
   const requestBodyConfig =
@@ -135,6 +137,8 @@ export const registerOpenApiRoute = ({
       ...(pathParams ? { params: pathParams } : {}),
       // add query param only if they exist
       ...(queryParams ? { query: queryParams } : {}),
+      // add headers only if they exist
+      ...(headers ? { headers } : {}),
     },
     responses: buildResponses(responses),
   });

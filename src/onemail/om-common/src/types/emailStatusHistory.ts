@@ -52,6 +52,8 @@ export interface EmailStatusHistoryItem {
   tag?: string[];
   clientId: string;
   dryRun: boolean;
+  configSetName: string;
+  tenantName: string;
 }
 
 export interface NameValue {

@@ -25,24 +25,39 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { StatusCodes } from 'http-status-codes';
 import { randomUUID } from 'node:crypto';
-import { EmailStatus, EmailStatusHistoryItem } from 'om-common/types';
+import {
+  EmailStatus,
+  EmailStatusHistoryItem,
+  TenantConfigurationItem,
+} from 'om-common/types';
 
 export const sendEmailTransactional = async (
   emailData: EmailHighPriorityBodyDTO,
   dryRun: boolean,
+  tenantId: string,
 ): Promise<EmailHighPriorityResponseDTO> => {
   const logger = getNamedLogger(sendEmailTransactional.name);
   logger.info('Start');
 
+  // get tenant configuration for clientId and configSetName
+  const tenantConfiguration = await getTenantConfiguration(tenantId);
+  // TODO: METRIC
+  if (!tenantConfiguration) {
+    throw new ApiError(
+      `Tenant configuration not found for tenantId ${tenantId}`,
+      StatusCodes.BAD_REQUEST,
+      ERROR_CODES.INVALID_TENANT,
+    );
+  }
+
   const requestId = randomUUID();
-  // TODO: implement this
-  const clientId = 'clientIdMock';
+  // add get clientId and configSetName from tenant table
   const tableName = env.aws.emailDbTable;
 
   const dbObj = mapEmailTransactionalToDbItem(
     emailData,
     requestId,
-    clientId,
+    tenantConfiguration,
     dryRun,
   );
 
@@ -71,19 +86,28 @@ export const sendEmailTransactional = async (
 export const sendEmailLowPriority = async (
   emailData: EmailLowPriorityBodyDTO,
   dryRun: boolean,
+  tenantId: string,
 ): Promise<EmailLowPriorityResponseDTO> => {
   const logger = getNamedLogger(sendEmailLowPriority.name);
   logger.info('Start');
 
+  // get tenant configuration for clientId and configSetName
+  const tenantConfiguration = await getTenantConfiguration(tenantId);
+  // TODO: METRIC
+  if (!tenantConfiguration) {
+    throw new ApiError(
+      `Tenant configuration not found for tenantId ${tenantId}`,
+      StatusCodes.BAD_REQUEST,
+      ERROR_CODES.INVALID_TENANT,
+    );
+  }
   const requestId = randomUUID();
-  // TODO: implement this
-  const clientId = 'clientIdMock';
   const tableName = env.aws.emailDbTable;
 
   const dbListObj = mapEmailLowPriorityToDbItem(
     emailData,
     requestId,
-    clientId,
+    tenantConfiguration,
     dryRun,
   );
 
@@ -127,9 +151,20 @@ export const sendEmailLowPriority = async (
 
 export const getEmailStatus = async (
   requestId: string,
+  tenantId: string,
 ): Promise<EmailStatusResponseDTO> => {
   const logger = getNamedLogger(getEmailStatus.name);
   logger.info('Start');
+
+  const tenantConfiguration = await getTenantConfiguration(tenantId);
+  // TODO: METRIC
+  if (!tenantConfiguration) {
+    throw new ApiError(
+      `Tenant configuration not found for tenantId ${tenantId}`,
+      StatusCodes.BAD_REQUEST,
+      ERROR_CODES.INVALID_TENANT,
+    );
+  }
 
   const result = await dynamoClient.send(
     new QueryCommand({
@@ -181,4 +216,41 @@ export const getEmailStatus = async (
 
   logger.info('End');
   return mapped;
+};
+
+export const getTenantConfiguration = async (
+  tenantName: string,
+): Promise<TenantConfigurationItem | undefined> => {
+  const result = await dynamoClient.send(
+    new QueryCommand({
+      TableName: env.aws.tenantConfigurationTable,
+      IndexName: env.aws.tenantDbConfigurationTenantNameGSI,
+      KeyConditionExpression: '#tenantName = :tenantName',
+      ExpressionAttributeNames: {
+        '#tenantName': 'tenantName',
+      },
+      ExpressionAttributeValues: {
+        ':tenantName': tenantName,
+      },
+    }),
+  );
+
+  const tenantConfigurations =
+    (result.Items as TenantConfigurationItem[] | undefined) ?? [];
+
+  if (tenantConfigurations.length === 0) {
+    return undefined;
+  }
+  // TODO: metric for multiple tenant configurations found with same tenantName
+  if (tenantConfigurations.length > 1) {
+    throw new ApiError(
+      `Multiple tenant configurations found for tenantName ${tenantName}`,
+      StatusCodes.CONFLICT,
+      ERROR_CODES.INVALID_TENANT,
+    );
+  }
+
+  const [tenantConfiguration] = tenantConfigurations;
+
+  return tenantConfiguration;
 };

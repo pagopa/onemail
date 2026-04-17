@@ -8,13 +8,14 @@ import {
   EmailStatus,
   EmailStatusHistoryItem,
   TemplateContent,
+  TenantConfigurationItem,
 } from 'om-common/types';
 import { SES_SIMULATOR } from 'om-common/utils';
 
 export function mapEmailLowPriorityToDbItem(
   body: EmailLowPriorityBodyDTO,
   requestId: string,
-  clientId: string,
+  tenantConfiguration: TenantConfigurationItem,
   dryRun: boolean,
 ): EmailStatusHistoryItem[] {
   const templateId = body.templateId;
@@ -56,8 +57,10 @@ export function mapEmailLowPriorityToDbItem(
       ],
       content: content,
       tag: body.tag,
-      clientId: clientId,
+      clientId: tenantConfiguration.clientId,
       dryRun: dryRun,
+      configSetName: tenantConfiguration.configSetName,
+      tenantName: tenantConfiguration.tenantName,
     });
   });
 
@@ -67,7 +70,7 @@ export function mapEmailLowPriorityToDbItem(
 export function mapEmailTransactionalToDbItem(
   body: EmailHighPriorityBodyDTO,
   requestId: string,
-  clientId: string,
+  tenantConfiguration: TenantConfigurationItem,
   dryRun: boolean,
 ): EmailStatusHistoryItem {
   const now = new Date().toISOString();
@@ -120,7 +123,9 @@ export function mapEmailTransactionalToDbItem(
     ],
     content: content,
     tag: body.tag,
-    clientId: clientId,
+    clientId: tenantConfiguration.clientId,
     dryRun: dryRun,
+    configSetName: tenantConfiguration.configSetName,
+    tenantName: tenantConfiguration.tenantName,
   };
 }

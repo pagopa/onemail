@@ -31,7 +31,10 @@ const tag = 'Emails';
 
 router.get(
   '/statuses',
-  validate({ query: EmailStatusQueryParamsSchema }),
+  validate({
+    query: EmailStatusQueryParamsSchema,
+    headers: TenantIdHeaderSchema,
+  }),
   EmailController.getEmailStatus,
 );
 registerOpenApiRoute({
@@ -41,6 +44,7 @@ registerOpenApiRoute({
   tags: [tag],
   isAuthenticated: true,
   queryParams: EmailStatusQueryParamsSchema,
+  headers: TenantIdHeaderSchema,
   responses: {
     [StatusCodes.OK]: {
       schema: EmailStatusResponseSchema,
@@ -66,6 +70,7 @@ registerOpenApiRoute({
   isAuthenticated: true,
   queryParams: EmailHighPriorityQueryParamsSchema,
   requestBody: EmailHighPriorityBodySchema,
+  headers: TenantIdHeaderSchema,
   responses: {
     [StatusCodes.ACCEPTED]: {
       schema: EmailHighPriorityResponseSchema,
@@ -91,6 +96,7 @@ registerOpenApiRoute({
   isAuthenticated: true,
   queryParams: EmailLowPriorityQueryParamsSchema,
   requestBody: EmailLowPriorityBodySchema,
+  headers: TenantIdHeaderSchema,
   responses: {
     [StatusCodes.ACCEPTED]: {
       schema: EmailLowPriorityResponseSchema,
