@@ -101,12 +101,12 @@ describe('priority.service high priority flows', () => {
 
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
-      status: EmailStatus.RejectedBySES,
+      status: EmailStatus.Rejected,
       reason: 'BadRequestException: bad request',
     });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
-        name: 'HighPriorityRejectedBySES',
+        name: 'HighPriorityRejected',
         dimensions: { clientId: email.clientId },
       },
     ]);
@@ -125,12 +125,12 @@ describe('priority.service high priority flows', () => {
 
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: email.emailId,
-      status: EmailStatus.RejectedBySES,
+      status: EmailStatus.Rejected,
       reason: 'Unknown SES error',
     });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
-        name: 'HighPriorityRejectedBySES',
+        name: 'HighPriorityRejected',
         dimensions: { clientId: email.clientId },
       },
     ]);
@@ -160,12 +160,12 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
 
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
-      status: EmailStatus.RejectedBySES,
+      status: EmailStatus.Rejected,
       reason: 'MailFromDomainNotVerifiedException: domain not verified',
     });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
-        name: 'HighPriorityRejectedBySES',
+        name: 'HighPriorityRejected',
         dimensions: { clientId: email.clientId },
       },
     ]);
@@ -189,12 +189,12 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
 
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
-      status: EmailStatus.RejectedBySES,
+      status: EmailStatus.Rejected,
       reason: 'MessageRejected: message rejected',
     });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
-        name: 'HighPriorityRejectedBySES',
+        name: 'HighPriorityRejected',
         dimensions: { clientId: email.clientId },
       },
     ]);
@@ -356,17 +356,17 @@ describe('priority.service low priority flows', () => {
     expect(batchUpdateEmailStatuses).toHaveBeenCalledWith([
       {
         item: emails[0],
-        status: EmailStatus.RejectedBySES,
+        status: EmailStatus.Rejected,
         reason: 'BadRequestException: bad request',
       },
       {
         item: emails[1],
-        status: EmailStatus.RejectedBySES,
+        status: EmailStatus.Rejected,
         reason: 'BadRequestException: bad request',
       },
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'LowPriorityRejectedBySES', value: 2 },
+      { name: 'LowPriorityRejected', value: 2 },
     ]);
   });
 });
@@ -427,7 +427,7 @@ describe('priority.service low priority SES entry result flows', () => {
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
       { name: 'LowPriorityDispatched', value: 1 },
-      { name: 'LowPriorityRejectedBySES', value: 0 },
+      { name: 'LowPriorityRejected', value: 0 },
       { name: 'LowPriorityRetryableFailure', value: 1 },
     ]);
   });
@@ -480,13 +480,13 @@ describe('priority.service low priority SES entry result flows', () => {
       },
       {
         item: emails[1],
-        status: EmailStatus.RejectedBySES,
+        status: EmailStatus.Rejected,
         reason: 'hard failure',
       },
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
       { name: 'LowPriorityDispatched', value: 1 },
-      { name: 'LowPriorityRejectedBySES', value: 1 },
+      { name: 'LowPriorityRejected', value: 1 },
       { name: 'LowPriorityRetryableFailure', value: 0 },
     ]);
     expect(namedLogger.info).toHaveBeenCalledWith('End');
