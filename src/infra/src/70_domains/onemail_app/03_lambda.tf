@@ -163,6 +163,16 @@ data "aws_iam_policy_document" "set_processor_policy" {
 
   statement {
     actions = [
+      "sqs:SendMessage"
+    ]
+    resources = [
+      data.aws_sqs_queue.high_priority.arn,
+      data.aws_sqs_queue.low_priority.arn
+    ]
+  }
+
+  statement {
+    actions = [
       "dynamodb:PutItem",
       "dynamodb:UpdateItem",
       "dynamodb:GetItem",
@@ -174,27 +184,6 @@ data "aws_iam_policy_document" "set_processor_policy" {
       data.aws_dynamodb_table.EmailStatusHistory.arn,
       "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsis["gsi_ses_message_id_idx"].name}"
     ]
-  }
-
-  statement {
-    actions = [
-      "scheduler:CreateSchedule",
-      "scheduler:GetSchedule",
-      "scheduler:DeleteSchedule"
-    ]
-    resources = [
-      "${local.scheduler_group_arn}/*",
-      local.scheduler_group_arn,
-      "${local.schedule_arn_prefix}/retry-*",
-      "${local.schedule_arn_prefix}/*"
-    ]
-  }
-
-  statement {
-    actions = [
-      "iam:PassRole"
-    ]
-    resources = [local.scheduler_role_arn]
   }
 
   dynamic "statement" {
@@ -256,21 +245,14 @@ module "lambda_set_processor" {
   memory_size                    = 256
   reserved_concurrent_executions = var.lambda_set_processor.reserved_concurrent_executions
   environment_variables = {
-    AWS_EMAIL_DB_TABLE                                     = data.aws_dynamodb_table.EmailStatusHistory.name
-    AWS_EMAIL_DB_MESSAGE_ID_GSI                            = local.gsis["gsi_ses_message_id_idx"].name
-    AWS_CLOUDWATCH_METRICS_NAMESPACE                       = "${local.project_nodomain}-lambda-config-set-processor"
-    SERVICE_PREFIX                                         = "${local.project_nodomain}"
-    NODE_ENV                                               = "production"
-    POWERTOOLS_LOG_LEVEL                                   = "DEBUG"
-    EVENTBRIDGE_SCHEDULER_ROLE_ARN                         = local.scheduler_role_arn
-    HIGH_PRIORITY_QUEUE_ARN                                = data.aws_sqs_queue.high_priority.arn
-    LOW_PRIORITY_QUEUE_ARN                                 = data.aws_sqs_queue.low_priority.arn
-    SCHEDULER_GROUP_NAME                                   = local.scheduler_group_name
-    SOFT_BOUNCE_HIGH_PRIORITY_BASE_DELAY_MINUTES           = var.lambda_set_processor.soft_bounce_high_priority_base_delay_minutes
-    SOFT_BOUNCE_HIGH_PRIORITY_ESCALATED_BASE_DELAY_MINUTES = var.lambda_set_processor.soft_bounce_high_priority_escalated_base_delay_minutes
-    SOFT_BOUNCE_HIGH_PRIORITY_MAX_WINDOW_DAYS              = var.lambda_set_processor.soft_bounce_high_priority_max_window_days
-    SOFT_BOUNCE_LOW_PRIORITY_BASE_DELAY_MINUTES            = var.lambda_set_processor.soft_bounce_low_priority_base_delay_minutes
-    SOFT_BOUNCE_LOW_PRIORITY_MAX_ATTEMPTS                  = var.lambda_set_processor.soft_bounce_low_priority_max_attempts
+    AWS_EMAIL_DB_TABLE               = data.aws_dynamodb_table.EmailStatusHistory.name
+    AWS_EMAIL_DB_MESSAGE_ID_GSI      = local.gsis["gsi_ses_message_id_idx"].name
+    AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-config-set-processor"
+    SERVICE_PREFIX                   = "${local.project_nodomain}"
+    NODE_ENV                         = "production"
+    POWERTOOLS_LOG_LEVEL             = "DEBUG"
+    SQS_HIGH_PRIORITY_QUEUE_URL      = data.aws_sqs_queue.high_priority.url
+    SQS_LOW_PRIORITY_QUEUE_URL       = data.aws_sqs_queue.low_priority.url
 
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids

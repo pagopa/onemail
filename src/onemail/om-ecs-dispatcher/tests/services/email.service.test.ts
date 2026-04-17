@@ -151,82 +151,136 @@ describe('email.service', () => {
       );
     });
   });
+});
 
-  describe('getEmailStatus', () => {
-    it('returns the history sorted in descending timestamp order', async () => {
-      const { dynamoClientMock } = setupEmailServiceDependencies();
+describe('email.service - getEmailStatus', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
 
-      dynamoClientMock.send.mockResolvedValue({
-        Items: [
-          {
-            emailId: 'email-id-3',
-            requestId: 'request-id-3',
-            priority: EmailPriority.HIGH,
-            status: EmailStatus.Delivered,
-            history: [
-              {
-                status: EmailStatus.Queued,
-                changedAt: '2026-01-01T10:00:00.000Z',
-              },
-              {
-                status: EmailStatus.Delivered,
-                changedAt: '2026-01-01T11:00:00.000Z',
-              },
-            ],
-            content: {
-              from: { email: 'sender@example.com' },
-              to: { email: 'user@example.com' },
-            },
-            clientId: 'client-id',
-            dryRun: false,
-          },
-        ],
-      });
+  it('returns the history sorted in descending timestamp order', async () => {
+    const { dynamoClientMock } = setupEmailServiceDependencies();
 
-      const { getEmailStatus } = await import('#services/email.service');
-
-      const result = await getEmailStatus('request-id-3');
-
-      expectCommandInput(
-        dynamoClientMock.send,
-        {
-          TableName: env.aws.emailDbTable,
-          IndexName: env.aws.emailDbRequestIdGSI,
-        },
-        0,
-      );
-      expect(result).toEqual([
+    dynamoClientMock.send.mockResolvedValue({
+      Items: [
         {
           emailId: 'email-id-3',
+          requestId: 'request-id-3',
           priority: EmailPriority.HIGH,
           status: EmailStatus.Delivered,
-          to: { email: 'user@example.com' },
           history: [
-            {
-              status: EmailStatus.Delivered,
-              changedAt: '2026-01-01T11:00:00.000Z',
-            },
             {
               status: EmailStatus.Queued,
               changedAt: '2026-01-01T10:00:00.000Z',
             },
+            {
+              status: EmailStatus.Delivered,
+              changedAt: '2026-01-01T11:00:00.000Z',
+            },
           ],
+          content: {
+            from: { email: 'sender@example.com' },
+            to: { email: 'user@example.com' },
+          },
+          clientId: 'client-id',
+          dryRun: false,
         },
-      ]);
+      ],
     });
 
-    it('throws an ApiError when the requested email status does not exist', async () => {
-      const { dynamoClientMock } = setupEmailServiceDependencies();
+    const { getEmailStatus } = await import('#services/email.service');
 
-      dynamoClientMock.send.mockResolvedValue({ Items: [] });
+    const result = await getEmailStatus('request-id-3');
 
-      const { getEmailStatus } = await import('#services/email.service');
+    expectCommandInput(
+      dynamoClientMock.send,
+      {
+        TableName: env.aws.emailDbTable,
+        IndexName: env.aws.emailDbRequestIdGSI,
+      },
+      0,
+    );
+    expect(result).toEqual([
+      {
+        emailId: 'email-id-3',
+        priority: EmailPriority.HIGH,
+        status: EmailStatus.Delivered,
+        to: { email: 'user@example.com' },
+        history: [
+          {
+            status: EmailStatus.Delivered,
+            changedAt: '2026-01-01T11:00:00.000Z',
+          },
+          {
+            status: EmailStatus.Queued,
+            changedAt: '2026-01-01T10:00:00.000Z',
+          },
+        ],
+        attempts: 0,
+      },
+    ]);
+  });
 
-      await expect(getEmailStatus('missing-request-id')).rejects.toMatchObject({
-        name: 'ApiError',
-        statusCode: 404,
-        errorCode: 'R001',
-      });
+  it('throws an ApiError when the requested email status does not exist', async () => {
+    const { dynamoClientMock } = setupEmailServiceDependencies();
+
+    dynamoClientMock.send.mockResolvedValue({ Items: [] });
+
+    const { getEmailStatus } = await import('#services/email.service');
+
+    await expect(getEmailStatus('missing-request-id')).rejects.toMatchObject({
+      name: 'ApiError',
+      statusCode: 404,
+      errorCode: 'R001',
     });
+  });
+
+  it('counts Dispatched events in history as attempts', async () => {
+    const { dynamoClientMock } = setupEmailServiceDependencies();
+
+    dynamoClientMock.send.mockResolvedValue({
+      Items: [
+        {
+          emailId: 'email-id-4',
+          requestId: 'request-id-4',
+          priority: EmailPriority.HIGH,
+          status: EmailStatus.Delivered,
+          history: [
+            {
+              status: EmailStatus.Queued,
+              changedAt: '2026-01-01T10:00:00.000Z',
+            },
+            {
+              status: EmailStatus.Dispatched,
+              changedAt: '2026-01-01T10:01:00.000Z',
+            },
+            {
+              status: EmailStatus.SoftBounce,
+              changedAt: '2026-01-01T10:02:00.000Z',
+            },
+            {
+              status: EmailStatus.Dispatched,
+              changedAt: '2026-01-01T10:03:00.000Z',
+            },
+            {
+              status: EmailStatus.Delivered,
+              changedAt: '2026-01-01T10:04:00.000Z',
+            },
+          ],
+          content: {
+            from: { email: 'sender@example.com' },
+            to: { email: 'user@example.com' },
+          },
+          clientId: 'client-id',
+          dryRun: false,
+        },
+      ],
+    });
+
+    const { getEmailStatus } = await import('#services/email.service');
+
+    const result = await getEmailStatus('request-id-4');
+
+    expect(result[0].attempts).toBe(2);
   });
 });
