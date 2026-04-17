@@ -194,6 +194,9 @@ importers:
       om-common:
         specifier: workspace:*
         version: link:../om-common
+      on-finished:
+        specifier: ^2.4.1
+        version: 2.4.1
       sanitize-html:
         specifier: ^2.17.1
         version: 2.17.1
@@ -213,6 +216,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.10.12
+      '@types/on-finished':
+        specifier: ^2.3.1
+        version: 2.3.5
       '@types/sanitize-html':
         specifier: ^2.16.0
         version: 2.16.0
@@ -1270,6 +1276,9 @@ packages:
 
   '@types/node@24.10.12':
     resolution: {integrity: sha512-68e+T28EbdmLSTkPgs3+UacC6rzmqrcWFPQs1C8mwJhI/r5Uxr0yEuQotczNRROd1gq30NGxee+fo0rSIxpyAw==}
+
+  '@types/on-finished@2.3.5':
+    resolution: {integrity: sha512-XUaCx9tVIC577KsOZxKbnvGlyPt2ogNXQEq/bOQpAfPwH9sH0FbzrRsK1961jpjKlK5V+Owmw55dVjukWhwH0w==}
 
   '@types/qs@6.14.0':
     resolution: {integrity: sha512-eOunJqu0K1923aExK6y8p6fsihYEn/BYuQ4g0CxAAgFc4b/ZLN4CrsRZ55srTdqoiLzU2B2evC+apEIxprEzkQ==}
@@ -4366,6 +4375,10 @@ snapshots:
   '@types/node@24.10.12':
     dependencies:
       undici-types: 7.16.0
+
+  '@types/on-finished@2.3.5':
+    dependencies:
+      '@types/node': 24.10.12
 
   '@types/qs@6.14.0': {}
 
