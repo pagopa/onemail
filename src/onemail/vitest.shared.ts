@@ -3,9 +3,8 @@ import { defineConfig } from 'vitest/config';
 
 type CreatePackageVitestConfigInput = {
   packageUrl: string;
-  srcRoot: string;
+  srcRoot?: string;
   omCommonSrcRoot?: string;
-  testsInclude?: string[];
   setupFiles: string[];
   coverageInclude: string[];
   coverageExclude?: string[];
@@ -17,13 +16,12 @@ const fromPackage = (packageUrl: string, path: string): string =>
 
 export const createPackageVitestConfig = ({
   packageUrl,
-  srcRoot,
+  srcRoot = './src',
   omCommonSrcRoot = '../om-common/src',
-  testsInclude = [],
   setupFiles,
   coverageInclude,
   coverageExclude = ['./src/utils/constants.ts'],
-  coverageReportsDirectory,
+  coverageReportsDirectory = './coverage',
 }: CreatePackageVitestConfigInput) => {
   const absoluteSrcRoot = fromPackage(packageUrl, srcRoot);
   const absoluteOmCommonSrcRoot = fromPackage(packageUrl, omCommonSrcRoot);
@@ -44,11 +42,6 @@ export const createPackageVitestConfig = ({
     },
     test: {
       environment: 'node',
-      ...(testsInclude.length > 0
-        ? {
-            include: testsInclude.map((path) => fromPackage(packageUrl, path)),
-          }
-        : {}),
       setupFiles: setupFiles.map((path) => fromPackage(packageUrl, path)),
       coverage: {
         provider: 'v8',
