@@ -28,6 +28,11 @@ on:
         type: string
         required: false
         default: ''
+      bypass_security_checks_manual:
+        description: 'Bypass security checks flag from workflow_dispatch input: use only with proper authorization'
+        type: boolean
+        required: false
+        default: false
 
 permissions: {}
 
@@ -42,7 +47,7 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7 https://github.com/actions/checkout/releases/tag/v4.1.7
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1 https://github.com/actions/checkout/releases/tag/v4.3.1
 
       - name: Setup Matrix
         id: matrix
@@ -51,17 +56,23 @@ jobs:
           event_name: ${{ inputs.event_name }}
           environment_input: ${{ inputs.environment_input }}
 
+  security-checks:
+    name: Security Checks
+    uses: ./.github/workflows/security-gates.yml
+    with:
+      bypass_security_checks_manual: ${{ inputs.bypass_security_checks_manual }}
+
   build:
     name: Build Lambda Artifact
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     # Depends on setup-matrix to skip the build when matrix resolution fails
-    needs: setup-matrix
+    needs: [setup-matrix, security-checks]
     permissions:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7 https://github.com/actions/checkout/releases/tag/v4.1.7
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1 https://github.com/actions/checkout/releases/tag/v4.3.1
 
       - name: Setup Node.js
         uses: ./.github/actions/node-setup
@@ -90,7 +101,7 @@ jobs:
     timeout-minutes: 20
     if: ${{ needs.setup-matrix.outputs.matrix != '' }}
     runs-on: ubuntu-22.04
-    needs: [setup-matrix, build]
+    needs: [setup-matrix, security-checks, build]
     strategy:
       matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
     continue-on-error: false

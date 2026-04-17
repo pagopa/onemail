@@ -20,6 +20,10 @@ on:
           - dev
           - uat
           - prod
+      bypass_security_checks:
+        type: boolean
+        default: false
+        description: 'Force deploy bypassing security checks: use only with proper authorization'
 
 # Never cancel an in-flight deploy to avoid s3 conflicts
 # It prevents issues where multiple commits are pushed in a short time, which would trigger multiple deploys and cancel the previous ones, potentially leaving the app in a broken state if the last deploy fails.
@@ -40,3 +44,4 @@ jobs:
       lambda_s3_key_var: LAMBDA_SENDER_KEY
       event_name: ${{ github.event_name }}
       environment_input: ${{ inputs.environment || '' }}
+      bypass_security_checks_manual: ${{ inputs.bypass_security_checks }}
