@@ -4,7 +4,13 @@ export default [
   ...pagopa,
   // extends
   {
-    ignores: ['**/dist/**', '**/build/**', 'src/infra/**', '**/.turbo/**'],
+    ignores: [
+      '**/dist/**',
+      '**/build/**',
+      'src/infra/**',
+      '**/.turbo/**',
+      '**/coverage/**',
+    ],
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
