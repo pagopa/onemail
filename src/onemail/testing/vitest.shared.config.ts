@@ -15,6 +15,10 @@ const SETUP_HOOKS_PATH = fileURLToPath(
   new URL('./setupHooks.ts', import.meta.url),
 );
 
+const LOGGER_MOCKS_PATH = fileURLToPath(
+  new URL('./loggerMocks.ts', import.meta.url),
+);
+
 export const createPackageVitestConfig = ({
   packageUrl,
   setupFiles = [],
@@ -41,7 +45,7 @@ export const createPackageVitestConfig = ({
     test: {
       environment: 'node',
       silent: process.env['CI'] === 'true',
-      setupFiles: [SETUP_HOOKS_PATH].concat(
+      setupFiles: [SETUP_HOOKS_PATH, LOGGER_MOCKS_PATH].concat(
         setupFiles.map((path) => fromPackage(packageUrl, path)),
       ),
       coverage: {

@@ -1,25 +1,24 @@
+import {
+  mapDbHighPriorityItemToSesModel,
+  mapDbLowPriorityItemToSesModel,
+} from '#utils/dbMapper';
 import { EmailPriority } from 'om-common/types';
 import { SES_SIMULATOR } from 'om-common/utils';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { makeEmailStatusHistoryItem } from '../__helpers__/emailFixtures.js';
 
+vi.mock('#config/env', () => ({
+  default: {
+    aws: {
+      configurationSetName: 'config-set',
+      tenantName: 'tenant-name',
+    },
+  },
+}));
+
 describe('dbMapper high priority utils', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
-  it('maps a high priority item with body content to the SES send input', async () => {
-    vi.doMock('#config/env', () => ({
-      default: {
-        aws: {
-          configurationSetName: 'config-set',
-          tenantName: 'tenant-name',
-        },
-      },
-    }));
-
-    const { mapDbHighPriorityItemToSesModel } = await import('#utils/dbMapper');
+  it('maps a high priority item with body content to the SES send input', () => {
     const input = makeEmailStatusHistoryItem({
       content: {
         from: {
@@ -59,18 +58,7 @@ describe('dbMapper high priority utils', () => {
     });
   });
 
-  it('rejects a high priority dry-run item with non-simulator recipient', async () => {
-    vi.doMock('#config/env', () => ({
-      default: {
-        aws: {
-          configurationSetName: 'config-set',
-          tenantName: 'tenant-name',
-        },
-      },
-    }));
-
-    const { mapDbHighPriorityItemToSesModel } = await import('#utils/dbMapper');
-
+  it('rejects a high priority dry-run item with non-simulator recipient', () => {
     expect(() =>
       mapDbHighPriorityItemToSesModel(
         makeEmailStatusHistoryItem({
@@ -86,18 +74,7 @@ describe('dbMapper high priority utils', () => {
     ).toThrowError(expect.objectContaining({ name: 'DryRunValidationError' }));
   });
 
-  it('maps a high priority item with template content to the SES send input', async () => {
-    vi.doMock('#config/env', () => ({
-      default: {
-        aws: {
-          configurationSetName: 'config-set',
-          tenantName: 'tenant-name',
-        },
-      },
-    }));
-
-    const { mapDbHighPriorityItemToSesModel } = await import('#utils/dbMapper');
-
+  it('maps a high priority item with template content to the SES send input', () => {
     expect(
       mapDbHighPriorityItemToSesModel(
         makeEmailStatusHistoryItem({
@@ -127,21 +104,7 @@ describe('dbMapper high priority utils', () => {
 });
 
 describe('dbMapper low priority utils', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
-  it('maps low priority template items to the SES bulk send input', async () => {
-    vi.doMock('#config/env', () => ({
-      default: {
-        aws: {
-          configurationSetName: 'config-set',
-          tenantName: 'tenant-name',
-        },
-      },
-    }));
-
-    const { mapDbLowPriorityItemToSesModel } = await import('#utils/dbMapper');
+  it('maps low priority template items to the SES bulk send input', () => {
     const items = [
       makeEmailStatusHistoryItem({
         dryRun: true,
@@ -204,18 +167,7 @@ describe('dbMapper low priority utils', () => {
     });
   });
 
-  it('rejects low priority body content because bulk send requires templates', async () => {
-    vi.doMock('#config/env', () => ({
-      default: {
-        aws: {
-          configurationSetName: 'config-set',
-          tenantName: 'tenant-name',
-        },
-      },
-    }));
-
-    const { mapDbLowPriorityItemToSesModel } = await import('#utils/dbMapper');
-
+  it('rejects low priority body content because bulk send requires templates', () => {
     expect(() =>
       mapDbLowPriorityItemToSesModel([
         makeEmailStatusHistoryItem({
@@ -232,18 +184,7 @@ describe('dbMapper low priority utils', () => {
     );
   });
 
-  it('rejects low priority batches when a later item is missing template content', async () => {
-    vi.doMock('#config/env', () => ({
-      default: {
-        aws: {
-          configurationSetName: 'config-set',
-          tenantName: 'tenant-name',
-        },
-      },
-    }));
-
-    const { mapDbLowPriorityItemToSesModel } = await import('#utils/dbMapper');
-
+  it('rejects low priority batches when a later item is missing template content', () => {
     expect(() =>
       mapDbLowPriorityItemToSesModel([
         makeEmailStatusHistoryItem({

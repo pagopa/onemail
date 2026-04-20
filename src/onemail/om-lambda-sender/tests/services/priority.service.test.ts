@@ -1,5 +1,10 @@
 import type { SQSRecord } from 'aws-lambda';
 
+import { DryRunValidationError } from '#errors/dryRunValidation.error';
+import {
+  handleHighPriority,
+  handleLowPriority,
+} from '#services/priority.service';
 import {
   BadRequestException,
   BulkEmailStatus,
@@ -9,53 +14,41 @@ import {
 import { EmailPriority, EmailStatus } from 'om-common/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { setupMockLoggers } from '../../../testing/loggerMocks.js';
 import { makeEmailStatusHistoryItem } from '../__helpers__/emailFixtures.js';
 
-type PriorityServiceOverrides = {
-  getEmailById?: ReturnType<typeof vi.fn>;
-  getEmailsByRequestId?: ReturnType<typeof vi.fn>;
-  updateEmailStatus?: ReturnType<typeof vi.fn>;
-  batchUpdateEmailStatuses?: ReturnType<typeof vi.fn>;
-  sendHighPriorityEmail?: ReturnType<typeof vi.fn>;
-  sendLowPriorityEmail?: ReturnType<typeof vi.fn>;
-  publishMetrics?: ReturnType<typeof vi.fn>;
-};
+const getEmailById = vi.hoisted(() => vi.fn());
+const getEmailsByRequestId = vi.hoisted(() => vi.fn());
+const updateEmailStatus = vi.hoisted(() => vi.fn());
+const batchUpdateEmailStatuses = vi.hoisted(() => vi.fn());
+const sendHighPriorityEmail = vi.hoisted(() => vi.fn());
+const sendLowPriorityEmail = vi.hoisted(() => vi.fn());
+const publishMetrics = vi.hoisted(() => vi.fn());
 
-const loadPriorityService = async (overrides?: PriorityServiceOverrides) => {
-  setupMockLoggers();
-  const publishMetrics = overrides?.publishMetrics ?? vi.fn();
-
-  vi.doMock('#repositories/email.repository', () => ({
-    getEmailById: overrides?.getEmailById ?? vi.fn(),
-    getEmailsByRequestId: overrides?.getEmailsByRequestId ?? vi.fn(),
-    updateEmailStatus: overrides?.updateEmailStatus ?? vi.fn(),
-    batchUpdateEmailStatuses: overrides?.batchUpdateEmailStatuses ?? vi.fn(),
-  }));
-  vi.doMock('#services/email.service', () => ({
-    sendHighPriorityEmail: overrides?.sendHighPriorityEmail ?? vi.fn(),
-    sendLowPriorityEmail: overrides?.sendLowPriorityEmail ?? vi.fn(),
-  }));
-  vi.doMock('om-common/repositories', () => ({
-    publishMetrics,
-    SenderMetricName: {
-      InvalidRecord: 'InvalidRecord',
-      EmailNotFound: 'EmailNotFound',
-      EmailBatchNotFound: 'EmailBatchNotFound',
-      HighPriorityDryRunError: 'HighPriorityDryRunError',
-      HighPriorityRejected: 'HighPriorityRejected',
-      HighPriorityDispatched: 'HighPriorityDispatched',
-      LowPriorityDryRunError: 'LowPriorityDryRunError',
-      LowPriorityRejected: 'LowPriorityRejected',
-      LowPriorityDispatched: 'LowPriorityDispatched',
-      LowPriorityRetryableFailure: 'LowPriorityRetryableFailure',
-    },
-  }));
-
-  const module = await import('#services/priority.service');
-
-  return { ...module, publishMetrics };
-};
+vi.mock('#repositories/email.repository', () => ({
+  getEmailById,
+  getEmailsByRequestId,
+  updateEmailStatus,
+  batchUpdateEmailStatuses,
+}));
+vi.mock('#services/email.service', () => ({
+  sendHighPriorityEmail,
+  sendLowPriorityEmail,
+}));
+vi.mock('om-common/repositories', () => ({
+  publishMetrics,
+  SenderMetricName: {
+    InvalidRecord: 'InvalidRecord',
+    EmailNotFound: 'EmailNotFound',
+    EmailBatchNotFound: 'EmailBatchNotFound',
+    HighPriorityDryRunError: 'HighPriorityDryRunError',
+    HighPriorityRejected: 'HighPriorityRejected',
+    HighPriorityDispatched: 'HighPriorityDispatched',
+    LowPriorityDryRunError: 'LowPriorityDryRunError',
+    LowPriorityRejected: 'LowPriorityRejected',
+    LowPriorityDispatched: 'LowPriorityDispatched',
+    LowPriorityRetryableFailure: 'LowPriorityRetryableFailure',
+  },
+}));
 
 const makeSqsRecord = (body: unknown): SQSRecord =>
   ({
@@ -63,31 +56,29 @@ const makeSqsRecord = (body: unknown): SQSRecord =>
     eventSourceARN: 'arn:aws:sqs:eu-south-1:123456789012:queue',
   }) as SQSRecord;
 
+beforeEach(() => {
+  getEmailById.mockReset();
+  getEmailsByRequestId.mockReset();
+  updateEmailStatus.mockReset();
+  batchUpdateEmailStatuses.mockReset();
+  sendHighPriorityEmail.mockReset();
+  sendLowPriorityEmail.mockReset();
+  publishMetrics.mockReset();
+});
+
 describe('priority.service high priority flows', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
   it('discards invalid records and publishes the invalid metric', async () => {
-    const { handleHighPriority, publishMetrics } = await loadPriorityService();
-
     await handleHighPriority({ body: 'not-json' } as never);
 
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'InvalidRecord' }]);
   });
 
   it('marks high priority emails as dry-run errors when SES validation fails', async () => {
-    const { DryRunValidationError } =
-      await import('#errors/dryRunValidation.error');
-    const updateEmailStatus = vi.fn();
     const email = makeEmailStatusHistoryItem();
-    const { handleHighPriority, publishMetrics } = await loadPriorityService({
-      getEmailById: vi.fn().mockResolvedValue(email),
-      updateEmailStatus,
-      sendHighPriorityEmail: vi
-        .fn()
-        .mockRejectedValue(new DryRunValidationError('invalid dry-run')),
-    });
+    getEmailById.mockResolvedValue(email);
+    sendHighPriorityEmail.mockRejectedValue(
+      new DryRunValidationError('invalid dry-run'),
+    );
 
     await handleHighPriority(makeSqsRecord({ emailId: 'email-1' }));
 
@@ -104,13 +95,9 @@ describe('priority.service high priority flows', () => {
   });
 
   it('marks high priority emails as dispatched when SES accepts them', async () => {
-    const updateEmailStatus = vi.fn();
     const email = makeEmailStatusHistoryItem();
-    const { handleHighPriority, publishMetrics } = await loadPriorityService({
-      getEmailById: vi.fn().mockResolvedValue(email),
-      updateEmailStatus,
-      sendHighPriorityEmail: vi.fn().mockResolvedValue('ses-message-id'),
-    });
+    getEmailById.mockResolvedValue(email);
+    sendHighPriorityEmail.mockResolvedValue('ses-message-id');
 
     await handleHighPriority(makeSqsRecord({ emailId: email.emailId }));
 
@@ -128,17 +115,11 @@ describe('priority.service high priority flows', () => {
   });
 
   it('marks high priority emails as rejected when SES returns a non-retryable error', async () => {
-    const updateEmailStatus = vi.fn();
     const email = makeEmailStatusHistoryItem();
-    const { handleHighPriority, publishMetrics } = await loadPriorityService({
-      getEmailById: vi.fn().mockResolvedValue(email),
-      updateEmailStatus,
-      sendHighPriorityEmail: vi
-        .fn()
-        .mockRejectedValue(
-          new BadRequestException({ message: 'bad request', $metadata: {} }),
-        ),
-    });
+    getEmailById.mockResolvedValue(email);
+    sendHighPriorityEmail.mockRejectedValue(
+      new BadRequestException({ message: 'bad request', $metadata: {} }),
+    );
 
     await handleHighPriority(makeSqsRecord({ emailId: 'email-1' }));
 
@@ -156,13 +137,9 @@ describe('priority.service high priority flows', () => {
   });
 
   it('marks high priority emails as rejected when SES returns no message id', async () => {
-    const updateEmailStatus = vi.fn();
     const email = makeEmailStatusHistoryItem();
-    const { handleHighPriority, publishMetrics } = await loadPriorityService({
-      getEmailById: vi.fn().mockResolvedValue(email),
-      updateEmailStatus,
-      sendHighPriorityEmail: vi.fn().mockResolvedValue(undefined),
-    });
+    getEmailById.mockResolvedValue(email);
+    sendHighPriorityEmail.mockResolvedValue(undefined);
 
     await handleHighPriority(makeSqsRecord({ emailId: email.emailId }));
 
@@ -181,23 +158,15 @@ describe('priority.service high priority flows', () => {
 });
 
 describe('priority.service high priority SES rejection and guard clauses', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
   it('marks high priority emails as rejected when domain is not verified by SES', async () => {
-    const updateEmailStatus = vi.fn();
     const email = makeEmailStatusHistoryItem();
-    const { handleHighPriority, publishMetrics } = await loadPriorityService({
-      getEmailById: vi.fn().mockResolvedValue(email),
-      updateEmailStatus,
-      sendHighPriorityEmail: vi.fn().mockRejectedValue(
-        new MailFromDomainNotVerifiedException({
-          message: 'domain not verified',
-          $metadata: {},
-        }),
-      ),
-    });
+    getEmailById.mockResolvedValue(email);
+    sendHighPriorityEmail.mockRejectedValue(
+      new MailFromDomainNotVerifiedException({
+        message: 'domain not verified',
+        $metadata: {},
+      }),
+    );
 
     await handleHighPriority(makeSqsRecord({ emailId: 'email-1' }));
 
@@ -215,18 +184,14 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
   });
 
   it('marks high priority emails as rejected when message is rejected by SES', async () => {
-    const updateEmailStatus = vi.fn();
     const email = makeEmailStatusHistoryItem();
-    const { handleHighPriority, publishMetrics } = await loadPriorityService({
-      getEmailById: vi.fn().mockResolvedValue(email),
-      updateEmailStatus,
-      sendHighPriorityEmail: vi.fn().mockRejectedValue(
-        new MessageRejected({
-          message: 'message rejected',
-          $metadata: {},
-        }),
-      ),
-    });
+    getEmailById.mockResolvedValue(email);
+    sendHighPriorityEmail.mockRejectedValue(
+      new MessageRejected({
+        message: 'message rejected',
+        $metadata: {},
+      }),
+    );
 
     await handleHighPriority(makeSqsRecord({ emailId: 'email-1' }));
 
@@ -244,17 +209,13 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
   });
 
   it('discards schema-invalid high priority records and publishes the invalid metric', async () => {
-    const { handleHighPriority, publishMetrics } = await loadPriorityService();
-
     await handleHighPriority(makeSqsRecord({ wrongField: 'value' }));
 
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'InvalidRecord' }]);
   });
 
   it('publishes EmailNotFound and returns early when DB has no record', async () => {
-    const { handleHighPriority, publishMetrics } = await loadPriorityService({
-      getEmailById: vi.fn().mockResolvedValue(undefined),
-    });
+    getEmailById.mockResolvedValue(undefined);
 
     await handleHighPriority(makeSqsRecord({ emailId: 'email-1' }));
 
@@ -262,15 +223,11 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
   });
 
   it('rethrows unknown SES errors for high priority without updating status', async () => {
-    const updateEmailStatus = vi.fn();
     const email = makeEmailStatusHistoryItem();
-    const { handleHighPriority } = await loadPriorityService({
-      getEmailById: vi.fn().mockResolvedValue(email),
-      updateEmailStatus,
-      sendHighPriorityEmail: vi
-        .fn()
-        .mockRejectedValue(new Error('unexpected SES failure')),
-    });
+    getEmailById.mockResolvedValue(email);
+    sendHighPriorityEmail.mockRejectedValue(
+      new Error('unexpected SES failure'),
+    );
 
     await expect(
       handleHighPriority(makeSqsRecord({ emailId: email.emailId })),
@@ -280,30 +237,20 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
 });
 
 describe('priority.service low priority flows', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
   it('discards invalid low priority records and publishes the invalid metric', async () => {
-    const { handleLowPriority, publishMetrics } = await loadPriorityService();
-
     await handleLowPriority({ body: 'not-json' } as never);
 
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'InvalidRecord' }]);
   });
 
   it('discards schema-invalid low priority records and publishes the invalid metric', async () => {
-    const { handleLowPriority, publishMetrics } = await loadPriorityService();
-
     await handleLowPriority(makeSqsRecord({ wrongField: 'value' }));
 
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'InvalidRecord' }]);
   });
 
   it('publishes EmailBatchNotFound and returns early when DB has no records', async () => {
-    const { handleLowPriority, publishMetrics } = await loadPriorityService({
-      getEmailsByRequestId: vi.fn().mockResolvedValue([]),
-    });
+    getEmailsByRequestId.mockResolvedValue([]);
 
     await handleLowPriority(makeSqsRecord({ requestId: 'request-1' }));
 
@@ -323,16 +270,10 @@ describe('priority.service low priority flows', () => {
         priority: EmailPriority.LOW,
       }),
     ];
-    const batchUpdateEmailStatuses = vi.fn();
-    const { DryRunValidationError } =
-      await import('#errors/dryRunValidation.error');
-    const { handleLowPriority, publishMetrics } = await loadPriorityService({
-      getEmailsByRequestId: vi.fn().mockResolvedValue(emails),
-      batchUpdateEmailStatuses,
-      sendLowPriorityEmail: vi
-        .fn()
-        .mockRejectedValue(new DryRunValidationError('invalid batch')),
-    });
+    getEmailsByRequestId.mockResolvedValue(emails);
+    sendLowPriorityEmail.mockRejectedValue(
+      new DryRunValidationError('invalid batch'),
+    );
 
     await handleLowPriority(makeSqsRecord({ requestId: 'request-1' }));
 
@@ -356,16 +297,10 @@ describe('priority.service low priority flows', () => {
         priority: EmailPriority.LOW,
       }),
     ];
-    const batchUpdateEmailStatuses = vi.fn();
-    const { handleLowPriority, publishMetrics } = await loadPriorityService({
-      getEmailsByRequestId: vi.fn().mockResolvedValue(emails),
-      batchUpdateEmailStatuses,
-      sendLowPriorityEmail: vi
-        .fn()
-        .mockRejectedValue(
-          new BadRequestException({ message: 'bad request', $metadata: {} }),
-        ),
-    });
+    getEmailsByRequestId.mockResolvedValue(emails);
+    sendLowPriorityEmail.mockRejectedValue(
+      new BadRequestException({ message: 'bad request', $metadata: {} }),
+    );
 
     await handleLowPriority(makeSqsRecord({ requestId: 'request-1' }));
 
@@ -388,10 +323,6 @@ describe('priority.service low priority flows', () => {
 });
 
 describe('priority.service low priority SES entry result flows', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
   it('throws when retryable failures remain and updates all statuses', async () => {
     const emails = [
       makeEmailStatusHistoryItem({
@@ -403,30 +334,26 @@ describe('priority.service low priority SES entry result flows', () => {
         priority: EmailPriority.LOW,
       }),
     ];
-    const batchUpdateEmailStatuses = vi.fn();
-    const { handleLowPriority, publishMetrics } = await loadPriorityService({
-      getEmailsByRequestId: vi.fn().mockResolvedValue(emails),
-      batchUpdateEmailStatuses,
-      sendLowPriorityEmail: vi.fn().mockResolvedValue({
-        successful: [
-          {
-            item: emails[0],
-            result: {
-              Status: BulkEmailStatus.SUCCESS,
-              MessageId: 'ses-message-1',
-            },
+    getEmailsByRequestId.mockResolvedValue(emails);
+    sendLowPriorityEmail.mockResolvedValue({
+      successful: [
+        {
+          item: emails[0],
+          result: {
+            Status: BulkEmailStatus.SUCCESS,
+            MessageId: 'ses-message-1',
           },
-        ],
-        failed: [
-          {
-            item: emails[1],
-            result: {
-              Status: BulkEmailStatus.FAILED,
-              Error: 'temporary issue',
-            },
+        },
+      ],
+      failed: [
+        {
+          item: emails[1],
+          result: {
+            Status: BulkEmailStatus.FAILED,
+            Error: 'temporary issue',
           },
-        ],
-      }),
+        },
+      ],
     });
 
     await expect(
@@ -459,30 +386,26 @@ describe('priority.service low priority SES entry result flows', () => {
         priority: EmailPriority.LOW,
       }),
     ];
-    const batchUpdateEmailStatuses = vi.fn();
-    const { handleLowPriority, publishMetrics } = await loadPriorityService({
-      getEmailsByRequestId: vi.fn().mockResolvedValue(emails),
-      batchUpdateEmailStatuses,
-      sendLowPriorityEmail: vi.fn().mockResolvedValue({
-        successful: [
-          {
-            item: emails[0],
-            result: {
-              Status: BulkEmailStatus.SUCCESS,
-              MessageId: 'ses-message-1',
-            },
+    getEmailsByRequestId.mockResolvedValue(emails);
+    sendLowPriorityEmail.mockResolvedValue({
+      successful: [
+        {
+          item: emails[0],
+          result: {
+            Status: BulkEmailStatus.SUCCESS,
+            MessageId: 'ses-message-1',
           },
-        ],
-        failed: [
-          {
-            item: emails[1],
-            result: {
-              Status: BulkEmailStatus.MESSAGE_REJECTED,
-              Error: 'hard failure',
-            },
+        },
+      ],
+      failed: [
+        {
+          item: emails[1],
+          result: {
+            Status: BulkEmailStatus.MESSAGE_REJECTED,
+            Error: 'hard failure',
           },
-        ],
-      }),
+        },
+      ],
     });
 
     await handleLowPriority(makeSqsRecord({ requestId: 'request-1' }));
@@ -513,14 +436,8 @@ describe('priority.service low priority SES entry result flows', () => {
         priority: EmailPriority.LOW,
       }),
     ];
-    const batchUpdateEmailStatuses = vi.fn();
-    const { handleLowPriority } = await loadPriorityService({
-      getEmailsByRequestId: vi.fn().mockResolvedValue(emails),
-      batchUpdateEmailStatuses,
-      sendLowPriorityEmail: vi
-        .fn()
-        .mockRejectedValue(new Error('unexpected SES failure')),
-    });
+    getEmailsByRequestId.mockResolvedValue(emails);
+    sendLowPriorityEmail.mockRejectedValue(new Error('unexpected SES failure'));
 
     await expect(
       handleLowPriority(makeSqsRecord({ requestId: 'request-1' })),

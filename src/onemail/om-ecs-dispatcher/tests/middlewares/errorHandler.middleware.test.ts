@@ -1,14 +1,14 @@
 import { ERROR_CODES } from '#dtos/error.dto';
+import { ApiError } from '#errors/api.error';
+import { errorHandler } from '#middlewares/errorHandler.middleware';
 import {
   ConditionalCheckFailedException,
   DynamoDBServiceException,
   ProvisionedThroughputExceededException,
   TransactionCanceledException,
 } from '@aws-sdk/client-dynamodb';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
-
-import { setupMockLoggers } from '../../../testing/loggerMocks.js';
 
 const createResponseMock = () => {
   const response = {
@@ -34,17 +34,15 @@ const createDynamoDbServiceError = (name: string) => {
   return error;
 };
 
-const loadErrorHandler = async () => {
-  setupMockLoggers();
-  const { errorHandler } = await import('#middlewares/errorHandler.middleware');
+const loadErrorHandler = () => {
   const response = createResponseMock();
 
   return { errorHandler, response };
 };
 
 const registerZodErrorTest = () => {
-  it('returns a bad request response for zod errors', async () => {
-    const { errorHandler, response } = await loadErrorHandler();
+  it('returns a bad request response for zod errors', () => {
+    const { errorHandler, response } = loadErrorHandler();
     const error = new ZodError([]);
 
     errorHandler(error, {} as never, response as never, vi.fn());
@@ -60,9 +58,8 @@ const registerZodErrorTest = () => {
 };
 
 const registerApiErrorTest = () => {
-  it('returns the original api error response when the error is already normalized', async () => {
-    const { ApiError } = await import('#errors/api.error');
-    const { errorHandler, response } = await loadErrorHandler();
+  it('returns the original api error response when the error is already normalized', () => {
+    const { errorHandler, response } = loadErrorHandler();
     const error = new ApiError('Forbidden operation', 403, 'X001');
 
     errorHandler(error, {} as never, response as never, vi.fn());
@@ -78,8 +75,8 @@ const registerApiErrorTest = () => {
 };
 
 const registerConflictMappingTests = () => {
-  it('maps conflict-like DynamoDB errors to a conflict response', async () => {
-    const { errorHandler, response } = await loadErrorHandler();
+  it('maps conflict-like DynamoDB errors to a conflict response', () => {
+    const { errorHandler, response } = loadErrorHandler();
 
     errorHandler(
       new TransactionCanceledException({
@@ -99,8 +96,8 @@ const registerConflictMappingTests = () => {
     );
   });
 
-  it('maps conditional check failures to a conflict response', async () => {
-    const { errorHandler, response } = await loadErrorHandler();
+  it('maps conditional check failures to a conflict response', () => {
+    const { errorHandler, response } = loadErrorHandler();
 
     errorHandler(
       new ConditionalCheckFailedException({
@@ -122,8 +119,8 @@ const registerConflictMappingTests = () => {
 };
 
 const registerValidationMappingTest = () => {
-  it('maps validation-like DynamoDB errors to a bad request response', async () => {
-    const { errorHandler, response } = await loadErrorHandler();
+  it('maps validation-like DynamoDB errors to a bad request response', () => {
+    const { errorHandler, response } = loadErrorHandler();
 
     errorHandler(
       createDynamoDbServiceError('ValidationException'),
@@ -142,8 +139,8 @@ const registerValidationMappingTest = () => {
 };
 
 const registerThrottleMappingTest = () => {
-  it('maps throttling-like DynamoDB errors to a too many requests response', async () => {
-    const { errorHandler, response } = await loadErrorHandler();
+  it('maps throttling-like DynamoDB errors to a too many requests response', () => {
+    const { errorHandler, response } = loadErrorHandler();
 
     errorHandler(
       new ProvisionedThroughputExceededException({
@@ -165,8 +162,8 @@ const registerThrottleMappingTest = () => {
 };
 
 const registerGenericDatabaseFallbackTest = () => {
-  it('falls back to a generic database error for unmapped DynamoDB exceptions', async () => {
-    const { errorHandler, response } = await loadErrorHandler();
+  it('falls back to a generic database error for unmapped DynamoDB exceptions', () => {
+    const { errorHandler, response } = loadErrorHandler();
 
     errorHandler(
       createDynamoDbServiceError('InternalServerError'),
@@ -185,8 +182,8 @@ const registerGenericDatabaseFallbackTest = () => {
 };
 
 const registerUnexpectedErrorFallbackTest = () => {
-  it('falls back to an unexpected error response for unknown errors', async () => {
-    const { errorHandler, response } = await loadErrorHandler();
+  it('falls back to an unexpected error response for unknown errors', () => {
+    const { errorHandler, response } = loadErrorHandler();
 
     errorHandler(new Error('boom'), {} as never, response as never, vi.fn());
 
@@ -201,10 +198,6 @@ const registerUnexpectedErrorFallbackTest = () => {
 };
 
 describe('errorHandler middleware', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
   registerZodErrorTest();
   registerApiErrorTest();
   registerConflictMappingTests();

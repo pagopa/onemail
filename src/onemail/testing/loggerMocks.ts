@@ -16,17 +16,7 @@ const createMockLogger = () => {
   return logger;
 };
 
-export const setupMockLoggers = () => {
-  const logger = createMockLogger();
-  const namedLogger = createMockLogger();
-
-  vi.doMock('#config/logger', () => ({
-    getLogger: vi.fn(() => logger),
-    getNamedLogger: vi.fn(() => namedLogger),
-  }));
-
-  return {
-    logger,
-    namedLogger,
-  };
-};
+vi.mock('#config/logger', () => ({
+  getLogger: vi.fn(() => createMockLogger()),
+  getNamedLogger: vi.fn(() => createMockLogger()),
+}));

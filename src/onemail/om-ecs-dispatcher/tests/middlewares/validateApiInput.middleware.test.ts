@@ -1,14 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { validate } from '#middlewares/validateApiInput.middleware';
+import { describe, expect, it, vi } from 'vitest';
 import z, { ZodError } from 'zod';
 
 describe('validateApiInput middleware', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
-  it('validates body, query and params before calling next', async () => {
-    const { validate } =
-      await import('#middlewares/validateApiInput.middleware');
+  it('validates body, query and params before calling next', () => {
     const next = vi.fn();
     const request = {
       body: {
@@ -42,9 +37,7 @@ describe('validateApiInput middleware', () => {
     expect(next).toHaveBeenCalledWith();
   });
 
-  it('passes validation errors to next', async () => {
-    const { validate } =
-      await import('#middlewares/validateApiInput.middleware');
+  it('passes validation errors to next', () => {
     const next = vi.fn();
     const request = {
       body: {},
