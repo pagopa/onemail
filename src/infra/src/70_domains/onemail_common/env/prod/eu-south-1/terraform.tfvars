@@ -71,10 +71,6 @@ dynamodb_tables = {
       {
         name = "tenantName"
         type = "S"
-      },
-      {
-        name = "configSetName"
-        type = "S"
       }
     ]
     global_secondary_indexes = [
