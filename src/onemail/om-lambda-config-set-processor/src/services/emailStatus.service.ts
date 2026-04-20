@@ -6,7 +6,10 @@ import {
   ConfSetEventItemSchema,
   EventTypeSchema,
 } from '#dtos/confSetEventItem.dto';
-import { updateEmailStatusBySesMessageId } from '#repositories/email.repository';
+import {
+  findEmailBySesMessageId,
+  updateEmailStatus,
+} from '#repositories/email.repository';
 import { handleSoftBounceRetry } from '#services/bounceRetry.service';
 import {
   CapitalizedSesBounceType,
@@ -81,11 +84,37 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     ]);
     return;
   }
+  const emailRecord = await findEmailBySesMessageId(eventItem.mail.messageId);
+  if (!emailRecord) {
+    logger.error('Email record not found for SES message ID', {
+      sesMessageId: eventItem.mail.messageId,
+    });
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.EmailNotFound,
+      },
+    ]);
+    return;
+  }
+  // Skip if current status is already Queued to avoid duplicate retries
+  if (EmailStatus.Queued === emailRecord.status) {
+    logger.error(
+      'Email already queued for retry, skipping additional retry scheduling',
+      { emailId: emailRecord.emailId },
+    );
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.EmailAlreadyQueued,
+      },
+    ]);
+    return;
+  }
+
   // Delivered
   if (
     eventItem.eventType === CapitalizedSesConfigurationSetEventType.Delivery
   ) {
-    await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+    await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
       {
         timestamp: eventItem.delivery.timestamp,
         status: EmailStatus.Delivered,
@@ -107,7 +136,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     ) {
       // Metrics published inside handleSoftBounceRetry to differentiate between different retry
       await handleSoftBounceRetry(
-        eventItem.mail.messageId,
+        emailRecord,
         eventItem.bounce.timestamp,
         eventItem.bounce.bounceSubType,
       );
@@ -115,7 +144,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       // Hard Bounce
       eventItem.bounce.bounceType === CapitalizedSesBounceType.Permanent
     ) {
-      await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+      await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
         {
           timestamp: eventItem.bounce.timestamp,
           status: EmailStatus.HardBounce,
@@ -132,7 +161,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     // Complaint
     eventItem.eventType === CapitalizedSesConfigurationSetEventType.Complaint
   ) {
-    await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+    await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
       {
         timestamp: eventItem.complaint.timestamp,
         status: EmailStatus.Complaint,
@@ -148,7 +177,7 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     // Reject
     eventItem.eventType === CapitalizedSesConfigurationSetEventType.Reject
   ) {
-    await updateEmailStatusBySesMessageId(eventItem.mail.messageId, [
+    await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
       {
         timestamp: new Date().toISOString(),
         status: EmailStatus.Rejected,

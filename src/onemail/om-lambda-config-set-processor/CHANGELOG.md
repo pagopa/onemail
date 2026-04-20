@@ -1,5 +1,11 @@
 # om-lambda-config-set-processor
 
+## 1.5.0
+
+### Minor Changes
+
+- defc523: Skip update if current and new state are equal to QUEUED
+
 ## 1.4.3
 
 ### Patch Changes

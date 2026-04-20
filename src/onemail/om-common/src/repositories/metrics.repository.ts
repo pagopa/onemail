@@ -54,6 +54,7 @@ export const ConfigSetProcessorMetricName = {
   MissingEmailRecordForRetry: 'MissingEmailRecordForRetry',
   // Other Errors
   ScheduleRetryFailed: 'ScheduleRetryFailed',
+  EmailAlreadyQueued: 'EmailAlreadyQueued',
 } as const;
 
 export const SenderMetricName = {
