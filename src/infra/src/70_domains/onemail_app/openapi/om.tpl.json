@@ -30,9 +30,15 @@
   "paths": {
     "/v1/emails/statuses": {
       "get": {
-        "tags": ["Emails"],
+        "tags": [
+          "Emails"
+        ],
         "summary": "Get email status history",
-        "security": [{ "api_key": [] }],
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
         "parameters": [
           {
             "name": "requestId",
@@ -50,37 +56,65 @@
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
           "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "timeoutInMillis": 20000
+          "timeoutInMillis": 20000,
+          "requestTemplates": {
+            "application/json": ${tenant_request_template
+            }
+          }
         },
         "responses": {
-          "200": { "description": "Email status history retrieved successfully" },
-          "400": { "description": "Bad request - invalid data" },
-          "401": { "description": "Unauthorized - authentication required or invalid credentials" },
-          "403": { "description": "Forbidden - permission denied to perform the request" },
-          "404": { "description": "Resource not found" },
-          "409": { "description": "Conflict - resource already exists" },
-          "429": { "description": "Too many requests" },
-          "500": { "description": "Generic error" }
+          "200": {
+            "description": "Email status history retrieved successfully"
+          },
+          "400": {
+            "description": "Bad request - invalid data"
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials"
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Conflict - resource already exists"
+          },
+          "429": {
+            "description": "Too many requests"
+          },
+          "500": {
+            "description": "Generic error"
+          }
         }
       }
     },
     "/v1/emails/send/high": {
       "post": {
-        "tags": ["Emails"],
+        "tags": [
+          "Emails"
+        ],
         "summary": "Send high priority single email",
-        "security": [{ "api_key": [] }],
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
         "parameters": [
-          %{ if env != "prod" }
+          %{ if env != "prod"
+          }
             {
-              "name": "dryRun",
-              "in": "query",
-              "required": false,
-              "schema": {
-                "type": "boolean",
-                "default": false
-              }
+            "name": "dryRun",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
-          %{ endif }
+          }
+          %{ endif
+          }
         ],
         "x-amazon-apigateway-integration": {
           "type": "HTTP",
@@ -88,56 +122,99 @@
           "uri": "${uri}/v1/emails/send/high",
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
-          %{ if env != "prod" }
+          %{ if env != "prod"
+          }
           "requestParameters": {
             "integration.request.querystring.dryRun": "method.request.querystring.dryRun"
           },
-          %{ endif }
+          %{ endif
+          }
           "requestTemplates": {
-            "application/json": ${tenant_request_template}
+            "application/json": ${tenant_request_template
+            }
           },
           "passthroughBehavior": "WHEN_NO_MATCH",
           "timeoutInMillis": 20000,
           "responses": {
-            "202": { "statusCode": "202" },
-            "400": { "statusCode": "400" },
-            "401": { "statusCode": "401" },
-            "403": { "statusCode": "403" },
-            "404": { "statusCode": "404" },
-            "409": { "statusCode": "409" },
-            "429": { "statusCode": "429" },
-            "500": { "statusCode": "500" }
+            "202": {
+              "statusCode": "202"
+            },
+            "400": {
+              "statusCode": "400"
+            },
+            "401": {
+              "statusCode": "401"
+            },
+            "403": {
+              "statusCode": "403"
+            },
+            "404": {
+              "statusCode": "404"
+            },
+            "409": {
+              "statusCode": "409"
+            },
+            "429": {
+              "statusCode": "429"
+            },
+            "500": {
+              "statusCode": "500"
+            }
           }
         },
         "responses": {
-          "202": { "description": "Email accepted for processing" },
-          "400": { "description": "Bad request - invalid data" },
-          "401": { "description": "Unauthorized - authentication required or invalid credentials" },
-          "403": { "description": "Forbidden - permission denied to perform the request" },
-          "404": { "description": "Resource not found" },
-          "409": { "description": "Conflict - resource already exists" },
-          "429": { "description": "Too many requests" },
-          "500": { "description": "Generic error" }
+          "202": {
+            "description": "Email accepted for processing"
+          },
+          "400": {
+            "description": "Bad request - invalid data"
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials"
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Conflict - resource already exists"
+          },
+          "429": {
+            "description": "Too many requests"
+          },
+          "500": {
+            "description": "Generic error"
+          }
         }
       }
     },
     "/v1/emails/send/low": {
       "post": {
-        "tags": ["Emails"],
+        "tags": [
+          "Emails"
+        ],
         "summary": "Send low priority email with single or multiple recipients",
-        "security": [{ "api_key": [] }],
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
         "parameters": [
-          %{ if env != "prod" }
+          %{ if env != "prod"
+          }
             {
-              "name": "dryRun",
-              "in": "query",
-              "required": false,
-              "schema": {
-                "type": "boolean",
-                "default": false
-              }
+            "name": "dryRun",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
-          %{ endif }
+          }
+          %{ endif
+          }
         ],
         "x-amazon-apigateway-integration": {
           "type": "HTTP",
@@ -145,69 +222,126 @@
           "uri": "${uri}/v1/emails/send/low",
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
-          %{ if env != "prod" }
+          %{ if env != "prod"
+          }
           "requestParameters": {
             "integration.request.querystring.dryRun": "method.request.querystring.dryRun"
           },
-          %{ endif }
+          %{ endif
+          }
           "requestTemplates": {
-            "application/json": ${tenant_request_template}
+            "application/json": ${tenant_request_template
+            }
           },
           "passthroughBehavior": "WHEN_NO_MATCH",
           "timeoutInMillis": 20000,
           "responses": {
-            "202": { "statusCode": "202" },
-            "400": { "statusCode": "400" },
-            "401": { "statusCode": "401" },
-            "403": { "statusCode": "403" },
-            "404": { "statusCode": "404" },
-            "409": { "statusCode": "409" },
-            "429": { "statusCode": "429" },
-            "500": { "statusCode": "500" }
+            "202": {
+              "statusCode": "202"
+            },
+            "400": {
+              "statusCode": "400"
+            },
+            "401": {
+              "statusCode": "401"
+            },
+            "403": {
+              "statusCode": "403"
+            },
+            "404": {
+              "statusCode": "404"
+            },
+            "409": {
+              "statusCode": "409"
+            },
+            "429": {
+              "statusCode": "429"
+            },
+            "500": {
+              "statusCode": "500"
+            }
           }
         },
         "responses": {
-          "202": { "description": "Email accepted for processing" },
-          "400": { "description": "Bad request - invalid data" },
-          "401": { "description": "Unauthorized - authentication required or invalid credentials" },
-          "403": { "description": "Forbidden - permission denied to perform the request" },
-          "404": { "description": "Resource not found" },
-          "409": { "description": "Conflict - resource already exists" },
-          "429": { "description": "Too many requests" },
-          "500": { "description": "Generic error" }
+          "202": {
+            "description": "Email accepted for processing"
+          },
+          "400": {
+            "description": "Bad request - invalid data"
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials"
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Conflict - resource already exists"
+          },
+          "429": {
+            "description": "Too many requests"
+          },
+          "500": {
+            "description": "Generic error"
+          }
         }
       }
     },
-    %{ if env != "prod" }
+    %{ if env != "prod"
+    }
       "/v1/emails/sanitize-html": {
-        "post": {
-          "tags": ["Emails"],
-          "summary": "Test HTML content sanitization of the email, only available in non-production environments",
-          "x-amazon-apigateway-integration": {
-            "type": "HTTP_PROXY",
-            "httpMethod": "POST",
-            "uri": "${uri}/v1/emails/sanitize-html",
-            "connectionType": "VPC_LINK",
-            "connectionId": "${connection_id}",
-            "passthroughBehavior": "WHEN_NO_TEMPLATES",
-            "timeoutInMillis": 20000
+      "post": {
+        "tags": [
+          "Emails"
+        ],
+        "summary": "Test HTML content sanitization of the email, only available in non-production environments",
+        "x-amazon-apigateway-integration": {
+          "type": "HTTP_PROXY",
+          "httpMethod": "POST",
+          "uri": "${uri}/v1/emails/sanitize-html",
+          "connectionType": "VPC_LINK",
+          "connectionId": "${connection_id}",
+          "passthroughBehavior": "WHEN_NO_TEMPLATES",
+          "timeoutInMillis": 20000
+        },
+        "responses": {
+          "200": {
+            "description": "Email sanitized successfully"
           },
-          "responses": {
-            "200": { "description": "Email sanitized successfully" },
-            "400": { "description": "Bad request - invalid data" },
-            "401": { "description": "Unauthorized - authentication required or invalid credentials" },
-            "403": { "description": "Forbidden - permission denied to perform the request" },
-            "404": { "description": "Resource not found" },
-            "409": { "description": "Conflict - resource already exists" },
-            "429": { "description": "Too many requests" },
-            "500": { "description": "Generic error" }
+          "400": {
+            "description": "Bad request - invalid data"
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials"
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Conflict - resource already exists"
+          },
+          "429": {
+            "description": "Too many requests"
+          },
+          "500": {
+            "description": "Generic error"
           }
         }
-      },
-    %{ endif }
+      }
+    },
+    %{ endif
+    }
     "/health/ready": {
       "get": {
-        "tags": ["Health"],
+        "tags": [
+          "Health"
+        ],
         "summary": "Perform readiness check of the service",
         "x-amazon-apigateway-integration": {
           "type": "HTTP_PROXY",
@@ -219,20 +353,38 @@
           "timeoutInMillis": 5000
         },
         "responses": {
-          "200": { "description": "Service is ready" },
-          "400": { "description": "Bad request - invalid data" },
-          "401": { "description": "Unauthorized - authentication required or invalid credentials" },
-          "403": { "description": "Forbidden - permission denied to perform the request" },
-          "404": { "description": "Resource not found" },
-          "409": { "description": "Conflict - resource already exists" },
-          "429": { "description": "Too many requests" },
-          "500": { "description": "Generic error" }
+          "200": {
+            "description": "Service is ready"
+          },
+          "400": {
+            "description": "Bad request - invalid data"
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials"
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Conflict - resource already exists"
+          },
+          "429": {
+            "description": "Too many requests"
+          },
+          "500": {
+            "description": "Generic error"
+          }
         }
       }
     },
     "/health": {
       "get": {
-        "tags": ["Health"],
+        "tags": [
+          "Health"
+        ],
         "summary": "Perform liveness check of the service",
         "x-amazon-apigateway-integration": {
           "type": "HTTP_PROXY",
@@ -244,14 +396,30 @@
           "timeoutInMillis": 5000
         },
         "responses": {
-          "200": { "description": "Service is alive" },
-          "400": { "description": "Bad request - invalid data" },
-          "401": { "description": "Unauthorized - authentication required or invalid credentials" },
-          "403": { "description": "Forbidden - permission denied to perform the request" },
-          "404": { "description": "Resource not found" },
-          "409": { "description": "Conflict - resource already exists" },
-          "429": { "description": "Too many requests" },
-          "500": { "description": "Generic error" }
+          "200": {
+            "description": "Service is alive"
+          },
+          "400": {
+            "description": "Bad request - invalid data"
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials"
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Conflict - resource already exists"
+          },
+          "429": {
+            "description": "Too many requests"
+          },
+          "500": {
+            "description": "Generic error"
+          }
         }
       }
     }

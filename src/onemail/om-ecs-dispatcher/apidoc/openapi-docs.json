@@ -554,7 +554,7 @@
               "minLength": 1
             },
             "required": true,
-            "name": "tenant-id",
+            "name": "x-tenant-id",
             "in": "header"
           }
         ],
@@ -674,7 +674,7 @@
               "minLength": 1
             },
             "required": true,
-            "name": "tenant-id",
+            "name": "x-tenant-id",
             "in": "header"
           }
         ],
@@ -801,7 +801,7 @@
               "minLength": 1
             },
             "required": true,
-            "name": "tenant-id",
+            "name": "x-tenant-id",
             "in": "header"
           }
         ],
