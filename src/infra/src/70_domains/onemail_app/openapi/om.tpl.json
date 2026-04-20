@@ -53,10 +53,9 @@
             "integration.request.querystring.requestId": "method.request.querystring.requestId"
           },
           "requestTemplates": {
-            "application/json": ${tenant_request_template},
-            "*/*": ${tenant_request_template}
+            "application/json": ${tenant_request_template}
           },
-          "passthroughBehavior": "WHEN_NO_MATCH",
+          "passthroughBehavior": "NEVER",
           "timeoutInMillis": 20000,
           "responses": {
             "200": { "statusCode": "200" },
