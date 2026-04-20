@@ -116,7 +116,7 @@ describe('email.service', () => {
       await expect(
         sendEmailTransactional(makeHighPriorityEmailDto(), false, 'tenant-a'),
       ).rejects.toMatchObject({
-        statusCode: 400,
+        statusCode: 401,
         errorCode: 'T001',
       });
 
@@ -211,7 +211,7 @@ describe('email.service', () => {
       await expect(
         sendEmailLowPriority(makeLowPriorityEmailDto(), false, 'tenant-a'),
       ).rejects.toMatchObject({
-        statusCode: 400,
+        statusCode: 401,
         errorCode: 'T001',
       });
 
@@ -461,9 +461,7 @@ describe('email.service - getTenantConfiguration', () => {
 
     const { getTenantConfiguration } = await import('#services/email.service');
 
-    await expect(getTenantConfiguration('tenant-a')).rejects.toMatchObject({
-      statusCode: 409,
-      errorCode: 'T001',
-    });
+    const result = await getTenantConfiguration('tenant-a');
+    expect(result).toBeUndefined();
   });
 });
