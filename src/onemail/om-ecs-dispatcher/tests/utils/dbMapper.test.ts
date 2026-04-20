@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   makeHighPriorityEmailDto,
   makeLowPriorityEmailDto,
-} from '../setup/dtoFactories.js';
+} from '../__helpers__/dtoFactories.js';
 
 describe('dbMapper', () => {
   beforeEach(() => {

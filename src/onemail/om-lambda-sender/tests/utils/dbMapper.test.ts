@@ -2,7 +2,7 @@ import { EmailPriority } from 'om-common/types';
 import { SES_SIMULATOR } from 'om-common/utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { makeEmailStatusHistoryItem } from '../setup/emailFixtures.js';
+import { makeEmailStatusHistoryItem } from '../__helpers__/emailFixtures.js';
 
 describe('dbMapper high priority utils', () => {
   beforeEach(() => {

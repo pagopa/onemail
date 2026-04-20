@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, vi } from 'vitest';
 
-export const registerVitestBaseHooks = (): void => {
+const registerVitestBaseHooks = (): void => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -9,3 +9,5 @@ export const registerVitestBaseHooks = (): void => {
     vi.restoreAllMocks();
   });
 };
+
+registerVitestBaseHooks();

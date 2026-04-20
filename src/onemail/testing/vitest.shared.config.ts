@@ -11,9 +11,13 @@ type CreatePackageVitestConfigInput = {
 const fromPackage = (packageUrl: string, path: string): string =>
   fileURLToPath(new URL(path, packageUrl));
 
+const SETUP_HOOKS_PATH = fileURLToPath(
+  new URL('./setupHooks.ts', import.meta.url),
+);
+
 export const createPackageVitestConfig = ({
   packageUrl,
-  setupFiles = ['./tests/setup/vi.test.base.ts'],
+  setupFiles = [],
   coverageInclude,
   coverageExclude = ['./src/utils/constants.ts'],
 }: CreatePackageVitestConfigInput) => {
@@ -36,7 +40,10 @@ export const createPackageVitestConfig = ({
     },
     test: {
       environment: 'node',
-      setupFiles: setupFiles.map((path) => fromPackage(packageUrl, path)),
+      silent: process.env['CI'] === 'true',
+      setupFiles: [SETUP_HOOKS_PATH].concat(
+        setupFiles.map((path) => fromPackage(packageUrl, path)),
+      ),
       coverage: {
         provider: 'v8',
         reporter: ['text', 'html'],

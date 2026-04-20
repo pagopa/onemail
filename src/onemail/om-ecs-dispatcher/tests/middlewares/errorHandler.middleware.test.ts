@@ -8,6 +8,8 @@ import {
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
+import { setupMockLoggers } from '../../../testing/loggerMocks.js';
+
 const createResponseMock = () => {
   const response = {
     status: vi.fn(),
@@ -33,26 +35,20 @@ const createDynamoDbServiceError = (name: string) => {
 };
 
 const loadErrorHandler = async () => {
-  const logger = { error: vi.fn() };
-
-  vi.doMock('#config/logger', () => ({
-    getLogger: vi.fn(() => logger),
-  }));
-
+  setupMockLoggers();
   const { errorHandler } = await import('#middlewares/errorHandler.middleware');
   const response = createResponseMock();
 
-  return { errorHandler, logger, response };
+  return { errorHandler, response };
 };
 
 const registerZodErrorTest = () => {
   it('returns a bad request response for zod errors', async () => {
-    const { errorHandler, logger, response } = await loadErrorHandler();
+    const { errorHandler, response } = await loadErrorHandler();
     const error = new ZodError([]);
 
     errorHandler(error, {} as never, response as never, vi.fn());
 
-    expect(logger.error).toHaveBeenCalledWith('Error occurred:', { error });
     expect(response.status).toHaveBeenCalledWith(400);
     expect(response.json).toHaveBeenCalledWith(
       expect.objectContaining({

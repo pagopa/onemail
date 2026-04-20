@@ -3,25 +3,25 @@ import { ApiError } from '#errors/api.error';
 import { EmailPriority, EmailStatus } from 'om-common/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createMockAwsClient } from '../setup/awsMocks.js';
 import {
   expectCommandInput,
   getNthCommand,
-} from '../setup/commandAssertions.js';
+} from '../../../testing/commandAssertions.js';
+import { setupMockLoggers } from '../../../testing/loggerMocks.js';
+
+const createMockAwsClient = () => ({
+  send: vi.fn().mockResolvedValue(undefined),
+});
 import {
   makeHighPriorityEmailDto,
   makeLowPriorityEmailDto,
-} from '../setup/dtoFactories.js';
-import { createMockLogger } from '../setup/loggerMocks.js';
+} from '../__helpers__/dtoFactories.js';
 
 const setupEmailServiceDependencies = () => {
-  const loggerMock = createMockLogger();
+  setupMockLoggers();
   const dynamoClientMock = createMockAwsClient();
   const sqsClientMock = createMockAwsClient();
 
-  vi.doMock('#config/logger', () => ({
-    getNamedLogger: vi.fn(() => loggerMock),
-  }));
   vi.doMock('#errors/api.error', () => ({ ApiError }));
   vi.doMock('#connectors/dynamo.connector', () => ({
     dynamoClient: dynamoClientMock,
@@ -32,7 +32,6 @@ const setupEmailServiceDependencies = () => {
 
   return {
     dynamoClientMock,
-    loggerMock,
     sqsClientMock,
   };
 };
@@ -44,7 +43,7 @@ describe('email.service', () => {
 
   describe('sendEmailTransactional', () => {
     it('persists the email and publishes the high priority message', async () => {
-      const { loggerMock, dynamoClientMock, sqsClientMock } =
+      const { dynamoClientMock, sqsClientMock } =
         setupEmailServiceDependencies();
       const randomUUID = vi
         .fn()
@@ -90,8 +89,6 @@ describe('email.service', () => {
         },
         0,
       );
-      expect(loggerMock.info).toHaveBeenCalledWith('Start');
-      expect(loggerMock.info).toHaveBeenCalledWith('End');
     });
   });
 

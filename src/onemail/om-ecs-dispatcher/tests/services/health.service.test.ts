@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createMockAwsClient } from '../setup/awsMocks.js';
-import { createMockLogger } from '../setup/loggerMocks.js';
+import { setupMockLoggers } from '../../../testing/loggerMocks.js';
+
+const createMockAwsClient = () => ({
+  send: vi.fn().mockResolvedValue(undefined),
+});
 
 const setupHealthServiceDependencies = () => {
-  const loggerMock = createMockLogger();
+  setupMockLoggers();
   const dynamoClientMock = createMockAwsClient();
   const sqsClientMock = createMockAwsClient();
 
-  vi.doMock('#config/logger', () => ({
-    getNamedLogger: vi.fn(() => loggerMock),
-  }));
   vi.doMock('#connectors/dynamo.connector', () => ({
     dynamoClient: dynamoClientMock,
   }));

@@ -5,7 +5,8 @@ import {
 } from '@aws-sdk/client-sesv2';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { makeEmailStatusHistoryItem } from '../setup/emailFixtures.js';
+import { getNthCommand } from '../../../testing/commandAssertions.js';
+import { makeEmailStatusHistoryItem } from '../__helpers__/emailFixtures.js';
 
 describe('email.service', () => {
   beforeEach(() => {
@@ -29,10 +30,9 @@ describe('email.service', () => {
 
     await expect(sendHighPriorityEmail(item)).resolves.toBe('ses-message-id');
     expect(sesSend).toHaveBeenCalledTimes(1);
-    expect(sesSend.mock.calls[0]?.[0]).toBeInstanceOf(SendEmailCommand);
-    expect((sesSend.mock.calls[0]?.[0] as SendEmailCommand).input).toEqual(
-      sesInput,
-    );
+    const command = getNthCommand(sesSend, 0);
+    expect(command).toBeInstanceOf(SendEmailCommand);
+    expect((command as SendEmailCommand).input).toEqual(sesInput);
   });
 
   it('returns undefined when SES returns no message id for a high priority email', async () => {
@@ -93,9 +93,8 @@ describe('email.service', () => {
     });
 
     expect(sesSend).toHaveBeenCalledTimes(1);
-    expect(sesSend.mock.calls[0]?.[0]).toBeInstanceOf(SendBulkEmailCommand);
-    expect((sesSend.mock.calls[0]?.[0] as SendBulkEmailCommand).input).toEqual(
-      sesInput,
-    );
+    const command = getNthCommand(sesSend, 0);
+    expect(command).toBeInstanceOf(SendBulkEmailCommand);
+    expect((command as SendBulkEmailCommand).input).toEqual(sesInput);
   });
 });
