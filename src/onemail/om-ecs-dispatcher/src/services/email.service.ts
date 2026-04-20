@@ -220,7 +220,7 @@ const validateTenantId = async (
   if (!tenantConfiguration) {
     throw new ApiError(
       `Tenant configuration not found for tenantId ${tenantId}`,
-      StatusCodes.BAD_REQUEST,
+      StatusCodes.UNAUTHORIZED,
       ERROR_CODES.INVALID_TENANT,
     );
   }
