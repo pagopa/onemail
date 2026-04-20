@@ -2,7 +2,7 @@
 description: Add or improve unit tests for Node.js/TypeScript code
 name: TechAIAddUnitTestsNodejs
 agent: agent
-argument-hint: target_file=<path> [test_framework=node:test]
+argument-hint: target_file=<path> [test_framework=vitest]
 ---
 
 # Add Node.js Unit Tests
@@ -12,7 +12,7 @@ Add or improve unit tests for an existing Node.js/TypeScript module while preser
 
 ## Required inputs
 - **Target file**: ${input:target_file}
-- **Test framework**: ${input:test_framework:node:test}
+- **Test framework**: ${input:test_framework:vitest}
 
 ## Instructions
 
@@ -23,10 +23,13 @@ Add or improve unit tests for an existing Node.js/TypeScript module while preser
    - input validation and guard clauses
    - relevant edge cases
 4. Keep tests deterministic and isolated (no network calls in unit scope).
-5. Use built-in `node:test` + `node:assert/strict` with BDD-like `describe`/`it` structure.
-6. Prefer readability and simple assertions over complex test abstractions.
-7. Use clear `given_when_then` naming for test cases.
-8. If external dependencies need mocking, use `node:test` built-in mocking utilities.
+5. Use **Vitest** (`describe`, `it`, `expect`, `vi` from `vitest`) with BDD-like structure.
+6. Use `vi.hoisted` to declare mock refs, then `vi.mock` and use static imports of the subject under test.
+7. If a mock (e.g. logger mock) is applied globally via `setupFiles`, never add a specific logger mock in test files.
+8. Each test configures only the mocks it needs directly on the hoisted refs.
+9. Prefer readability and simple assertions over complex test abstractions.
+10. Use clear `given_when_then` naming for test cases.
+11. - Place tests under `<package>/tests/`; helpers and fixtures and setup under `<package>/tests/__helpers__/`; shared test utilities and config under `testing/`.
 
 ## Minimal example
 - Input: `target_file=src/onemail/om-lambda-sender/src/services/email.service.ts`
@@ -35,5 +38,5 @@ Add or improve unit tests for an existing Node.js/TypeScript module while preser
   - Deterministic assertions and no network calls.
 
 ## Validation
-- Run tests with `pnpm turbo test` or `node --test` for the target package.
+- Run tests with `pnpm --filter <package-name> test`.
 - Report which test cases were added and why.
