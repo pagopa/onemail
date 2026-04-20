@@ -16,7 +16,7 @@ data "aws_iam_policy_document" "ecs_task_policy" {
   }
 
   statement {
-    sid = "DynamoDBAccess"
+    sid = "DynamoDBEmailStatusHistoryAccess"
 
     actions = [
       "dynamodb:PutItem",
@@ -34,6 +34,19 @@ data "aws_iam_policy_document" "ecs_task_policy" {
   }
 
   statement {
+    sid = "DynamoDBTenantConfigReadAccess"
+
+    actions = [
+      "dynamodb:Query"
+    ]
+
+    resources = [
+      data.aws_dynamodb_table.TenantConfig.arn,
+      "${data.aws_dynamodb_table.TenantConfig.arn}/index/${local.tenant_config_gsis["gsi_tenant_name_idx"].name}"
+    ]
+  }
+
+  statement {
     sid = "CloudWatchMetricsAccess"
 
     actions = [
@@ -45,11 +58,12 @@ data "aws_iam_policy_document" "ecs_task_policy" {
   }
 
   dynamic "statement" {
-    for_each = local.dynamodb_kms_key_arn != null ? [local.dynamodb_kms_key_arn] : []
+    for_each = toset(compact([
+      local.dynamodb_kms_key_arn,
+      local.tenant_config_kms_key_arn
+    ]))
 
     content {
-      sid = "KMSAccess"
-
       actions = [
         "kms:Decrypt",
         "kms:Encrypt"
@@ -127,7 +141,7 @@ module "ecs_service" {
     },
     {
       name  = "AWS_TENANT_DB_CONFIG_TENANT_NAME_GSI"
-      value = local.gsis["gsi_tenant_name_idx"].name
+      value = local.tenant_config_gsis["gsi_tenant_name_idx"].name
     },
   ]
 
