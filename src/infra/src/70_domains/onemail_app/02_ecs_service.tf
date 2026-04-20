@@ -120,7 +120,15 @@ module "ecs_service" {
     {
       name  = "AWS_CLOUDWATCH_METRICS_NAMESPACE"
       value = "${local.project_nodomain}-ecs-dispatcher"
-    }
+    },
+    {
+      name  = "AWS_TENANT_CONFIG_TABLE"
+      value = data.aws_dynamodb_table.TenantConfig.name
+    },
+    {
+      name  = "AWS_TENANT_DB_CONFIG_TENANT_NAME_GSI"
+      value = local.gsis["gsi_tenant_name_idx"].name
+    },
   ]
 
 }
