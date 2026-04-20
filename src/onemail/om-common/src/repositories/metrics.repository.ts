@@ -45,6 +45,7 @@ export const ConfigSetProcessorMetricName = {
   EmailHardBounce: `Email${EmailStatus.HardBounce}`,
   EmailSoftBounce: `Email${EmailStatus.SoftBounce}`,
   EmailComplaint: `Email${EmailStatus.Complaint}`,
+  EmailRejected: `Email${EmailStatus.Rejected}`,
   // Email Errors
   HighPriorityEmailMaxRetriesReached: `${PriorityPrefix[EmailPriority.HIGH]}${EmailStatus.MaxRetriesReached}`,
   LowPriorityEmailMaxRetriesReached: `${PriorityPrefix[EmailPriority.LOW]}${EmailStatus.MaxRetriesReached}`,
@@ -53,17 +54,18 @@ export const ConfigSetProcessorMetricName = {
   MissingEmailRecordForRetry: 'MissingEmailRecordForRetry',
   // Other Errors
   ScheduleRetryFailed: 'ScheduleRetryFailed',
+  EmailAlreadyQueued: 'EmailAlreadyQueued',
 } as const;
 
 export const SenderMetricName = {
   // High priority
   HighPriorityDispatched: `${PriorityPrefix[EmailPriority.HIGH]}${EmailStatus.Dispatched}`,
   HighPriorityDryRunError: `${PriorityPrefix[EmailPriority.HIGH]}${EmailStatus.DryRunError}`,
-  HighPriorityRejectedBySES: `${PriorityPrefix[EmailPriority.HIGH]}${EmailStatus.RejectedBySES}`,
+  HighPriorityRejected: `${PriorityPrefix[EmailPriority.HIGH]}${EmailStatus.Rejected}`,
   // Low priority
   LowPriorityDispatched: `${PriorityPrefix[EmailPriority.LOW]}${EmailStatus.Dispatched}`,
   LowPriorityDryRunError: `${PriorityPrefix[EmailPriority.LOW]}${EmailStatus.DryRunError}`,
-  LowPriorityRejectedBySES: `${PriorityPrefix[EmailPriority.LOW]}${EmailStatus.RejectedBySES}`,
+  LowPriorityRejected: `${PriorityPrefix[EmailPriority.LOW]}${EmailStatus.Rejected}`,
   LowPriorityRetryableFailure: `${PriorityPrefix[EmailPriority.LOW]}RetryableFailure`,
   // Errors
   EmailBatchNotFound: 'EmailBatchNotFound',

@@ -88,12 +88,12 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       });
       await updateEmailStatus({
         emailId,
-        status: EmailStatus.RejectedBySES,
+        status: EmailStatus.Rejected,
         reason: errorMessage,
       });
       publishMetrics([
         {
-          name: SenderMetricName.HighPriorityRejectedBySES,
+          name: SenderMetricName.HighPriorityRejected,
           dimensions: clientIdDimension,
         },
       ]);
@@ -132,12 +132,12 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
     });
     await updateEmailStatus({
       emailId,
-      status: EmailStatus.RejectedBySES,
+      status: EmailStatus.Rejected,
       reason: 'Unknown SES error',
     });
     publishMetrics([
       {
-        name: SenderMetricName.HighPriorityRejectedBySES,
+        name: SenderMetricName.HighPriorityRejected,
         dimensions: clientIdDimension,
       },
     ]);
@@ -217,7 +217,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
         });
         return {
           item: entry.item,
-          status: EmailStatus.RejectedBySES,
+          status: EmailStatus.Rejected,
           reason: entry.result.Error,
         };
       }),
@@ -267,13 +267,13 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       await batchUpdateEmailStatuses(
         emails.map((email) => ({
           item: email,
-          status: EmailStatus.RejectedBySES,
+          status: EmailStatus.Rejected,
           reason: errorMessage,
         })),
       );
       publishMetrics([
         {
-          name: SenderMetricName.LowPriorityRejectedBySES,
+          name: SenderMetricName.LowPriorityRejected,
           value: emails.length,
         },
       ]);
@@ -295,7 +295,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       value: successfulEmails.length,
     },
     {
-      name: SenderMetricName.LowPriorityRejectedBySES,
+      name: SenderMetricName.LowPriorityRejected,
       value: nonRetryableFailures.length,
     },
     {

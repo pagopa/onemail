@@ -1,5 +1,19 @@
 # onemail
 
+## 1.4.9
+
+### Patch Changes
+
+- Updated dependencies [defc523]
+  - om-lambda-config-set-processor@1.5.0
+
+## 1.4.8
+
+### Patch Changes
+
+- Updated dependencies [bcd64ba]
+  - om-lambda-config-set-processor@1.4.3
+
 ## 1.4.7
 
 ### Patch Changes

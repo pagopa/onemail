@@ -97,7 +97,7 @@
           "Dispatched",
           "HardBounce",
           "Queued",
-          "RejectedBySES",
+          "Rejected",
           "DryRunError",
           "SoftBounce",
           "Complaint",
