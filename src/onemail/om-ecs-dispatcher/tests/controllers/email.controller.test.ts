@@ -55,7 +55,7 @@ describe('email.controller', () => {
       {
         body: makeHighPriorityEmailDto(),
         query: { dryRun: false },
-        headers: { 'tenant-id': 'tenant-a' },
+        headers: { 'x-tenant-id': 'tenant-a' },
       } as never,
       response as never,
     );
@@ -88,7 +88,7 @@ describe('email.controller', () => {
             ],
           }),
           query: { dryRun: false },
-          headers: { 'tenant-id': 'tenant-a' },
+          headers: { 'x-tenant-id': 'tenant-a' },
         } as never,
         response as never,
       ),
@@ -119,7 +119,7 @@ describe('email.controller', () => {
           ],
         }),
         query: { dryRun: true },
-        headers: { 'tenant-id': 'tenant-a' },
+        headers: { 'x-tenant-id': 'tenant-a' },
       } as never,
       response as never,
     );
@@ -166,7 +166,7 @@ describe('email.controller', () => {
     await controller(
       {
         query: { requestId: 'request-id-3' },
-        headers: { 'tenant-id': 'tenant-a' },
+        headers: { 'x-tenant-id': 'tenant-a' },
       } as never,
       response as never,
     );

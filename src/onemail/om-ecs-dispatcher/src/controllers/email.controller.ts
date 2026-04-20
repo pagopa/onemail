@@ -34,7 +34,7 @@ export const sendEmailTransactional = async (
   res: Response<EmailHighPriorityResponseDTO>,
 ) => {
   const { dryRun } = req.query as unknown as EmailHighPriorityQueryParams;
-  const tenantId = req.headers['tenant-id'] as string;
+  const tenantId = req.headers['x-tenant-id'] as string;
 
   const result = await emailService.sendEmailTransactional(
     req.body,
@@ -54,7 +54,7 @@ export const sendEmailLowPriority = async (
   res: Response<EmailLowPriorityResponseDTO>,
 ) => {
   const { dryRun } = req.query as unknown as EmailLowPriorityQueryParams;
-  const tenantId = req.headers['tenant-id'] as string;
+  const tenantId = req.headers['x-tenant-id'] as string;
 
   if (!dryRun) {
     validateNoDuplicateRecipients(req.body.sendingInfo);
@@ -84,7 +84,7 @@ export const getEmailStatus = async (
   res: Response<EmailStatusResponseDTO>,
 ) => {
   const { requestId } = req.query as unknown as EmailStatusQueryParamsDTO;
-  const tenantId = req.headers['tenant-id'] as string;
+  const tenantId = req.headers['x-tenant-id'] as string;
 
   const result = await emailService.getEmailStatus(requestId, tenantId);
   res.status(StatusCodes.OK).json(result);

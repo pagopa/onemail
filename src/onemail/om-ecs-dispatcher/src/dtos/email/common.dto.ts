@@ -114,5 +114,5 @@ export const htmlContentSchema = stringCheckedSchema({ min: 10, max: 150000 })
   });
 
 export const TenantIdHeaderSchema = z.object({
-  'tenant-id': z.string().min(1, 'tenant-id header is required').trim(),
+  'x-tenant-id': z.string().min(1, 'x-tenant-id header is required').trim(),
 });
