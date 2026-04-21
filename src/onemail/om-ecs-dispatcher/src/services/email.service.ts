@@ -203,11 +203,11 @@ export const getEmailStatus = async (
       publishMetrics([
         {
           name: DispatcherMetricName.UnauthorizedTenant,
-          dimensions: { tenantName: tenantConfiguration.tenantName },
+          dimensions: { tenantName: tenantId },
         },
       ]);
       throw new ApiError(
-        `Email with requestId ${requestId} does not belong to tenant ${tenantConfiguration.tenantName}`,
+        `Email with requestId ${requestId} does not belong to tenant ${tenantId}`,
         StatusCodes.UNAUTHORIZED,
         ERROR_CODES.INVALID_TENANT,
       );
