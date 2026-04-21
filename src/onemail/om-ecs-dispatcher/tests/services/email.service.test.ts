@@ -1,11 +1,12 @@
 import env from '#config/env';
 import {
   getEmailStatus,
+  getTenantConfiguration,
   sendEmailLowPriority,
   sendEmailTransactional,
 } from '#services/email.service';
 import { EmailPriority, EmailStatus } from 'om-common/types';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   expectCommandInput,
@@ -14,6 +15,7 @@ import {
 import {
   makeHighPriorityEmailDto,
   makeLowPriorityEmailDto,
+  makeTenantConfiguration,
 } from '../__helpers__/dtoFactories.js';
 
 const dynamoSend = vi.hoisted(() => vi.fn());
@@ -28,14 +30,10 @@ vi.mock('#connectors/sqs.connector', () => ({
 }));
 vi.mock('node:crypto', () => ({ randomUUID }));
 
-const setupEmailServiceDependencies = () => ({
-  dynamoClientMock: { send: dynamoSend },
-  sqsClientMock: { send: sqsSend },
-});
-
 describe('email.service', () => {
   describe('sendEmailTransactional', () => {
     it('persists the email and publishes the high priority message', async () => {
+      dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
       randomUUID
         .mockReturnValueOnce('request-id-1')
         .mockReturnValueOnce('email-id-1');
@@ -50,7 +48,7 @@ describe('email.service', () => {
       const putCommand = expectCommandInput(
         dynamoSend,
         { TableName: env.aws.emailDbTable },
-        0,
+        1,
       );
       const putItem = (
         putCommand.input as {
@@ -75,11 +73,9 @@ describe('email.service', () => {
         0,
       );
     });
+
     it('throws INVALID_TENANT when tenant configuration is missing', async () => {
       dynamoSend.mockResolvedValueOnce({ Items: [] });
-
-      const { sendEmailTransactional } =
-        await import('#services/email.service');
 
       await expect(
         sendEmailTransactional(makeHighPriorityEmailDto(), false, 'tenant-a'),
@@ -94,6 +90,7 @@ describe('email.service', () => {
 
   describe('sendEmailLowPriority', () => {
     it('splits low priority batches over the DynamoDB write limit', async () => {
+      dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
       randomUUID.mockReturnValueOnce('request-id-2');
       for (let index = 1; index <= 26; index += 1) {
         randomUUID.mockReturnValueOnce(`email-id-${index}`);
@@ -111,12 +108,12 @@ describe('email.service', () => {
       );
 
       expect(result).toEqual({ requestId: 'request-id-2' });
-      expect(dynamoSend).toHaveBeenCalledTimes(2);
+      expect(dynamoSend).toHaveBeenCalledTimes(3);
 
-      const firstBatch = getNthCommand(dynamoSend, 0) as {
+      const firstBatch = getNthCommand(dynamoSend, 1) as {
         input: { RequestItems: Record<string, unknown[]> };
       };
-      const secondBatch = getNthCommand(dynamoSend, 1) as {
+      const secondBatch = getNthCommand(dynamoSend, 2) as {
         input: { RequestItems: Record<string, unknown[]> };
       };
 
@@ -149,11 +146,7 @@ describe('email.service', () => {
     });
 
     it('throws INVALID_TENANT when tenant configuration is missing', async () => {
-      const { dynamoClientMock, sqsClientMock } =
-        setupEmailServiceDependencies();
-      dynamoClientMock.send.mockResolvedValueOnce({ Items: [] });
-
-      const { sendEmailLowPriority } = await import('#services/email.service');
+      dynamoSend.mockResolvedValueOnce({ Items: [] });
 
       await expect(
         sendEmailLowPriority(makeLowPriorityEmailDto(), false, 'tenant-a'),
@@ -162,14 +155,15 @@ describe('email.service', () => {
         errorCode: 'T001',
       });
 
-      expect(sqsClientMock.send).not.toHaveBeenCalled();
+      expect(sqsSend).not.toHaveBeenCalled();
     });
   });
 });
 
 describe('email.service - getEmailStatus', () => {
   it('returns the history sorted in descending timestamp order', async () => {
-    dynamoSend.mockResolvedValue({
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    dynamoSend.mockResolvedValueOnce({
       Items: [
         {
           emailId: 'email-id-3',
@@ -192,6 +186,8 @@ describe('email.service - getEmailStatus', () => {
           },
           clientId: 'client-id',
           dryRun: false,
+          tenantName: 'tenant-a',
+          configSetName: 'config-set-a',
         },
       ],
     });
@@ -228,7 +224,8 @@ describe('email.service - getEmailStatus', () => {
   });
 
   it('throws an ApiError when the requested email status does not exist', async () => {
-    dynamoSend.mockResolvedValue({ Items: [] });
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    dynamoSend.mockResolvedValueOnce({ Items: [] });
 
     await expect(
       getEmailStatus('missing-request-id', 'tenant-a'),
@@ -240,7 +237,8 @@ describe('email.service - getEmailStatus', () => {
   });
 
   it('counts Dispatched events in history as attempts', async () => {
-    dynamoSend.mockResolvedValue({
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    dynamoSend.mockResolvedValueOnce({
       Items: [
         {
           emailId: 'email-id-4',
@@ -275,6 +273,8 @@ describe('email.service - getEmailStatus', () => {
           },
           clientId: 'client-id',
           dryRun: false,
+          tenantName: 'tenant-a',
+          configSetName: 'config-set-a',
         },
       ],
     });
@@ -283,32 +283,48 @@ describe('email.service - getEmailStatus', () => {
 
     expect(result[0].attempts).toBe(2);
   });
-});
 
-describe('email.service - getTenantConfiguration', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
-  it('queries tenant configuration by tenantName GSI and returns the first item', async () => {
-    const { dynamoClientMock } = setupEmailServiceDependencies();
-
-    dynamoClientMock.send.mockResolvedValue({
+  it('throws INVALID_TENANT when the requested status belongs to another tenant', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    dynamoSend.mockResolvedValueOnce({
       Items: [
         {
-          tenantName: 'tenant-a',
-          configSetName: 'config-set-a',
+          emailId: 'email-id-5',
+          requestId: 'request-id-5',
+          priority: EmailPriority.HIGH,
+          status: EmailStatus.Delivered,
+          history: [],
+          content: {
+            from: { email: 'sender@example.com' },
+            to: { email: 'user@example.com' },
+          },
           clientId: 'client-id-a',
+          dryRun: false,
+          configSetName: 'config-set-a',
+          tenantName: 'tenant-b',
         },
       ],
     });
 
-    const { getTenantConfiguration } = await import('#services/email.service');
+    await expect(
+      getEmailStatus('request-id-5', 'tenant-a'),
+    ).rejects.toMatchObject({
+      statusCode: 401,
+      errorCode: 'T001',
+    });
+  });
+});
+
+describe('email.service - getTenantConfiguration', () => {
+  it('queries tenant configuration by tenantName GSI and returns the first item', async () => {
+    dynamoSend.mockResolvedValueOnce({
+      Items: [makeTenantConfiguration()],
+    });
 
     const result = await getTenantConfiguration('tenant-a');
 
     expectCommandInput(
-      dynamoClientMock.send,
+      dynamoSend,
       {
         TableName: env.aws.tenantConfigurationTable,
         IndexName: env.aws.tenantDbConfigurationTenantNameGSI,
@@ -331,21 +347,15 @@ describe('email.service - getTenantConfiguration', () => {
   });
 
   it('returns undefined when tenant configuration does not exist', async () => {
-    const { dynamoClientMock } = setupEmailServiceDependencies();
-
-    dynamoClientMock.send.mockResolvedValue({ Items: [] });
-
-    const { getTenantConfiguration } = await import('#services/email.service');
+    dynamoSend.mockResolvedValueOnce({ Items: [] });
 
     const result = await getTenantConfiguration('missing-tenant');
 
     expect(result).toBeUndefined();
   });
 
-  it('throws INVALID_TENANT when more than one tenant configuration exists for the same tenantName', async () => {
-    const { dynamoClientMock } = setupEmailServiceDependencies();
-
-    dynamoClientMock.send.mockResolvedValue({
+  it('returns undefined when more than one tenant configuration exists for the same tenantName', async () => {
+    dynamoSend.mockResolvedValueOnce({
       Items: [
         {
           tenantName: 'tenant-a',
@@ -359,8 +369,6 @@ describe('email.service - getTenantConfiguration', () => {
         },
       ],
     });
-
-    const { getTenantConfiguration } = await import('#services/email.service');
 
     const result = await getTenantConfiguration('tenant-a');
     expect(result).toBeUndefined();

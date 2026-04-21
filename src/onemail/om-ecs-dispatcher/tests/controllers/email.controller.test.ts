@@ -138,7 +138,7 @@ describe('email.controller', () => {
       response as never,
     );
 
-    expect(getEmailStatus).toHaveBeenCalledWith('request-id-3', 'tenant-a');
+    expect(getEmailStatusMock).toHaveBeenCalledWith('request-id-3', 'tenant-a');
     expect(response.status).toHaveBeenCalledWith(200);
     expect(response.json).toHaveBeenCalledWith([{ emailId: 'email-id-1' }]);
   });
