@@ -33,6 +33,10 @@ data "aws_dynamodb_table" "EmailStatusHistory" {
   name = "EmailStatusHistory"
 }
 
+data "aws_dynamodb_table" "TenantConfig" {
+  name = "TenantConfig"
+}
+
 data "aws_ecs_cluster" "core" {
   cluster_name = "${local.project_nodomain}-ecs-cluster"
 }

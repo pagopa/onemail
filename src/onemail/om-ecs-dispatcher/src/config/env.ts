@@ -18,6 +18,12 @@ export default {
     emailDbRequestIdGSI:
       process.env.AWS_EMAIL_DB_REQUEST_ID_GSI ??
       throwMissingRequiredEnvVar('AWS_EMAIL_DB_REQUEST_ID_GSI'),
+    tenantConfigurationTable:
+      process.env.AWS_TENANT_CONFIG_TABLE ??
+      throwMissingRequiredEnvVar('AWS_TENANT_CONFIG_TABLE'),
+    tenantDbConfigurationTenantNameGSI:
+      process.env.AWS_TENANT_DB_CONFIG_TENANT_NAME_GSI ??
+      throwMissingRequiredEnvVar('AWS_TENANT_DB_CONFIG_TENANT_NAME_GSI'),
     localDynamoDb: {
       endpoint: process.env.AWS_DYNAMODB_ENDPOINT || 'http://localhost:8000',
       accessKeyId: process.env.AWS_DYNAMODB_ACCESS_KEY_ID || 'local',

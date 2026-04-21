@@ -21,8 +21,12 @@ import { ERROR_CODES } from '#dtos/error.dto';
 import { ApiError } from '#errors/api.error';
 import * as emailService from '#services/email.service';
 import { AsStringQuery } from '#types/request.type';
+import { headerTenantName } from '#utils/constants';
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
+
+const getTenantNameFromHeaders = (headers: Request['headers']): string =>
+  headers[headerTenantName] as string;
 
 export const sendEmailTransactional = async (
   req: Request<
@@ -34,7 +38,13 @@ export const sendEmailTransactional = async (
   res: Response<EmailHighPriorityResponseDTO>,
 ) => {
   const { dryRun } = req.query as unknown as EmailHighPriorityQueryParams;
-  const result = await emailService.sendEmailTransactional(req.body, dryRun);
+  const tenantName = getTenantNameFromHeaders(req.headers);
+
+  const result = await emailService.sendEmailTransactional(
+    req.body,
+    dryRun,
+    tenantName,
+  );
   res.status(StatusCodes.ACCEPTED).json(result);
 };
 
@@ -48,11 +58,16 @@ export const sendEmailLowPriority = async (
   res: Response<EmailLowPriorityResponseDTO>,
 ) => {
   const { dryRun } = req.query as unknown as EmailLowPriorityQueryParams;
+  const tenantName = getTenantNameFromHeaders(req.headers);
 
   if (!dryRun) {
     validateNoDuplicateRecipients(req.body.sendingInfo);
   }
-  const result = await emailService.sendEmailLowPriority(req.body, dryRun);
+  const result = await emailService.sendEmailLowPriority(
+    req.body,
+    dryRun,
+    tenantName,
+  );
   res.status(StatusCodes.ACCEPTED).json(result);
 };
 
@@ -73,7 +88,9 @@ export const getEmailStatus = async (
   res: Response<EmailStatusResponseDTO>,
 ) => {
   const { requestId } = req.query as unknown as EmailStatusQueryParamsDTO;
-  const result = await emailService.getEmailStatus(requestId);
+  const tenantName = getTenantNameFromHeaders(req.headers);
+
+  const result = await emailService.getEmailStatus(requestId, tenantName);
   res.status(StatusCodes.OK).json(result);
 };
 

@@ -14,6 +14,7 @@ import {
 import {
   makeHighPriorityEmailDto,
   makeLowPriorityEmailDto,
+  makeTenantConfiguration,
 } from '../__helpers__/dtoFactories.js';
 
 const dynamoSend = vi.hoisted(() => vi.fn());
@@ -31,6 +32,7 @@ vi.mock('node:crypto', () => ({ randomUUID }));
 describe('email.service', () => {
   describe('sendEmailTransactional', () => {
     it('persists the email and publishes the high priority message', async () => {
+      dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
       randomUUID
         .mockReturnValueOnce('request-id-1')
         .mockReturnValueOnce('email-id-1');
@@ -38,13 +40,14 @@ describe('email.service', () => {
       const result = await sendEmailTransactional(
         makeHighPriorityEmailDto(),
         false,
+        'tenant-a',
       );
 
       expect(result).toEqual({ requestId: 'request-id-1' });
       const putCommand = expectCommandInput(
         dynamoSend,
         { TableName: env.aws.emailDbTable },
-        0,
+        1,
       );
       const putItem = (
         putCommand.input as {
@@ -58,6 +61,7 @@ describe('email.service', () => {
       expect(putItem.requestId).toBe('request-id-1');
       expect(putItem.emailId).toBe('email-id-1');
       expect(putItem.content.to.email).toBe('user@example.com');
+      expect((putItem as { clientId?: string }).clientId).toBe('client-id-a');
 
       expectCommandInput(
         sqsSend,
@@ -68,10 +72,46 @@ describe('email.service', () => {
         0,
       );
     });
+
+    it('throws INVALID_TENANT when tenant configuration is missing', async () => {
+      dynamoSend.mockResolvedValueOnce({ Items: [] });
+
+      await expect(
+        sendEmailTransactional(makeHighPriorityEmailDto(), false, 'tenant-a'),
+      ).rejects.toMatchObject({
+        statusCode: 401,
+        errorCode: 'T001',
+      });
+
+      expect(sqsSend).not.toHaveBeenCalled();
+    });
+
+    it('throws INVALID_TENANT when more than one tenant configuration exists', async () => {
+      dynamoSend.mockResolvedValueOnce({
+        Items: [
+          makeTenantConfiguration(),
+          {
+            tenantName: 'tenant-a',
+            configSetName: 'config-set-b',
+            clientId: 'client-id-b',
+          },
+        ],
+      });
+
+      await expect(
+        sendEmailTransactional(makeHighPriorityEmailDto(), false, 'tenant-a'),
+      ).rejects.toMatchObject({
+        statusCode: 401,
+        errorCode: 'T001',
+      });
+
+      expect(sqsSend).not.toHaveBeenCalled();
+    });
   });
 
   describe('sendEmailLowPriority', () => {
     it('splits low priority batches over the DynamoDB write limit', async () => {
+      dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
       randomUUID.mockReturnValueOnce('request-id-2');
       for (let index = 1; index <= 26; index += 1) {
         randomUUID.mockReturnValueOnce(`email-id-${index}`);
@@ -85,15 +125,16 @@ describe('email.service', () => {
       const result = await sendEmailLowPriority(
         makeLowPriorityEmailDto({ sendingInfo }),
         false,
+        'tenant-a',
       );
 
       expect(result).toEqual({ requestId: 'request-id-2' });
-      expect(dynamoSend).toHaveBeenCalledTimes(2);
+      expect(dynamoSend).toHaveBeenCalledTimes(3);
 
-      const firstBatch = getNthCommand(dynamoSend, 0) as {
+      const firstBatch = getNthCommand(dynamoSend, 1) as {
         input: { RequestItems: Record<string, unknown[]> };
       };
-      const secondBatch = getNthCommand(dynamoSend, 1) as {
+      const secondBatch = getNthCommand(dynamoSend, 2) as {
         input: { RequestItems: Record<string, unknown[]> };
       };
 
@@ -104,6 +145,17 @@ describe('email.service', () => {
         1,
       );
 
+      const firstBatchFirstItem = firstBatch.input.RequestItems[
+        env.aws.emailDbTable
+      ][0] as {
+        PutRequest: {
+          Item: {
+            clientId: string;
+          };
+        };
+      };
+      expect(firstBatchFirstItem.PutRequest.Item.clientId).toBe('client-id-a');
+
       expectCommandInput(
         sqsSend,
         {
@@ -113,12 +165,26 @@ describe('email.service', () => {
         0,
       );
     });
+
+    it('throws INVALID_TENANT when tenant configuration is missing', async () => {
+      dynamoSend.mockResolvedValueOnce({ Items: [] });
+
+      await expect(
+        sendEmailLowPriority(makeLowPriorityEmailDto(), false, 'tenant-a'),
+      ).rejects.toMatchObject({
+        statusCode: 401,
+        errorCode: 'T001',
+      });
+
+      expect(sqsSend).not.toHaveBeenCalled();
+    });
   });
 });
 
 describe('email.service - getEmailStatus', () => {
   it('returns the history sorted in descending timestamp order', async () => {
-    dynamoSend.mockResolvedValue({
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    dynamoSend.mockResolvedValueOnce({
       Items: [
         {
           emailId: 'email-id-3',
@@ -141,11 +207,13 @@ describe('email.service - getEmailStatus', () => {
           },
           clientId: 'client-id',
           dryRun: false,
+          tenantName: 'tenant-a',
+          configSetName: 'config-set-a',
         },
       ],
     });
 
-    const result = await getEmailStatus('request-id-3');
+    const result = await getEmailStatus('request-id-3', 'tenant-a');
 
     expectCommandInput(
       dynamoSend,
@@ -153,7 +221,7 @@ describe('email.service - getEmailStatus', () => {
         TableName: env.aws.emailDbTable,
         IndexName: env.aws.emailDbRequestIdGSI,
       },
-      0,
+      1,
     );
     expect(result).toEqual([
       {
@@ -177,9 +245,12 @@ describe('email.service - getEmailStatus', () => {
   });
 
   it('throws an ApiError when the requested email status does not exist', async () => {
-    dynamoSend.mockResolvedValue({ Items: [] });
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    dynamoSend.mockResolvedValueOnce({ Items: [] });
 
-    await expect(getEmailStatus('missing-request-id')).rejects.toMatchObject({
+    await expect(
+      getEmailStatus('missing-request-id', 'tenant-a'),
+    ).rejects.toMatchObject({
       name: 'ApiError',
       statusCode: 404,
       errorCode: 'R001',
@@ -187,7 +258,8 @@ describe('email.service - getEmailStatus', () => {
   });
 
   it('counts Dispatched events in history as attempts', async () => {
-    dynamoSend.mockResolvedValue({
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    dynamoSend.mockResolvedValueOnce({
       Items: [
         {
           emailId: 'email-id-4',
@@ -222,12 +294,44 @@ describe('email.service - getEmailStatus', () => {
           },
           clientId: 'client-id',
           dryRun: false,
+          tenantName: 'tenant-a',
+          configSetName: 'config-set-a',
         },
       ],
     });
 
-    const result = await getEmailStatus('request-id-4');
+    const result = await getEmailStatus('request-id-4', 'tenant-a');
 
     expect(result[0].attempts).toBe(2);
+  });
+
+  it('throws INVALID_TENANT when the requested status belongs to another tenant', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    dynamoSend.mockResolvedValueOnce({
+      Items: [
+        {
+          emailId: 'email-id-5',
+          requestId: 'request-id-5',
+          priority: EmailPriority.HIGH,
+          status: EmailStatus.Delivered,
+          history: [],
+          content: {
+            from: { email: 'sender@example.com' },
+            to: { email: 'user@example.com' },
+          },
+          clientId: 'client-id-a',
+          dryRun: false,
+          configSetName: 'config-set-a',
+          tenantName: 'tenant-b',
+        },
+      ],
+    });
+
+    await expect(
+      getEmailStatus('request-id-5', 'tenant-a'),
+    ).rejects.toMatchObject({
+      statusCode: 401,
+      errorCode: 'T001',
+    });
   });
 });

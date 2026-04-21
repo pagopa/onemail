@@ -8,3 +8,5 @@ export const APP_ENV_VALUES = {
 export const versionRoutePath = {
   v1: '/v1',
 };
+
+export const headerTenantName = 'x-tenant-name';

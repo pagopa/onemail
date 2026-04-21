@@ -1,6 +1,6 @@
 import env from '#config/env';
 import { emailSanitizerOptions } from '#config/htmlSanitizer';
-import { APP_ENV_VALUES } from '#utils/constants';
+import { APP_ENV_VALUES, headerTenantName } from '#utils/constants';
 import sanitizeHtml from 'sanitize-html';
 import { z } from 'zod';
 
@@ -112,3 +112,7 @@ export const htmlContentSchema = stringCheckedSchema({ min: 10, max: 150000 })
     message:
       'Invalid HTML provided: content was removed due to security rules.',
   });
+
+export const TenantNameHeaderSchema = z.object({
+  [headerTenantName]: stringCheckedSchema(),
+});

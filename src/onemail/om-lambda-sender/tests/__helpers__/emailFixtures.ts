@@ -29,5 +29,7 @@ export const makeEmailStatusHistoryItem = (
   },
   clientId: 'client-1',
   dryRun: false,
+  configSetName: 'config-set-1',
+  tenantName: 'tenant-1',
   ...overrides,
 });

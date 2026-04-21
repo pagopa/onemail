@@ -26,24 +26,30 @@ import {
 import { StatusCodes } from 'http-status-codes';
 import { randomUUID } from 'node:crypto';
 import { DispatcherMetricName, publishMetrics } from 'om-common/repositories';
-import { EmailStatus, EmailStatusHistoryItem } from 'om-common/types';
+import {
+  EmailStatus,
+  EmailStatusHistoryItem,
+  TenantConfigurationItem,
+} from 'om-common/types';
 
 export const sendEmailTransactional = async (
   emailData: EmailHighPriorityBodyDTO,
   dryRun: boolean,
+  tenantName: string,
 ): Promise<EmailHighPriorityResponseDTO> => {
   const logger = getNamedLogger(sendEmailTransactional.name);
   logger.info('Start');
 
+  // get tenant configuration for clientId and configSetName
+  const tenantConfiguration =
+    await getAndValidateTenantConfiguration(tenantName);
   const requestId = randomUUID();
-  // TODO: implement this
-  const clientId = 'clientIdMock';
   const tableName = env.aws.emailDbTable;
 
   const dbObj = mapEmailTransactionalToDbItem(
     emailData,
     requestId,
-    clientId,
+    tenantConfiguration,
     dryRun,
   );
 
@@ -68,6 +74,7 @@ export const sendEmailTransactional = async (
   publishMetrics([
     {
       name: DispatcherMetricName.HighPriorityAccepted,
+      dimensions: { tenantName: tenantName },
     },
   ]);
 
@@ -78,19 +85,21 @@ export const sendEmailTransactional = async (
 export const sendEmailLowPriority = async (
   emailData: EmailLowPriorityBodyDTO,
   dryRun: boolean,
+  tenantName: string,
 ): Promise<EmailLowPriorityResponseDTO> => {
   const logger = getNamedLogger(sendEmailLowPriority.name);
   logger.info('Start');
 
+  // get tenant configuration for clientId and configSetName
+  const tenantConfiguration =
+    await getAndValidateTenantConfiguration(tenantName);
   const requestId = randomUUID();
-  // TODO: implement this
-  const clientId = 'clientIdMock';
   const tableName = env.aws.emailDbTable;
 
   const dbListObj = mapEmailLowPriorityToDbItem(
     emailData,
     requestId,
-    clientId,
+    tenantConfiguration,
     dryRun,
   );
 
@@ -132,6 +141,7 @@ export const sendEmailLowPriority = async (
     {
       name: DispatcherMetricName.LowPriorityAccepted,
       value: dbListObj.length,
+      dimensions: { tenantName: tenantName },
     },
   ]);
 
@@ -141,9 +151,13 @@ export const sendEmailLowPriority = async (
 
 export const getEmailStatus = async (
   requestId: string,
+  tenantName: string,
 ): Promise<EmailStatusResponseDTO> => {
   const logger = getNamedLogger(getEmailStatus.name);
   logger.info('Start');
+
+  const tenantConfiguration =
+    await getAndValidateTenantConfiguration(tenantName);
 
   const result = await dynamoClient.send(
     new QueryCommand({
@@ -165,6 +179,7 @@ export const getEmailStatus = async (
     publishMetrics([
       {
         name: DispatcherMetricName.EmailStatusNotFound,
+        dimensions: { tenantName: tenantName },
       },
     ]);
     throw new ApiError(
@@ -176,6 +191,20 @@ export const getEmailStatus = async (
 
   const mapped = items.map((item) => {
     // Sort history in descending order based on changedAt timestamp
+    if (tenantConfiguration.tenantName !== item.tenantName) {
+      publishMetrics([
+        {
+          name: DispatcherMetricName.UnauthorizedTenant,
+          dimensions: { tenantName: tenantName },
+        },
+      ]);
+      throw new ApiError(
+        `Email with requestId ${requestId} does not belong to tenant ${tenantName}`,
+        StatusCodes.UNAUTHORIZED,
+        ERROR_CODES.INVALID_TENANT,
+      );
+    }
+
     const sortedHistory = [...item.history].sort(
       (a, b) =>
         new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime(),
@@ -197,4 +226,59 @@ export const getEmailStatus = async (
 
   logger.info('End');
   return mapped;
+};
+
+const getAndValidateTenantConfiguration = async (
+  tenantName: string,
+): Promise<TenantConfigurationItem> => {
+  const tenantConfigurations =
+    await getTenantConfigurationByTenantName(tenantName);
+  if (!tenantConfigurations || tenantConfigurations.length === 0) {
+    publishMetrics([
+      {
+        name: DispatcherMetricName.TenantConfigurationNotFound,
+        dimensions: { tenantName: tenantName },
+      },
+    ]);
+    throw new ApiError(
+      `Tenant configuration not found for tenantName ${tenantName}`,
+      StatusCodes.UNAUTHORIZED,
+      ERROR_CODES.INVALID_TENANT,
+    );
+  }
+
+  if (tenantConfigurations.length > 1) {
+    publishMetrics([
+      {
+        name: DispatcherMetricName.MultipleTenantForClient,
+        dimensions: { tenantName: tenantName },
+      },
+    ]);
+    throw new ApiError(
+      `Tenant configuration conflict for tenantName ${tenantName}`,
+      StatusCodes.UNAUTHORIZED,
+      ERROR_CODES.INVALID_TENANT,
+    );
+  }
+  return tenantConfigurations[0];
+};
+
+const getTenantConfigurationByTenantName = async (
+  tenantName: string,
+): Promise<TenantConfigurationItem[]> => {
+  const result = await dynamoClient.send(
+    new QueryCommand({
+      TableName: env.aws.tenantConfigurationTable,
+      IndexName: env.aws.tenantDbConfigurationTenantNameGSI,
+      KeyConditionExpression: '#tenantName = :tenantName',
+      ExpressionAttributeNames: {
+        '#tenantName': 'tenantName',
+      },
+      ExpressionAttributeValues: {
+        ':tenantName': tenantName,
+      },
+    }),
+  );
+
+  return (result.Items as TenantConfigurationItem[] | undefined) ?? [];
 };

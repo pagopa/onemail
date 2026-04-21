@@ -6,6 +6,7 @@ export function validate(schemas: {
   body?: ZodType;
   params?: ZodType;
   query?: ZodType;
+  headers?: ZodType;
 }) {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -18,6 +19,10 @@ export function validate(schemas: {
       if (schemas.params) {
         const validatedParams = schemas.params.parse(req.params);
         updateTargetWithValidatedData(req, 'params', validatedParams);
+      }
+      if (schemas.headers) {
+        const validatedHeaders = schemas.headers.parse(req.headers);
+        updateHeadersWithValidatedData(req, validatedHeaders);
       }
       next();
     } catch (error) {
@@ -38,4 +43,11 @@ const updateTargetWithValidatedData = (
     enumerable: true,
     configurable: true,
   });
+};
+
+const updateHeadersWithValidatedData = (
+  req: Request,
+  validatedData: unknown,
+) => {
+  Object.assign(req.headers, validatedData);
 };

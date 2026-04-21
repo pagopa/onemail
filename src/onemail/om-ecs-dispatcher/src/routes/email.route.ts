@@ -1,5 +1,6 @@
 import env from '#config/env';
 import * as EmailController from '#controllers/email.controller';
+import { TenantNameHeaderSchema } from '#dtos/email/common.dto';
 import {
   EmailHighPriorityBodySchema,
   EmailHighPriorityQueryParamsSchema,
@@ -30,7 +31,10 @@ const tag = 'Emails';
 
 router.get(
   '/statuses',
-  validate({ query: EmailStatusQueryParamsSchema }),
+  validate({
+    query: EmailStatusQueryParamsSchema,
+    headers: TenantNameHeaderSchema,
+  }),
   EmailController.getEmailStatus,
 );
 registerOpenApiRoute({
@@ -40,6 +44,7 @@ registerOpenApiRoute({
   tags: [tag],
   isAuthenticated: true,
   queryParams: EmailStatusQueryParamsSchema,
+  headers: TenantNameHeaderSchema,
   responses: {
     [StatusCodes.OK]: {
       schema: EmailStatusResponseSchema,
@@ -53,6 +58,7 @@ router.post(
   validate({
     body: EmailHighPriorityBodySchema,
     query: EmailHighPriorityQueryParamsSchema,
+    headers: TenantNameHeaderSchema,
   }),
   EmailController.sendEmailTransactional,
 );
@@ -64,6 +70,7 @@ registerOpenApiRoute({
   isAuthenticated: true,
   queryParams: EmailHighPriorityQueryParamsSchema,
   requestBody: EmailHighPriorityBodySchema,
+  headers: TenantNameHeaderSchema,
   responses: {
     [StatusCodes.ACCEPTED]: {
       schema: EmailHighPriorityResponseSchema,
@@ -77,6 +84,7 @@ router.post(
   validate({
     body: EmailLowPriorityBodySchema,
     query: EmailLowPriorityQueryParamsSchema,
+    headers: TenantNameHeaderSchema,
   }),
   EmailController.sendEmailLowPriority,
 );
@@ -88,6 +96,7 @@ registerOpenApiRoute({
   isAuthenticated: true,
   queryParams: EmailLowPriorityQueryParamsSchema,
   requestBody: EmailLowPriorityBodySchema,
+  headers: TenantNameHeaderSchema,
   responses: {
     [StatusCodes.ACCEPTED]: {
       schema: EmailLowPriorityResponseSchema,

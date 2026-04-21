@@ -45,9 +45,9 @@ variable "domain" {
   }
 }
 
-# DynamoDB table configuration
-variable "dynamodb_table_config" {
-  type = object({
+# DynamoDB tables configuration
+variable "dynamodb_tables" {
+  type = map(object({
     table_name = string
     hash_key   = string
     range_key  = optional(string)
@@ -73,8 +73,9 @@ variable "dynamodb_table_config" {
     replica_regions = optional(list(object({
       region_name = string
     })))
-  })
-  description = "DynamoDB table configuration"
+  }))
+  description = "Map of DynamoDB table configurations keyed by logical table name."
+  default     = {}
 }
 
 # ECS Cluster configuration

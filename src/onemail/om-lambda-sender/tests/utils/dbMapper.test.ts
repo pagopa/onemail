@@ -53,8 +53,8 @@ describe('dbMapper high priority utils', () => {
           Headers: [{ Name: 'X-Test', Value: 'value' }],
         },
       },
-      TenantName: 'tenant-name',
-      ConfigurationSetName: 'config-set',
+      TenantName: 'tenant-1',
+      ConfigurationSetName: 'config-set-1',
     });
   });
 
@@ -164,6 +164,8 @@ describe('dbMapper low priority utils', () => {
           ReplacementHeaders: undefined,
         },
       ],
+      TenantName: 'tenant-1',
+      ConfigurationSetName: 'config-set-1',
     });
   });
 

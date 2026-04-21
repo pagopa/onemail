@@ -9,12 +9,6 @@ export default {
     emailDbRequestIdGSI:
       process.env.AWS_EMAIL_DB_REQUEST_ID_GSI ??
       throwMissingRequiredEnvVar('AWS_EMAIL_DB_REQUEST_ID_GSI'),
-    configurationSetName:
-      process.env.TMP_CONFIGURATION_SET_NAME ??
-      throwMissingRequiredEnvVar('TMP_CONFIGURATION_SET_NAME'),
-    tenantName:
-      process.env.TMP_TENANT_NAME ??
-      throwMissingRequiredEnvVar('TMP_TENANT_NAME'),
   },
   sqs: {
     highPriorityQueueARN:

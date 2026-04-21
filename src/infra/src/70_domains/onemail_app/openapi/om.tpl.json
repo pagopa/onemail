@@ -44,13 +44,29 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "HTTP_PROXY",
+          "type": "HTTP",
           "httpMethod": "GET",
           "uri": "${uri}/v1/emails/statuses",
           "connectionType": "VPC_LINK",
           "connectionId": "${connection_id}",
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "timeoutInMillis": 20000
+          "requestParameters": {
+            "integration.request.querystring.requestId": "method.request.querystring.requestId"
+          },
+          "requestTemplates": {
+            "application/json": ${tenant_request_template}
+          },
+          "passthroughBehavior": "WHEN_NO_MATCH",
+          "timeoutInMillis": 20000,
+          "responses": {
+            "200": { "statusCode": "200" },
+            "400": { "statusCode": "400" },
+            "401": { "statusCode": "401" },
+            "403": { "statusCode": "403" },
+            "404": { "statusCode": "404" },
+            "409": { "statusCode": "409" },
+            "429": { "statusCode": "429" },
+            "500": { "statusCode": "500" }
+          }
         },
         "responses": {
           "200": { "description": "Email status history retrieved successfully" },

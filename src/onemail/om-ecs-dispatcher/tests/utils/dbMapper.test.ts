@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   makeHighPriorityEmailDto,
   makeLowPriorityEmailDto,
+  makeTenantConfiguration,
 } from '../__helpers__/dtoFactories.js';
 
 const randomUUID = vi.hoisted(() => vi.fn());
@@ -21,14 +22,16 @@ describe('dbMapper', () => {
     const result = mapEmailTransactionalToDbItem(
       makeHighPriorityEmailDto(),
       'request-id',
-      'client-id',
+      makeTenantConfiguration(),
       false,
     );
 
     expect(result).toMatchObject({
       emailId: 'mapped-email-id',
       requestId: 'request-id',
-      clientId: 'client-id',
+      clientId: 'client-id-a',
+      configSetName: 'config-set-a',
+      tenantName: 'tenant-a',
       dryRun: false,
       content: {
         subject: 'Test subject',
@@ -56,7 +59,7 @@ describe('dbMapper', () => {
         ],
       }),
       'request-id-low',
-      'client-id',
+      makeTenantConfiguration(),
       true,
     );
 
@@ -70,6 +73,9 @@ describe('dbMapper', () => {
           matchedAttributes: JSON.stringify({ user: 'first' }),
         },
       },
+      clientId: 'client-id-a',
+      configSetName: 'config-set-a',
+      tenantName: 'tenant-a',
       dryRun: true,
     });
     expect(result[1]).toMatchObject({

@@ -58,4 +58,29 @@ describe('validateApiInput middleware', () => {
     expect(next).toHaveBeenCalledTimes(1);
     expect(next.mock.calls[0]?.[0]).toBeInstanceOf(ZodError);
   });
+
+  it('validates headers and assigns parsed values to request', () => {
+    const next = vi.fn();
+    const request = {
+      body: {},
+      query: {},
+      params: {},
+      headers: {
+        'x-tenant-name': '  tenant-a  ',
+        host: 'localhost',
+      },
+    };
+
+    const middleware = validate({
+      headers: z.object({
+        'x-tenant-name': z.string().min(1).trim(),
+      }),
+    });
+
+    middleware(request as never, {} as never, next);
+
+    expect(request.headers['x-tenant-name']).toBe('tenant-a');
+    expect(request.headers.host).toBe('localhost');
+    expect(next).toHaveBeenCalledWith();
+  });
 });

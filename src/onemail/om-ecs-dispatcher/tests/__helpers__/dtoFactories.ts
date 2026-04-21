@@ -38,3 +38,9 @@ export const makeLowPriorityEmailDto = (
   ],
   ...overrides,
 });
+
+export const makeTenantConfiguration = () => ({
+  tenantName: 'tenant-a',
+  configSetName: 'config-set-a',
+  clientId: 'client-id-a',
+});

@@ -42,6 +42,7 @@ describe('email.controller', () => {
       {
         body: makeHighPriorityEmailDto(),
         query: { dryRun: false },
+        headers: { 'x-tenant-name': 'tenant-a' },
       } as never,
       response as never,
     );
@@ -51,6 +52,7 @@ describe('email.controller', () => {
         to: expect.objectContaining({ email: 'user@example.com' }),
       }),
       false,
+      'tenant-a',
     );
     expect(response.status).toHaveBeenCalledWith(202);
     expect(response.json).toHaveBeenCalledWith({ requestId: 'request-id-1' });
@@ -69,6 +71,7 @@ describe('email.controller', () => {
             ],
           }),
           query: { dryRun: false },
+          headers: { 'x-tenant-name': 'tenant-a' },
         } as never,
         response as never,
       ),
@@ -93,6 +96,7 @@ describe('email.controller', () => {
           ],
         }),
         query: { dryRun: true },
+        headers: { 'x-tenant-name': 'tenant-a' },
       } as never,
       response as never,
     );
@@ -100,6 +104,7 @@ describe('email.controller', () => {
     expect(sendEmailLowPriorityMock).toHaveBeenCalledWith(
       expect.objectContaining({ sendingInfo: expect.any(Array) }),
       true,
+      'tenant-a',
     );
     expect(response.status).toHaveBeenCalledWith(202);
     expect(response.json).toHaveBeenCalledWith({ requestId: 'request-id-2' });
@@ -128,11 +133,12 @@ describe('email.controller', () => {
     await getEmailStatus(
       {
         query: { requestId: 'request-id-3' },
+        headers: { 'x-tenant-name': 'tenant-a' },
       } as never,
       response as never,
     );
 
-    expect(getEmailStatusMock).toHaveBeenCalledWith('request-id-3');
+    expect(getEmailStatusMock).toHaveBeenCalledWith('request-id-3', 'tenant-a');
     expect(response.status).toHaveBeenCalledWith(200);
     expect(response.json).toHaveBeenCalledWith([{ emailId: 'email-id-1' }]);
   });
