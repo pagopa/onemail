@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.3.0
+
+### Minor Changes
+
+- 9b7144b: Align SES configuration between envs
+
 ## 1.2.0
 
 ### Minor Changes

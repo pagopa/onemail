@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.16.0
+
+### Minor Changes
+
+- 9b7144b: Align SES configuration between envs
+
 ## 1.15.0
 
 ### Minor Changes

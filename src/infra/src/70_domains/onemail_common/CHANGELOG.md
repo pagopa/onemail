@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.9.0
+
+### Minor Changes
+
+- 9b7144b: Align SES configuration between envs
+
 ## 1.8.0
 
 ### Minor Changes
