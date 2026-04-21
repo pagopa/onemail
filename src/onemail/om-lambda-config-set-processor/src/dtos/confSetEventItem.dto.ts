@@ -42,6 +42,11 @@ const RejectSchema = z.object({
   reason: z.string().nullable(),
 });
 
+const RenderingFailureSchema = z.object({
+  templateName: z.string(),
+  errorMessage: z.string().nullable(),
+});
+
 const EventBaseSchema = z.object({
   mail: MailSchema,
 });
@@ -66,6 +71,12 @@ export const ConfSetEventItemSchema = z.discriminatedUnion('eventType', [
   EventBaseSchema.extend({
     eventType: z.literal(CapitalizedSesConfigurationSetEventType.Reject),
     reject: RejectSchema,
+  }),
+  EventBaseSchema.extend({
+    eventType: z.literal(
+      CapitalizedSesConfigurationSetEventType.RenderingFailure,
+    ),
+    failure: RenderingFailureSchema,
   }),
 ]);
 

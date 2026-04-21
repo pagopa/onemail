@@ -1,5 +1,11 @@
 # om-lambda-config-set-processor
 
+## 1.5.1
+
+### Patch Changes
+
+- f9eef79: Rendering failure event handling
+
 ## 1.5.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.9.1
+
+### Patch Changes
+
+- f40a440: add test for sender and create common shared vitest configuration
+
 ## 1.9.0
 
 ### Minor Changes
