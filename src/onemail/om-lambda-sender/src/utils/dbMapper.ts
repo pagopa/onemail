@@ -43,18 +43,14 @@ export function mapDbHighPriorityItemToSesModel(
     };
   }
 
-  const tenantName = item.tenantName;
-
-  const configurationSetName = item.configSetName;
-
   const input: SendEmailCommandInput = {
     FromEmailAddress: formatEmailAddress(content.from),
     Destination: {
       ToAddresses: [formatEmailAddress(content.to)],
     },
     Content: content_obj,
-    TenantName: tenantName,
-    ConfigurationSetName: configurationSetName,
+    TenantName: item.tenantName,
+    ConfigurationSetName: item.configSetName,
   };
 
   return input;

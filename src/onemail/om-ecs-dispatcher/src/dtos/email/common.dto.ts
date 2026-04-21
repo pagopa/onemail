@@ -1,6 +1,6 @@
 import env from '#config/env';
 import { emailSanitizerOptions } from '#config/htmlSanitizer';
-import { APP_ENV_VALUES } from '#utils/constants';
+import { APP_ENV_VALUES, headerTenantName } from '#utils/constants';
 import sanitizeHtml from 'sanitize-html';
 import { z } from 'zod';
 
@@ -114,5 +114,5 @@ export const htmlContentSchema = stringCheckedSchema({ min: 10, max: 150000 })
   });
 
 export const TenantIdHeaderSchema = z.object({
-  'x-tenant-id': z.string().min(1, 'x-tenant-id header is required').trim(),
+  [headerTenantName]: stringCheckedSchema(),
 });

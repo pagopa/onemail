@@ -190,15 +190,6 @@ export const getEmailStatus = async (
 
   const mapped = items.map((item) => {
     // Sort history in descending order based on changedAt timestamp
-    const sortedHistory = [...item.history].sort(
-      (a, b) =>
-        new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime(),
-    );
-
-    const attempts = item.history.filter(
-      (event) => event.status === EmailStatus.Dispatched,
-    ).length;
-
     if (tenantConfiguration.tenantName !== item.tenantName) {
       publishMetrics([
         {
@@ -212,6 +203,15 @@ export const getEmailStatus = async (
         ERROR_CODES.INVALID_TENANT,
       );
     }
+
+    const sortedHistory = [...item.history].sort(
+      (a, b) =>
+        new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime(),
+    );
+
+    const attempts = item.history.filter(
+      (event) => event.status === EmailStatus.Dispatched,
+    ).length;
 
     return {
       status: item.status,
@@ -230,20 +230,40 @@ export const getEmailStatus = async (
 const validateTenantId = async (
   tenantId: string,
 ): Promise<TenantConfigurationItem> => {
-  const tenantConfiguration = await getTenantConfiguration(tenantId);
-  if (!tenantConfiguration) {
+  const tenantConfigurations = await getTenantConfiguration(tenantId);
+  if (!tenantConfigurations || tenantConfigurations.length === 0) {
+    publishMetrics([
+      {
+        name: DispatcherMetricName.TenantConfigurationNotFound,
+        dimensions: { tenantName: tenantId },
+      },
+    ]);
     throw new ApiError(
       `Tenant configuration not found for tenantId ${tenantId}`,
       StatusCodes.UNAUTHORIZED,
       ERROR_CODES.INVALID_TENANT,
     );
   }
-  return tenantConfiguration;
+
+  if (tenantConfigurations.length > 1) {
+    publishMetrics([
+      {
+        name: DispatcherMetricName.MultipleTenantForClient,
+        dimensions: { tenantName: tenantId },
+      },
+    ]);
+    throw new ApiError(
+      `Tenant configuration conflict for tenantId ${tenantId}`,
+      StatusCodes.UNAUTHORIZED,
+      ERROR_CODES.INVALID_TENANT,
+    );
+  }
+  return tenantConfigurations[0];
 };
 
-export const getTenantConfiguration = async (
+const getTenantConfiguration = async (
   tenantName: string,
-): Promise<TenantConfigurationItem | undefined> => {
+): Promise<TenantConfigurationItem[] | undefined> => {
   const result = await dynamoClient.send(
     new QueryCommand({
       TableName: env.aws.tenantConfigurationTable,
@@ -258,30 +278,5 @@ export const getTenantConfiguration = async (
     }),
   );
 
-  const tenantConfigurations =
-    (result.Items as TenantConfigurationItem[] | undefined) ?? [];
-
-  if (tenantConfigurations.length === 0) {
-    publishMetrics([
-      {
-        name: DispatcherMetricName.TenantConfigurationNotFound,
-        dimensions: { tenantName },
-      },
-    ]);
-    return undefined;
-  }
-
-  if (tenantConfigurations.length > 1) {
-    publishMetrics([
-      {
-        name: DispatcherMetricName.MultipleTenantForClient,
-        dimensions: { tenantName },
-      },
-    ]);
-    return undefined;
-  }
-
-  const [tenantConfiguration] = tenantConfigurations;
-
-  return tenantConfiguration;
+  return (result.Items as TenantConfigurationItem[] | undefined) ?? [];
 };

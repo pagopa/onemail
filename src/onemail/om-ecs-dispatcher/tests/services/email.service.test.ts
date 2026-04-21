@@ -1,7 +1,6 @@
 import env from '#config/env';
 import {
   getEmailStatus,
-  getTenantConfiguration,
   sendEmailLowPriority,
   sendEmailTransactional,
 } from '#services/email.service';
@@ -76,6 +75,28 @@ describe('email.service', () => {
 
     it('throws INVALID_TENANT when tenant configuration is missing', async () => {
       dynamoSend.mockResolvedValueOnce({ Items: [] });
+
+      await expect(
+        sendEmailTransactional(makeHighPriorityEmailDto(), false, 'tenant-a'),
+      ).rejects.toMatchObject({
+        statusCode: 401,
+        errorCode: 'T001',
+      });
+
+      expect(sqsSend).not.toHaveBeenCalled();
+    });
+
+    it('throws INVALID_TENANT when more than one tenant configuration exists', async () => {
+      dynamoSend.mockResolvedValueOnce({
+        Items: [
+          makeTenantConfiguration(),
+          {
+            tenantName: 'tenant-a',
+            configSetName: 'config-set-b',
+            clientId: 'client-id-b',
+          },
+        ],
+      });
 
       await expect(
         sendEmailTransactional(makeHighPriorityEmailDto(), false, 'tenant-a'),
@@ -312,65 +333,5 @@ describe('email.service - getEmailStatus', () => {
       statusCode: 401,
       errorCode: 'T001',
     });
-  });
-});
-
-describe('email.service - getTenantConfiguration', () => {
-  it('queries tenant configuration by tenantName GSI and returns the first item', async () => {
-    dynamoSend.mockResolvedValueOnce({
-      Items: [makeTenantConfiguration()],
-    });
-
-    const result = await getTenantConfiguration('tenant-a');
-
-    expectCommandInput(
-      dynamoSend,
-      {
-        TableName: env.aws.tenantConfigurationTable,
-        IndexName: env.aws.tenantDbConfigurationTenantNameGSI,
-        KeyConditionExpression: '#tenantName = :tenantName',
-        ExpressionAttributeNames: {
-          '#tenantName': 'tenantName',
-        },
-        ExpressionAttributeValues: {
-          ':tenantName': 'tenant-a',
-        },
-      },
-      0,
-    );
-
-    expect(result).toEqual({
-      tenantName: 'tenant-a',
-      configSetName: 'config-set-a',
-      clientId: 'client-id-a',
-    });
-  });
-
-  it('returns undefined when tenant configuration does not exist', async () => {
-    dynamoSend.mockResolvedValueOnce({ Items: [] });
-
-    const result = await getTenantConfiguration('missing-tenant');
-
-    expect(result).toBeUndefined();
-  });
-
-  it('returns undefined when more than one tenant configuration exists for the same tenantName', async () => {
-    dynamoSend.mockResolvedValueOnce({
-      Items: [
-        {
-          tenantName: 'tenant-a',
-          configSetName: 'config-set-a',
-          clientId: 'client-id-a',
-        },
-        {
-          tenantName: 'tenant-a',
-          configSetName: 'config-set-b',
-          clientId: 'client-id-b',
-        },
-      ],
-    });
-
-    const result = await getTenantConfiguration('tenant-a');
-    expect(result).toBeUndefined();
   });
 });

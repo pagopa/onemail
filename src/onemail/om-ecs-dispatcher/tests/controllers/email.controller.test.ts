@@ -42,7 +42,7 @@ describe('email.controller', () => {
       {
         body: makeHighPriorityEmailDto(),
         query: { dryRun: false },
-        headers: { 'x-tenant-id': 'tenant-a' },
+        headers: { 'x-tenant-name': 'tenant-a' },
       } as never,
       response as never,
     );
@@ -71,7 +71,7 @@ describe('email.controller', () => {
             ],
           }),
           query: { dryRun: false },
-          headers: { 'x-tenant-id': 'tenant-a' },
+          headers: { 'x-tenant-name': 'tenant-a' },
         } as never,
         response as never,
       ),
@@ -96,7 +96,7 @@ describe('email.controller', () => {
           ],
         }),
         query: { dryRun: true },
-        headers: { 'x-tenant-id': 'tenant-a' },
+        headers: { 'x-tenant-name': 'tenant-a' },
       } as never,
       response as never,
     );
@@ -133,7 +133,7 @@ describe('email.controller', () => {
     await getEmailStatus(
       {
         query: { requestId: 'request-id-3' },
-        headers: { 'x-tenant-id': 'tenant-a' },
+        headers: { 'x-tenant-name': 'tenant-a' },
       } as never,
       response as never,
     );

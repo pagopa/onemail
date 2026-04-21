@@ -1,6 +1,6 @@
 #set($apiKeyId = $context.identity.apiKeyId)
 #set($tenantName = $stageVariables.get($apiKeyId))
 #if($tenantName && $tenantName != "")
-  #set($context.requestOverride.header.x-tenant-id = $tenantName)
+  #set($context.requestOverride.header.x-tenant-name = $tenantName)
 #end
 $input.json('$')

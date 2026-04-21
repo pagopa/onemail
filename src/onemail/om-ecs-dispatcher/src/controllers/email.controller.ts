@@ -21,6 +21,7 @@ import { ERROR_CODES } from '#dtos/error.dto';
 import { ApiError } from '#errors/api.error';
 import * as emailService from '#services/email.service';
 import { AsStringQuery } from '#types/request.type';
+import { headerTenantName } from '#utils/constants';
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
@@ -34,7 +35,7 @@ export const sendEmailTransactional = async (
   res: Response<EmailHighPriorityResponseDTO>,
 ) => {
   const { dryRun } = req.query as unknown as EmailHighPriorityQueryParams;
-  const tenantId = req.headers['x-tenant-id'] as string;
+  const tenantId = getTenantIdFromHeaders(req.headers);
 
   const result = await emailService.sendEmailTransactional(
     req.body,
@@ -54,7 +55,7 @@ export const sendEmailLowPriority = async (
   res: Response<EmailLowPriorityResponseDTO>,
 ) => {
   const { dryRun } = req.query as unknown as EmailLowPriorityQueryParams;
-  const tenantId = req.headers['x-tenant-id'] as string;
+  const tenantId = getTenantIdFromHeaders(req.headers);
 
   if (!dryRun) {
     validateNoDuplicateRecipients(req.body.sendingInfo);
@@ -84,11 +85,14 @@ export const getEmailStatus = async (
   res: Response<EmailStatusResponseDTO>,
 ) => {
   const { requestId } = req.query as unknown as EmailStatusQueryParamsDTO;
-  const tenantId = req.headers['x-tenant-id'] as string;
+  const tenantId = getTenantIdFromHeaders(req.headers);
 
   const result = await emailService.getEmailStatus(requestId, tenantId);
   res.status(StatusCodes.OK).json(result);
 };
+
+const getTenantIdFromHeaders = (headers: Request['headers']): string =>
+  headers[headerTenantName] as string;
 
 function validateNoDuplicateRecipients(sendingInfo: SendingInfoDTO[]) {
   const seen = new Set<string>();

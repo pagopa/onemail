@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.9.0",
+    "version": "1.9.1",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -551,10 +551,11 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 255
             },
             "required": true,
-            "name": "x-tenant-id",
+            "name": "x-tenant-name",
             "in": "header"
           }
         ],
@@ -671,10 +672,11 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 255
             },
             "required": true,
-            "name": "x-tenant-id",
+            "name": "x-tenant-name",
             "in": "header"
           }
         ],
@@ -798,10 +800,11 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 255
             },
             "required": true,
-            "name": "x-tenant-id",
+            "name": "x-tenant-name",
             "in": "header"
           }
         ],
