@@ -21,4 +21,5 @@ export enum CapitalizedSesConfigurationSetEventType {
   Complaint = 'Complaint',
   Delivery = 'Delivery',
   Reject = 'Reject',
+  RenderingFailure = 'Rendering Failure',
 }

@@ -189,6 +189,27 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
         name: ConfigSetProcessorMetricName.EmailRejected,
       },
     ]);
+  } else if (
+    // Rendering Failure
+    eventItem.eventType ===
+    CapitalizedSesConfigurationSetEventType.RenderingFailure
+  ) {
+    await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
+      {
+        timestamp: new Date().toISOString(),
+        status: EmailStatus.Rejected,
+        reason:
+          `Template rendering failure "${eventItem.failure.templateName}"` +
+          eventItem.failure.errorMessage
+            ? `: ${eventItem.failure.errorMessage}`
+            : '',
+      },
+    ]);
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.EmailRenderingFailure,
+      },
+    ]);
   }
 
   logger.info('End');
