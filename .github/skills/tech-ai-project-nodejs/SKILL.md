@@ -39,9 +39,13 @@ description: Create or modify Node.js/TypeScript application components using DD
 - `utils/` — package-local constants and pure helpers.
 
 ## Testing
-- Use built-in `node:test` + `node:assert/strict`.
-- Prefer BDD-like structure (`describe`/`it` where available).
+- Use **Vitest** as the test framework (`describe`, `it`, `expect`, `vi` from `vitest`).
 - Keep tests deterministic and isolated.
+- Declare mock refs with `vi.hoisted` at the top of the file, then call `vi.mock` and use static imports for the subject under test.
+- If a mock (e.g. logger mock) is applied globally via `setupFiles`, never add a specific logger mock in test files.
+- Each test configures only the mocks it needs directly on the hoisted refs.
+- Prefer readability and simple assertions over complex test abstractions.
+- Place tests under `<package>/tests/`; helpers and fixtures and setup under `<package>/tests/__helpers__/`; shared test utilities and config under `testing/`.
 - For modify tasks with existing tests: edit implementation first, run existing tests, then update tests only for intentional behavior changes.
 
 ## Monorepo awareness

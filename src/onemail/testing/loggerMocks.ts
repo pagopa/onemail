@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 
-export const createMockLogger = () => {
+const createMockLogger = () => {
   const logger = {
     info: vi.fn(),
     debug: vi.fn(),
@@ -15,3 +15,8 @@ export const createMockLogger = () => {
 
   return logger;
 };
+
+vi.mock('#config/logger', () => ({
+  getLogger: vi.fn(() => createMockLogger()),
+  getNamedLogger: vi.fn(() => createMockLogger()),
+}));

@@ -1,21 +1,22 @@
+import {
+  mapEmailLowPriorityToDbItem,
+  mapEmailTransactionalToDbItem,
+} from '#utils/dbMapper';
 import { SES_SIMULATOR } from 'om-common/utils';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   makeHighPriorityEmailDto,
   makeLowPriorityEmailDto,
-} from '../setup/dtoFactories.js';
+} from '../__helpers__/dtoFactories.js';
+
+const randomUUID = vi.hoisted(() => vi.fn());
+
+vi.mock('node:crypto', () => ({ randomUUID }));
 
 describe('dbMapper', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
-  it('maps transactional email content using the direct email body payload', async () => {
-    const randomUUID = vi.fn().mockReturnValue('mapped-email-id');
-    vi.doMock('node:crypto', () => ({ randomUUID }));
-
-    const { mapEmailTransactionalToDbItem } = await import('#utils/dbMapper');
+  it('maps transactional email content using the direct email body payload', () => {
+    randomUUID.mockReturnValue('mapped-email-id');
 
     const result = mapEmailTransactionalToDbItem(
       makeHighPriorityEmailDto(),
@@ -39,14 +40,8 @@ describe('dbMapper', () => {
     });
   });
 
-  it('maps low priority emails to SES simulator recipients during dry run', async () => {
-    const randomUUID = vi
-      .fn()
-      .mockReturnValueOnce('low-1')
-      .mockReturnValueOnce('low-2');
-    vi.doMock('node:crypto', () => ({ randomUUID }));
-
-    const { mapEmailLowPriorityToDbItem } = await import('#utils/dbMapper');
+  it('maps low priority emails to SES simulator recipients during dry run', () => {
+    randomUUID.mockReturnValueOnce('low-1').mockReturnValueOnce('low-2');
 
     const result = mapEmailLowPriorityToDbItem(
       makeLowPriorityEmailDto({

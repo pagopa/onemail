@@ -1,3 +1,6 @@
+import type { EmailHighPriorityBodyDTO } from '#dtos/email/emailHighPriority.dto';
+import type { EmailLowPriorityBodyDTO } from '#dtos/email/emailLowPriority.dto';
+
 type EmailAddress = {
   email: string;
   name?: string;
@@ -9,8 +12,8 @@ const makeEmailAddress = (email: string, name?: string): EmailAddress => ({
 });
 
 export const makeHighPriorityEmailDto = (
-  overrides: Record<string, unknown> = {},
-) => ({
+  overrides: Partial<EmailHighPriorityBodyDTO> = {},
+): EmailHighPriorityBodyDTO => ({
   from: makeEmailAddress('sender@example.com', 'OneMail Sender'),
   to: makeEmailAddress('user@example.com', 'OneMail Recipient'),
   emailContent: {
@@ -21,8 +24,8 @@ export const makeHighPriorityEmailDto = (
 });
 
 export const makeLowPriorityEmailDto = (
-  overrides: Record<string, unknown> = {},
-) => ({
+  overrides: Partial<EmailLowPriorityBodyDTO> = {},
+): EmailLowPriorityBodyDTO => ({
   from: makeEmailAddress('sender@example.com', 'OneMail Sender'),
   templateId: 'template-id',
   sendingInfo: [

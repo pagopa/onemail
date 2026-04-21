@@ -17,10 +17,13 @@ applyTo: "**/*.js,**/*.cjs,**/*.mjs,**/*.ts,**/*.tsx"
 - Add unit tests for testable logic.
 
 ## Testing defaults
-- Use built-in `node:test` + `node:assert/strict`.
-- Prefer BDD-like structure (`describe`/`it` where available).
+- Use **Vitest** as the test framework (`describe`, `it`, `expect`, `vi` from `vitest`).
 - Keep tests deterministic and isolated.
-- For modify tasks with existing tests: change implementation first, run existing tests, and update tests only for intentional behavior changes.
+- Use `vi.hoisted` to declare mock refs, then `vi.mock` with static imports of the subject under test.
+- If a mock (e.g. logger mock) is applied globally via `setupFiles`, never add a specific logger mock in test files.
+- Each test configures only the mocks it needs, directly on the hoisted refs.
+- Place tests under `<package>/tests/`; helpers and fixtures and setup under `<package>/tests/__helpers__/`; shared test utilities and config under `testing/`.
+- For modify tasks with existing tests: edit implementation first, run existing tests, then update tests only for intentional behavior changes.
 
 ## Reference implementation
 - For module and test examples, use `.github/skills/tech-ai-project-nodejs/SKILL.md`.

@@ -30,7 +30,7 @@ Create or modify Node.js/TypeScript application components with DDD boundaries, 
 7. Use `zod` for request payload validation and environment variable parsing.
 8. If `action=modify`, preserve existing behavior unless explicit changes are requested.
 9. If `action=modify` and tests already exist, run existing tests before editing test files.
-10. Add or update deterministic `node:test` unit tests only after the first test run, and only for intentional behavior changes or uncovered new behavior.
+10. Add or update deterministic **Vitest** unit tests only after the first test run, and only for intentional behavior changes or uncovered new behavior.
 
 ## Minimal example
 - Input: `action=create component_type=service component_name=emailStatus purpose="Resolve email delivery status from SES events"`
