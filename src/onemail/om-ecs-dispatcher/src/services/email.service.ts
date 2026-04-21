@@ -35,13 +35,13 @@ import {
 export const sendEmailTransactional = async (
   emailData: EmailHighPriorityBodyDTO,
   dryRun: boolean,
-  tenantId: string,
+  tenantName: string,
 ): Promise<EmailHighPriorityResponseDTO> => {
   const logger = getNamedLogger(sendEmailTransactional.name);
   logger.info('Start');
 
   // get tenant configuration for clientId and configSetName
-  const tenantConfiguration = await validateTenantId(tenantId);
+  const tenantConfiguration = await validateTenantName(tenantName);
 
   const requestId = randomUUID();
   // add get clientId and configSetName from tenant table
@@ -75,7 +75,7 @@ export const sendEmailTransactional = async (
   publishMetrics([
     {
       name: DispatcherMetricName.HighPriorityAccepted,
-      dimensions: { tenantName: tenantId },
+      dimensions: { tenantName: tenantName },
     },
   ]);
 
@@ -86,13 +86,13 @@ export const sendEmailTransactional = async (
 export const sendEmailLowPriority = async (
   emailData: EmailLowPriorityBodyDTO,
   dryRun: boolean,
-  tenantId: string,
+  tenantName: string,
 ): Promise<EmailLowPriorityResponseDTO> => {
   const logger = getNamedLogger(sendEmailLowPriority.name);
   logger.info('Start');
 
   // get tenant configuration for clientId and configSetName
-  const tenantConfiguration = await validateTenantId(tenantId);
+  const tenantConfiguration = await validateTenantName(tenantName);
   const requestId = randomUUID();
   const tableName = env.aws.emailDbTable;
 
@@ -141,7 +141,7 @@ export const sendEmailLowPriority = async (
     {
       name: DispatcherMetricName.LowPriorityAccepted,
       value: dbListObj.length,
-      dimensions: { tenantName: tenantId },
+      dimensions: { tenantName: tenantName },
     },
   ]);
 
@@ -151,12 +151,12 @@ export const sendEmailLowPriority = async (
 
 export const getEmailStatus = async (
   requestId: string,
-  tenantId: string,
+  tenantName: string,
 ): Promise<EmailStatusResponseDTO> => {
   const logger = getNamedLogger(getEmailStatus.name);
   logger.info('Start');
 
-  const tenantConfiguration = await validateTenantId(tenantId);
+  const tenantConfiguration = await validateTenantName(tenantName);
 
   const result = await dynamoClient.send(
     new QueryCommand({
@@ -178,7 +178,7 @@ export const getEmailStatus = async (
     publishMetrics([
       {
         name: DispatcherMetricName.EmailStatusNotFound,
-        dimensions: { tenantName: tenantId },
+        dimensions: { tenantName: tenantName },
       },
     ]);
     throw new ApiError(
@@ -194,11 +194,11 @@ export const getEmailStatus = async (
       publishMetrics([
         {
           name: DispatcherMetricName.UnauthorizedTenant,
-          dimensions: { tenantName: tenantId },
+          dimensions: { tenantName: tenantName },
         },
       ]);
       throw new ApiError(
-        `Email with requestId ${requestId} does not belong to tenant ${tenantId}`,
+        `Email with requestId ${requestId} does not belong to tenant ${tenantName}`,
         StatusCodes.UNAUTHORIZED,
         ERROR_CODES.INVALID_TENANT,
       );
@@ -227,19 +227,19 @@ export const getEmailStatus = async (
   return mapped;
 };
 
-const validateTenantId = async (
-  tenantId: string,
+const validateTenantName = async (
+  tenantName: string,
 ): Promise<TenantConfigurationItem> => {
-  const tenantConfigurations = await getTenantConfiguration(tenantId);
+  const tenantConfigurations = await getTenantConfiguration(tenantName);
   if (!tenantConfigurations || tenantConfigurations.length === 0) {
     publishMetrics([
       {
         name: DispatcherMetricName.TenantConfigurationNotFound,
-        dimensions: { tenantName: tenantId },
+        dimensions: { tenantName: tenantName },
       },
     ]);
     throw new ApiError(
-      `Tenant configuration not found for tenantId ${tenantId}`,
+      `Tenant configuration not found for tenantName ${tenantName}`,
       StatusCodes.UNAUTHORIZED,
       ERROR_CODES.INVALID_TENANT,
     );
@@ -249,11 +249,11 @@ const validateTenantId = async (
     publishMetrics([
       {
         name: DispatcherMetricName.MultipleTenantForClient,
-        dimensions: { tenantName: tenantId },
+        dimensions: { tenantName: tenantName },
       },
     ]);
     throw new ApiError(
-      `Tenant configuration conflict for tenantId ${tenantId}`,
+      `Tenant configuration conflict for tenantName ${tenantName}`,
       StatusCodes.UNAUTHORIZED,
       ERROR_CODES.INVALID_TENANT,
     );

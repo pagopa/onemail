@@ -113,6 +113,6 @@ export const htmlContentSchema = stringCheckedSchema({ min: 10, max: 150000 })
       'Invalid HTML provided: content was removed due to security rules.',
   });
 
-export const TenantIdHeaderSchema = z.object({
+export const TenantNameHeaderSchema = z.object({
   [headerTenantName]: stringCheckedSchema(),
 });
