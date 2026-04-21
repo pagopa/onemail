@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { registerOpenApiRoute } from '#utils/openapi';
+import { describe, expect, it, vi } from 'vitest';
 import z from 'zod';
 
-const registerPath = vi.fn();
+const registerPath = vi.hoisted(() => vi.fn());
 
 vi.mock('#config/apidocs', () => ({
   registry: {
@@ -10,13 +11,7 @@ vi.mock('#config/apidocs', () => ({
 }));
 
 describe('openapi utils', () => {
-  beforeEach(() => {
-    vi.resetModules();
-    registerPath.mockReset();
-  });
-
-  it('registers a route with request body, params, query and schema responses', async () => {
-    const { registerOpenApiRoute } = await import('#utils/openapi');
+  it('registers a route with request body, params, query and schema responses', () => {
     const requestBody = z.object({ email: z.string().email() });
     const pathParams = z.object({ requestId: z.string() });
     const queryParams = z.object({ dryRun: z.boolean() });
@@ -81,9 +76,7 @@ describe('openapi utils', () => {
     });
   });
 
-  it('registers a route without optional request parts and supports schema-less responses', async () => {
-    const { registerOpenApiRoute } = await import('#utils/openapi');
-
+  it('registers a route without optional request parts and supports schema-less responses', () => {
     registerOpenApiRoute({
       method: 'get',
       path: '/emails/status',

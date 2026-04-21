@@ -1,10 +1,16 @@
+import {
+  getEmailStatus,
+  sanitizeHtmlContent,
+  sendEmailLowPriority,
+  sendEmailTransactional,
+} from '#controllers/email.controller';
 import { ERROR_CODES } from '#dtos/error.dto';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   makeHighPriorityEmailDto,
   makeLowPriorityEmailDto,
-} from '../setup/dtoFactories.js';
+} from '../__helpers__/dtoFactories.js';
 
 const createResponseMock = () => {
   const response = {
@@ -17,41 +23,22 @@ const createResponseMock = () => {
   return response;
 };
 
-const mockEmailService = (
-  overrides: Partial<{
-    sendEmailTransactional: ReturnType<typeof vi.fn>;
-    sendEmailLowPriority: ReturnType<typeof vi.fn>;
-    getEmailStatus: ReturnType<typeof vi.fn>;
-  }> = {},
-) => {
-  const service = {
-    sendEmailTransactional: vi.fn(),
-    sendEmailLowPriority: vi.fn(),
-    getEmailStatus: vi.fn(),
-    ...overrides,
-  };
+const sendEmailTransactionalMock = vi.hoisted(() => vi.fn());
+const sendEmailLowPriorityMock = vi.hoisted(() => vi.fn());
+const getEmailStatusMock = vi.hoisted(() => vi.fn());
 
-  vi.doMock('#services/email.service', () => service);
-
-  return service;
-};
+vi.mock('#services/email.service', () => ({
+  sendEmailTransactional: sendEmailTransactionalMock,
+  sendEmailLowPriority: sendEmailLowPriorityMock,
+  getEmailStatus: getEmailStatusMock,
+}));
 
 describe('email.controller', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
   it('forwards transactional email requests to the service and returns accepted', async () => {
-    const sendEmailTransactional = vi.fn().mockResolvedValue({
-      requestId: 'request-id-1',
-    });
-    mockEmailService({ sendEmailTransactional });
-
-    const { sendEmailTransactional: controller } =
-      await import('#controllers/email.controller');
+    sendEmailTransactionalMock.mockResolvedValue({ requestId: 'request-id-1' });
     const response = createResponseMock();
 
-    await controller(
+    await sendEmailTransactional(
       {
         body: makeHighPriorityEmailDto(),
         query: { dryRun: false },
@@ -60,7 +47,7 @@ describe('email.controller', () => {
       response as never,
     );
 
-    expect(sendEmailTransactional).toHaveBeenCalledWith(
+    expect(sendEmailTransactionalMock).toHaveBeenCalledWith(
       expect.objectContaining({
         to: expect.objectContaining({ email: 'user@example.com' }),
       }),
@@ -72,14 +59,10 @@ describe('email.controller', () => {
   });
 
   it('rejects duplicate recipients for low priority emails when dryRun is false', async () => {
-    mockEmailService();
-
-    const { sendEmailLowPriority: controller } =
-      await import('#controllers/email.controller');
     const response = createResponseMock();
 
     await expect(
-      controller(
+      sendEmailLowPriority(
         {
           body: makeLowPriorityEmailDto({
             sendingInfo: [
@@ -101,16 +84,10 @@ describe('email.controller', () => {
   });
 
   it('skips duplicate validation for low priority dry runs and returns accepted', async () => {
-    const sendEmailLowPriority = vi.fn().mockResolvedValue({
-      requestId: 'request-id-2',
-    });
-    mockEmailService({ sendEmailLowPriority });
-
-    const { sendEmailLowPriority: controller } =
-      await import('#controllers/email.controller');
+    sendEmailLowPriorityMock.mockResolvedValue({ requestId: 'request-id-2' });
     const response = createResponseMock();
 
-    await controller(
+    await sendEmailLowPriority(
       {
         body: makeLowPriorityEmailDto({
           sendingInfo: [
@@ -124,7 +101,7 @@ describe('email.controller', () => {
       response as never,
     );
 
-    expect(sendEmailLowPriority).toHaveBeenCalledWith(
+    expect(sendEmailLowPriorityMock).toHaveBeenCalledWith(
       expect.objectContaining({ sendingInfo: expect.any(Array) }),
       true,
       'tenant-a',
@@ -134,10 +111,6 @@ describe('email.controller', () => {
   });
 
   it('returns sanitized html content as-is', async () => {
-    mockEmailService();
-
-    const { sanitizeHtmlContent } =
-      await import('#controllers/email.controller');
     const response = createResponseMock();
 
     await sanitizeHtmlContent(
@@ -154,16 +127,10 @@ describe('email.controller', () => {
   });
 
   it('gets email status and returns ok', async () => {
-    const getEmailStatus = vi
-      .fn()
-      .mockResolvedValue([{ emailId: 'email-id-1' }]);
-    mockEmailService({ getEmailStatus });
-
-    const { getEmailStatus: controller } =
-      await import('#controllers/email.controller');
+    getEmailStatusMock.mockResolvedValue([{ emailId: 'email-id-1' }]);
     const response = createResponseMock();
 
-    await controller(
+    await getEmailStatus(
       {
         query: { requestId: 'request-id-3' },
         headers: { 'x-tenant-id': 'tenant-a' },

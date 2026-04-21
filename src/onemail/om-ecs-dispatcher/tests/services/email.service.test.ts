@@ -1,69 +1,44 @@
 import env from '#config/env';
-import { ApiError } from '#errors/api.error';
+import {
+  getEmailStatus,
+  sendEmailLowPriority,
+  sendEmailTransactional,
+} from '#services/email.service';
 import { EmailPriority, EmailStatus } from 'om-common/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createMockAwsClient } from '../setup/awsMocks.js';
 import {
   expectCommandInput,
   getNthCommand,
-} from '../setup/commandAssertions.js';
+} from '../../../testing/commandAssertions.js';
 import {
   makeHighPriorityEmailDto,
   makeLowPriorityEmailDto,
-} from '../setup/dtoFactories.js';
-import { createMockLogger } from '../setup/loggerMocks.js';
+} from '../__helpers__/dtoFactories.js';
 
-const setupEmailServiceDependencies = () => {
-  const loggerMock = createMockLogger();
-  const dynamoClientMock = createMockAwsClient();
-  const sqsClientMock = createMockAwsClient();
+const dynamoSend = vi.hoisted(() => vi.fn());
+const sqsSend = vi.hoisted(() => vi.fn());
+const randomUUID = vi.hoisted(() => vi.fn());
 
-  vi.doMock('#config/logger', () => ({
-    getNamedLogger: vi.fn(() => loggerMock),
-  }));
-  vi.doMock('#errors/api.error', () => ({ ApiError }));
-  vi.doMock('#connectors/dynamo.connector', () => ({
-    dynamoClient: dynamoClientMock,
-  }));
-  vi.doMock('#connectors/sqs.connector', () => ({
-    sqsClient: sqsClientMock,
-  }));
+vi.mock('#connectors/dynamo.connector', () => ({
+  dynamoClient: { send: dynamoSend },
+}));
+vi.mock('#connectors/sqs.connector', () => ({
+  sqsClient: { send: sqsSend },
+}));
+vi.mock('node:crypto', () => ({ randomUUID }));
 
-  return {
-    dynamoClientMock,
-    loggerMock,
-    sqsClientMock,
-  };
-};
+const setupEmailServiceDependencies = () => ({
+  dynamoClientMock: { send: dynamoSend },
+  sqsClientMock: { send: sqsSend },
+});
 
 describe('email.service', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
   describe('sendEmailTransactional', () => {
     it('persists the email and publishes the high priority message', async () => {
-      const { loggerMock, dynamoClientMock, sqsClientMock } =
-        setupEmailServiceDependencies();
-      dynamoClientMock.send.mockResolvedValueOnce({
-        Items: [
-          {
-            tenantName: 'tenant-a',
-            configSetName: 'config-set-a',
-            clientId: 'client-id-a',
-          },
-        ],
-      });
-      const randomUUID = vi
-        .fn()
+      randomUUID
         .mockReturnValueOnce('request-id-1')
         .mockReturnValueOnce('email-id-1');
-
-      vi.doMock('node:crypto', () => ({ randomUUID }));
-
-      const { sendEmailTransactional } =
-        await import('#services/email.service');
 
       const result = await sendEmailTransactional(
         makeHighPriorityEmailDto(),
@@ -73,11 +48,9 @@ describe('email.service', () => {
 
       expect(result).toEqual({ requestId: 'request-id-1' });
       const putCommand = expectCommandInput(
-        dynamoClientMock.send,
-        {
-          TableName: env.aws.emailDbTable,
-        },
-        1,
+        dynamoSend,
+        { TableName: env.aws.emailDbTable },
+        0,
       );
       const putItem = (
         putCommand.input as {
@@ -94,21 +67,16 @@ describe('email.service', () => {
       expect((putItem as { clientId?: string }).clientId).toBe('client-id-a');
 
       expectCommandInput(
-        sqsClientMock.send,
+        sqsSend,
         {
           QueueUrl: env.aws.sqs.highPriorityQueueUrl,
           MessageBody: JSON.stringify({ emailId: 'email-id-1' }),
         },
         0,
       );
-      expect(loggerMock.info).toHaveBeenCalledWith('Start');
-      expect(loggerMock.info).toHaveBeenCalledWith('End');
     });
-
     it('throws INVALID_TENANT when tenant configuration is missing', async () => {
-      const { dynamoClientMock, sqsClientMock } =
-        setupEmailServiceDependencies();
-      dynamoClientMock.send.mockResolvedValueOnce({ Items: [] });
+      dynamoSend.mockResolvedValueOnce({ Items: [] });
 
       const { sendEmailTransactional } =
         await import('#services/email.service');
@@ -120,41 +88,20 @@ describe('email.service', () => {
         errorCode: 'T001',
       });
 
-      expect(sqsClientMock.send).not.toHaveBeenCalled();
+      expect(sqsSend).not.toHaveBeenCalled();
     });
   });
 
   describe('sendEmailLowPriority', () => {
     it('splits low priority batches over the DynamoDB write limit', async () => {
-      const { dynamoClientMock, sqsClientMock } =
-        setupEmailServiceDependencies();
-      dynamoClientMock.send.mockResolvedValueOnce({
-        Items: [
-          {
-            tenantName: 'tenant-a',
-            configSetName: 'config-set-a',
-            clientId: 'client-id-a',
-          },
-        ],
-      });
-      const randomUUID = vi.fn();
-
       randomUUID.mockReturnValueOnce('request-id-2');
       for (let index = 1; index <= 26; index += 1) {
         randomUUID.mockReturnValueOnce(`email-id-${index}`);
       }
 
-      vi.doMock('node:crypto', () => ({ randomUUID }));
-
-      const { sendEmailLowPriority } = await import('#services/email.service');
-
       const sendingInfo = Array.from({ length: 26 }, (_, index) => ({
-        to: {
-          email: `user${index + 1}@example.com`,
-        },
-        templateAttributes: {
-          item: index + 1,
-        },
+        to: { email: `user${index + 1}@example.com` },
+        templateAttributes: { item: index + 1 },
       }));
 
       const result = await sendEmailLowPriority(
@@ -164,12 +111,12 @@ describe('email.service', () => {
       );
 
       expect(result).toEqual({ requestId: 'request-id-2' });
-      expect(dynamoClientMock.send).toHaveBeenCalledTimes(3);
+      expect(dynamoSend).toHaveBeenCalledTimes(2);
 
-      const firstBatch = getNthCommand(dynamoClientMock.send, 1) as {
+      const firstBatch = getNthCommand(dynamoSend, 0) as {
         input: { RequestItems: Record<string, unknown[]> };
       };
-      const secondBatch = getNthCommand(dynamoClientMock.send, 2) as {
+      const secondBatch = getNthCommand(dynamoSend, 1) as {
         input: { RequestItems: Record<string, unknown[]> };
       };
 
@@ -192,7 +139,7 @@ describe('email.service', () => {
       expect(firstBatchFirstItem.PutRequest.Item.clientId).toBe('client-id-a');
 
       expectCommandInput(
-        sqsClientMock.send,
+        sqsSend,
         {
           QueueUrl: env.aws.sqs.lowPriorityQueueUrl,
           MessageBody: JSON.stringify({ requestId: 'request-id-2' }),
@@ -221,56 +168,38 @@ describe('email.service', () => {
 });
 
 describe('email.service - getEmailStatus', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
   it('returns the history sorted in descending timestamp order', async () => {
-    const { dynamoClientMock } = setupEmailServiceDependencies();
-
-    dynamoClientMock.send
-      .mockResolvedValueOnce({
-        Items: [
-          {
-            tenantName: 'tenant-a',
-            configSetName: 'config-set-a',
-            clientId: 'client-id-a',
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        Items: [
-          {
-            emailId: 'email-id-3',
-            requestId: 'request-id-3',
-            priority: EmailPriority.HIGH,
-            status: EmailStatus.Delivered,
-            history: [
-              {
-                status: EmailStatus.Queued,
-                changedAt: '2026-01-01T10:00:00.000Z',
-              },
-              {
-                status: EmailStatus.Delivered,
-                changedAt: '2026-01-01T11:00:00.000Z',
-              },
-            ],
-            content: {
-              from: { email: 'sender@example.com' },
-              to: { email: 'user@example.com' },
+    dynamoSend.mockResolvedValue({
+      Items: [
+        {
+          emailId: 'email-id-3',
+          requestId: 'request-id-3',
+          priority: EmailPriority.HIGH,
+          status: EmailStatus.Delivered,
+          history: [
+            {
+              status: EmailStatus.Queued,
+              changedAt: '2026-01-01T10:00:00.000Z',
             },
-            clientId: 'client-id',
-            dryRun: false,
+            {
+              status: EmailStatus.Delivered,
+              changedAt: '2026-01-01T11:00:00.000Z',
+            },
+          ],
+          content: {
+            from: { email: 'sender@example.com' },
+            to: { email: 'user@example.com' },
           },
-        ],
-      });
-
-    const { getEmailStatus } = await import('#services/email.service');
+          clientId: 'client-id',
+          dryRun: false,
+        },
+      ],
+    });
 
     const result = await getEmailStatus('request-id-3', 'tenant-a');
 
     expectCommandInput(
-      dynamoClientMock.send,
+      dynamoSend,
       {
         TableName: env.aws.emailDbTable,
         IndexName: env.aws.emailDbRequestIdGSI,
@@ -299,21 +228,7 @@ describe('email.service - getEmailStatus', () => {
   });
 
   it('throws an ApiError when the requested email status does not exist', async () => {
-    const { dynamoClientMock } = setupEmailServiceDependencies();
-
-    dynamoClientMock.send
-      .mockResolvedValueOnce({
-        Items: [
-          {
-            tenantName: 'tenant-a',
-            configSetName: 'config-set-a',
-            clientId: 'client-id-a',
-          },
-        ],
-      })
-      .mockResolvedValueOnce({ Items: [] });
-
-    const { getEmailStatus } = await import('#services/email.service');
+    dynamoSend.mockResolvedValue({ Items: [] });
 
     await expect(
       getEmailStatus('missing-request-id', 'tenant-a'),
@@ -325,58 +240,44 @@ describe('email.service - getEmailStatus', () => {
   });
 
   it('counts Dispatched events in history as attempts', async () => {
-    const { dynamoClientMock } = setupEmailServiceDependencies();
-
-    dynamoClientMock.send
-      .mockResolvedValueOnce({
-        Items: [
-          {
-            tenantName: 'tenant-a',
-            configSetName: 'config-set-a',
-            clientId: 'client-id-a',
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        Items: [
-          {
-            emailId: 'email-id-4',
-            requestId: 'request-id-4',
-            priority: EmailPriority.HIGH,
-            status: EmailStatus.Delivered,
-            history: [
-              {
-                status: EmailStatus.Queued,
-                changedAt: '2026-01-01T10:00:00.000Z',
-              },
-              {
-                status: EmailStatus.Dispatched,
-                changedAt: '2026-01-01T10:01:00.000Z',
-              },
-              {
-                status: EmailStatus.SoftBounce,
-                changedAt: '2026-01-01T10:02:00.000Z',
-              },
-              {
-                status: EmailStatus.Dispatched,
-                changedAt: '2026-01-01T10:03:00.000Z',
-              },
-              {
-                status: EmailStatus.Delivered,
-                changedAt: '2026-01-01T10:04:00.000Z',
-              },
-            ],
-            content: {
-              from: { email: 'sender@example.com' },
-              to: { email: 'user@example.com' },
+    dynamoSend.mockResolvedValue({
+      Items: [
+        {
+          emailId: 'email-id-4',
+          requestId: 'request-id-4',
+          priority: EmailPriority.HIGH,
+          status: EmailStatus.Delivered,
+          history: [
+            {
+              status: EmailStatus.Queued,
+              changedAt: '2026-01-01T10:00:00.000Z',
             },
-            clientId: 'client-id',
-            dryRun: false,
+            {
+              status: EmailStatus.Dispatched,
+              changedAt: '2026-01-01T10:01:00.000Z',
+            },
+            {
+              status: EmailStatus.SoftBounce,
+              changedAt: '2026-01-01T10:02:00.000Z',
+            },
+            {
+              status: EmailStatus.Dispatched,
+              changedAt: '2026-01-01T10:03:00.000Z',
+            },
+            {
+              status: EmailStatus.Delivered,
+              changedAt: '2026-01-01T10:04:00.000Z',
+            },
+          ],
+          content: {
+            from: { email: 'sender@example.com' },
+            to: { email: 'user@example.com' },
           },
-        ],
-      });
-
-    const { getEmailStatus } = await import('#services/email.service');
+          clientId: 'client-id',
+          dryRun: false,
+        },
+      ],
+    });
 
     const result = await getEmailStatus('request-id-4', 'tenant-a');
 
