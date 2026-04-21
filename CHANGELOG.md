@@ -1,5 +1,18 @@
 # onemail
 
+## 1.4.13
+
+### Patch Changes
+
+- Updated dependencies [cd262f4]
+  - infra-domains-onemail-monitoring@1.4.0
+  - infra-domains-onemail-common@1.10.0
+  - infra-domains-onemail-app@1.17.0
+  - om-ecs-dispatcher@1.10.0
+  - om-lambda-sender@1.4.0
+  - om-common@1.3.0
+  - om-lambda-config-set-processor@1.5.2
+
 ## 1.4.12
 
 ### Patch Changes

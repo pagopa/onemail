@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.17.0
+
+### Minor Changes
+
+- cd262f4: add authentication
+
 ## 1.16.0
 
 ### Minor Changes

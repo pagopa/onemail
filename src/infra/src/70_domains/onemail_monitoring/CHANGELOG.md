@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.4.0
+
+### Minor Changes
+
+- cd262f4: add authentication
+
 ## 1.3.0
 
 ### Minor Changes

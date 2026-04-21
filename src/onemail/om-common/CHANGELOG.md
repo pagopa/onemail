@@ -1,5 +1,11 @@
 # om-common
 
+## 1.3.0
+
+### Minor Changes
+
+- cd262f4: add authentication
+
 ## 1.2.1
 
 ### Patch Changes
