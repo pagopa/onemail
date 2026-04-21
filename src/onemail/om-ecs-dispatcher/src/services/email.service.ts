@@ -41,10 +41,9 @@ export const sendEmailTransactional = async (
   logger.info('Start');
 
   // get tenant configuration for clientId and configSetName
-  const tenantConfiguration = await validateTenantName(tenantName);
-
+  const tenantConfiguration =
+    await getAndValidateTenantConfiguration(tenantName);
   const requestId = randomUUID();
-  // add get clientId and configSetName from tenant table
   const tableName = env.aws.emailDbTable;
 
   const dbObj = mapEmailTransactionalToDbItem(
@@ -92,7 +91,8 @@ export const sendEmailLowPriority = async (
   logger.info('Start');
 
   // get tenant configuration for clientId and configSetName
-  const tenantConfiguration = await validateTenantName(tenantName);
+  const tenantConfiguration =
+    await getAndValidateTenantConfiguration(tenantName);
   const requestId = randomUUID();
   const tableName = env.aws.emailDbTable;
 
@@ -156,7 +156,8 @@ export const getEmailStatus = async (
   const logger = getNamedLogger(getEmailStatus.name);
   logger.info('Start');
 
-  const tenantConfiguration = await validateTenantName(tenantName);
+  const tenantConfiguration =
+    await getAndValidateTenantConfiguration(tenantName);
 
   const result = await dynamoClient.send(
     new QueryCommand({
@@ -227,10 +228,11 @@ export const getEmailStatus = async (
   return mapped;
 };
 
-const validateTenantName = async (
+const getAndValidateTenantConfiguration = async (
   tenantName: string,
 ): Promise<TenantConfigurationItem> => {
-  const tenantConfigurations = await getTenantConfiguration(tenantName);
+  const tenantConfigurations =
+    await getTenantConfigurationByTenantName(tenantName);
   if (!tenantConfigurations || tenantConfigurations.length === 0) {
     publishMetrics([
       {
@@ -261,9 +263,9 @@ const validateTenantName = async (
   return tenantConfigurations[0];
 };
 
-const getTenantConfiguration = async (
+const getTenantConfigurationByTenantName = async (
   tenantName: string,
-): Promise<TenantConfigurationItem[] | undefined> => {
+): Promise<TenantConfigurationItem[]> => {
   const result = await dynamoClient.send(
     new QueryCommand({
       TableName: env.aws.tenantConfigurationTable,
