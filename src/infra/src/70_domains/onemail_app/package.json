@@ -1,6 +1,6 @@
 {
   "name": "infra-domains-onemail-app",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "description": "Domain infrastructure code for the OneMail app.",
   "private": true
 }

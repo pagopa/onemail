@@ -1,5 +1,16 @@
 # om-ecs-dispatcher
 
+## 1.10.0
+
+### Minor Changes
+
+- cd262f4: add authentication
+
+### Patch Changes
+
+- Updated dependencies [cd262f4]
+  - om-common@1.3.0
+
 ## 1.9.1
 
 ### Patch Changes
