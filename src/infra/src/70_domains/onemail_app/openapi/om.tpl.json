@@ -55,7 +55,7 @@
           "requestTemplates": {
             "application/json": ${tenant_request_template}
           },
-          "passthroughBehavior": "NEVER",
+          "passthroughBehavior": "WHEN_NO_MATCH",
           "timeoutInMillis": 20000,
           "responses": {
             "200": { "statusCode": "200" },
