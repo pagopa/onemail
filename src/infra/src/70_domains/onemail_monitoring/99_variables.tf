@@ -40,11 +40,7 @@ variable "location_short" {
   description = "Location short like eg: neu, weu."
 }
 
-variable "enable_ses" {
-  type        = bool
-  description = "Whether to enable SES-related resources for this domain."
-  default     = false
-}
+
 
 variable "alarm_subscribers" {
   type        = string

@@ -20,7 +20,7 @@ data "aws_iam_policy_document" "sender_policy" {
       "ses:SendBulkEmail",
       "ses:SendBulkTemplatedEmail"
     ]
-    resources = var.enable_ses && var.env != "dev" ? distinct(concat(
+    resources = var.env != "dev" ? distinct(concat(
       ["arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:template/*"],
       [for tenant_key, _ in local.tenants : data.aws_ses_domain_identity.tenant[tenant_key].arn],
       [for tenant_key, _ in local.tenants : data.aws_sesv2_configuration_set.tenant_config_set[tenant_key].arn]
@@ -28,7 +28,7 @@ data "aws_iam_policy_document" "sender_policy" {
 
 
     dynamic "condition" {
-      for_each = var.enable_ses && length(local.tenants) > 0 ? [1] : []
+      for_each = length(local.tenants) > 0 ? [1] : []
 
       content {
         test     = "StringEquals"
@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "sender_policy" {
     }
 
     dynamic "condition" {
-      for_each = var.enable_ses && length(local.tenants) > 0 ? [1] : []
+      for_each = length(local.tenants) > 0 ? [1] : []
 
       content {
         test     = "StringLike"
