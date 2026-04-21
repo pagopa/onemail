@@ -70,7 +70,7 @@ data "aws_route53_zone" "onemail" {
 }
 
 data "aws_ses_domain_identity" "tenant" {
-  for_each = var.enable_ses ? local.tenants : {}
+  for_each = local.tenants
   domain   = each.value.domain
 }
 
@@ -81,7 +81,7 @@ data "aws_lb_listener" "ecs_core" {
 }
 
 data "aws_sesv2_configuration_set" "tenant_config_set" {
-  for_each               = var.enable_ses ? local.tenants : {}
+  for_each               = local.tenants
   configuration_set_name = each.value.configuration_set_name
 }
 

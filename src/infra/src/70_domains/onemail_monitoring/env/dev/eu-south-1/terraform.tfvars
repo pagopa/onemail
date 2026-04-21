@@ -8,5 +8,4 @@ location_short = "eus1"
 aws_region     = "eu-south-1"
 
 
-enable_ses        = true
 alarm_subscribers = "alarm-subscribers"

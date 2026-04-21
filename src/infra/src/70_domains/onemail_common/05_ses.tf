@@ -1,12 +1,12 @@
 # Tenants
 resource "aws_sesv2_tenant" "tenants" {
-  for_each    = var.enable_ses ? local.tenants : {}
+  for_each    = local.tenants
   tenant_name = each.value.tenant_name
 }
 
 # Email identities for each tenant
 resource "aws_sesv2_email_identity" "tenant_identities" {
-  for_each       = var.enable_ses ? local.tenants : {}
+  for_each       = local.tenants
   email_identity = each.value.domain
 
   configuration_set_name = aws_sesv2_configuration_set.config_set[each.key].configuration_set_name
@@ -18,7 +18,7 @@ resource "aws_sesv2_email_identity" "tenant_identities" {
 
 # Custom MAIL FROM domain for SPF and DMARC alignment per tenant
 resource "aws_ses_domain_mail_from" "tenant_mail_from" {
-  for_each         = var.enable_ses ? local.tenants : {}
+  for_each         = local.tenants
   domain           = aws_sesv2_email_identity.tenant_identities[each.key].email_identity
   mail_from_domain = "bounce.${each.value.domain}"
   # In test phase: allow SES fallback if the custom MAIL FROM MX is not ready yet.
@@ -27,12 +27,11 @@ resource "aws_ses_domain_mail_from" "tenant_mail_from" {
 }
 
 # resource "aws_ses_account_suppression_attributes" "main" {
-#   count = var.enable_ses ? 1 : 0
 #   suppressed_reasons = ["BOUNCE", "COMPLAINT"]
 # }
 
 resource "aws_sesv2_configuration_set" "config_set" {
-  for_each               = var.enable_ses ? local.tenants : {}
+  for_each               = local.tenants
   configuration_set_name = each.value.configuration_set_name
 
   sending_options {
@@ -49,19 +48,19 @@ resource "aws_sesv2_configuration_set" "config_set" {
 }
 
 resource "aws_sesv2_tenant_resource_association" "identity_assoc" {
-  for_each     = var.enable_ses ? local.tenants : {}
+  for_each     = local.tenants
   tenant_name  = aws_sesv2_tenant.tenants[each.key].tenant_name
   resource_arn = aws_sesv2_email_identity.tenant_identities[each.key].arn
 }
 
 resource "aws_sesv2_tenant_resource_association" "config_set_assoc" {
-  for_each     = var.enable_ses ? local.tenants : {}
+  for_each     = local.tenants
   tenant_name  = aws_sesv2_tenant.tenants[each.key].tenant_name
   resource_arn = aws_sesv2_configuration_set.config_set[each.key].arn
 }
 
 resource "aws_sesv2_configuration_set_event_destination" "to_eb" {
-  for_each               = var.enable_ses ? local.tenants : {}
+  for_each               = local.tenants
   configuration_set_name = aws_sesv2_configuration_set.config_set[each.key].configuration_set_name
   event_destination_name = "dest-eb-${local.project_nodomain}-${each.key}"
 
@@ -75,7 +74,6 @@ resource "aws_sesv2_configuration_set_event_destination" "to_eb" {
 }
 
 resource "aws_cloudwatch_event_rule" "ses_rule" {
-  count       = var.enable_ses ? 1 : 0
   name        = "${local.project_nodomain}-${var.env}-ses-central-rule"
   description = "Central rule to capture SES events for all tenants in ${var.env} environment"
   event_pattern = jsonencode({
@@ -92,13 +90,11 @@ resource "aws_cloudwatch_event_rule" "ses_rule" {
 }
 
 resource "aws_cloudwatch_event_target" "sqs_target" {
-  count = var.enable_ses ? 1 : 0
-  rule  = aws_cloudwatch_event_rule.ses_rule[0].name
-  arn   = aws_sqs_queue.sqs_set_processor.arn
+  rule = aws_cloudwatch_event_rule.ses_rule.name
+  arn  = aws_sqs_queue.sqs_set_processor.arn
 }
 
 resource "aws_sqs_queue_policy" "eb_to_sqs" {
-  count     = var.enable_ses ? 1 : 0
   queue_url = aws_sqs_queue.sqs_set_processor.id
   policy = jsonencode({
     Version = "2012-10-17",
@@ -107,7 +103,7 @@ resource "aws_sqs_queue_policy" "eb_to_sqs" {
       Principal = { Service = "events.amazonaws.com" },
       Action    = "sqs:SendMessage",
       Resource  = aws_sqs_queue.sqs_set_processor.arn,
-      Condition = { ArnEquals = { "aws:SourceArn" = aws_cloudwatch_event_rule.ses_rule[0].arn } }
+      Condition = { ArnEquals = { "aws:SourceArn" = aws_cloudwatch_event_rule.ses_rule.arn } }
     }]
   })
 }

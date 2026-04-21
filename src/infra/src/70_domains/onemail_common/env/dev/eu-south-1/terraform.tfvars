@@ -86,5 +86,3 @@ dynamodb_tables = {
 
 # ECS Cluster
 enable_container_insights = false
-
-enable_ses = true

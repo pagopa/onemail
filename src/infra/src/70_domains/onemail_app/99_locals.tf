@@ -4,7 +4,7 @@ locals {
   product                       = "${var.prefix}-${var.env_short}"
   zone_name                     = var.env == "prod" ? var.dns_zone_name : "${var.env}.${var.dns_zone_name}"
   tenants_file_path             = "${path.module}/../../data/tenants/tenants.json"
-  raw_tenants                   = var.enable_ses ? jsondecode(file(local.tenants_file_path)) : {}
+  raw_tenants                   = jsondecode(file(local.tenants_file_path))
   tenant_domain_prefix          = var.env == "prod" ? "" : "${var.env}."
   tenant_name_prefix            = "${local.project_nodomain}-tenant"
   configuration_set_name_prefix = "${local.project_nodomain}-configuration-set"
