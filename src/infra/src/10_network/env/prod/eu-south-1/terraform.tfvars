@@ -21,3 +21,5 @@ web_acl = {
   cloudwatch_metrics_enabled = true
   sampled_requests_enabled   = true
 }
+
+enable_ses_dns_records = true

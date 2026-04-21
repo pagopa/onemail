@@ -87,9 +87,3 @@ variable "dns_zone_name" {
   description = "Name of the DNS hosted zone. For prod: 'onemail.pagopa.it', for dev/uat: subdomain will be automatically prefixed."
   default     = "onemail.pagopa.it"
 }
-
-variable "enable_ses" {
-  type        = bool
-  description = "Whether to enable SES-related resources for this domain."
-  default     = false
-}
