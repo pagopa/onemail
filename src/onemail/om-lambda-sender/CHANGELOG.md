@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.3.2
+
+### Patch Changes
+
+- f40a440: add test for sender and create common shared vitest configuration
+
 ## 1.3.1
 
 ### Patch Changes
