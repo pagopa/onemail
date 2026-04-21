@@ -25,6 +25,9 @@ import { headerTenantName } from '#utils/constants';
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
+const getTenantIdFromHeaders = (headers: Request['headers']): string =>
+  headers[headerTenantName] as string;
+
 export const sendEmailTransactional = async (
   req: Request<
     unknown,
@@ -90,9 +93,6 @@ export const getEmailStatus = async (
   const result = await emailService.getEmailStatus(requestId, tenantId);
   res.status(StatusCodes.OK).json(result);
 };
-
-const getTenantIdFromHeaders = (headers: Request['headers']): string =>
-  headers[headerTenantName] as string;
 
 function validateNoDuplicateRecipients(sendingInfo: SendingInfoDTO[]) {
   const seen = new Set<string>();
