@@ -156,7 +156,7 @@ export const getEmailStatus = async (
   const logger = getNamedLogger(getEmailStatus.name);
   logger.info('Start');
 
-  await validateTenantId(tenantId);
+  const tenantConfiguration = await validateTenantId(tenantId);
 
   const result = await dynamoClient.send(
     new QueryCommand({
@@ -198,6 +198,20 @@ export const getEmailStatus = async (
     const attempts = item.history.filter(
       (event) => event.status === EmailStatus.Dispatched,
     ).length;
+
+    if (tenantConfiguration.tenantName !== item.tenantName) {
+      publishMetrics([
+        {
+          name: DispatcherMetricName.UnauthorizedTenant,
+          dimensions: { tenantName: tenantConfiguration.tenantName },
+        },
+      ]);
+      throw new ApiError(
+        `Email with requestId ${requestId} does not belong to tenant ${tenantConfiguration.tenantName}`,
+        StatusCodes.UNAUTHORIZED,
+        ERROR_CODES.INVALID_TENANT,
+      );
+    }
 
     return {
       status: item.status,

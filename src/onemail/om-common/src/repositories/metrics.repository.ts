@@ -80,6 +80,7 @@ export const DispatcherMetricName = {
   EmailStatusNotFound: 'EmailStatusNotFound',
   MultipleTenantForClient: 'MultipleTenantForClient',
   TenantConfigurationNotFound: 'TenantConfigurationNotFound',
+  UnauthorizedTenant: 'UnauthorizedTenant',
 } as const;
 
 interface MetricInput {
