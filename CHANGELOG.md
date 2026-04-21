@@ -1,5 +1,15 @@
 # onemail
 
+## 1.4.12
+
+### Patch Changes
+
+- Updated dependencies [9b7144b]
+  - infra-domains-onemail-monitoring@1.3.0
+  - infra-domains-onemail-common@1.9.0
+  - infra-domains-onemail-app@1.16.0
+  - infra-network@1.9.0
+
 ## 1.4.11
 
 ### Patch Changes
