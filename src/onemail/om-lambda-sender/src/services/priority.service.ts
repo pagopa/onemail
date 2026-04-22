@@ -60,9 +60,9 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
   const clientIdDimension = { clientId: email.clientId };
 
   // 3. Send the email with SES
-  let sesMessageId: string | undefined;
+  let providerMessageId: string | undefined;
   try {
-    sesMessageId = await sendHighPriorityEmail(email);
+    providerMessageId = await sendHighPriorityEmail(email);
   } catch (error) {
     if (error instanceof DryRunValidationError) {
       logger.error('Dry-run validation failed', {
@@ -109,15 +109,15 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
   }
 
   // 4. Update the email status in DB
-  if (sesMessageId) {
+  if (providerMessageId) {
     logger.debug('Email accepted by SES', {
       emailId,
-      sesMessageId,
+      providerMessageId,
     });
     await updateEmailStatus({
       emailId,
       status: EmailStatus.Dispatched,
-      messageId: sesMessageId,
+      providerMessageId: providerMessageId,
     });
     publishMetrics([
       {
@@ -207,7 +207,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       ...successfulEmails.map((entry) => ({
         item: entry.item,
         status: EmailStatus.Dispatched,
-        messageId: entry.result.MessageId,
+        providerMessageId: entry.result.MessageId,
       })),
       ...nonRetryableFailures.map((entry) => {
         logger.error('Email rejected by SES', {

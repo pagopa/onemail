@@ -53,12 +53,12 @@ export const getEmailsByRequestId = async (
 export const updateEmailStatus = async ({
   emailId,
   status,
-  messageId,
+  providerMessageId,
   reason,
 }: {
   emailId: string;
   status: EmailStatus;
-  messageId?: string;
+  providerMessageId?: string;
   reason?: string;
 }): Promise<void> => {
   const now = new Date().toISOString();
@@ -67,17 +67,17 @@ export const updateEmailStatus = async ({
       TableName: env.aws.emailDbTable,
       Key: { emailId },
       UpdateExpression:
-        'SET #status = :status, #updatedAt = :updatedAt, #sesMessageId = :sesMessageId, #history = list_append(if_not_exists(#history, :emptyList), :newHistoryItem)',
+        'SET #status = :status, #updatedAt = :updatedAt, #providerMessageId = :providerMessageId, #history = list_append(if_not_exists(#history, :emptyList), :newHistoryItem)',
       ExpressionAttributeNames: {
         '#status': 'status',
         '#updatedAt': 'updatedAt',
-        '#sesMessageId': 'sesMessageId',
+        '#providerMessageId': 'providerMessageId',
         '#history': 'history',
       },
       ExpressionAttributeValues: {
         ':status': status,
         ':updatedAt': now,
-        ':sesMessageId': messageId || null,
+        ':providerMessageId': providerMessageId || null,
         ':emptyList': [],
         ':newHistoryItem': [{ status, changedAt: now, reason }],
       },
@@ -88,7 +88,7 @@ export const updateEmailStatus = async ({
 export interface EmailStatusUpdate {
   item: EmailStatusHistoryItem;
   status: EmailStatus;
-  messageId?: string;
+  providerMessageId?: string;
   reason?: string;
 }
 
@@ -165,7 +165,7 @@ export const batchUpdateEmailStatuses = async (
     return;
   }
 
-  const items = updates.map(({ item, status, messageId, reason }) => {
+  const items = updates.map(({ item, status, providerMessageId, reason }) => {
     // Append the new status to the existing history array
     const updatedHistory = item.history ? [...item.history] : [];
     updatedHistory.push({
@@ -180,7 +180,7 @@ export const batchUpdateEmailStatuses = async (
           ...item,
           status,
           updatedAt: now,
-          messageId: messageId ?? null,
+          providerMessageId: providerMessageId,
           history: updatedHistory,
         },
       },

@@ -104,7 +104,7 @@ describe('priority.service high priority flows', () => {
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: email.emailId,
       status: EmailStatus.Dispatched,
-      messageId: 'ses-message-id',
+      providerMessageId: 'ses-message-id',
     });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
@@ -364,7 +364,7 @@ describe('priority.service low priority SES entry result flows', () => {
       {
         item: emails[0],
         status: EmailStatus.Dispatched,
-        messageId: 'ses-message-1',
+        providerMessageId: 'ses-message-1',
       },
       { item: emails[1], status: EmailStatus.Queued },
     ]);
@@ -414,7 +414,7 @@ describe('priority.service low priority SES entry result flows', () => {
       {
         item: emails[0],
         status: EmailStatus.Dispatched,
-        messageId: 'ses-message-1',
+        providerMessageId: 'ses-message-1',
       },
       {
         item: emails[1],

@@ -15,20 +15,20 @@ import { EmailStatus, type EmailStatusHistoryItem } from 'om-common/types';
 
 const logger = getLogger();
 
-export const findEmailBySesMessageId = async (
-  sesMessageId: string,
+export const findEmailByProviderMessageId = async (
+  providerMessageId: string,
 ): Promise<EmailStatusHistoryItem | undefined> => {
-  // Query the email record by SES message ID using the GSI
+  // Query the email record by provider message ID using the GSI
   const queryResult = await dynamoClient.send(
     new QueryCommand({
       TableName: env.aws.emailDbTable,
       IndexName: env.aws.emailDbMessageIdGSI,
-      KeyConditionExpression: '#sesMessageId = :sesMessageId',
+      KeyConditionExpression: '#providerMessageId = :providerMessageId',
       ExpressionAttributeNames: {
-        '#sesMessageId': 'sesMessageId',
+        '#providerMessageId': 'providerMessageId',
       },
       ExpressionAttributeValues: {
-        ':sesMessageId': sesMessageId,
+        ':providerMessageId': providerMessageId,
       },
       Limit: 1,
     }),
@@ -41,7 +41,9 @@ export const findEmailBySesMessageId = async (
         name: ConfigSetProcessorMetricName.EmailNotFound,
       },
     ]);
-    logger.warn('No email record found for SES message Id', { sesMessageId });
+    logger.warn('No email record found for provider message Id', {
+      providerMessageId,
+    });
   }
 
   return item;
@@ -107,7 +109,7 @@ export const updateEmailStatus = async (
 export interface EmailStatusUpdate {
   item: EmailStatusHistoryItem;
   status: EmailStatus;
-  messageId?: string;
+  providerMessageId?: string;
 }
 
 const DYNAMO_BATCH_LIMIT = 25;
@@ -177,7 +179,7 @@ export const batchUpdateEmailStatuses = async (
     return;
   }
 
-  const items = updates.map(({ item, status, messageId }) => {
+  const items = updates.map(({ item, status, providerMessageId }) => {
     // Append the new status to the existing history array
     const updatedHistory = item.history ? [...item.history] : [];
     updatedHistory.push({
@@ -191,7 +193,7 @@ export const batchUpdateEmailStatuses = async (
           ...item,
           status,
           updatedAt: now,
-          sesMessageId: messageId ?? item.sesMessageId,
+          providerMessageId: providerMessageId ?? item.providerMessageId,
           history: updatedHistory,
         },
       },
