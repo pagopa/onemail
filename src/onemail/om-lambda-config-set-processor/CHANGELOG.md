@@ -1,5 +1,16 @@
 # om-lambda-config-set-processor
 
+## 1.6.0
+
+### Minor Changes
+
+- ae6a79d: refactor sesMessageId to providerMessageId to make it agnostic to the provider used to send emails
+
+### Patch Changes
+
+- Updated dependencies [ae6a79d]
+  - om-common@1.4.0
+
 ## 1.5.2
 
 ### Patch Changes

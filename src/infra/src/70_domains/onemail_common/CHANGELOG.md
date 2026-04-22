@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.11.0
+
+### Minor Changes
+
+- ae6a79d: refactor sesMessageId to providerMessageId to make it agnostic to the provider used to send emails
+
 ## 1.10.0
 
 ### Minor Changes

@@ -1,5 +1,16 @@
 # onemail
 
+## 1.4.14
+
+### Patch Changes
+
+- Updated dependencies [ae6a79d]
+  - om-lambda-config-set-processor@1.6.0
+  - infra-domains-onemail-common@1.11.0
+  - om-lambda-sender@1.5.0
+  - om-common@1.4.0
+  - om-ecs-dispatcher@1.10.1
+
 ## 1.4.13
 
 ### Patch Changes
