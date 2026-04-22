@@ -16,7 +16,8 @@ const logger = getLogger();
 app.use(express.json());
 
 // flush collected metrics when the response is sent
-app.use(metricsFlush);
+// only for versioned routes (/v1, /v2, ...), not health checks or other non-application endpoints
+app.use(/^\/v\d+/, metricsFlush);
 
 // api routes
 app.use('/', routes);
