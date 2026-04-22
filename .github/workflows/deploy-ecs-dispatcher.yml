@@ -51,15 +51,15 @@ jobs:
           event_name: ${{ github.event_name }}
           environment_input: ${{ inputs.environment }}
 
-  # security-checks:
-  #   name: Security Checks
-  #   uses: ./.github/workflows/security-gates.yml
-  #   with:
-  #     bypass_security_checks_manual: ${{ inputs.bypass_security_checks }}
+  security-checks:
+    name: Security Checks
+    uses: ./.github/workflows/security-gates.yml
+    with:
+      bypass_security_checks_manual: ${{ inputs.bypass_security_checks }}
 
   deploy:
     name: Deploy on ECS ${{ matrix.environment }}-${{ matrix.region }}
-    needs: [setup] #, security-checks]
+    needs: [setup , security-checks]
     if: ${{ needs.setup.outputs.matrix != '' }}
     runs-on: ubuntu-22.04
     timeout-minutes: 30
