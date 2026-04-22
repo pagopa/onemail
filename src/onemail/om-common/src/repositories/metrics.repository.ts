@@ -11,8 +11,13 @@ import { EmailPriority, EmailStatus } from '../types/emailStatusHistory.js';
  * Use in long-running processes (e.g. ECS tasks) where there is no
  * Lambda-invocation boundary and the middy `logMetrics` middleware
  * is not available.
+ * No-op if there are no metrics to publish.
  */
 export const forceFlushMetrics = (): void => {
+  if (!metricsClient.hasStoredMetrics()) {
+    return;
+  }
+
   metricsClient.publishStoredMetrics();
 };
 
