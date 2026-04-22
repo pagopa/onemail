@@ -1,5 +1,11 @@
 # om-common
 
+## 1.4.1
+
+### Patch Changes
+
+- b826d85: improve metrics flushing logic to handle no stored metrics case
+
 ## 1.4.0
 
 ### Minor Changes

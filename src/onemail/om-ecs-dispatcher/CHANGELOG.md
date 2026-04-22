@@ -1,5 +1,13 @@
 # om-ecs-dispatcher
 
+## 1.10.2
+
+### Patch Changes
+
+- b826d85: improve metrics flushing logic to handle no stored metrics case
+- Updated dependencies [b826d85]
+  - om-common@1.4.1
+
 ## 1.10.1
 
 ### Patch Changes
