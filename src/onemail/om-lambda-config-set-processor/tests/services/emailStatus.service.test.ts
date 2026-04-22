@@ -16,13 +16,13 @@ import {
   makeSqsRecord,
 } from '../__helpers__/fixtures.js';
 
-const findEmailBySesMessageId = vi.hoisted(() => vi.fn());
+const findEmailByProviderMessageId = vi.hoisted(() => vi.fn());
 const updateEmailStatus = vi.hoisted(() => vi.fn());
 const handleSoftBounceRetry = vi.hoisted(() => vi.fn());
 const publishMetrics = vi.hoisted(() => vi.fn());
 
 vi.mock('#repositories/email.repository', () => ({
-  findEmailBySesMessageId,
+  findEmailByProviderMessageId,
   updateEmailStatus,
 }));
 vi.mock('#services/bounceRetry.service', () => ({
@@ -47,7 +47,7 @@ describe('emailStatus.service validation and guard clauses', () => {
     await sqsEventHandler({ body: '' } as never);
 
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'InvalidRecord' }]);
-    expect(findEmailBySesMessageId).not.toHaveBeenCalled();
+    expect(findEmailByProviderMessageId).not.toHaveBeenCalled();
   });
 
   it('discards records with non-JSON body and publishes InvalidRecord', async () => {
@@ -65,7 +65,7 @@ describe('emailStatus.service validation and guard clauses', () => {
     );
 
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'InvalidRecord' }]);
-    expect(findEmailBySesMessageId).not.toHaveBeenCalled();
+    expect(findEmailByProviderMessageId).not.toHaveBeenCalled();
   });
 
   it('discards records with a known eventType but invalid schema and publishes InvalidRecord', async () => {
@@ -80,18 +80,18 @@ describe('emailStatus.service validation and guard clauses', () => {
   });
 
   it('publishes EmailNotFound when no email record matches the SES message id', async () => {
-    findEmailBySesMessageId.mockResolvedValue(undefined);
+    findEmailByProviderMessageId.mockResolvedValue(undefined);
 
     await sqsEventHandler(makeSqsRecord(makeDeliveryEvent('ses-msg-1')));
 
-    expect(findEmailBySesMessageId).toHaveBeenCalledWith('ses-msg-1');
+    expect(findEmailByProviderMessageId).toHaveBeenCalledWith('ses-msg-1');
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'EmailNotFound' }]);
     expect(updateEmailStatus).not.toHaveBeenCalled();
   });
 
   it('publishes EmailAlreadyQueued and skips processing when email is already Queued', async () => {
     const email = makeEmailStatusHistoryItem({ status: EmailStatus.Queued });
-    findEmailBySesMessageId.mockResolvedValue(email);
+    findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(makeSqsRecord(makeDeliveryEvent()));
 
@@ -103,13 +103,13 @@ describe('emailStatus.service validation and guard clauses', () => {
 
   it('extracts event from EventBridge detail wrapper', async () => {
     const email = makeEmailStatusHistoryItem();
-    findEmailBySesMessageId.mockResolvedValue(email);
+    findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
       makeSqsRecord({ detail: makeDeliveryEvent('ses-msg-1') }),
     );
 
-    expect(findEmailBySesMessageId).toHaveBeenCalledWith('ses-msg-1');
+    expect(findEmailByProviderMessageId).toHaveBeenCalledWith('ses-msg-1');
     expect(updateEmailStatus).toHaveBeenCalledWith(
       email.emailId,
       email.status,
@@ -126,7 +126,7 @@ describe('emailStatus.service validation and guard clauses', () => {
 describe('emailStatus.service delivery flow', () => {
   it('updates email status to Delivered and publishes EmailDelivered', async () => {
     const email = makeEmailStatusHistoryItem();
-    findEmailBySesMessageId.mockResolvedValue(email);
+    findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
       makeSqsRecord(makeDeliveryEvent('ses-msg-1', '2025-06-01T12:00:00Z')),
@@ -144,7 +144,7 @@ describe('emailStatus.service delivery flow', () => {
 describe('emailStatus.service bounce flow', () => {
   it('delegates transient bounce to handleSoftBounceRetry', async () => {
     const email = makeEmailStatusHistoryItem();
-    findEmailBySesMessageId.mockResolvedValue(email);
+    findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
       makeSqsRecord(
@@ -167,7 +167,7 @@ describe('emailStatus.service bounce flow', () => {
 
   it('delegates undetermined bounce to handleSoftBounceRetry', async () => {
     const email = makeEmailStatusHistoryItem();
-    findEmailBySesMessageId.mockResolvedValue(email);
+    findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
       makeSqsRecord(
@@ -188,7 +188,7 @@ describe('emailStatus.service bounce flow', () => {
 
   it('updates email status to HardBounce on permanent bounce and publishes metric', async () => {
     const email = makeEmailStatusHistoryItem();
-    findEmailBySesMessageId.mockResolvedValue(email);
+    findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
       makeSqsRecord(
@@ -219,7 +219,7 @@ describe('emailStatus.service bounce flow', () => {
 describe('emailStatus.service complaint flow', () => {
   it('updates email status to Complaint and publishes metric', async () => {
     const email = makeEmailStatusHistoryItem();
-    findEmailBySesMessageId.mockResolvedValue(email);
+    findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
       makeSqsRecord(
@@ -243,7 +243,7 @@ describe('emailStatus.service complaint flow', () => {
 
   it('passes undefined reason when complaintSubType is null', async () => {
     const email = makeEmailStatusHistoryItem();
-    findEmailBySesMessageId.mockResolvedValue(email);
+    findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
       makeSqsRecord(makeComplaintEvent('ses-msg-1', '2025-06-01T12:00:00Z')),
@@ -266,7 +266,7 @@ describe('emailStatus.service complaint flow', () => {
 describe('emailStatus.service reject flow', () => {
   it('updates email status to Rejected with reason and publishes metric', async () => {
     const email = makeEmailStatusHistoryItem();
-    findEmailBySesMessageId.mockResolvedValue(email);
+    findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
       makeSqsRecord(makeRejectEvent('ses-msg-1', 'Bad content')),
@@ -287,7 +287,7 @@ describe('emailStatus.service reject flow', () => {
 
   it('uses fallback reason when reject reason is null', async () => {
     const email = makeEmailStatusHistoryItem();
-    findEmailBySesMessageId.mockResolvedValue(email);
+    findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(makeSqsRecord(makeRejectEvent('ses-msg-1', null)));
 
@@ -307,7 +307,7 @@ describe('emailStatus.service reject flow', () => {
 describe('emailStatus.service rendering failure flow', () => {
   it('updates email status to Rejected with template failure reason and publishes metric', async () => {
     const email = makeEmailStatusHistoryItem();
-    findEmailBySesMessageId.mockResolvedValue(email);
+    findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
       makeSqsRecord(
