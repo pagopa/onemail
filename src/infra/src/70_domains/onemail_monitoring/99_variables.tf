@@ -17,7 +17,7 @@ variable "env_short" {
   description = "Short environment identifier."
   validation {
     condition     = length(var.env_short) <= 1
-    error_message = "Max length is 1 character."
+    error_message = "Max length is 1 character"
   }
 }
 
@@ -26,7 +26,7 @@ variable "domain" {
   description = "Domain name."
   validation {
     condition     = length(var.domain) <= 12
-    error_message = "Max length is 12 characters."
+    error_message = "Max length is 12 characters"
   }
 }
 
