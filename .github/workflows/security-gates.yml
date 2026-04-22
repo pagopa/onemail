@@ -24,9 +24,18 @@ on:
         required: false
 
 jobs:
+  debug-event:
+    name: Debug Event Context
+    runs-on: ubuntu-22.04
+    permissions: {}
+    steps:
+      - name: Print event name
+        run: echo "github.event_name=${{ github.event_name }}"
+
   security-gates-oer:
     name: Security Gates OER
-    if: ${{ github.event_name == 'workflow_call' || github.event.pull_request.base.ref == 'main' }}
+    # Run on: push (automated deploy), workflow_dispatch (manual deploy), or pull_request targeting main
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main') }}
     # force_release input is used to decide if security gates check should be bypassed
     uses: pagopa/prodsec-security-gates/.github/workflows/security-gate.yml@cf92482741b7b7d10feae58460bf1ebfeb3bbfbb
     with:
