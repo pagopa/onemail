@@ -180,7 +180,7 @@ data "aws_iam_policy_document" "set_processor_policy" {
     ]
     resources = [
       data.aws_dynamodb_table.EmailStatusHistory.arn,
-      "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsis["gsi_ses_message_id_idx"].name}"
+      "${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsis["gsi_provider_message_id_idx"].name}"
     ]
   }
 
@@ -244,7 +244,7 @@ module "lambda_set_processor" {
   reserved_concurrent_executions = var.lambda_set_processor.reserved_concurrent_executions
   environment_variables = {
     AWS_EMAIL_DB_TABLE               = data.aws_dynamodb_table.EmailStatusHistory.name
-    AWS_EMAIL_DB_MESSAGE_ID_GSI      = local.gsis["gsi_ses_message_id_idx"].name
+    AWS_EMAIL_DB_MESSAGE_ID_GSI      = local.gsis["gsi_provider_message_id_idx"].name
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-config-set-processor"
     SERVICE_PREFIX                   = "${local.project_nodomain}"
     NODE_ENV                         = "production"
