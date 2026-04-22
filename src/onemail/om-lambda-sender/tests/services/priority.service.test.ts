@@ -1,5 +1,3 @@
-import type { SQSRecord } from 'aws-lambda';
-
 import { DryRunValidationError } from '#errors/dryRunValidation.error';
 import {
   handleHighPriority,
@@ -14,7 +12,10 @@ import {
 import { EmailPriority, EmailStatus } from 'om-common/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { makeEmailStatusHistoryItem } from '../__helpers__/emailFixtures.js';
+import {
+  makeEmailStatusHistoryItem,
+  makeSqsRecord,
+} from '../__helpers__/emailFixtures.js';
 
 const getEmailById = vi.hoisted(() => vi.fn());
 const getEmailsByRequestId = vi.hoisted(() => vi.fn());
@@ -49,12 +50,6 @@ vi.mock('om-common/repositories', () => ({
     LowPriorityRetryableFailure: 'LowPriorityRetryableFailure',
   },
 }));
-
-const makeSqsRecord = (body: unknown): SQSRecord =>
-  ({
-    body: JSON.stringify(body),
-    eventSourceARN: 'arn:aws:sqs:eu-south-1:123456789012:queue',
-  }) as SQSRecord;
 
 beforeEach(() => {
   getEmailById.mockReset();

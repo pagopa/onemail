@@ -5,38 +5,13 @@ import {
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
-import {
-  EmailPriority,
-  EmailStatus,
-  type EmailStatusHistoryItem,
-} from 'om-common/types';
 
-export const makeEmailStatusHistoryItem = (
-  overrides: Partial<EmailStatusHistoryItem> = {},
-): EmailStatusHistoryItem => ({
-  emailId: 'email-1',
-  requestId: 'request-1',
-  priority: EmailPriority.HIGH,
-  status: EmailStatus.Dispatched,
-  history: [],
-  content: {
-    from: { email: 'sender@example.com', name: 'Sender Name' },
-    to: { email: 'user@example.com', name: 'User Name' },
-    subject: 'Hello',
-    body: { html: '<p>Hello</p>', text: 'Hello' },
-  },
-  clientId: 'client-1',
-  dryRun: false,
-  configSetName: 'config-set-1',
-  tenantName: 'tenant-1',
-  ...overrides,
-});
+import { makeSqsRecordBody } from '../../../testing/fixtures.js';
+
+export { makeEmailStatusHistoryItem } from '../../../testing/fixtures.js';
 
 export const makeSqsRecord = (body: unknown): SQSRecord =>
-  ({
-    body: JSON.stringify(body),
-    eventSourceARN: 'arn:aws:sqs:eu-south-1:123456789012:queue',
-  }) as SQSRecord;
+  makeSqsRecordBody(body) as SQSRecord;
 
 export const makeDeliveryEvent = (
   messageId = 'ses-msg-1',

@@ -102,7 +102,9 @@ describe('emailStatus.service validation and guard clauses', () => {
   });
 
   it('extracts event from EventBridge detail wrapper', async () => {
-    const email = makeEmailStatusHistoryItem();
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
@@ -125,7 +127,9 @@ describe('emailStatus.service validation and guard clauses', () => {
 
 describe('emailStatus.service delivery flow', () => {
   it('updates email status to Delivered and publishes EmailDelivered', async () => {
-    const email = makeEmailStatusHistoryItem();
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
@@ -143,7 +147,9 @@ describe('emailStatus.service delivery flow', () => {
 
 describe('emailStatus.service bounce flow', () => {
   it('delegates transient bounce to handleSoftBounceRetry', async () => {
-    const email = makeEmailStatusHistoryItem();
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
@@ -166,7 +172,9 @@ describe('emailStatus.service bounce flow', () => {
   });
 
   it('delegates undetermined bounce to handleSoftBounceRetry', async () => {
-    const email = makeEmailStatusHistoryItem();
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
@@ -187,7 +195,9 @@ describe('emailStatus.service bounce flow', () => {
   });
 
   it('updates email status to HardBounce on permanent bounce and publishes metric', async () => {
-    const email = makeEmailStatusHistoryItem();
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
@@ -218,7 +228,9 @@ describe('emailStatus.service bounce flow', () => {
 
 describe('emailStatus.service complaint flow', () => {
   it('updates email status to Complaint and publishes metric', async () => {
-    const email = makeEmailStatusHistoryItem();
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
@@ -242,7 +254,9 @@ describe('emailStatus.service complaint flow', () => {
   });
 
   it('passes undefined reason when complaintSubType is null', async () => {
-    const email = makeEmailStatusHistoryItem();
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
@@ -265,7 +279,9 @@ describe('emailStatus.service complaint flow', () => {
 
 describe('emailStatus.service reject flow', () => {
   it('updates email status to Rejected with reason and publishes metric', async () => {
-    const email = makeEmailStatusHistoryItem();
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
@@ -286,7 +302,9 @@ describe('emailStatus.service reject flow', () => {
   });
 
   it('uses fallback reason when reject reason is null', async () => {
-    const email = makeEmailStatusHistoryItem();
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(makeSqsRecord(makeRejectEvent('ses-msg-1', null)));
@@ -306,7 +324,9 @@ describe('emailStatus.service reject flow', () => {
 
 describe('emailStatus.service rendering failure flow', () => {
   it('updates email status to Rejected with template failure reason and publishes metric', async () => {
-    const email = makeEmailStatusHistoryItem();
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
