@@ -1,5 +1,11 @@
 # om-common
 
+## 1.4.0
+
+### Minor Changes
+
+- ae6a79d: refactor sesMessageId to providerMessageId to make it agnostic to the provider used to send emails
+
 ## 1.3.0
 
 ### Minor Changes

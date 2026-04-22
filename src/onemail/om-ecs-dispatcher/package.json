@@ -1,6 +1,6 @@
 {
   "name": "om-ecs-dispatcher",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "description": "RESTful API that sorts requests into queues based on priority",
   "private": true,
   "main": "dist/app.js",
