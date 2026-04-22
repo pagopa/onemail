@@ -7,7 +7,7 @@ import {
   EventTypeSchema,
 } from '#dtos/confSetEventItem.dto';
 import {
-  findEmailBySesMessageId,
+  findEmailByProviderMessageId,
   updateEmailStatus,
 } from '#repositories/email.repository';
 import { handleSoftBounceRetry } from '#services/bounceRetry.service';
@@ -84,10 +84,12 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     ]);
     return;
   }
-  const emailRecord = await findEmailBySesMessageId(eventItem.mail.messageId);
+  const emailRecord = await findEmailByProviderMessageId(
+    eventItem.mail.messageId,
+  );
   if (!emailRecord) {
-    logger.error('Email record not found for SES message ID', {
-      sesMessageId: eventItem.mail.messageId,
+    logger.error('Email record not found for provider message ID', {
+      providerMessageId: eventItem.mail.messageId,
     });
     publishMetrics([
       {

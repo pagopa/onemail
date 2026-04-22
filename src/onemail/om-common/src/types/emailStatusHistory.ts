@@ -44,7 +44,7 @@ export interface EmailEvent {
 export interface EmailStatusHistoryItem {
   emailId: string; // PK
   requestId: string; // GSI
-  sesMessageId?: string;
+  providerMessageId?: string;
   priority: EmailPriority;
   status: EmailStatus;
   history: EmailEvent[];
