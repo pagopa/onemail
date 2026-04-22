@@ -32,7 +32,7 @@ dynamodb_tables = {
         type = "S"
       },
       {
-        name = "sesMessageId"
+        name = "providerMessageId"
         type = "S"
       }
     ]
@@ -43,8 +43,8 @@ dynamodb_tables = {
         projection_type = "ALL"
       },
       {
-        name            = "gsi_ses_message_id_idx"
-        hash_key        = "sesMessageId"
+        name            = "gsi_provider_message_id_idx"
+        hash_key        = "providerMessageId"
         projection_type = "ALL"
       }
     ]
