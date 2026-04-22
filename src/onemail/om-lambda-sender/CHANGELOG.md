@@ -1,5 +1,12 @@
 # om-lambda-sender
 
+## 1.5.1
+
+### Patch Changes
+
+- Updated dependencies [b826d85]
+  - om-common@1.4.1
+
 ## 1.5.0
 
 ### Minor Changes
