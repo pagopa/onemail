@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.18.0
+
+### Minor Changes
+
+- c16a539: refactor provider_message_id references
+
 ## 1.17.0
 
 ### Minor Changes
