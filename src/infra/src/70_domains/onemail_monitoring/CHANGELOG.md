@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.4.1
+
+### Patch Changes
+
+- fd66f49: Chore: update some description
+
 ## 1.4.0
 
 ### Minor Changes
