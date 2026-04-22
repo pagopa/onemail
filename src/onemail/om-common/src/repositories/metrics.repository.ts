@@ -14,11 +14,9 @@ import { EmailPriority, EmailStatus } from '../types/emailStatusHistory.js';
  * No-op if there are no metrics to publish.
  */
 export const forceFlushMetrics = (): void => {
-  if (!metricsClient.hasStoredMetrics()) {
-    return;
+  if (metricsClient.hasStoredMetrics()) {
+    metricsClient.publishStoredMetrics();
   }
-
-  metricsClient.publishStoredMetrics();
 };
 
 export const publishMetrics = (metricsInput: MetricInput[]): void => {
