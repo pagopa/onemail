@@ -53,6 +53,8 @@ jobs:
 
   security-checks:
     name: Security Checks
+    permissions:
+      contents: read
     uses: ./.github/workflows/security-gates.yml
     with:
       bypass_security_checks_manual: ${{ inputs.bypass_security_checks }}
