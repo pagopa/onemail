@@ -1,5 +1,11 @@
 # om-lambda-config-set-processor
 
+## 1.6.2
+
+### Patch Changes
+
+- 61d74fb: add test lambda-config-set-processor
+
 ## 1.6.1
 
 ### Patch Changes
