@@ -2,6 +2,7 @@ import { sqsEventHandler } from '#services/emailStatus.service';
 import {
   CapitalizedSesBounceSubType,
   CapitalizedSesBounceType,
+  CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
 import { EmailStatus } from 'om-common/types';
 import { describe, expect, it, vi } from 'vitest';
@@ -11,9 +12,9 @@ import {
   makeComplaintEvent,
   makeDeliveryEvent,
   makeEmailStatusHistoryItem,
+  makeQueueRecord,
   makeRejectEvent,
   makeRenderingFailureEvent,
-  makeSqsRecord,
 } from '../__helpers__/fixtures.js';
 
 const findEmailByProviderMessageId = vi.hoisted(() => vi.fn());
@@ -58,8 +59,8 @@ describe('emailStatus.service validation and guard clauses', () => {
 
   it('discards records with an unknown eventType silently', async () => {
     await sqsEventHandler(
-      makeSqsRecord({
-        eventType: 'UnknownEvent',
+      makeQueueRecord({
+        eventType: 'UnknownEvent' as CapitalizedSesConfigurationSetEventType,
         mail: { timestamp: '2025-01-01T00:00:00Z', messageId: 'msg-1' },
       }),
     );
@@ -70,8 +71,8 @@ describe('emailStatus.service validation and guard clauses', () => {
 
   it('discards records with a known eventType but invalid schema and publishes InvalidRecord', async () => {
     await sqsEventHandler(
-      makeSqsRecord({
-        eventType: 'Delivery',
+      makeQueueRecord({
+        eventType: CapitalizedSesConfigurationSetEventType.Delivery,
         // missing mail and delivery fields
       }),
     );
@@ -82,7 +83,7 @@ describe('emailStatus.service validation and guard clauses', () => {
   it('publishes EmailNotFound when no email record matches the SES message id', async () => {
     findEmailByProviderMessageId.mockResolvedValue(undefined);
 
-    await sqsEventHandler(makeSqsRecord(makeDeliveryEvent('ses-msg-1')));
+    await sqsEventHandler(makeQueueRecord(makeDeliveryEvent('ses-msg-1')));
 
     expect(findEmailByProviderMessageId).toHaveBeenCalledWith('ses-msg-1');
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'EmailNotFound' }]);
@@ -93,7 +94,7 @@ describe('emailStatus.service validation and guard clauses', () => {
     const email = makeEmailStatusHistoryItem({ status: EmailStatus.Queued });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
-    await sqsEventHandler(makeSqsRecord(makeDeliveryEvent()));
+    await sqsEventHandler(makeQueueRecord(makeDeliveryEvent()));
 
     expect(publishMetrics).toHaveBeenCalledWith([
       { name: 'EmailAlreadyQueued' },
@@ -107,9 +108,7 @@ describe('emailStatus.service validation and guard clauses', () => {
     });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
-    await sqsEventHandler(
-      makeSqsRecord({ detail: makeDeliveryEvent('ses-msg-1') }),
-    );
+    await sqsEventHandler(makeQueueRecord(makeDeliveryEvent('ses-msg-1')));
 
     expect(findEmailByProviderMessageId).toHaveBeenCalledWith('ses-msg-1');
     expect(updateEmailStatus).toHaveBeenCalledWith(
@@ -133,7 +132,7 @@ describe('emailStatus.service delivery flow', () => {
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
-      makeSqsRecord(makeDeliveryEvent('ses-msg-1', '2025-06-01T12:00:00Z')),
+      makeQueueRecord(makeDeliveryEvent('ses-msg-1', '2025-06-01T12:00:00Z')),
     );
 
     expect(updateEmailStatus).toHaveBeenCalledWith(
@@ -153,7 +152,7 @@ describe('emailStatus.service bounce flow', () => {
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
-      makeSqsRecord(
+      makeQueueRecord(
         makeBounceEvent(
           'ses-msg-1',
           CapitalizedSesBounceType.Transient,
@@ -178,7 +177,7 @@ describe('emailStatus.service bounce flow', () => {
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
-      makeSqsRecord(
+      makeQueueRecord(
         makeBounceEvent(
           'ses-msg-1',
           CapitalizedSesBounceType.Undetermined,
@@ -201,7 +200,7 @@ describe('emailStatus.service bounce flow', () => {
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
-      makeSqsRecord(
+      makeQueueRecord(
         makeBounceEvent(
           'ses-msg-1',
           CapitalizedSesBounceType.Permanent,
@@ -234,7 +233,7 @@ describe('emailStatus.service complaint flow', () => {
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
-      makeSqsRecord(
+      makeQueueRecord(
         makeComplaintEvent('ses-msg-1', '2025-06-01T12:00:00Z', 'abuse'),
       ),
     );
@@ -260,7 +259,7 @@ describe('emailStatus.service complaint flow', () => {
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
-      makeSqsRecord(makeComplaintEvent('ses-msg-1', '2025-06-01T12:00:00Z')),
+      makeQueueRecord(makeComplaintEvent('ses-msg-1', '2025-06-01T12:00:00Z')),
     );
 
     expect(updateEmailStatus).toHaveBeenCalledWith(
@@ -285,7 +284,7 @@ describe('emailStatus.service reject flow', () => {
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
-      makeSqsRecord(makeRejectEvent('ses-msg-1', 'Bad content')),
+      makeQueueRecord(makeRejectEvent('ses-msg-1', 'Bad content')),
     );
 
     expect(updateEmailStatus).toHaveBeenCalledWith(
@@ -307,7 +306,7 @@ describe('emailStatus.service reject flow', () => {
     });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
-    await sqsEventHandler(makeSqsRecord(makeRejectEvent('ses-msg-1', null)));
+    await sqsEventHandler(makeQueueRecord(makeRejectEvent('ses-msg-1', null)));
 
     expect(updateEmailStatus).toHaveBeenCalledWith(
       email.emailId,
@@ -330,7 +329,7 @@ describe('emailStatus.service rendering failure flow', () => {
     findEmailByProviderMessageId.mockResolvedValue(email);
 
     await sqsEventHandler(
-      makeSqsRecord(
+      makeQueueRecord(
         makeRenderingFailureEvent('ses-msg-1', 'my-template', 'missing var'),
       ),
     );
