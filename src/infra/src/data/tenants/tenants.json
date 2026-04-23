@@ -5,6 +5,6 @@
   },
   "oneidentity": {
     "admin_mailbox": "ops-dmarc",
-    "domain": "oneidentity.pagopa.it"
+    "domain": "oneid.pagopa.it"
   }
 }
