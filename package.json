@@ -1,6 +1,5 @@
 {
   "name": "onemail",
-  "version": "1.4.18",
   "description": "Centralized email service for PagoPA products.",
   "packageManager": "pnpm@10.29.2",
   "type": "module",
