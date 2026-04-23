@@ -44,4 +44,4 @@ jobs:
       lambda_s3_key_var: LAMBDA_CONFIG_SET_PROCESSOR_KEY
       event_name: ${{ github.event_name }}
       environment_input: ${{ inputs.environment || '' }}
-      bypass_security_checks_manual: ${{ inputs.bypass_security_checks }}
+      bypass_security_checks_manual: ${{ inputs.bypass_security_checks || false }}
