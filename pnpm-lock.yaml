@@ -69,40 +69,6 @@ overrides:
 importers:
 
   .:
-    dependencies:
-      infra-core:
-        specifier: workspace:*
-        version: link:src/infra/src/20_core
-      infra-domains-onemail-app:
-        specifier: workspace:*
-        version: link:src/infra/src/70_domains/onemail_app
-      infra-domains-onemail-common:
-        specifier: workspace:*
-        version: link:src/infra/src/70_domains/onemail_common
-      infra-domains-onemail-monitoring:
-        specifier: workspace:*
-        version: link:src/infra/src/70_domains/onemail_monitoring
-      infra-iam:
-        specifier: workspace:*
-        version: link:src/infra/src/0_IAM
-      infra-network:
-        specifier: workspace:*
-        version: link:src/infra/src/10_network
-      infra-security:
-        specifier: workspace:*
-        version: link:src/infra/src/30_security
-      om-common:
-        specifier: workspace:*
-        version: link:src/onemail/om-common
-      om-ecs-dispatcher:
-        specifier: workspace:*
-        version: link:src/onemail/om-ecs-dispatcher
-      om-lambda-config-set-processor:
-        specifier: workspace:*
-        version: link:src/onemail/om-lambda-config-set-processor
-      om-lambda-sender:
-        specifier: workspace:*
-        version: link:src/onemail/om-lambda-sender
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.8
