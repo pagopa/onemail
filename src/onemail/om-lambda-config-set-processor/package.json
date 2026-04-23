@@ -13,6 +13,7 @@
     "dev": "echo \"No dev start yet for config-set processor\"",
     "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
+    "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit",
     "lint:check": "eslint",
