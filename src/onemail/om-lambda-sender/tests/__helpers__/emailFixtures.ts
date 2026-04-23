@@ -1,7 +1,10 @@
+import type { SQSRecord } from 'aws-lambda';
+
+import { SqsEventItemHigh, SqsEventItemLow } from '#dtos/sqsEventItem.dto';
 import {
   EmailPriority,
   EmailStatus,
-  type EmailStatusHistoryItem,
+  EmailStatusHistoryItem,
 } from 'om-common/types';
 
 export const makeEmailStatusHistoryItem = (
@@ -33,3 +36,11 @@ export const makeEmailStatusHistoryItem = (
   tenantName: 'tenant-1',
   ...overrides,
 });
+
+export const makeQueueRecord = (
+  body: Partial<SqsEventItemHigh> | Partial<SqsEventItemLow>,
+): SQSRecord =>
+  ({
+    body: JSON.stringify(body),
+    eventSourceARN: 'arn:aws:sqs:eu-south-1:123456789012:queue',
+  }) as SQSRecord;
