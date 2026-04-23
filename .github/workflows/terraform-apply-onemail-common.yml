@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'src/infra/src/70_domains/onemail_common/CHANGELOG.md'
+      - 'src/infra/src/data/tenants/tenants.json'
   workflow_dispatch:
     inputs:
       environment:

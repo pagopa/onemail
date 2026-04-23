@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'src/infra/src/70_domains/onemail_common/**'
+      - 'src/infra/src/data/tenants/tenants.json'
   workflow_dispatch:
     inputs:
       environment:
