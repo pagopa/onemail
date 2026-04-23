@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'src/infra/src/10_network/CHANGELOG.md'
+      - 'src/infra/src/data/tenants/tenants.json'
   workflow_dispatch:
     inputs:
       environment:

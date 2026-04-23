@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'src/infra/src/70_domains/onemail_common/**'
+      - 'src/infra/src/data/tenants/tenants.json'
   workflow_dispatch:
     inputs:
       environment:
@@ -18,7 +19,8 @@ on:
 jobs:
   setup-matrix:
     # Skip on pull_request from changeset-release/* branches (automated changeset release PRs)
-    if: ${{ github.event_name != 'pull_request' || !startsWith(github.head_ref, 'changeset-release/') }}
+    if: ${{ github.event_name != 'pull_request' || !startsWith(github.head_ref,
+      'changeset-release/') }}
     name: Setup Environment Matrix
     runs-on: ubuntu-22.04
     permissions:
