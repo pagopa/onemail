@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.12.0
+
+### Minor Changes
+
+- 20de9a8: AWS DynamoDB delete protection enabling
+
 ## 1.11.0
 
 ### Minor Changes
