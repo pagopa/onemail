@@ -1,5 +1,11 @@
 # infra-network
 
+## 1.10.0
+
+### Minor Changes
+
+- 15cfed1: ALB set newer ssl policy
+
 ## 1.9.0
 
 ### Minor Changes
