@@ -2,5 +2,9 @@
   "onemail": {
     "admin_mailbox": "ops-dmarc",
     "domain": "onemail.pagopa.it"
+  },
+  "oneid": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": "oneid.pagopa.it"
   }
 }
