@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - 'src/infra/src/70_domains/onemail_common/CHANGELOG.md'
-      - 'src/infra/src/data/tenants/tenants.json'
   workflow_dispatch:
     inputs:
       environment:
@@ -17,6 +16,18 @@ on:
           - dev
           - uat
           - prod
+  workflow_call:
+    inputs:
+      environment_input:
+        description: 'Environment to apply (forwarded from the caller)'
+        required: false
+        type: string
+        default: ''
+      fail_fast:
+        description: 'Fail-fast for the matrix strategy'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   setup-matrix:
@@ -35,14 +46,14 @@ jobs:
         uses: ./.github/actions/env-matrix
         with:
           event_name: ${{ github.event_name }}
-          environment_input: ${{ github.event.inputs.environment }}
+          environment_input: ${{ inputs.environment_input || github.event.inputs.environment }}
 
   terraform-apply:
     name: Terraform Apply ${{ matrix.environment }}
     runs-on: ubuntu-22.04
     needs: setup-matrix
     strategy:
-      fail-fast: false
+      fail-fast: ${{ inputs.fail_fast == true }}
       matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
     environment: ${{ matrix.environment }}
     concurrency: terraform-onemail-common-${{ matrix.environment }}
