@@ -41,7 +41,7 @@ variable "domain" {
   description = "Domain name."
   validation {
     condition     = length(var.domain) <= 12
-    error_message = "Max length is 12 characters."
+    error_message = "Max length is 12 characters"
   }
 }
 
