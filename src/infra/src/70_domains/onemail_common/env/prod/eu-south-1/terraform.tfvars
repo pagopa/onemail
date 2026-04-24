@@ -47,7 +47,11 @@ dynamodb_tables = {
         projection_type = "ALL"
       }
     ]
-    replica_regions = []
+    replica_regions = [
+      {
+        region_name = "eu-central-1"
+      }
+    ]
   }
   tenant_config = {
     table_name                     = "TenantConfig"
@@ -57,7 +61,7 @@ dynamodb_tables = {
     stream_enabled                 = true
     stream_view_type               = "NEW_AND_OLD_IMAGES"
     ttl_attribute_name             = "expiration_time"
-    replication_enabled            = false
+    replication_enabled            = true
     create_kms_key                 = true
     kms_alias                      = "/dynamodb/tenantconfig"
     server_side_encryption_enabled = true
@@ -78,7 +82,11 @@ dynamodb_tables = {
         projection_type = "ALL"
       }
     ]
-    replica_regions = []
+    replica_regions = [
+      {
+        region_name = "eu-central-1"
+      }
+    ]
   }
 }
 
