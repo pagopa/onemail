@@ -149,6 +149,7 @@ resource "aws_lb_listener" "https" {
   port              = 443
   protocol          = "HTTPS"
   certificate_arn   = module.acm.acm_certificate_arn
+  ssl_policy        = var.alb_ssl_policy
 
   default_action {
     type             = "forward"

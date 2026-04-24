@@ -97,3 +97,8 @@ variable "web_acl" {
   })
   description = "WEB acl configuration"
 }
+
+variable "alb_ssl_policy" {
+  type        = string
+  description = "ALB Listener security policy"
+}
