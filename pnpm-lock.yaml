@@ -115,6 +115,8 @@ importers:
 
   src/infra/src/70_domains/onemail_monitoring: {}
 
+  src/infra/src/data/tenants: {}
+
   src/onemail/om-common:
     dependencies:
       '@aws-lambda-powertools/logger':
