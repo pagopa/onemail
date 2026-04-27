@@ -19,6 +19,7 @@ import {
   BadRequestException,
   MailFromDomainNotVerifiedException,
   MessageRejected,
+  SESv2ServiceException,
 } from '@aws-sdk/client-sesv2';
 import isEmpty from 'lodash-es/isEmpty.js';
 import { publishMetrics, SenderMetricName } from 'om-common/repositories';
@@ -325,6 +326,12 @@ function handleSesError(error: unknown): string | undefined {
   }
   if (error instanceof MessageRejected) {
     return `MessageRejected: ${error.message}`;
+  }
+  if (
+    error instanceof SESv2ServiceException &&
+    error.name === 'AccessDeniedException'
+  ) {
+    return `AccessDeniedException: tenant used in from attribute not configured in SES.`;
   }
   return undefined;
 }
