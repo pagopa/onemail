@@ -78,11 +78,6 @@ if ! command -v uuidgen &> /dev/null; then
   exit 1
 fi
 
-# ── AWS region env ────────────────────────────────────────────────────────
-if [[ -z "${AWS_REGION:-}" ]]; then
-  export AWS_REGION="eu-south-1"
-fi
-
 # ── Build item values ─────────────────────────────────────────────────────────
 CLIENT_ID=$(uuidgen | tr '[:upper:]' '[:lower:]')
 CONFIG_SET_NAME="oml-${ENV_CODE}-configuration-set-${CLIENT_NAME}"
@@ -90,7 +85,6 @@ TENANT_NAME="oml-${ENV_CODE}-tenant-${CLIENT_NAME}"
 
 # ── Insert item ───────────────────────────────────────────────────────────────
 echo "ℹ️  Seeding TenantConfig item into table '$TABLE_NAME'..."
-echo "   AWS REGION     : $AWS_REGION"
 echo ""
 echo "   clientId       : $CLIENT_ID"
 echo "   configSetName  : $CONFIG_SET_NAME"
