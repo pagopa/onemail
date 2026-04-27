@@ -1,4 +1,5 @@
 import type { SQSRecord } from 'aws-lambda';
+import type { EmailStatusHistoryItem } from 'om-common/types';
 
 import { getLogger, getNamedLogger } from '#config/logger';
 import {
@@ -12,6 +13,7 @@ import {
 } from '#repositories/email.repository';
 import { handleSoftBounceRetry } from '#services/bounceRetry.service';
 import {
+  CapitalizedSesBounceSubType,
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
@@ -23,6 +25,15 @@ import {
 import { EmailStatus } from 'om-common/types';
 
 const logger = getLogger();
+
+/** Transient sub-types that are non-retryable and treated as hard bounces */
+const NON_RETRYABLE_TRANSIENT_SUB_TYPES = new Set<
+  CapitalizedSesBounceSubType | undefined | null
+>([
+  CapitalizedSesBounceSubType.AttachmentRejected,
+  CapitalizedSesBounceSubType.ContentRejected,
+  CapitalizedSesBounceSubType.MessageTooLarge,
+]);
 
 const extractEventPayload = (recordBody: string): Record<string, unknown> => {
   const parsedRecordBody = JSON.parse(recordBody);
@@ -72,16 +83,62 @@ const validateRecord = (record: SQSRecord): ConfSetEventItem | undefined => {
   return result.data;
 };
 
+const isHardBounce = (
+  event: Extract<ConfSetEventItem, { eventType: 'Bounce' }>,
+): EmailStatus => {
+  const { bounceType, bounceSubType } = event.bounce;
+  if (bounceType === CapitalizedSesBounceType.Permanent)
+    return EmailStatus.HardBounce;
+  if (
+    bounceType === CapitalizedSesBounceType.Transient &&
+    NON_RETRYABLE_TRANSIENT_SUB_TYPES.has(bounceSubType)
+  )
+    return EmailStatus.NonRetryableSoftBounce;
+  return EmailStatus.SoftBounce;
+};
+
+const handleBounce = async (
+  event: Extract<ConfSetEventItem, { eventType: 'Bounce' }>,
+  emailRecord: EmailStatusHistoryItem,
+): Promise<void> => {
+  const bounceStatus = isHardBounce(event);
+  if (bounceStatus === EmailStatus.HardBounce) {
+    await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
+      {
+        timestamp: event.bounce.timestamp,
+        status: EmailStatus.HardBounce,
+        reason: event.bounce.bounceSubType,
+      },
+    ]);
+    publishMetrics([{ name: ConfigSetProcessorMetricName.EmailHardBounce }]);
+  } else if (bounceStatus === EmailStatus.NonRetryableSoftBounce) {
+    await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
+      {
+        timestamp: event.bounce.timestamp,
+        status: EmailStatus.NonRetryableSoftBounce,
+        reason: event.bounce.bounceSubType,
+      },
+    ]);
+    publishMetrics([
+      { name: ConfigSetProcessorMetricName.EmailNonRetryableSoftBounce },
+    ]);
+  } else {
+    // Soft bounce (Undetermined or retryable Transient)
+    // Metrics published inside handleSoftBounceRetry to differentiate between different retry
+    await handleSoftBounceRetry(
+      emailRecord,
+      event.bounce.timestamp,
+      event.bounce.bounceSubType,
+    );
+  }
+};
+
 export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
   const logger = getNamedLogger(sqsEventHandler.name);
   logger.info('Start');
   const eventItem = validateRecord(record);
   if (!eventItem) {
-    publishMetrics([
-      {
-        name: ConfigSetProcessorMetricName.InvalidRecord,
-      },
-    ]);
+    publishMetrics([{ name: ConfigSetProcessorMetricName.InvalidRecord }]);
     return;
   }
   const emailRecord = await findEmailByProviderMessageId(
@@ -91,127 +148,69 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     logger.error('Email record not found for provider message ID', {
       providerMessageId: eventItem.mail.messageId,
     });
-    publishMetrics([
-      {
-        name: ConfigSetProcessorMetricName.EmailNotFound,
-      },
-    ]);
+    publishMetrics([{ name: ConfigSetProcessorMetricName.EmailNotFound }]);
     return;
   }
-  // Skip if current status is already Queued to avoid duplicate retries
   if (EmailStatus.Queued === emailRecord.status) {
     logger.error(
       'Email already queued for retry, skipping additional retry scheduling',
       { emailId: emailRecord.emailId },
     );
-    publishMetrics([
-      {
-        name: ConfigSetProcessorMetricName.EmailAlreadyQueued,
-      },
-    ]);
+    publishMetrics([{ name: ConfigSetProcessorMetricName.EmailAlreadyQueued }]);
     return;
   }
 
-  // Delivered
-  if (
-    eventItem.eventType === CapitalizedSesConfigurationSetEventType.Delivery
-  ) {
-    await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
-      {
-        timestamp: eventItem.delivery.timestamp,
-        status: EmailStatus.Delivered,
-      },
-    ]);
-    publishMetrics([
-      {
-        name: ConfigSetProcessorMetricName.EmailDelivered,
-      },
-    ]);
-  } else if (
-    // Bounce
-    eventItem.eventType === CapitalizedSesConfigurationSetEventType.Bounce
-  ) {
-    // Soft Bounce
-    if (
-      eventItem.bounce.bounceType === CapitalizedSesBounceType.Transient ||
-      eventItem.bounce.bounceType === CapitalizedSesBounceType.Undetermined
-    ) {
-      // Metrics published inside handleSoftBounceRetry to differentiate between different retry
-      await handleSoftBounceRetry(
-        emailRecord,
-        eventItem.bounce.timestamp,
-        eventItem.bounce.bounceSubType,
-      );
-    } else if (
-      // Hard Bounce
-      eventItem.bounce.bounceType === CapitalizedSesBounceType.Permanent
-    ) {
+  switch (eventItem.eventType) {
+    case CapitalizedSesConfigurationSetEventType.Bounce:
+      await handleBounce(eventItem, emailRecord);
+      break;
+
+    case CapitalizedSesConfigurationSetEventType.Complaint:
       await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
         {
-          timestamp: eventItem.bounce.timestamp,
-          status: EmailStatus.HardBounce,
-          reason: eventItem.bounce.bounceSubType,
+          timestamp: eventItem.complaint.timestamp,
+          status: EmailStatus.Complaint,
+          reason: eventItem.complaint.complaintSubType ?? undefined,
+        },
+      ]);
+      publishMetrics([{ name: ConfigSetProcessorMetricName.EmailComplaint }]);
+      break;
+
+    case CapitalizedSesConfigurationSetEventType.Delivery:
+      await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
+        {
+          timestamp: eventItem.delivery.timestamp,
+          status: EmailStatus.Delivered,
+        },
+      ]);
+      publishMetrics([{ name: ConfigSetProcessorMetricName.EmailDelivered }]);
+      break;
+
+    case CapitalizedSesConfigurationSetEventType.Reject:
+      await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
+        {
+          timestamp: new Date().toISOString(),
+          status: EmailStatus.Rejected,
+          reason: eventItem.reject.reason ?? 'Bad content',
+        },
+      ]);
+      publishMetrics([{ name: ConfigSetProcessorMetricName.EmailRejected }]);
+      break;
+
+    case CapitalizedSesConfigurationSetEventType.RenderingFailure:
+      await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
+        {
+          timestamp: new Date().toISOString(),
+          status: EmailStatus.Rejected,
+          reason: eventItem.failure.errorMessage
+            ? `Template rendering failure "${eventItem.failure.templateName}": ${eventItem.failure.errorMessage}`
+            : `Template rendering failure "${eventItem.failure.templateName}"`,
         },
       ]);
       publishMetrics([
-        {
-          name: ConfigSetProcessorMetricName.EmailHardBounce,
-        },
+        { name: ConfigSetProcessorMetricName.EmailRenderingFailure },
       ]);
-    }
-  } else if (
-    // Complaint
-    eventItem.eventType === CapitalizedSesConfigurationSetEventType.Complaint
-  ) {
-    await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
-      {
-        timestamp: eventItem.complaint.timestamp,
-        status: EmailStatus.Complaint,
-        reason: eventItem.complaint.complaintSubType ?? undefined,
-      },
-    ]);
-    publishMetrics([
-      {
-        name: ConfigSetProcessorMetricName.EmailComplaint,
-      },
-    ]);
-  } else if (
-    // Reject
-    eventItem.eventType === CapitalizedSesConfigurationSetEventType.Reject
-  ) {
-    await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
-      {
-        timestamp: new Date().toISOString(),
-        status: EmailStatus.Rejected,
-        reason: eventItem.reject.reason ?? 'Bad content',
-      },
-    ]);
-    publishMetrics([
-      {
-        name: ConfigSetProcessorMetricName.EmailRejected,
-      },
-    ]);
-  } else if (
-    // Rendering Failure
-    eventItem.eventType ===
-    CapitalizedSesConfigurationSetEventType.RenderingFailure
-  ) {
-    await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
-      {
-        timestamp: new Date().toISOString(),
-        status: EmailStatus.Rejected,
-        reason:
-          `Template rendering failure "${eventItem.failure.templateName}"` +
-          eventItem.failure.errorMessage
-            ? `: ${eventItem.failure.errorMessage}`
-            : '',
-      },
-    ]);
-    publishMetrics([
-      {
-        name: ConfigSetProcessorMetricName.EmailRenderingFailure,
-      },
-    ]);
+      break;
   }
 
   logger.info('End');

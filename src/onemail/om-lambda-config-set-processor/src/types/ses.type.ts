@@ -16,6 +16,12 @@ export enum CapitalizedSesBounceType {
   Transient = 'Transient',
 }
 
+export enum CapitalizedSesComplaintSubType {
+  ContentRejected = 'ContentRejected',
+  AttachmentRejected = 'AttachmentRejected',
+  MessageTooLarge = 'MessageTooLarge',
+}
+
 export enum CapitalizedSesConfigurationSetEventType {
   Bounce = 'Bounce',
   Complaint = 'Complaint',
