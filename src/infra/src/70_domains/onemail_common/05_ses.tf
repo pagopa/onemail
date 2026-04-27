@@ -76,10 +76,12 @@ resource "aws_sesv2_configuration_set_event_destination" "to_eb" {
 resource "terraform_data" "seed_tenant_config" {
   for_each = local.tenants
 
-  depends_on = [
-    aws_sesv2_tenant.tenants[each.key],
-    aws_sesv2_configuration_set.config_set[each.key]
-  ]
+  depends_on = [module.dynamodb_table["tenant_config"]]
+
+  input = {
+    tenant_name            = aws_sesv2_tenant.tenants[each.key].tenant_name
+    configuration_set_name = aws_sesv2_configuration_set.config_set[each.key].configuration_set_name
+  }
 
   provisioner "local-exec" {
     command = "${local.seed_tenant_config_script_path} --env ${var.env} --client-name ${each.key}"
