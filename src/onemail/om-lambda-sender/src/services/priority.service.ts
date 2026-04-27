@@ -289,7 +289,8 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
   }
 
   await batchUpdateEmailStatuses(updates);
-  publishMetrics([
+
+  const metrics = [
     {
       name: SenderMetricName.LowPriorityDispatched,
       value: successfulEmails.length,
@@ -302,7 +303,11 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       name: SenderMetricName.LowPriorityRetryableFailure,
       value: retryableFailures.length,
     },
-  ]);
+  ].filter((m) => m.value > 0);
+
+  if (metrics.length > 0) {
+    publishMetrics(metrics);
+  }
 
   if (retryableFailures.length > 0) {
     throw new Error('Retryable failures occurred');
