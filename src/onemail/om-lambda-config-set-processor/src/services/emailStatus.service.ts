@@ -13,7 +13,7 @@ import {
 } from '#repositories/email.repository';
 import { handleSoftBounceRetry } from '#services/bounceRetry.service';
 import {
-  CapitalizedSesBounceSubType,
+  CapitalizedNonRetryableTransientSubTypes,
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
@@ -25,15 +25,6 @@ import {
 import { EmailStatus } from 'om-common/types';
 
 const logger = getLogger();
-
-/** Transient sub-types that are non-retryable and treated as hard bounces */
-const NON_RETRYABLE_TRANSIENT_SUB_TYPES = new Set<
-  CapitalizedSesBounceSubType | undefined | null
->([
-  CapitalizedSesBounceSubType.AttachmentRejected,
-  CapitalizedSesBounceSubType.ContentRejected,
-  CapitalizedSesBounceSubType.MessageTooLarge,
-]);
 
 const extractEventPayload = (recordBody: string): Record<string, unknown> => {
   const parsedRecordBody = JSON.parse(recordBody);
@@ -83,7 +74,7 @@ const validateRecord = (record: SQSRecord): ConfSetEventItem | undefined => {
   return result.data;
 };
 
-const isHardBounce = (
+const getBounceStatus = (
   event: Extract<ConfSetEventItem, { eventType: 'Bounce' }>,
 ): EmailStatus => {
   const { bounceType, bounceSubType } = event.bounce;
@@ -91,7 +82,8 @@ const isHardBounce = (
     return EmailStatus.HardBounce;
   if (
     bounceType === CapitalizedSesBounceType.Transient &&
-    NON_RETRYABLE_TRANSIENT_SUB_TYPES.has(bounceSubType)
+    bounceSubType &&
+    CapitalizedNonRetryableTransientSubTypes.has(bounceSubType)
   )
     return EmailStatus.NonRetryableSoftBounce;
   return EmailStatus.SoftBounce;
@@ -101,7 +93,7 @@ const handleBounce = async (
   event: Extract<ConfSetEventItem, { eventType: 'Bounce' }>,
   emailRecord: EmailStatusHistoryItem,
 ): Promise<void> => {
-  const bounceStatus = isHardBounce(event);
+  const bounceStatus = getBounceStatus(event);
   if (bounceStatus === EmailStatus.HardBounce) {
     await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
       {
@@ -124,7 +116,7 @@ const handleBounce = async (
     ]);
   } else {
     // Soft bounce (Undetermined or retryable Transient)
-    // Metrics published inside handleSoftBounceRetry to differentiate between different retry
+    // Metrics published inside handleSoftBounceRetry to differentiate between different retry types
     await handleSoftBounceRetry(
       emailRecord,
       event.bounce.timestamp,
@@ -151,6 +143,8 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     publishMetrics([{ name: ConfigSetProcessorMetricName.EmailNotFound }]);
     return;
   }
+
+  // Skip if current status is already Queued to avoid duplicate retries
   if (EmailStatus.Queued === emailRecord.status) {
     logger.error(
       'Email already queued for retry, skipping additional retry scheduling',
