@@ -370,7 +370,6 @@ describe('priority.service low priority SES entry result flows', () => {
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
       { name: 'LowPriorityDispatched', value: 1 },
-      { name: 'LowPriorityRejected', value: 0 },
       { name: 'LowPriorityRetryableFailure', value: 1 },
     ]);
   });
@@ -425,7 +424,6 @@ describe('priority.service low priority SES entry result flows', () => {
     expect(publishMetrics).toHaveBeenCalledWith([
       { name: 'LowPriorityDispatched', value: 1 },
       { name: 'LowPriorityRejected', value: 1 },
-      { name: 'LowPriorityRetryableFailure', value: 0 },
     ]);
   });
 
