@@ -238,8 +238,34 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
       status: EmailStatus.Rejected,
-      reason:
-        'AccessDeniedException: tenant used in from attribute not configured in SES.',
+      reason: 'AccessDeniedException: tenant configuration error.',
+    });
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'HighPriorityRejected',
+        dimensions: { clientId: email.clientId },
+      },
+    ]);
+  });
+
+  it('marks high priority emails as rejected when SES template is not found', async () => {
+    const email = makeEmailStatusHistoryItem();
+    getEmailById.mockResolvedValue(email);
+    const notFound = new SESv2ServiceException({
+      name: 'NotFoundException',
+      message: 'Template does not exist',
+      $metadata: {},
+      $fault: 'client',
+    });
+    notFound.name = 'NotFoundException';
+    sendHighPriorityEmail.mockRejectedValue(notFound);
+
+    await handleHighPriority(makeQueueRecord({ emailId: 'email-1' }));
+
+    expect(updateEmailStatus).toHaveBeenCalledWith({
+      emailId: 'email-1',
+      status: EmailStatus.Rejected,
+      reason: 'NotFoundException: the template used might not exist in SES',
     });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
@@ -455,7 +481,9 @@ describe('priority.service low priority SES entry result flows', () => {
       { name: 'LowPriorityRejected', value: 1 },
     ]);
   });
+});
 
+describe('priority.service low priority SES rejection and guard clauses', () => {
   it('marks whole low priority batches as rejected when access is denied by SES', async () => {
     const emails = [
       makeEmailStatusHistoryItem({
@@ -483,14 +511,52 @@ describe('priority.service low priority SES entry result flows', () => {
       {
         item: emails[0],
         status: EmailStatus.Rejected,
-        reason:
-          'AccessDeniedException: tenant used in from attribute not configured in SES.',
+        reason: 'AccessDeniedException: tenant configuration error.',
       },
       {
         item: emails[1],
         status: EmailStatus.Rejected,
-        reason:
-          'AccessDeniedException: tenant used in from attribute not configured in SES.',
+        reason: 'AccessDeniedException: tenant configuration error.',
+      },
+    ]);
+    expect(publishMetrics).toHaveBeenCalledWith([
+      { name: 'LowPriorityRejected', value: 2 },
+    ]);
+  });
+
+  it('marks whole low priority batches as rejected when SES template is not found', async () => {
+    const emails = [
+      makeEmailStatusHistoryItem({
+        emailId: 'email-1',
+        priority: EmailPriority.LOW,
+      }),
+      makeEmailStatusHistoryItem({
+        emailId: 'email-2',
+        priority: EmailPriority.LOW,
+      }),
+    ];
+    getEmailsByRequestId.mockResolvedValue(emails);
+    const notFound = new SESv2ServiceException({
+      name: 'NotFoundException',
+      message: 'Template does not exist',
+      $metadata: {},
+      $fault: 'client',
+    });
+    notFound.name = 'NotFoundException';
+    sendLowPriorityEmail.mockRejectedValue(notFound);
+
+    await handleLowPriority(makeQueueRecord({ requestId: 'request-1' }));
+
+    expect(batchUpdateEmailStatuses).toHaveBeenCalledWith([
+      {
+        item: emails[0],
+        status: EmailStatus.Rejected,
+        reason: 'NotFoundException: the template used might not exist in SES',
+      },
+      {
+        item: emails[1],
+        status: EmailStatus.Rejected,
+        reason: 'NotFoundException: the template used might not exist in SES',
       },
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([

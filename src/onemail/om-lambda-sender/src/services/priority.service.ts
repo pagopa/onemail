@@ -327,11 +327,19 @@ function handleSesError(error: unknown): string | undefined {
   if (error instanceof MessageRejected) {
     return `MessageRejected: ${error.message}`;
   }
+  // TODO: handle SES exceptions related to tenant configuration in ecs-dispatcher,
+  // before reaching lambda sender
   if (
     error instanceof SESv2ServiceException &&
     error.name === 'AccessDeniedException'
   ) {
-    return `AccessDeniedException: tenant used in from attribute not configured in SES.`;
+    return `AccessDeniedException: tenant configuration error.`;
+  }
+  if (
+    error instanceof SESv2ServiceException &&
+    error.name === 'NotFoundException'
+  ) {
+    return `NotFoundException: the template used might not exist in SES`;
   }
   return undefined;
 }
