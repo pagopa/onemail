@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
 #
-# Purpose: Seed a TenantConfig item into the TenantConfig DynamoDB table for a given environment.
+# Purpose: Seed a TenantConfig item into a DynamoDB table for a given environment.
 #          AWS credentials must be exported in the current shell session or though AWS SSO.
 #
 # Usage examples:
-#   ./seed-tenant-config.sh --env dev --client-name appio
-#   ./seed-tenant-config.sh --env uat --client-name selfcare
-#   ./seed-tenant-config.sh --env prod --client-name send
+#   ./seed-tenant-config.sh --env dev --client-name appio --table-name TenantConfig
+#   ./seed-tenant-config.sh --env uat --client-name selfcare --table-name TenantConfig
+#   ./seed-tenant-config.sh --env prod --client-name send --table-name TenantConfig
 
 set -euo pipefail
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
-TABLE_NAME="TenantConfig"
+TABLE_NAME=""
 ENV_INPUT=""
 CLIENT_NAME=""
 
 # ── Argument parsing ──────────────────────────────────────────────────────────
 usage() {
-  echo "Usage: $0 --env <dev|uat|prod> --client-name <name>"
+  echo "Usage: $0 --env <dev|uat|prod> --client-name <name> --table-name <table-name>"
   exit 1
 }
 
@@ -29,6 +29,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --client-name)
       CLIENT_NAME="$2"
+      shift 2
+      ;;
+    --table-name)
+      TABLE_NAME="$2"
       shift 2
       ;;
     *)
@@ -46,6 +50,11 @@ fi
 
 if [[ -z "$CLIENT_NAME" ]]; then
   echo "❌ --client-name is required" >&2
+  usage
+fi
+
+if [[ -z "$TABLE_NAME" ]]; then
+  echo "❌ --table-name is required" >&2
   usage
 fi
 

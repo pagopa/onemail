@@ -84,7 +84,7 @@ resource "terraform_data" "seed_tenant_config" {
   }
 
   provisioner "local-exec" {
-    command = "${local.seed_tenant_config_script_path} --env ${var.env} --client-name ${each.key}"
+    command = "${local.seed_tenant_config_script_path} --env ${var.env} --client-name ${each.key} --table-name ${var.dynamodb_tables["tenant_config"].table_name}"
 
     environment = {
       AWS_REGION = var.aws_region
