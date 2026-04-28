@@ -8,6 +8,7 @@ import {
   SqsEventItemLowSchema,
 } from '#dtos/sqsEventItem.dto';
 import { DryRunValidationError } from '#errors/dryRunValidation.error';
+import { RetryableEmailError } from '#errors/retryableEmail.error';
 import {
   batchUpdateEmailStatuses,
   getEmailById,
@@ -100,12 +101,7 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       return;
     }
 
-    logger.error(`SES error`, {
-      emailId,
-      error,
-      retryable: true,
-    });
-    throw error;
+    throw new RetryableEmailError('SES transient failure', { emailId }, error);
   }
 
   // 4. Update the email status in DB
@@ -279,13 +275,12 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       ]);
       return;
     }
-    logger.error(`SES error`, {
-      requestId,
+
+    throw new RetryableEmailError(
+      'SES transient failure',
+      { requestId },
       error,
-      retryable: true,
-    });
-    // TODO: update entries in dynamo (?)
-    throw error;
+    );
   }
 
   await batchUpdateEmailStatuses(updates);
@@ -305,7 +300,9 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
   ]);
 
   if (retryableFailures.length > 0) {
-    throw new Error('Retryable failures occurred');
+    throw new RetryableEmailError('Retryable per-email SES failures', {
+      requestId,
+    });
   }
 
   logger.info('End');

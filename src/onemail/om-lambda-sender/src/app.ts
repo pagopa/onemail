@@ -1,7 +1,8 @@
-import type { Context, SQSEvent, SQSHandler } from 'aws-lambda';
+import type { Context, SQSEvent, SQSHandler, SQSRecord } from 'aws-lambda';
 
 import env from '#config/env';
-import { addLambdaContextToLogger } from '#config/logger';
+import { addLambdaContextToLogger, getLogger } from '#config/logger';
+import { RetryableEmailError } from '#errors/retryableEmail.error';
 import {
   handleHighPriority,
   handleLowPriority,
@@ -14,9 +15,29 @@ import {
 import middy from '@middy/core';
 import { flushMetrics } from 'om-common/repositories';
 
-const processor = new BatchProcessor(EventType.SQS);
+const logger = getLogger();
 
-//todo do error handler but exclude some SES errors
+class CustomBatchProcessor extends BatchProcessor {
+  override failureHandler(record: SQSRecord, error: Error) {
+    if (error instanceof RetryableEmailError) {
+      logger.error(`Retryable error: ${error.message}`, {
+        ...error.context,
+        error: error.cause,
+        retryable: true,
+      });
+    } else {
+      logger.error('Unexpected error, will be retried', {
+        error,
+        body: record.body,
+        retryable: true,
+      });
+    }
+    return super.failureHandler(record, error);
+  }
+}
+
+const processor = new CustomBatchProcessor(EventType.SQS);
+
 const lambdaHandler: SQSHandler = async (event: SQSEvent, context: Context) => {
   addLambdaContextToLogger(context);
   const isHighPriority = event.Records[0].eventSourceARN.includes(
