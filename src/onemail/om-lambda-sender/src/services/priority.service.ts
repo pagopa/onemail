@@ -84,13 +84,13 @@ export const handleHighPriority = async (record: SQSRecord): Promise<void> => {
     if (errorMessage) {
       logger.error(`Rejected by SES`, {
         emailId,
-        error: errorMessage,
+        error: errorMessage.message,
         retryable: false,
       });
       await updateEmailStatus({
         emailId,
         status: EmailStatus.Rejected,
-        reason: errorMessage,
+        reason: errorMessage.reason,
       });
       publishMetrics([
         {
@@ -261,7 +261,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
     if (errorMessage) {
       logger.error(`Rejected by SES`, {
         requestId,
-        error: errorMessage,
+        error: errorMessage.message,
         retryable: false,
       });
       // Whole batch rejected — mark all items
@@ -269,7 +269,7 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
         emails.map((email) => ({
           item: email,
           status: EmailStatus.Rejected,
-          reason: errorMessage,
+          reason: errorMessage.reason,
         })),
       );
       publishMetrics([
@@ -317,15 +317,26 @@ export const handleLowPriority = async (record: SQSRecord): Promise<void> => {
   logger.info('End');
 };
 
-function handleSesError(error: unknown): string | undefined {
+function handleSesError(
+  error: unknown,
+): { message: string; reason: string } | undefined {
   if (error instanceof BadRequestException) {
-    return `BadRequestException: ${error.message}`;
+    return {
+      message: `BadRequestException: ${error.message}`,
+      reason: 'BadRequestException',
+    };
   }
   if (error instanceof MailFromDomainNotVerifiedException) {
-    return `MailFromDomainNotVerifiedException: ${error.message}`;
+    return {
+      message: `MailFromDomainNotVerifiedException: ${error.message}`,
+      reason: 'MailFromDomainNotVerifiedException',
+    };
   }
   if (error instanceof MessageRejected) {
-    return `MessageRejected: ${error.message}`;
+    return {
+      message: `MessageRejected: ${error.message}`,
+      reason: 'MessageRejected',
+    };
   }
   // TODO: handle SES exceptions related to tenant configuration in ecs-dispatcher,
   // before reaching lambda sender
@@ -333,13 +344,20 @@ function handleSesError(error: unknown): string | undefined {
     error instanceof SESv2ServiceException &&
     error.name === 'AccessDeniedException'
   ) {
-    return `AccessDeniedException: tenant configuration error.`;
+    return {
+      message: `AccessDeniedException: ${error.message}`,
+      reason:
+        'AccessDeniedException: not authorized to perform the requested SES action',
+    };
   }
   if (
     error instanceof SESv2ServiceException &&
     error.name === 'NotFoundException'
   ) {
-    return `NotFoundException: the template used might not exist in SES`;
+    return {
+      message: `NotFoundException: ${error.message}`,
+      reason: 'NotFoundException: the template used might not exist in SES',
+    };
   }
   return undefined;
 }

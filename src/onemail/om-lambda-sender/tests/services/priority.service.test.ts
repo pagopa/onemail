@@ -123,7 +123,7 @@ describe('priority.service high priority flows', () => {
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
       status: EmailStatus.Rejected,
-      reason: 'BadRequestException: bad request',
+      reason: 'BadRequestException',
     });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
@@ -170,7 +170,7 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
       status: EmailStatus.Rejected,
-      reason: 'MailFromDomainNotVerifiedException: domain not verified',
+      reason: 'MailFromDomainNotVerifiedException',
     });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
@@ -195,7 +195,7 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
       status: EmailStatus.Rejected,
-      reason: 'MessageRejected: message rejected',
+      reason: 'MessageRejected',
     });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
@@ -238,7 +238,8 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
       status: EmailStatus.Rejected,
-      reason: 'AccessDeniedException: tenant configuration error.',
+      reason:
+        'AccessDeniedException: not authorized to perform the requested SES action',
     });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
@@ -363,12 +364,12 @@ describe('priority.service low priority flows', () => {
       {
         item: emails[0],
         status: EmailStatus.Rejected,
-        reason: 'BadRequestException: bad request',
+        reason: 'BadRequestException',
       },
       {
         item: emails[1],
         status: EmailStatus.Rejected,
-        reason: 'BadRequestException: bad request',
+        reason: 'BadRequestException',
       },
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
@@ -511,12 +512,14 @@ describe('priority.service low priority SES rejection and guard clauses', () => 
       {
         item: emails[0],
         status: EmailStatus.Rejected,
-        reason: 'AccessDeniedException: tenant configuration error.',
+        reason:
+          'AccessDeniedException: not authorized to perform the requested SES action',
       },
       {
         item: emails[1],
         status: EmailStatus.Rejected,
-        reason: 'AccessDeniedException: tenant configuration error.',
+        reason:
+          'AccessDeniedException: not authorized to perform the requested SES action',
       },
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
