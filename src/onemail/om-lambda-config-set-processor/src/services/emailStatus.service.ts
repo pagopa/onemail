@@ -26,15 +26,6 @@ import { EmailStatus } from 'om-common/types';
 
 const logger = getLogger();
 
-/** Transient sub-types that are non-retryable and treated as EmailNonRetryableSoftBounce */
-const NON_RETRYABLE_TRANSIENT_SUB_TYPES = new Set<
-  CapitalizedSesBounceSubType | undefined | null
->([
-  CapitalizedSesBounceSubType.AttachmentRejected,
-  CapitalizedSesBounceSubType.ContentRejected,
-  CapitalizedSesBounceSubType.MessageTooLarge,
-]);
-
 const extractEventPayload = (recordBody: string): Record<string, unknown> => {
   const parsedRecordBody = JSON.parse(recordBody);
   return Object.hasOwn(parsedRecordBody, 'detail')
