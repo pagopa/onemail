@@ -72,6 +72,7 @@ variable "dynamodb_tables" {
     })))
     replica_regions = optional(list(object({
       region_name = string
+      kms_key_arn = optional(string)
     })))
   }))
   description = "Map of DynamoDB table configurations keyed by logical table name."

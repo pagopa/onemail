@@ -1,0 +1,46 @@
+name: Terraform Apply - Tenants
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/infra/src/data/tenants/CHANGELOG.md'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to apply'
+        required: true
+        type: choice
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+  terraform-apply-common:
+    uses: ./.github/workflows/terraform-apply-onemail-common.yml
+    with:
+      environment_input: ${{ github.event.inputs.environment || '' }}
+      fail_fast: true
+    permissions:
+      id-token: write
+      contents: read
+
+  terraform-apply-app:
+    needs: terraform-apply-common
+    uses: ./.github/workflows/terraform-apply-onemail-app.yml
+    with:
+      environment_input: ${{ github.event.inputs.environment || '' }}
+    permissions:
+      id-token: write
+      contents: read
+
+  terraform-apply-monitoring:
+    needs: terraform-apply-common
+    uses: ./.github/workflows/terraform-apply-onemail-monitoring.yml
+    with:
+      environment_input: ${{ github.event.inputs.environment || '' }}
+    permissions:
+      id-token: write
+      contents: read
