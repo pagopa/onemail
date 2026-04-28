@@ -47,3 +47,29 @@ variable "alarm_subscribers" {
   description = "Email address to subscribe to SES reputation alarms."
   default     = ""
 }
+
+variable "sqs_alarm_max_age_seconds" {
+  description = "Maximum allowed age, in seconds, for messages in each monitored SQS queue. Configure per environment in terraform.tfvars."
+
+  type = object({
+    high_priority        = number
+    low_priority         = number
+    config_set_processor = number
+  })
+}
+
+variable "infra_alarm_templates" {
+  description = "Template configuration for infrastructure CloudWatch alarms. Configure per environment in terraform.tfvars."
+
+  type = map(object({
+    comparison_operator = string
+    evaluation_periods  = number
+    threshold           = number
+    metric_name         = string
+    namespace           = string
+    period              = number
+    statistic           = optional(string)
+    extended_statistic  = optional(string)
+    treat_missing_data  = optional(string, "notBreaching")
+  }))
+}
