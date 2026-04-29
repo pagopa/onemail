@@ -1,0 +1,673 @@
+{
+    "widgets": [
+        {
+            "height": 6,
+            "width": 6,
+            "y": 1,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "height": 6,
+                "width": 6,
+                "y": 1,
+                "x": 0,
+                "type": "metric",
+                "view": "timeSeries",
+                "stacked": false,
+                "metrics": [
+                    [ "AWS/ApiGateway", "Count", "ApiName", "${api_name}", { "region": "${aws_region}" } ]
+                ],
+                "region": "${aws_region}",
+                "period": 300,
+                "stat": "Sum",
+                "title": "Api calls"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 1,
+            "x": 6,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "ANOMALY_DETECTION_BAND(m1, 2)", "label": "AnomalyDetection", "id": "e1" } ],
+                    [ "AWS/ApiGateway", "Latency", "ApiName", "${api_name}", { "region": "${aws_region}", "id": "m1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${aws_region}",
+                "period": 300,
+                "stat": "Average"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 1,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApiGateway", "5XXError", "ApiName", "${api_name}", { "region": "${aws_region}" } ],
+                    [ ".", "4XXError", ".", ".", { "region": "${aws_region}" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${aws_region}",
+                "period": 300,
+                "stat": "Sum"
+            }
+        },
+        {
+            "height": 1,
+            "width": 24,
+            "y": 0,
+            "x": 0,
+            "type": "text",
+            "properties": {
+                "markdown": "## Frontend (Api Gateway) \n"
+            }
+        },
+        {
+            "height": 1,
+            "width": 12,
+            "y": 14,
+            "x": 0,
+            "type": "text",
+            "properties": {
+                "markdown": "## Database ${status_table} table [more metrics](https://${aws_region}.console.aws.amazon.com/dynamodbv2/home?region=${aws_region}#table?name=${status_table}&tab=monitoring)"
+            }
+        },
+        {
+            "height": 1,
+            "width": 24,
+            "y": 7,
+            "x": 0,
+            "type": "text",
+            "properties": {
+                "markdown": "## Backend (ECS) [Container insight](https://${aws_region}.console.aws.amazon.com/cloudwatch/home?region=${aws_region}#container-insights:)\n"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 1,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "ANOMALY_DETECTION_BAND(m1, 2)", "label": "AnomalyDetection", "id": "e1", "region": "${aws_region}" } ],
+                    [ "AWS/ApiGateway", "IntegrationLatency", "ApiName", "${api_name}", { "id": "m1", "region": "${aws_region}" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${aws_region}",
+                "title": "Integration Latency",
+                "stat": "Average",
+                "period": 60
+            }
+        },
+        {
+            "height": 1,
+            "width": 12,
+            "y": 14,
+            "x": 12,
+            "type": "text",
+            "properties": {
+                "markdown": "\n### Index: gsi_provider_message_id_idx\n"
+            }
+        },
+        {
+            "height": 6,
+            "width": 8,
+            "y": 8,
+            "x": 16,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/NetworkELB", "UnHealthyHostCount", "TargetGroup", "${nlb.target_group_arn_suffix}", "LoadBalancer", "${nlb.arn_suffix}" ],
+                    [ ".", "HealthyHostCount", ".", ".", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${aws_region}",
+                "stat": "Maximum",
+                "period": 300,
+                "title": "Healthy Host, UnHealthy Host Count"
+            }
+        },
+        {
+            "height": 6,
+            "width": 8,
+            "y": 8,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/ECS", "CPUUtilization", "ServiceName", "${ecs.service_name}", "ClusterName", "${ecs.cluster_name}", { "stat": "Minimum", "region": "${aws_region}" } ],
+                    [ "...", { "stat": "Maximum", "region": "${aws_region}" } ],
+                    [ "...", { "stat": "Average", "region": "${aws_region}" } ]
+                ],
+                "period": 300,
+                "region": "${aws_region}",
+                "stacked": false,
+                "title": "CPU utilisation",
+                "view": "timeSeries"
+            }
+        },
+        {
+            "height": 6,
+            "width": 8,
+            "y": 8,
+            "x": 8,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/ECS", "MemoryUtilization", "ServiceName", "${ecs.service_name}", "ClusterName", "${ecs.cluster_name}", { "stat": "Minimum", "region": "${aws_region}" } ],
+                    [ "...", { "stat": "Maximum", "region": "${aws_region}" } ],
+                    [ "...", { "stat": "Average", "region": "${aws_region}" } ]
+                ],
+                "period": 300,
+                "region": "${aws_region}",
+                "stacked": false,
+                "title": "Memory utilisation",
+                "view": "timeSeries"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 15,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "title": "Read usage (average units/second)",
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${aws_region}",
+                "stat": "Average",
+                "period": 60,
+                "yAxis": {
+                    "left": {
+                        "showUnits": false
+                    }
+                },
+                "metrics": [
+                    [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${status_table}", { "stat": "Sum", "id": "m1", "visible": false, "region": "${aws_region}" } ],
+                    [ { "expression": "m1/PERIOD(m1)", "label": "Consumed", "id": "e1", "color": "#0073BB", "region": "${aws_region}" } ]
+                ]
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 15,
+            "x": 6,
+            "type": "metric",
+            "properties": {
+                "title": "Write usage (average units/second)",
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${aws_region}",
+                "stat": "Average",
+                "period": 60,
+                "yAxis": {
+                    "left": {
+                        "showUnits": false
+                    }
+                },
+                "metrics": [
+                    [ "AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "${status_table}", { "stat": "Sum", "id": "m1", "visible": false, "region": "${aws_region}" } ],
+                    [ { "expression": "m1/PERIOD(m1)", "label": "Consumed", "id": "e1", "color": "#0073BB", "region": "${aws_region}" } ]
+                ]
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 15,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "title": "Read usage (average units/second)",
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${aws_region}",
+                "stat": "Average",
+                "period": 60,
+                "yAxis": {
+                    "left": {
+                        "showUnits": false
+                    }
+                },
+                "metrics": [
+                    [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${status_table}", "GlobalSecondaryIndexName", "gsi_provider_message_id_idx", { "stat": "Sum", "id": "m1", "visible": false, "region": "${aws_region}" } ],
+                    [ { "expression": "m1/PERIOD(m1)", "label": "Consumed", "id": "e1", "region": "${aws_region}", "color": "#0073BB" } ]
+                ]
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 15,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "title": "Write usage (average units/second)",
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${aws_region}",
+                "stat": "Average",
+                "period": 60,
+                "yAxis": {
+                    "left": {
+                        "showUnits": false
+                    }
+                },
+                "metrics": [
+                  [ "AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "${status_table}", "GlobalSecondaryIndexName", "gsi_provider_message_id_idx", { "stat": "Sum", "id": "m1", "visible": false, "region": "${aws_region}" } ],
+                  [ { "expression": "m1/PERIOD(m1)", "label": "Consumed", "id": "e1", "region": "${aws_region}", "color": "#0073BB" } ]
+              ]
+          }
+      },
+      {
+          "height": 1,
+          "width": 12,
+          "y": 28,
+          "x": 0,
+          "type": "text",
+          "properties": {
+              "markdown": "## Database ${status_table} table [more metrics](https://${aws_region}.console.aws.amazon.com/dynamodbv2/home?region=${aws_region}#table?name=${status_table}&tab=monitoring)"
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 29,
+          "x": 0,
+          "type": "metric",
+          "properties": {
+              "title": "Read usage (average units/second)",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Average",
+              "period": 60,
+              "yAxis": {
+                  "left": {
+                      "showUnits": false
+                  }
+              },
+              "metrics": [
+                  [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${status_table}", { "stat": "Sum", "id": "m1", "visible": false, "region": "${aws_region}" } ],
+                  [ { "expression": "m1/PERIOD(m1)", "label": "Consumed", "id": "e1", "color": "#0073BB", "region": "${aws_region}" } ]
+              ]
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 29,
+          "x": 6,
+          "type": "metric",
+          "properties": {
+              "title": "Get latency (milliseconds)",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Average",
+              "period": 60,
+              "yAxis": {
+                  "left": {
+                      "showUnits": false
+                  }
+              },
+              "metrics": [
+                  [ "AWS/DynamoDB", "SuccessfulRequestLatency", "TableName", "${status_table}", "Operation", "GetItem", { "color": "#0073BB", "label": "Get latency", "region": "${aws_region}" } ],
+                  [ "...", "BatchGetItem", { "color": "#9468BD", "label": "Batch get latency", "region": "${aws_region}" } ]
+              ]
+          }
+      },
+      {
+          "height": 1,
+          "width": 5,
+          "y": 21,
+          "x": 18,
+          "type": "text",
+          "properties": {
+              "markdown": "## Index: gsi_request_id_idx\n"
+            }
+     },
+     {
+            "height": 6,
+            "width": 6,
+            "y": 15,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "title": "Read usage (average units/second)",
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${aws_region}",
+                "stat": "Average",
+                "period": 60,
+                "yAxis": {
+                    "left": {
+                        "showUnits": false
+                    }
+                },
+                "metrics": [
+                    [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${status_table}", "GlobalSecondaryIndexName", "gsi_request_id_idx", { "stat": "Sum", "id": "m1", "visible": false, "region": "${aws_region}" } ],
+                    [ { "expression": "m1/PERIOD(m1)", "label": "Consumed", "id": "e1", "region": "${aws_region}", "color": "#0073BB" } ]
+                ]
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 15,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "title": "Write usage (average units/second)",
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${aws_region}",
+                "stat": "Average",
+                "period": 60,
+                "yAxis": {
+                    "left": {
+                        "showUnits": false
+                    }
+                },
+                "metrics": [
+                  [ "AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "${status_table}", "GlobalSecondaryIndexName", "gsi_request_id_idx", { "stat": "Sum", "id": "m1", "visible": false, "region": "${aws_region}" } ],
+                  [ { "expression": "m1/PERIOD(m1)", "label": "Consumed", "id": "e1", "region": "${aws_region}", "color": "#0073BB" } ]
+              ]
+          }
+      },
+      {
+          "height": 1,
+          "width": 12,
+          "y": 35,
+          "x": 0,
+          "type": "text",
+          "properties": {
+              "markdown": "## Database ${tenant_table} table [more metrics](https://${aws_region}.console.aws.amazon.com/dynamodbv2/home?region=${aws_region}#table?name=${tenant_table}&tab=monitoring)"
+          }
+      },
+      {
+          "height": 1,
+          "width": 12,
+          "y": 35,
+          "x": 12,
+          "type": "text",
+          "properties": {
+              "markdown": "\n### Index: gsi_tenant_name_idx\n"
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 36,
+          "x": 0,
+          "type": "metric",
+          "properties": {
+              "title": "Read usage (average units/second)",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Average",
+              "period": 60,
+              "yAxis": {
+                  "left": {
+                      "showUnits": false
+                  }
+              },
+              "metrics": [
+                  [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${tenant_table}", { "stat": "Sum", "id": "m1", "visible": false, "region": "${aws_region}" } ],
+                  [ { "expression": "m1/PERIOD(m1)", "label": "Consumed", "id": "e1", "color": "#0073BB", "region": "${aws_region}" } ]
+              ]
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 36,
+          "x": 6,
+          "type": "metric",
+          "properties": {
+              "title": "Write usage (average units/second)",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Average",
+              "period": 60,
+              "yAxis": {
+                  "left": {
+                      "showUnits": false
+                  }
+              },
+              "metrics": [
+                  [ "AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "${tenant_table}", { "stat": "Sum", "id": "m1", "visible": false, "region": "${aws_region}" } ],
+                  [ { "expression": "m1/PERIOD(m1)", "label": "Consumed", "id": "e1", "color": "#0073BB", "region": "${aws_region}" } ]
+              ]
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 36,
+          "x": 12,
+          "type": "metric",
+          "properties": {
+              "title": "Read usage (average units/second)",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Average",
+              "period": 60,
+              "yAxis": {
+                  "left": {
+                      "showUnits": false
+                  }
+              },
+              "metrics": [
+                  [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${tenant_table}", "GlobalSecondaryIndexName", "gsi_tenant_name_idx", { "stat": "Sum", "id": "m1", "visible": false, "region": "${aws_region}" } ],
+                  [ { "expression": "m1/PERIOD(m1)", "label": "Consumed", "id": "e1", "region": "${aws_region}", "color": "#0073BB" } ]
+              ]
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 36,
+          "x": 18,
+          "type": "metric",
+          "properties": {
+              "title": "Write usage (average units/second)",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Average",
+              "period": 60,
+              "yAxis": {
+                  "left": {
+                      "showUnits": false
+                  }
+              },
+              "metrics": [
+                  [ "AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "${tenant_table}", "GlobalSecondaryIndexName", "gsi_tenant_name_idx", { "stat": "Sum", "id": "m1", "visible": false, "region": "${aws_region}" } ],
+                  [ { "expression": "m1/PERIOD(m1)", "label": "Consumed", "id": "e1", "region": "${aws_region}", "color": "#0073BB" } ]
+              ]
+          }
+      },
+      {
+          "height": 1,
+          "width": 24,
+          "y": 42,
+          "x": 0,
+          "type": "text",
+          "properties": {
+              "markdown": "## Queues (SQS) - ${sqs_high_priority}"
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 43,
+          "x": 0,
+          "type": "metric",
+          "properties": {
+              "title": "Queue depth",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Maximum",
+              "period": 60,
+              "metrics": [
+                  [ "AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", "${sqs_high_priority}", { "region": "${aws_region}" } ]
+              ]
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 43,
+          "x": 6,
+          "type": "metric",
+          "properties": {
+              "title": "Oldest message age (seconds)",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Maximum",
+              "period": 60,
+              "metrics": [
+                  [ "AWS/SQS", "ApproximateAgeOfOldestMessage", "QueueName", "${sqs_high_priority}", { "region": "${aws_region}" } ]
+              ]
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 43,
+          "x": 12,
+          "type": "metric",
+          "properties": {
+              "title": "Messages sent / received",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Sum",
+              "period": 60,
+              "metrics": [
+                  [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${sqs_high_priority}", { "region": "${aws_region}", "color": "#0073BB", "label": "Sent" } ],
+                  [ ".", "NumberOfMessagesReceived", ".", ".", { "region": "${aws_region}", "color": "#2CA02C", "label": "Received" } ]
+              ]
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 43,
+          "x": 18,
+          "type": "metric",
+          "properties": {
+              "title": "In-flight messages",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Maximum",
+              "period": 60,
+              "metrics": [
+                  [ "AWS/SQS", "ApproximateNumberOfMessagesNotVisible", "QueueName", "${sqs_high_priority}", { "region": "${aws_region}" } ]
+              ]
+          }
+      },
+      {
+          "height": 1,
+          "width": 24,
+          "y": 49,
+          "x": 0,
+          "type": "text",
+          "properties": {
+              "markdown": "## Queues (SQS) - ${sqs_low_priority}"
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 50,
+          "x": 0,
+          "type": "metric",
+          "properties": {
+              "title": "Queue depth",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Maximum",
+              "period": 60,
+              "metrics": [
+                  [ "AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", "${sqs_low_priority}", { "region": "${aws_region}" } ]
+              ]
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 50,
+          "x": 6,
+          "type": "metric",
+          "properties": {
+              "title": "Oldest message age (seconds)",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Maximum",
+              "period": 60,
+              "metrics": [
+                  [ "AWS/SQS", "ApproximateAgeOfOldestMessage", "QueueName", "${sqs_low_priority}", { "region": "${aws_region}" } ]
+              ]
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 50,
+          "x": 12,
+          "type": "metric",
+          "properties": {
+              "title": "Messages sent / received",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Sum",
+              "period": 60,
+              "metrics": [
+                  [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${sqs_low_priority}", { "region": "${aws_region}", "color": "#0073BB", "label": "Sent" } ],
+                  [ ".", "NumberOfMessagesReceived", ".", ".", { "region": "${aws_region}", "color": "#2CA02C", "label": "Received" } ]
+              ]
+          }
+      },
+      {
+          "height": 6,
+          "width": 6,
+          "y": 50,
+          "x": 18,
+          "type": "metric",
+          "properties": {
+              "title": "In-flight messages",
+              "view": "timeSeries",
+              "stacked": false,
+              "region": "${aws_region}",
+              "stat": "Maximum",
+              "period": 60,
+              "metrics": [
+                  [ "AWS/SQS", "ApproximateNumberOfMessagesNotVisible", "QueueName", "${sqs_low_priority}", { "region": "${aws_region}" } ]
+              ]
+          }
+      }
+    ]
+}

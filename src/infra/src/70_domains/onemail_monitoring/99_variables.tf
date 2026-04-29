@@ -73,3 +73,8 @@ variable "infra_alarm_templates" {
     treat_missing_data  = optional(string, "notBreaching")
   }))
 }
+
+variable "dashboard_name" {
+  type        = string
+  description = "CloudWatch dashboard name."
+}
