@@ -63,14 +63,12 @@ export const updateEmailStatus = async ({
 }): Promise<void> => {
   const now = new Date().toISOString();
 
-  const updateExpression = providerMessageId
-    ? 'SET #status = :status, #updatedAt = :updatedAt, #providerMessageId = :providerMessageId, #history = list_append(if_not_exists(#history, :emptyList), :newHistoryItem)'
-    : 'SET #status = :status, #updatedAt = :updatedAt, #history = list_append(if_not_exists(#history, :emptyList), :newHistoryItem) REMOVE #providerMessageId';
+  let updateExpression =
+    'SET #status = :status, #updatedAt = :updatedAt, #history = list_append(if_not_exists(#history, :emptyList), :newHistoryItem)';
 
   const expressionAttributeNames: Record<string, string> = {
     '#status': 'status',
     '#updatedAt': 'updatedAt',
-    '#providerMessageId': 'providerMessageId',
     '#history': 'history',
   };
 
@@ -81,7 +79,10 @@ export const updateEmailStatus = async ({
     ':newHistoryItem': [{ status, changedAt: now, reason }],
   };
 
+  // add providerMessageId to the update expression if it's provided
   if (providerMessageId) {
+    updateExpression += ', #providerMessageId = :providerMessageId';
+    expressionAttributeNames['#providerMessageId'] = 'providerMessageId';
     expressionAttributeValues[':providerMessageId'] = providerMessageId;
   }
 
