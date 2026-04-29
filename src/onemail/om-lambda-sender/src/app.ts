@@ -13,10 +13,15 @@ import {
   processPartialResponse,
 } from '@aws-lambda-powertools/batch';
 import middy from '@middy/core';
-import { flushMetrics } from 'om-common/repositories';
+import {
+  flushMetrics,
+  publishMetrics,
+  SenderMetricName,
+} from 'om-common/repositories';
 
 const logger = getLogger();
 
+// Custom global error handler
 class CustomBatchProcessor extends BatchProcessor {
   override failureHandler(record: SQSRecord, error: Error) {
     if (error instanceof RetryableEmailError) {
@@ -26,6 +31,11 @@ class CustomBatchProcessor extends BatchProcessor {
         retryable: true,
       });
     } else {
+      publishMetrics([
+        {
+          name: SenderMetricName.UnexpectedRetryableError,
+        },
+      ]);
       logger.error('Unexpected error, will be retried', {
         error,
         body: record.body,
