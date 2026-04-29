@@ -1,5 +1,11 @@
 # om-common
 
+## 1.4.3
+
+### Patch Changes
+
+- b0856e4: Error handling imporvement
+
 ## 1.4.2
 
 ### Patch Changes
