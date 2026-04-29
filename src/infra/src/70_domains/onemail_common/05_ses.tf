@@ -90,7 +90,7 @@ resource "terraform_data" "seed_tenant_config" {
       AWS_REGION = var.aws_region
     }
 
-    interpreter = ["/usr/bin/env", "bash"]
+    interpreter = ["/usr/bin/env", "bash", "-c"]
   }
 }
 

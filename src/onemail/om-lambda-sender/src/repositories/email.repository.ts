@@ -62,25 +62,36 @@ export const updateEmailStatus = async ({
   reason?: string;
 }): Promise<void> => {
   const now = new Date().toISOString();
+
+  const updateExpression = providerMessageId
+    ? 'SET #status = :status, #updatedAt = :updatedAt, #providerMessageId = :providerMessageId, #history = list_append(if_not_exists(#history, :emptyList), :newHistoryItem)'
+    : 'SET #status = :status, #updatedAt = :updatedAt, #history = list_append(if_not_exists(#history, :emptyList), :newHistoryItem) REMOVE #providerMessageId';
+
+  const expressionAttributeNames: Record<string, string> = {
+    '#status': 'status',
+    '#updatedAt': 'updatedAt',
+    '#providerMessageId': 'providerMessageId',
+    '#history': 'history',
+  };
+
+  const expressionAttributeValues: Record<string, unknown> = {
+    ':status': status,
+    ':updatedAt': now,
+    ':emptyList': [],
+    ':newHistoryItem': [{ status, changedAt: now, reason }],
+  };
+
+  if (providerMessageId) {
+    expressionAttributeValues[':providerMessageId'] = providerMessageId;
+  }
+
   await dynamoClient.send(
     new UpdateCommand({
       TableName: env.aws.emailDbTable,
       Key: { emailId },
-      UpdateExpression:
-        'SET #status = :status, #updatedAt = :updatedAt, #providerMessageId = :providerMessageId, #history = list_append(if_not_exists(#history, :emptyList), :newHistoryItem)',
-      ExpressionAttributeNames: {
-        '#status': 'status',
-        '#updatedAt': 'updatedAt',
-        '#providerMessageId': 'providerMessageId',
-        '#history': 'history',
-      },
-      ExpressionAttributeValues: {
-        ':status': status,
-        ':updatedAt': now,
-        ':providerMessageId': providerMessageId || null,
-        ':emptyList': [],
-        ':newHistoryItem': [{ status, changedAt: now, reason }],
-      },
+      UpdateExpression: updateExpression,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
     }),
   );
 };
@@ -180,7 +191,7 @@ export const batchUpdateEmailStatuses = async (
           ...item,
           status,
           updatedAt: now,
-          providerMessageId: providerMessageId,
+          ...(providerMessageId ? { providerMessageId } : {}),
           history: updatedHistory,
         },
       },
