@@ -3,10 +3,7 @@ import type { Context, SQSEvent, SQSHandler, SQSRecord } from 'aws-lambda';
 import env from '#config/env';
 import { addLambdaContextToLogger, getLogger } from '#config/logger';
 import { RetryableEmailError } from '#errors/retryableEmail.error';
-import {
-  handleHighPriority,
-  handleLowPriority,
-} from '#services/priority.service';
+import { handleEmailRecordByPriority } from '#services/priority.service';
 import {
   BatchProcessor,
   EventType,
@@ -37,8 +34,8 @@ class CustomBatchProcessor extends BatchProcessor {
         },
       ]);
       logger.error('Unexpected error, will be retried', {
-        error,
         body: record.body,
+        error,
         retryable: true,
       });
     }
@@ -54,7 +51,8 @@ const lambdaHandler: SQSHandler = async (event: SQSEvent, context: Context) => {
     env.sqs.highPriorityQueueARN,
   );
 
-  const recordHandler = isHighPriority ? handleHighPriority : handleLowPriority;
+  const recordHandler = (record: SQSRecord) =>
+    handleEmailRecordByPriority(record, isHighPriority);
 
   // TODO: idempotency with @aws-lambda-powertools/idempotency
   return processPartialResponse(event, recordHandler, processor, {
