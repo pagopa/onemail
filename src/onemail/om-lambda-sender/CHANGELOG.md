@@ -1,5 +1,13 @@
 # om-lambda-sender
 
+## 1.6.2
+
+### Patch Changes
+
+- b0856e4: Error handling imporvement
+- Updated dependencies [b0856e4]
+  - om-common@1.4.3
+
 ## 1.6.1
 
 ### Patch Changes
