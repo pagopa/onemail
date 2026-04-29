@@ -108,3 +108,5 @@ infra_alarm_templates = {
     treat_missing_data  = "notBreaching"
   }
 }
+
+dashboard_name = "overall-dashboard"
