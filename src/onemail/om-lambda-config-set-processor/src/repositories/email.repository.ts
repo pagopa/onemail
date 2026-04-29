@@ -193,7 +193,7 @@ export const batchUpdateEmailStatuses = async (
           ...item,
           status,
           updatedAt: now,
-          providerMessageId: providerMessageId ?? item.providerMessageId,
+          ...(providerMessageId ? { providerMessageId } : {}),
           history: updatedHistory,
         },
       },

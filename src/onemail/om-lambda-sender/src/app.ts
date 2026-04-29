@@ -1,29 +1,58 @@
-import type { Context, SQSEvent, SQSHandler } from 'aws-lambda';
+import type { Context, SQSEvent, SQSHandler, SQSRecord } from 'aws-lambda';
 
 import env from '#config/env';
-import { addLambdaContextToLogger } from '#config/logger';
-import {
-  handleHighPriority,
-  handleLowPriority,
-} from '#services/priority.service';
+import { addLambdaContextToLogger, getLogger } from '#config/logger';
+import { RetryableEmailError } from '#errors/retryableEmail.error';
+import { handleEmailRecordByPriority } from '#services/priority.service';
 import {
   BatchProcessor,
   EventType,
   processPartialResponse,
 } from '@aws-lambda-powertools/batch';
 import middy from '@middy/core';
-import { flushMetrics } from 'om-common/repositories';
+import {
+  flushMetrics,
+  publishMetrics,
+  SenderMetricName,
+} from 'om-common/repositories';
 
-const processor = new BatchProcessor(EventType.SQS);
+const logger = getLogger();
 
-//todo do error handler but exclude some SES errors
+// Custom global error handler
+class CustomBatchProcessor extends BatchProcessor {
+  override failureHandler(record: SQSRecord, error: Error) {
+    if (error instanceof RetryableEmailError) {
+      logger.error(`Retryable error: ${error.message}`, {
+        ...error.context,
+        error: error.cause,
+        retryable: true,
+      });
+    } else {
+      publishMetrics([
+        {
+          name: SenderMetricName.UnexpectedRetryableError,
+        },
+      ]);
+      logger.error('Unexpected error, will be retried', {
+        body: record.body,
+        error,
+        retryable: true,
+      });
+    }
+    return super.failureHandler(record, error);
+  }
+}
+
+const processor = new CustomBatchProcessor(EventType.SQS);
+
 const lambdaHandler: SQSHandler = async (event: SQSEvent, context: Context) => {
   addLambdaContextToLogger(context);
   const isHighPriority = event.Records[0].eventSourceARN.includes(
     env.sqs.highPriorityQueueARN,
   );
 
-  const recordHandler = isHighPriority ? handleHighPriority : handleLowPriority;
+  const recordHandler = (record: SQSRecord) =>
+    handleEmailRecordByPriority(record, isHighPriority);
 
   // TODO: idempotency with @aws-lambda-powertools/idempotency
   return processPartialResponse(event, recordHandler, processor, {

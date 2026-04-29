@@ -77,6 +77,7 @@ export const SenderMetricName = {
   EmailNotFound: 'EmailNotFound',
   EmailStatusBatchUpdateFailed: 'EmailStatusBatchUpdateFailed',
   InvalidRecord: 'InvalidRecord',
+  UnexpectedRetryableError: 'UnexpectedRetryableError',
 } as const;
 
 export const DispatcherMetricName = {

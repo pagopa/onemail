@@ -40,19 +40,19 @@ jobs:
       # start lint checking
       - name: Lint
         id: lint-check
-        run: pnpm run lint:check
+        run: pnpm run lint:check --affected
 
       # start code style checking
       - name: Format
         id: format-check
-        run: pnpm run format:check
+        run: pnpm run format:check --affected
 
       # run TypeScript type checking
       - name: TypeScript type checking
         id: type-check
-        run: pnpm run type-check
+        run: pnpm run type-check --affected
 
       # run unit tests with coverage
       - name: Unit tests
         id: unit-tests
-        run: pnpm run test:coverage
+        run: pnpm run test:coverage --affected

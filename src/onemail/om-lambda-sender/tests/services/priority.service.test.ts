@@ -1,9 +1,6 @@
 import { SqsEventItemHigh } from '#dtos/sqsEventItem.dto';
 import { DryRunValidationError } from '#errors/dryRunValidation.error';
-import {
-  handleHighPriority,
-  handleLowPriority,
-} from '#services/priority.service';
+import { handleEmailRecordByPriority } from '#services/priority.service';
 import {
   BadRequestException,
   BulkEmailStatus,
@@ -65,7 +62,7 @@ beforeEach(() => {
 
 describe('priority.service high priority flows', () => {
   it('discards invalid records and publishes the invalid metric', async () => {
-    await handleHighPriority({ body: 'not-json' } as never);
+    await handleEmailRecordByPriority({ body: 'not-json' } as never, true);
 
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'InvalidRecord' }]);
   });
@@ -77,7 +74,10 @@ describe('priority.service high priority flows', () => {
       new DryRunValidationError('invalid dry-run'),
     );
 
-    await handleHighPriority(makeQueueRecord({ emailId: 'email-1' }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: 'email-1' }),
+      true,
+    );
 
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
@@ -96,7 +96,10 @@ describe('priority.service high priority flows', () => {
     getEmailById.mockResolvedValue(email);
     sendHighPriorityEmail.mockResolvedValue('ses-message-id');
 
-    await handleHighPriority(makeQueueRecord({ emailId: email.emailId }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: email.emailId }),
+      true,
+    );
 
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: email.emailId,
@@ -118,7 +121,10 @@ describe('priority.service high priority flows', () => {
       new BadRequestException({ message: 'bad request', $metadata: {} }),
     );
 
-    await handleHighPriority(makeQueueRecord({ emailId: 'email-1' }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: 'email-1' }),
+      true,
+    );
 
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
@@ -138,7 +144,10 @@ describe('priority.service high priority flows', () => {
     getEmailById.mockResolvedValue(email);
     sendHighPriorityEmail.mockResolvedValue(undefined);
 
-    await handleHighPriority(makeQueueRecord({ emailId: email.emailId }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: email.emailId }),
+      true,
+    );
 
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: email.emailId,
@@ -165,7 +174,10 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
       }),
     );
 
-    await handleHighPriority(makeQueueRecord({ emailId: 'email-1' }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: 'email-1' }),
+      true,
+    );
 
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
@@ -190,7 +202,10 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
       }),
     );
 
-    await handleHighPriority(makeQueueRecord({ emailId: 'email-1' }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: 'email-1' }),
+      true,
+    );
 
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
@@ -206,8 +221,9 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
   });
 
   it('discards schema-invalid high priority records and publishes the invalid metric', async () => {
-    await handleHighPriority(
+    await handleEmailRecordByPriority(
       makeQueueRecord({ wrongField: 'value' } as unknown as SqsEventItemHigh),
+      true,
     );
 
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'InvalidRecord' }]);
@@ -216,7 +232,10 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
   it('publishes EmailNotFound and returns early when DB has no record', async () => {
     getEmailById.mockResolvedValue(undefined);
 
-    await handleHighPriority(makeQueueRecord({ emailId: 'email-1' }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: 'email-1' }),
+      true,
+    );
 
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'EmailNotFound' }]);
   });
@@ -233,7 +252,10 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     accessDenied.name = 'AccessDeniedException';
     sendHighPriorityEmail.mockRejectedValue(accessDenied);
 
-    await handleHighPriority(makeQueueRecord({ emailId: 'email-1' }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: 'email-1' }),
+      true,
+    );
 
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
@@ -261,7 +283,10 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     notFound.name = 'NotFoundException';
     sendHighPriorityEmail.mockRejectedValue(notFound);
 
-    await handleHighPriority(makeQueueRecord({ emailId: 'email-1' }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: 'email-1' }),
+      true,
+    );
 
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
@@ -276,7 +301,7 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     ]);
   });
 
-  it('rethrows unknown SES errors for high priority without updating status', async () => {
+  it('rethrows unknown SES errors for high priority without updating email status', async () => {
     const email = makeEmailStatusHistoryItem();
     getEmailById.mockResolvedValue(email);
     sendHighPriorityEmail.mockRejectedValue(
@@ -284,22 +309,26 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     );
 
     await expect(
-      handleHighPriority(makeQueueRecord({ emailId: email.emailId })),
-    ).rejects.toThrow('unexpected SES failure');
+      handleEmailRecordByPriority(
+        makeQueueRecord({ emailId: email.emailId }),
+        true,
+      ),
+    ).rejects.toThrow('SES transient failure');
     expect(updateEmailStatus).not.toHaveBeenCalled();
   });
 });
 
 describe('priority.service low priority flows', () => {
   it('discards invalid low priority records and publishes the invalid metric', async () => {
-    await handleLowPriority({ body: 'not-json' } as never);
+    await handleEmailRecordByPriority({ body: 'not-json' } as never, false);
 
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'InvalidRecord' }]);
   });
 
   it('discards schema-invalid low priority records and publishes the invalid metric', async () => {
-    await handleLowPriority(
+    await handleEmailRecordByPriority(
       makeQueueRecord({ wrongField: 'value' } as unknown as SqsEventItemHigh),
+      false,
     );
 
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'InvalidRecord' }]);
@@ -308,7 +337,10 @@ describe('priority.service low priority flows', () => {
   it('publishes EmailBatchNotFound and returns early when DB has no records', async () => {
     getEmailsByRequestId.mockResolvedValue([]);
 
-    await handleLowPriority(makeQueueRecord({ requestId: 'request-1' }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ requestId: 'request-1' }),
+      false,
+    );
 
     expect(publishMetrics).toHaveBeenCalledWith([
       { name: 'EmailBatchNotFound' },
@@ -331,7 +363,10 @@ describe('priority.service low priority flows', () => {
       new DryRunValidationError('invalid batch'),
     );
 
-    await handleLowPriority(makeQueueRecord({ requestId: 'request-1' }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ requestId: 'request-1' }),
+      false,
+    );
 
     expect(batchUpdateEmailStatuses).toHaveBeenCalledWith([
       { item: emails[0], status: EmailStatus.DryRunError },
@@ -358,7 +393,10 @@ describe('priority.service low priority flows', () => {
       new BadRequestException({ message: 'bad request', $metadata: {} }),
     );
 
-    await handleLowPriority(makeQueueRecord({ requestId: 'request-1' }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ requestId: 'request-1' }),
+      false,
+    );
 
     expect(batchUpdateEmailStatuses).toHaveBeenCalledWith([
       {
@@ -413,8 +451,11 @@ describe('priority.service low priority SES entry result flows', () => {
     });
 
     await expect(
-      handleLowPriority(makeQueueRecord({ requestId: 'request-1' })),
-    ).rejects.toThrow('Retryable failures occurred');
+      handleEmailRecordByPriority(
+        makeQueueRecord({ requestId: 'request-1' }),
+        false,
+      ),
+    ).rejects.toThrow('Retryable per-email SES failures');
 
     expect(batchUpdateEmailStatuses).toHaveBeenCalledWith([
       {
@@ -463,7 +504,10 @@ describe('priority.service low priority SES entry result flows', () => {
       ],
     });
 
-    await handleLowPriority(makeQueueRecord({ requestId: 'request-1' }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ requestId: 'request-1' }),
+      false,
+    );
 
     expect(batchUpdateEmailStatuses).toHaveBeenCalledWith([
       {
@@ -506,7 +550,10 @@ describe('priority.service low priority SES rejection and guard clauses', () => 
     accessDenied.name = 'AccessDeniedException';
     sendLowPriorityEmail.mockRejectedValue(accessDenied);
 
-    await handleLowPriority(makeQueueRecord({ requestId: 'request-1' }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ requestId: 'request-1' }),
+      false,
+    );
 
     expect(batchUpdateEmailStatuses).toHaveBeenCalledWith([
       {
@@ -548,7 +595,10 @@ describe('priority.service low priority SES rejection and guard clauses', () => 
     notFound.name = 'NotFoundException';
     sendLowPriorityEmail.mockRejectedValue(notFound);
 
-    await handleLowPriority(makeQueueRecord({ requestId: 'request-1' }));
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ requestId: 'request-1' }),
+      false,
+    );
 
     expect(batchUpdateEmailStatuses).toHaveBeenCalledWith([
       {
@@ -567,7 +617,7 @@ describe('priority.service low priority SES rejection and guard clauses', () => 
     ]);
   });
 
-  it('rethrows unknown SES errors for low priority without updating statuses', async () => {
+  it('rethrows unknown SES errors for low priority without updating email statuses', async () => {
     const emails = [
       makeEmailStatusHistoryItem({
         emailId: 'email-1',
@@ -578,8 +628,11 @@ describe('priority.service low priority SES rejection and guard clauses', () => 
     sendLowPriorityEmail.mockRejectedValue(new Error('unexpected SES failure'));
 
     await expect(
-      handleLowPriority(makeQueueRecord({ requestId: 'request-1' })),
-    ).rejects.toThrow('unexpected SES failure');
+      handleEmailRecordByPriority(
+        makeQueueRecord({ requestId: 'request-1' }),
+        false,
+      ),
+    ).rejects.toThrow('SES transient failure');
     expect(batchUpdateEmailStatuses).not.toHaveBeenCalled();
   });
 });
