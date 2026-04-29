@@ -1,5 +1,11 @@
 # om-common
 
+## 1.4.2
+
+### Patch Changes
+
+- 0d2fad2: add rendering failure event ses and no retryable soft bounces
+
 ## 1.4.1
 
 ### Patch Changes
