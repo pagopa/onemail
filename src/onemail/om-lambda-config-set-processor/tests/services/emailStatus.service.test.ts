@@ -36,6 +36,7 @@ vi.mock('om-common/repositories', () => ({
     EmailAlreadyQueued: 'EmailAlreadyQueued',
     EmailDelivered: 'EmailDelivered',
     EmailHardBounce: 'EmailHardBounce',
+    EmailNonRetryableSoftBounce: 'EmailNonRetryableSoftBounce',
     EmailComplaint: 'EmailComplaint',
     EmailRejected: 'EmailRejected',
     EmailRenderingFailure: 'EmailRenderingFailure',
@@ -170,6 +171,31 @@ describe('emailStatus.service bounce flow', () => {
     expect(updateEmailStatus).not.toHaveBeenCalled();
   });
 
+  it('delegates transient General bounce to handleSoftBounceRetry', async () => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
+    findEmailByProviderMessageId.mockResolvedValue(email);
+
+    await sqsEventHandler(
+      makeQueueRecord(
+        makeBounceEvent(
+          'ses-msg-1',
+          CapitalizedSesBounceType.Transient,
+          CapitalizedSesBounceSubType.General,
+          '2025-06-01T12:00:00Z',
+        ),
+      ),
+    );
+
+    expect(handleSoftBounceRetry).toHaveBeenCalledWith(
+      email,
+      '2025-06-01T12:00:00Z',
+      CapitalizedSesBounceSubType.General,
+    );
+    expect(updateEmailStatus).not.toHaveBeenCalled();
+  });
+
   it('delegates undetermined bounce to handleSoftBounceRetry', async () => {
     const email = makeEmailStatusHistoryItem({
       status: EmailStatus.Dispatched,
@@ -222,6 +248,44 @@ describe('emailStatus.service bounce flow', () => {
       ],
     );
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'EmailHardBounce' }]);
+  });
+
+  it.each([
+    CapitalizedSesBounceSubType.ContentRejected,
+    CapitalizedSesBounceSubType.AttachmentRejected,
+    CapitalizedSesBounceSubType.MessageTooLarge,
+  ])('treats transient %s as NonRetryableSoftBounce', async (subType) => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
+    findEmailByProviderMessageId.mockResolvedValue(email);
+
+    await sqsEventHandler(
+      makeQueueRecord(
+        makeBounceEvent(
+          'ses-msg-1',
+          CapitalizedSesBounceType.Transient,
+          subType,
+          '2025-06-01T12:00:00Z',
+        ),
+      ),
+    );
+
+    expect(updateEmailStatus).toHaveBeenCalledWith(
+      email.emailId,
+      email.status,
+      [
+        {
+          timestamp: '2025-06-01T12:00:00Z',
+          status: EmailStatus.NonRetryableSoftBounce,
+          reason: subType,
+        },
+      ],
+    );
+    expect(publishMetrics).toHaveBeenCalledWith([
+      { name: 'EmailNonRetryableSoftBounce' },
+    ]);
+    expect(handleSoftBounceRetry).not.toHaveBeenCalled();
   });
 });
 
@@ -340,6 +404,34 @@ describe('emailStatus.service rendering failure flow', () => {
       [
         expect.objectContaining({
           status: EmailStatus.Rejected,
+          reason: 'Template rendering failure "my-template": missing var',
+        }),
+      ],
+    );
+    expect(publishMetrics).toHaveBeenCalledWith([
+      { name: 'EmailRenderingFailure' },
+    ]);
+  });
+
+  it('omits error suffix when errorMessage is null', async () => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
+    findEmailByProviderMessageId.mockResolvedValue(email);
+
+    await sqsEventHandler(
+      makeQueueRecord(
+        makeRenderingFailureEvent('ses-msg-1', 'my-template', null),
+      ),
+    );
+
+    expect(updateEmailStatus).toHaveBeenCalledWith(
+      email.emailId,
+      email.status,
+      [
+        expect.objectContaining({
+          status: EmailStatus.Rejected,
+          reason: 'Template rendering failure "my-template"',
         }),
       ],
     );

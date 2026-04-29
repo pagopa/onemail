@@ -16,6 +16,14 @@ export enum CapitalizedSesBounceType {
   Transient = 'Transient',
 }
 
+/** Transient sub-types that are non-retryable and treated as hard bounces */
+export const CapitalizedNonRetryableTransientSubTypes =
+  new Set<CapitalizedSesBounceSubType>([
+    CapitalizedSesBounceSubType.AttachmentRejected,
+    CapitalizedSesBounceSubType.ContentRejected,
+    CapitalizedSesBounceSubType.MessageTooLarge,
+  ]);
+
 export enum CapitalizedSesConfigurationSetEventType {
   Bounce = 'Bounce',
   Complaint = 'Complaint',
