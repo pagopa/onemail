@@ -1,5 +1,13 @@
 # om-lambda-sender
 
+## 1.6.1
+
+### Patch Changes
+
+- 0d2fad2: add rendering failure event ses and no retryable soft bounces
+- Updated dependencies [0d2fad2]
+  - om-common@1.4.2
+
 ## 1.6.0
 
 ### Minor Changes

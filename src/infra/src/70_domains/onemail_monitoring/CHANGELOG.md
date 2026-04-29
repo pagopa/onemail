@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.5.0
+
+### Minor Changes
+
+- 9a84c45: Setup Infra Alarms
+
 ## 1.4.1
 
 ### Patch Changes

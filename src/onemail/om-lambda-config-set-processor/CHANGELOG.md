@@ -1,5 +1,13 @@
 # om-lambda-config-set-processor
 
+## 1.6.3
+
+### Patch Changes
+
+- 0d2fad2: add rendering failure event ses and no retryable soft bounces
+- Updated dependencies [0d2fad2]
+  - om-common@1.4.2
+
 ## 1.6.2
 
 ### Patch Changes

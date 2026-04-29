@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.13.1
+
+### Patch Changes
+
+- 0d2fad2: add rendering failure event ses and no retryable soft bounces
+
 ## 1.13.0
 
 ### Minor Changes
