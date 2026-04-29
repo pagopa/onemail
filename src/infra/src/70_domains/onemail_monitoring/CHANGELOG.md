@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.6.0
+
+### Minor Changes
+
+- 21ffc0e: Overall Cloudwatch Dashboard Configuration
+
 ## 1.5.0
 
 ### Minor Changes
