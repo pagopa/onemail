@@ -6,6 +6,7 @@ import {
   BulkEmailStatus,
   MailFromDomainNotVerifiedException,
   MessageRejected,
+  SESv2ServiceException,
 } from '@aws-sdk/client-sesv2';
 import { EmailPriority, EmailStatus } from 'om-common/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -128,7 +129,7 @@ describe('priority.service high priority flows', () => {
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
       status: EmailStatus.Rejected,
-      reason: 'BadRequestException: bad request',
+      reason: 'BadRequestException',
     });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
@@ -181,7 +182,7 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
       status: EmailStatus.Rejected,
-      reason: 'MailFromDomainNotVerifiedException: domain not verified',
+      reason: 'MailFromDomainNotVerifiedException',
     });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
@@ -209,7 +210,7 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: 'email-1',
       status: EmailStatus.Rejected,
-      reason: 'MessageRejected: message rejected',
+      reason: 'MessageRejected',
     });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
@@ -237,6 +238,67 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     );
 
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'EmailNotFound' }]);
+  });
+
+  it('marks high priority emails as rejected when access is denied by SES', async () => {
+    const email = makeEmailStatusHistoryItem();
+    getEmailById.mockResolvedValue(email);
+    const accessDenied = new SESv2ServiceException({
+      name: 'AccessDeniedException',
+      message: 'User is not authorized to perform ses:SendEmail',
+      $metadata: {},
+      $fault: 'client',
+    });
+    accessDenied.name = 'AccessDeniedException';
+    sendHighPriorityEmail.mockRejectedValue(accessDenied);
+
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: 'email-1' }),
+      true,
+    );
+
+    expect(updateEmailStatus).toHaveBeenCalledWith({
+      emailId: 'email-1',
+      status: EmailStatus.Rejected,
+      reason:
+        'AccessDeniedException: not authorized to perform the requested SES action',
+    });
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'HighPriorityRejected',
+        dimensions: { clientId: email.clientId },
+      },
+    ]);
+  });
+
+  it('marks high priority emails as rejected when SES template is not found', async () => {
+    const email = makeEmailStatusHistoryItem();
+    getEmailById.mockResolvedValue(email);
+    const notFound = new SESv2ServiceException({
+      name: 'NotFoundException',
+      message: 'Template does not exist',
+      $metadata: {},
+      $fault: 'client',
+    });
+    notFound.name = 'NotFoundException';
+    sendHighPriorityEmail.mockRejectedValue(notFound);
+
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: 'email-1' }),
+      true,
+    );
+
+    expect(updateEmailStatus).toHaveBeenCalledWith({
+      emailId: 'email-1',
+      status: EmailStatus.Rejected,
+      reason: 'NotFoundException: the template used might not exist in SES',
+    });
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'HighPriorityRejected',
+        dimensions: { clientId: email.clientId },
+      },
+    ]);
   });
 
   it('rethrows unknown SES errors for high priority without updating email status', async () => {
@@ -340,12 +402,12 @@ describe('priority.service low priority flows', () => {
       {
         item: emails[0],
         status: EmailStatus.Rejected,
-        reason: 'BadRequestException: bad request',
+        reason: 'BadRequestException',
       },
       {
         item: emails[1],
         status: EmailStatus.Rejected,
-        reason: 'BadRequestException: bad request',
+        reason: 'BadRequestException',
       },
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
@@ -405,7 +467,6 @@ describe('priority.service low priority SES entry result flows', () => {
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
       { name: 'LowPriorityDispatched', value: 1 },
-      { name: 'LowPriorityRejected', value: 0 },
       { name: 'LowPriorityRetryableFailure', value: 1 },
     ]);
   });
@@ -463,7 +524,96 @@ describe('priority.service low priority SES entry result flows', () => {
     expect(publishMetrics).toHaveBeenCalledWith([
       { name: 'LowPriorityDispatched', value: 1 },
       { name: 'LowPriorityRejected', value: 1 },
-      { name: 'LowPriorityRetryableFailure', value: 0 },
+    ]);
+  });
+});
+
+describe('priority.service low priority SES rejection and guard clauses', () => {
+  it('marks whole low priority batches as rejected when access is denied by SES', async () => {
+    const emails = [
+      makeEmailStatusHistoryItem({
+        emailId: 'email-1',
+        priority: EmailPriority.LOW,
+      }),
+      makeEmailStatusHistoryItem({
+        emailId: 'email-2',
+        priority: EmailPriority.LOW,
+      }),
+    ];
+    getEmailsByRequestId.mockResolvedValue(emails);
+    const accessDenied = new SESv2ServiceException({
+      name: 'AccessDeniedException',
+      message: 'User is not authorized to perform ses:SendBulkEmail',
+      $metadata: {},
+      $fault: 'client',
+    });
+    accessDenied.name = 'AccessDeniedException';
+    sendLowPriorityEmail.mockRejectedValue(accessDenied);
+
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ requestId: 'request-1' }),
+      false,
+    );
+
+    expect(batchUpdateEmailStatuses).toHaveBeenCalledWith([
+      {
+        item: emails[0],
+        status: EmailStatus.Rejected,
+        reason:
+          'AccessDeniedException: not authorized to perform the requested SES action',
+      },
+      {
+        item: emails[1],
+        status: EmailStatus.Rejected,
+        reason:
+          'AccessDeniedException: not authorized to perform the requested SES action',
+      },
+    ]);
+    expect(publishMetrics).toHaveBeenCalledWith([
+      { name: 'LowPriorityRejected', value: 2 },
+    ]);
+  });
+
+  it('marks whole low priority batches as rejected when SES template is not found', async () => {
+    const emails = [
+      makeEmailStatusHistoryItem({
+        emailId: 'email-1',
+        priority: EmailPriority.LOW,
+      }),
+      makeEmailStatusHistoryItem({
+        emailId: 'email-2',
+        priority: EmailPriority.LOW,
+      }),
+    ];
+    getEmailsByRequestId.mockResolvedValue(emails);
+    const notFound = new SESv2ServiceException({
+      name: 'NotFoundException',
+      message: 'Template does not exist',
+      $metadata: {},
+      $fault: 'client',
+    });
+    notFound.name = 'NotFoundException';
+    sendLowPriorityEmail.mockRejectedValue(notFound);
+
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ requestId: 'request-1' }),
+      false,
+    );
+
+    expect(batchUpdateEmailStatuses).toHaveBeenCalledWith([
+      {
+        item: emails[0],
+        status: EmailStatus.Rejected,
+        reason: 'NotFoundException: the template used might not exist in SES',
+      },
+      {
+        item: emails[1],
+        status: EmailStatus.Rejected,
+        reason: 'NotFoundException: the template used might not exist in SES',
+      },
+    ]);
+    expect(publishMetrics).toHaveBeenCalledWith([
+      { name: 'LowPriorityRejected', value: 2 },
     ]);
   });
 

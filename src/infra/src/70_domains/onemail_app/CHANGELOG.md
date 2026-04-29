@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.19.0
+
+### Minor Changes
+
+- c029e54: Setup DynamoDB global tables and kms replica
+
 ## 1.18.0
 
 ### Minor Changes

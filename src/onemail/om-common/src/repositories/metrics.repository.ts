@@ -46,6 +46,7 @@ export const ConfigSetProcessorMetricName = {
   EmailLowPriorityRetry: `${PriorityPrefix[EmailPriority.LOW]}Retry`,
   // Bounce
   EmailHardBounce: `Email${EmailStatus.HardBounce}`,
+  EmailNonRetryableSoftBounce: `Email${EmailStatus.NonRetryableSoftBounce}`,
   EmailSoftBounce: `Email${EmailStatus.SoftBounce}`,
   EmailComplaint: `Email${EmailStatus.Complaint}`,
   EmailRejected: `Email${EmailStatus.Rejected}`,

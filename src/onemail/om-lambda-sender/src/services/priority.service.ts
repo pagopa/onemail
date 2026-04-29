@@ -21,6 +21,7 @@ import {
   BadRequestException,
   MailFromDomainNotVerifiedException,
   MessageRejected,
+  SESv2ServiceException,
 } from '@aws-sdk/client-sesv2';
 import isEmpty from 'lodash-es/isEmpty.js';
 import { publishMetrics, SenderMetricName } from 'om-common/repositories';
@@ -102,7 +103,7 @@ const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       await updateEmailStatus({
         emailId,
         status: EmailStatus.Rejected,
-        reason: errorMessage,
+        reason: errorMessage.reason,
       });
       publishMetrics([
         {
@@ -112,7 +113,7 @@ const handleHighPriority = async (record: SQSRecord): Promise<void> => {
       ]);
       throw new PermanentEmailError('Email rejected by SES', {
         emailId,
-        error: errorMessage,
+        error: errorMessage.message,
       });
     }
 
@@ -262,7 +263,7 @@ const handleLowPriority = async (record: SQSRecord): Promise<void> => {
         emails.map((email) => ({
           item: email,
           status: EmailStatus.Rejected,
-          reason: errorMessage,
+          reason: errorMessage.reason,
         })),
       );
       publishMetrics([
@@ -273,7 +274,7 @@ const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       ]);
       throw new PermanentEmailError('Email rejected by SES', {
         requestId,
-        error: errorMessage,
+        error: errorMessage.message,
       });
     }
 
@@ -285,7 +286,8 @@ const handleLowPriority = async (record: SQSRecord): Promise<void> => {
   }
 
   await batchUpdateEmailStatuses(updates);
-  publishMetrics([
+
+  const metrics = [
     {
       name: SenderMetricName.LowPriorityDispatched,
       value: successfulEmails.length,
@@ -298,7 +300,11 @@ const handleLowPriority = async (record: SQSRecord): Promise<void> => {
       name: SenderMetricName.LowPriorityRetryableFailure,
       value: retryableFailures.length,
     },
-  ]);
+  ].filter((m) => m.value > 0);
+
+  if (metrics.length > 0) {
+    publishMetrics(metrics);
+  }
 
   if (retryableFailures.length > 0) {
     throw new RetryableEmailError('Retryable per-email SES failures', {
@@ -309,15 +315,47 @@ const handleLowPriority = async (record: SQSRecord): Promise<void> => {
   logger.info('End');
 };
 
-function handleSesError(error: unknown): string | undefined {
+function handleSesError(
+  error: unknown,
+): { message: string; reason: string } | undefined {
   if (error instanceof BadRequestException) {
-    return `BadRequestException: ${error.message}`;
+    return {
+      message: `BadRequestException: ${error.message}`,
+      reason: 'BadRequestException',
+    };
   }
   if (error instanceof MailFromDomainNotVerifiedException) {
-    return `MailFromDomainNotVerifiedException: ${error.message}`;
+    return {
+      message: `MailFromDomainNotVerifiedException: ${error.message}`,
+      reason: 'MailFromDomainNotVerifiedException',
+    };
   }
   if (error instanceof MessageRejected) {
-    return `MessageRejected: ${error.message}`;
+    return {
+      message: `MessageRejected: ${error.message}`,
+      reason: 'MessageRejected',
+    };
+  }
+  // TODO: handle SES exceptions related to tenant configuration in ecs-dispatcher,
+  // before reaching lambda sender
+  if (
+    error instanceof SESv2ServiceException &&
+    error.name === 'AccessDeniedException'
+  ) {
+    return {
+      message: `AccessDeniedException: ${error.message}`,
+      reason:
+        'AccessDeniedException: not authorized to perform the requested SES action',
+    };
+  }
+  if (
+    error instanceof SESv2ServiceException &&
+    error.name === 'NotFoundException'
+  ) {
+    return {
+      message: `NotFoundException: ${error.message}`,
+      reason: 'NotFoundException: the template used might not exist in SES',
+    };
   }
   return undefined;
 }

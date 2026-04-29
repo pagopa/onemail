@@ -7,6 +7,7 @@ export enum EmailStatus {
   Delivered = 'Delivered',
   Dispatched = 'Dispatched',
   HardBounce = 'HardBounce',
+  NonRetryableSoftBounce = 'NonRetryableSoftBounce',
   Queued = 'Queued',
   Rejected = 'Rejected',
   DryRunError = 'DryRunError',

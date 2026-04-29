@@ -66,7 +66,7 @@ resource "aws_sesv2_configuration_set_event_destination" "to_eb" {
 
   event_destination {
     enabled              = true
-    matching_event_types = ["REJECT", "BOUNCE", "COMPLAINT", "DELIVERY"]
+    matching_event_types = ["REJECT", "BOUNCE", "COMPLAINT", "DELIVERY", "RENDERING_FAILURE"]
     event_bridge_destination {
       event_bus_arn = "arn:aws:events:${var.aws_region}:${data.aws_caller_identity.current.account_id}:event-bus/default"
     }
@@ -90,7 +90,7 @@ resource "terraform_data" "seed_tenant_config" {
       AWS_REGION = var.aws_region
     }
 
-    interpreter = ["/usr/bin/env", "bash"]
+    interpreter = ["/usr/bin/env", "bash", "-c"]
   }
 }
 
@@ -99,7 +99,7 @@ resource "aws_cloudwatch_event_rule" "ses_rule" {
   description = "Central rule to capture SES events for all tenants in ${var.env} environment"
   event_pattern = jsonencode({
     source      = ["aws.ses"],
-    detail-type = ["Email Delivered", "Email Complaint Received", "Email Bounced", "Email Rejected", "Email Delivery Delayed"],
+    detail-type = ["Email Delivered", "Email Complaint Received", "Email Bounced", "Email Rejected", "Email Delivery Delayed", "Email Rendering Failed"],
     detail = {
       mail = {
         tenant = {
