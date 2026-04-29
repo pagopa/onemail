@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.6.0
+
+### Minor Changes
+
+- c029e54: Setup DynamoDB global tables and kms replica
+
 ## 1.5.2
 
 ### Patch Changes
