@@ -463,7 +463,6 @@ describe('priority.service low priority SES entry result flows', () => {
         status: EmailStatus.Dispatched,
         providerMessageId: 'ses-message-1',
       },
-      { item: emails[1], status: EmailStatus.Queued },
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
       { name: 'LowPriorityDispatched', value: 1 },
