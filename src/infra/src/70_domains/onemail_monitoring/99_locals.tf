@@ -154,4 +154,31 @@ locals {
       configuration_set_name = "${local.configuration_set_name_prefix}-${tenant_key}"
     }
   }
+
+  # --- Custom application metric alarms ---
+
+  custom_alarms_config_set_processor = {
+    for key, tpl in var.custom_alarm_config.config_set_processor : key => merge(tpl, {
+      alarm_name        = "${local.project_nodomain}-csp-${tpl.metric_name}"
+      alarm_description = "The config-set-processor emitted at least ${tpl.threshold} ${tpl.metric_name} event(s) in the last ${tpl.period / 60} minutes."
+      namespace         = local.project_nodomain
+      dimensions = {
+        service = "${local.project_nodomain}-lambda-config-set-processor"
+      }
+    })
+  }
+
+  custom_alarms_dispatcher = merge([
+    for key, tpl in var.custom_alarm_config.dispatcher : {
+      for tenant_key, tenant in local.tenants : "${key}_${tenant_key}" => merge(tpl, {
+        alarm_name        = "${local.project_nodomain}-dispatcher-${tpl.metric_name}-${tenant_key}"
+        alarm_description = "The dispatcher emitted at least ${tpl.threshold} ${tpl.metric_name} event(s) for tenant ${tenant_key} in the last ${tpl.period / 60} minutes."
+        namespace         = local.project_nodomain
+        dimensions = {
+          service    = "${local.project_nodomain}-ecs-dispatcher"
+          tenantName = tenant.tenant_name
+        }
+      })
+    }
+  ]...)
 }

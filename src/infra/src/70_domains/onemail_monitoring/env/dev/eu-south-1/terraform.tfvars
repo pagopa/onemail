@@ -109,4 +109,65 @@ infra_alarm_templates = {
   }
 }
 
+custom_alarm_config = {
+  config_set_processor = {
+    email_hard_bounce = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 2
+      metric_name         = "EmailHardBounce"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    email_complaint = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 2
+      metric_name         = "EmailComplaint"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    email_rejected = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 2
+      metric_name         = "EmailRejected"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+  }
+  dispatcher = {
+    multiple_tenant_for_client = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 2
+      metric_name         = "MultipleTenantForClient"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    tenant_configuration_not_found = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 2
+      metric_name         = "TenantConfigurationNotFound"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    unauthorized_tenant = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 2
+      metric_name         = "UnauthorizedTenant"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+  }
+}
+
 dashboard_name = "overall-dashboard"

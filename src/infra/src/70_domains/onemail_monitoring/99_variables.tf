@@ -74,6 +74,31 @@ variable "infra_alarm_templates" {
   }))
 }
 
+variable "custom_alarm_config" {
+  description = "Template configuration for custom application CloudWatch alarms. Configure per environment in terraform.tfvars."
+
+  type = object({
+    config_set_processor = map(object({
+      comparison_operator = string
+      evaluation_periods  = number
+      threshold           = number
+      metric_name         = string
+      period              = number
+      statistic           = optional(string, "Sum")
+      treat_missing_data  = optional(string, "notBreaching")
+    }))
+    dispatcher = map(object({
+      comparison_operator = string
+      evaluation_periods  = number
+      threshold           = number
+      metric_name         = string
+      period              = number
+      statistic           = optional(string, "Sum")
+      treat_missing_data  = optional(string, "notBreaching")
+    }))
+  })
+}
+
 variable "dashboard_name" {
   type        = string
   description = "CloudWatch dashboard name."
