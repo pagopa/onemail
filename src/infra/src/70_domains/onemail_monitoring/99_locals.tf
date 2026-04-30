@@ -1,12 +1,13 @@
 locals {
   project_nodomain              = "${var.prefix}-${var.env_short}-${var.location_short}"
+  project_nodomain_ses          = "${var.prefix}-${var.env_short}"
   alarm_topic_arn               = try(aws_sns_topic.alerts[0].arn, null)
   alarm_actions                 = compact([local.alarm_topic_arn])
   emails                        = var.alarm_subscribers != "" ? split(",", data.aws_ssm_parameter.alarm_subscribers[0].value) : []
   tenants_file_path             = "${path.module}/../../data/tenants/tenants.json"
   raw_tenants                   = jsondecode(file(local.tenants_file_path))
-  tenant_name_prefix            = "${local.project_nodomain}-tenant"
-  configuration_set_name_prefix = "${local.project_nodomain}-configuration-set"
+  tenant_name_prefix            = "${local.project_nodomain_ses}-tenant"
+  configuration_set_name_prefix = "${local.project_nodomain_ses}-configuration-set"
 
   lambda_alarm_targets = {
     sender = {
