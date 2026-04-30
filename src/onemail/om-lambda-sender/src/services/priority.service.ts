@@ -357,6 +357,7 @@ async function checkIfMaxAttemptsReached(
       name: isHighPriority
         ? SenderMetricName.HighPriorityExhaustedRetries
         : SenderMetricName.LowPriorityExhaustedRetries,
+      value: emails.length,
       dimensions: { clientId },
     },
   ]);
