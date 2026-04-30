@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.8.0
+
+### Minor Changes
+
+- 9dc767e: Set correct dimensions for alarms related to Tenant and ConfigSet
+
 ## 1.7.0
 
 ### Minor Changes
