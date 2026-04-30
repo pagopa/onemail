@@ -1,148 +1,99 @@
-# AGENTS.md - onemail
+# AGENTS.md - Instruction Architecture Bridge
 
-This file is for GitHub Copilot and AI assistants working in this repository.
+This file is the stable entrypoint for the repository instruction architecture.
 
-## Naming Policy
-- Use GitHub Copilot terminology in repository-facing content.
-- Do not mention internal runtime names in repository artifacts.
-- Treat prompt frontmatter `name:` as the canonical command identifier.
-- Repository-internal prompt, skill, and agent filenames must start with `internal-`.
-- Repository-internal prompt, skill, and agent `name:` values must also start with `internal-`.
+## Role
 
-## Decision Priority
-1. Apply repository non-negotiables from `.github/copilot-instructions.md`.
-2. Apply explicit user requirements for the current task.
-3. Apply the selected agent behavior (agent-first routing).
-4. Apply matching files under `.github/instructions/*.instructions.md` using `applyTo`.
-5. Apply selected prompt constraints from `.github/prompts/*.prompt.md`.
-6. Apply implementation details from referenced `.github/skills/*/SKILL.md`.
-7. If no agent is explicitly selected, default to `TechAIImplementer`.
+- `AGENTS.md` is the main orientation document, the cross-surface bridge, and the precedence anchor.
+- Keep this file stable, strategic, and free of volatile inventory.
+- Treat rules as canonical here unless a narrower scoped instruction explicitly owns an exception.
 
-## Agent Routing
+## Cross-Surface Contract
 
-### When to use each agent
-- Use `TechAIPlanner` for ambiguous scope, tradeoff analysis, or multi-step design.
-- Use `TechAIImplementer` for direct code/config changes and validation-first delivery.
-- Use `internal-onemail-repo-specialist` for repo-specific work that depends on the actual `src/infra`, `src/onemail`, `.github/workflows`, and `.github/actions` conventions in this repository.
-- Use `TechAIReviewer` for quality gates and defect/regression findings.
-- Use `TechAITerraformGuardrails` for Terraform safety and policy guardrail reviews.
-- Use `TechAIIAMLeastPrivilege` for role and permission scoping checks.
-- Use `TechAIWorkflowSupplyChain` for workflow supply-chain hardening and CI checks.
-- Use `TechAISecurityReviewer` as the security-focused review gate.
-- Use `TechAIPREditor` when generating pull request content from the repository template.
+1. Use `.github/copilot-instructions.md` as the repo-wide Copilot projection.
+2. Use `.github/INVENTORY.md` for the exact live catalog of instructions, skills, and agents.
+3. Use `.github/instructions/` for path-specific or domain-specific projections.
+4. Use `.github/skills/` and `.github/agents/` only when they are relevant to the current task.
+5. Keep policy, projections, and inventory separate instead of mixing them into one file.
 
-### Agent composition
-- For changes spanning multiple specialist domains, run each relevant specialist and aggregate findings.
-- The standard chain for non-trivial work is: `TechAIPlanner` -> `TechAIImplementer` -> `TechAIReviewer` or a matching specialist.
+## Precedence Model
 
-## Governance References
-- `.github/security-baseline.md`
-- `.github/DEPRECATION.md`
-- `.github/repo-profiles.yml`
-- `.github/scripts/validate-copilot-customizations.sh`
+- `AGENTS.md` owns repository-wide defaults, rule placement, and bridge behavior.
+- `.github/copilot-instructions.md` projects the repo-wide behavior that must remain visible in native Copilot flows and must stay aligned with this file.
+- Narrower scoped instructions may override defaults only inside their declared scope.
+- Before adding a new policy, decide whether it truly belongs at repository scope; prefer the smallest specific instruction, skill, agent, or configuration that fully owns the behavior, and promote it to `AGENTS.md` only when it changes cross-surface governance or applies across the AI configuration baseline.
+- When rules conflict, prefer the smallest valid scope; if scope is equal, follow the canonical rule stated here and remove the conflicting duplicate.
 
-## Prohibitions
-- Apply all non-negotiables from `.github/copilot-instructions.md` plus:
-- Never run destructive commands unless explicitly requested.
-- Never skip validation after making changes.
+## Language Default
 
-## Repository Defaults
-- Primary focus: Infrastructure-heavy repository with Terraform-managed platform assets.
-- Profile hint: `infrastructure-heavy`
-- AGENTS.md is the external bridge for assistant behavior and naming; keep runtime references abstract.
-- Resolve stack from target files and explicit prompt inputs; the agent role remains behavioral, not language-specific.
-- Prioritize these paths:
-  - `src/infra`
-  - `src/onemail`
-  - `docs`
-  - `CHANGELOG.md`
-  - `CODEOWNERS`
+- The default authoring language for repository artifacts is English unless a scoped instruction explicitly overrides it.
+- User chat may be Italian.
+- Keep language exceptions explicit and local instead of restating broader prohibitions across the catalog.
+- Repository-owned execution-plan artifacts under `tmp/superpowers/<clear-action-or-task-name>/` may default to Italian when the local planning policy applies; this exception stays local to those plan files and does not change the repository-wide English default.
 
-### Default instruction routing
-| Pattern | Instruction |
-| --- | --- |
-| `**/*.sh` | `bash.instructions.md` |
-| `**/actions/**/action.y*ml,**/workflows/**/action.y*ml` | `github-action-composite.instructions.md` |
-| `**/workflows/**` | `github-actions.instructions.md` |
-| `**/authorizations/**/*.json,**/organization/**/*.json,**/src/**/*.json,**/data/**/*.json` | `json.instructions.md` |
-| `**/*.md` | `markdown.instructions.md` |
-| `**/*.js,**/*.cjs,**/*.mjs,**/*.ts,**/*.tsx` | `nodejs.instructions.md` |
-| `**/*.py` | `python.instructions.md` |
-| `**/*.sh,**/scripts/**/*.py,**/bin/**/*.py,**/*script*.py` | `scripts.instructions.md` |
-| `**/*.tf` | `terraform.instructions.md` |
-| `**/*.yml,**/*.yaml` | `yaml.instructions.md` |
+## Naming Contract
 
-### Preferred prompts
-- `TechAICloudPolicy`
-- `TechAITerraform`
-- `internal-onemail-change`
+- Repository-owned resources created in `cloud-strategy.github` use the `internal-*` prefix.
+- Repository-owned resources created in other repositories use the `local-*` prefix.
+- Imported upstream resources keep the `<short-repo>-<original-resource-name>` form.
 
-### Preferred skills
-- `TechAICloudPolicy`
-- `TechAITerraformFeature`
-- `TechAITerraformModule`
-- `internal-onemail-repo-context`
+## Resource Model
 
-### Required validations before PR
-- `terraform fmt -recursive`
-- `terraform validate`
-- `bash -n <changed_bash_paths>`
-- `shellcheck -s bash <changed_bash_paths>`
-- `python -m compileall <changed_python_paths>`
-- `bash .github/scripts/validate-copilot-customizations.sh --scope root --mode strict`
+- Treat prefixes as origin and ownership markers first. Do not use them as a rigid proxy for strategic, tactical, or operational level.
+- Evaluate resources on two axes: origin/ownership and dominant role.
+- `obra-*` resources are cross-cutting workflow assets. They often help with strategic framing, but may govern tactical or operational work when relevant.
+- `internal-*` resources are the canonical repository-owned layer. They are tactical by default, but may also be strategic or operational when their contract says so.
+- Imported upstream resources remain support depth by default. Overlap alone is not enough to fork or wrap them; prefer a repository-owned wrapper or replacement only when routing, governance, terminology, output shape, or safety expectations require repo-local ownership.
+- During catalog review or rationalization, imported assets in domains already covered by a credible internal owner must be evaluated as `keep as depth`, `wrap under the internal owner`, or `retire`; do not collapse that decision to a binary keep/delete choice.
+- Keep imported upstream assets verbatim by default. Allow a direct in-place override only for a strong repo-specific need that the user explicitly counter-validates, and register that override in the `internal-agent-sync-external-resources` skill bundle so future refreshes can replay it safely.
+- `local-*` resources remain consumer-local extensions. They are usually tactical or operational, but may be strategic when a consumer repository needs explicit local governance.
+- When overlap exists, prefer the repository-owned internal owner as canonical and use imported depth as support unless no credible internal owner exists.
 
-## Repository Inventory (Auto-generated)
-This inventory reflects the desired managed baseline plus repository-owned internal Copilot assets already present in the target repository.
+## Operational Owner Model
 
-### Instructions
-- `.github/instructions/bash.instructions.md`
-- `.github/instructions/github-action-composite.instructions.md`
-- `.github/instructions/github-actions.instructions.md`
-- `.github/instructions/json.instructions.md`
-- `.github/instructions/markdown.instructions.md`
-- `.github/instructions/nodejs.instructions.md`
-- `.github/instructions/python.instructions.md`
-- `.github/instructions/scripts.instructions.md`
-- `.github/instructions/terraform.instructions.md`
-- `.github/instructions/yaml.instructions.md`
+- `internal-delivery-operator`, `internal-planning-leader`, `internal-review-guard`, and `internal-critical-master` remain the canonical repository-owned operational agents.
+- The canonical operational model uses direct entry instead of a repository-owned front-door router.
+- When the right lane is unclear, prefer `internal-planning-leader` as the safe fallback.
+- Canonical owners remain recommendation-only when their boundary breaks and are not subagent-invoked by default.
+- Any future automation between canonical owners must be explicit, narrow, one-directional, and must not create all-to-all dispatch or nested ping-pong.
 
-### Prompts
-- `.github/prompts/internal-onemail-change.prompt.md`
-- `.github/prompts/tech-ai-add-unit-tests.prompt.md`
-- `.github/prompts/tech-ai-add-unit-tests-nodejs.prompt.md`
-- `.github/prompts/tech-ai-bash-script.prompt.md`
-- `.github/prompts/tech-ai-cloud-policy.prompt.md`
-- `.github/prompts/tech-ai-data-registry.prompt.md`
-- `.github/prompts/tech-ai-github-action.prompt.md`
-- `.github/prompts/tech-ai-github-composite-action.prompt.md`
-- `.github/prompts/tech-ai-pr-description.prompt.md`
-- `.github/prompts/tech-ai-python-script.prompt.md`
-- `.github/prompts/tech-ai-nodejs.prompt.md`
-- `.github/prompts/tech-ai-python.prompt.md`
-- `.github/prompts/tech-ai-terraform.prompt.md`
+## Projection Rules
 
-### Skills
-- `.github/skills/internal-onemail-repo-context/SKILL.md`
-- `.github/skills/tech-ai-cicd-workflow/SKILL.md`
-- `.github/skills/tech-ai-cloud-policy/SKILL.md`
-- `.github/skills/tech-ai-code-review/SKILL.md`
-- `.github/skills/tech-ai-composite-action/SKILL.md`
-- `.github/skills/tech-ai-data-registry/SKILL.md`
-- `.github/skills/tech-ai-pr-editor/SKILL.md`
-- `.github/skills/tech-ai-project-nodejs/SKILL.md`
-- `.github/skills/tech-ai-project-python/SKILL.md`
-- `.github/skills/tech-ai-script-bash/SKILL.md`
-- `.github/skills/tech-ai-script-python/SKILL.md`
-- `.github/skills/tech-ai-terraform-feature/SKILL.md`
-- `.github/skills/tech-ai-terraform-module/SKILL.md`
+- Keep repo-wide Copilot behavior in `.github/copilot-instructions.md`.
+- Keep local self-containment in scoped instruction files only when it improves the consumer experience and does not create drift.
+- Keep volatile inventory in `.github/INVENTORY.md`, never here.
+- When introducing a new source-managed catalog family or a new human-readable catalog summary surface, update inventory generation, sync discovery, and validator coverage in the same change so `.github/INVENTORY.md` is not the only surface aware of it.
+- Do not add hand-maintained catalog matrices or counts beside `.github/INVENTORY.md` unless they are generated from the filesystem or covered by validation.
+- Keep `internal-sync-*` assets sync-specific. They may reference root governance, but they do not replace canonical ownership in this file or `.github/copilot-instructions.md`.
+- When a sync or catalog workflow changes a repository-wide default, update the canonical owner first and then realign downstream projections or sync surfaces in the same pass.
+- Do not treat removed validators, sync scripts, contract tests, or historical aliases as active policy unless they exist on disk and are reintroduced deliberately.
 
-### Agents
-- `.github/agents/internal-onemail-repo-specialist.agent.md`
-- `.github/agents/tech-ai-pr-editor.agent.md`
-- `.github/agents/tech-ai-github-workflow-supply-chain.agent.md`
-- `.github/agents/tech-ai-iam-least-privilege.agent.md`
-- `.github/agents/tech-ai-implementer.agent.md`
-- `.github/agents/tech-ai-planner.agent.md`
-- `.github/agents/tech-ai-reviewer.agent.md`
-- `.github/agents/tech-ai-security-reviewer.agent.md`
-- `.github/agents/tech-ai-terraform-guardrails.agent.md`
+## Consumer Override Layer
+
+- This standards repository owns the sync seed template at `.github/copilot-instructions.override.md.template`.
+- Consumer repositories may keep `.github/copilot-instructions.override.md` as the consumer-local exception layer materialized from that template by sync.
+- That file may override synced defaults from `AGENTS.md` or `.github/copilot-instructions.md` only inside the consumer repository and only when each exception states the overridden baseline rule, local scope, reason, and required disclosure.
+- If the target file exists but declares no active overrides, keep the synced baseline authoritative.
+- When a response follows a local override, it must say that a consumer-local exception is in effect and cite `.github/copilot-instructions.override.md`.
+- Keep the target override file local in effect even when seeded by sync. Do not treat it as inventory, and do not use it to collapse the separate roles of `AGENTS.md`, `.github/copilot-instructions.md`, and `.github/INVENTORY.md`.
+- The local override layer must not redefine the ownership meaning of `internal-*`, `local-*`, or `internal-sync-*`; use it for repo-local exceptions, not for replacing the bridge model.
+
+## Retained Learning
+
+- Root `LESSONS_LEARNED.md` is the repository learning ledger for durable lessons discovered during repository work, regardless of phase.
+- Record or codify a durable lesson as soon as it becomes clear enough to be reusable; do not wait for task completion only because the work is still in planning, review, debugging, or implementation.
+- When a validator, IDE, schema check, or runtime error overturns an earlier implementation assumption, re-evaluate retained learning immediately instead of treating the correction as task-local by default.
+- When correctness depends on vendor-owned workflow semantics, schema constraints, or context availability, read the primary documentation before editing or asserting that a change is valid.
+- Keep `LESSONS_LEARNED.md` non-canonical. It must not replace `AGENTS.md`, `.github/copilot-instructions.md`, scoped instructions, skills, or agents.
+- Keep `LESSONS_LEARNED.md` append-preserving by default: preserve unrelated rows already on disk, including local uncommitted lessons, and change a specific row only when that same lesson is being codified, disproven, narrowed, or deduplicated.
+- Durable corrections to repeated or consequential misapplication of existing repository rules may also be retained as lessons.
+- Keep detailed retained-learning behavior in `.github/copilot-instructions.md`; keep only the strategic boundary here.
+
+## Volatile Artifacts
+
+- Transient planning, brainstorming, and other Superpowers-generated working files must not be written under `docs/`.
+- When such artifacts are needed inside this repository, write them under `tmp/superpowers/`.
+- Create or reuse `tmp/superpowers/<clear-action-or-task-name>/` only for retained repository-owned planning that must survive the current turn because the work is non-banal, crosses turns, spans macro-categories, needs handoff, tracking, or provenance, or preserves tradeoffs worth review.
+- Keep retained execution plans as numbered Markdown files: a single `01-...md` file when one macro-category is enough, or multiple numbered files such as `01-contesto-e-vincoli.md`, `02-implementazione.md`, and `03-validazione.md` when the work spans multiple macro-categories.
+- Keep unresolved questions, doubts, or user decisions in `dubbi-e-domande.md`; this file stays separate from executable plan files and remains outside the plan-and-apply loop.
+- During execution, create matching `done-*` files, move completed items into them, remove them from the active numbered source file, and continue through the remaining numbered plan files until the work is finished or a real blocker requires user input.
