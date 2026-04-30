@@ -11,6 +11,7 @@ resource "aws_cloudwatch_metric_alarm" "bounce_rate_per_tenant" {
   threshold           = "0.05" # 5%
   alarm_description   = "The bounce rate for tenant ${each.key} has exceeded 5%."
   alarm_actions       = local.alarm_actions
+  treat_missing_data  = "notBreaching"
 
   dimensions = {
     ConfigurationSet = each.value.configuration_set_name
@@ -30,6 +31,7 @@ resource "aws_cloudwatch_metric_alarm" "complaint_rate_per_tenant" {
   threshold           = "0.001" # 0.1%
   alarm_description   = "The complaint rate (spam) for tenant ${each.key} has exceeded 0.1%."
   alarm_actions       = local.alarm_actions
+  treat_missing_data  = "notBreaching"
 
   dimensions = {
     ConfigurationSet = each.value.configuration_set_name
