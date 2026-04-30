@@ -16,7 +16,9 @@ import {
   getEmailsByRequestId,
   updateEmailStatus,
 } from '#repositories/email.repository';
+import { BulkSendResult } from '#types/bulkSendResult.type';
 import { RetryableBulkEmailStatuses } from '#types/retryableSESStatus.type';
+import { MAX_ATTEMPTS } from '#utils/constants';
 import {
   BadRequestException,
   MailFromDomainNotVerifiedException,
@@ -24,8 +26,13 @@ import {
   SESv2ServiceException,
 } from '@aws-sdk/client-sesv2';
 import isEmpty from 'lodash-es/isEmpty.js';
+import isNil from 'lodash-es/isNil.js';
 import { publishMetrics, SenderMetricName } from 'om-common/repositories';
-import { EmailStatus } from 'om-common/types';
+import {
+  EmailPriority,
+  EmailStatus,
+  type EmailStatusHistoryItem,
+} from 'om-common/types';
 
 import {
   sendHighPriorityEmail,
@@ -37,9 +44,12 @@ export const handleEmailRecordByPriority = async (
   isHighPriority: boolean,
 ): Promise<void> => {
   try {
+    const currentAttempt = Number(
+      record.attributes?.ApproximateReceiveCount ?? 1,
+    );
     return await (isHighPriority
-      ? handleHighPriority(record)
-      : handleLowPriority(record));
+      ? handleHighPriority(record, currentAttempt)
+      : handleLowPriority(record, currentAttempt));
   } catch (error) {
     // For permanent errors swallow the error to avoid retries
     if (error instanceof PermanentEmailError) {
@@ -57,7 +67,10 @@ export const handleEmailRecordByPriority = async (
   }
 };
 
-const handleHighPriority = async (record: SQSRecord): Promise<void> => {
+const handleHighPriority = async (
+  record: SQSRecord,
+  currentAttempt: number,
+): Promise<void> => {
   const logger = getNamedLogger(handleHighPriority.name);
   logger.info('Start');
 
@@ -77,9 +90,12 @@ const handleHighPriority = async (record: SQSRecord): Promise<void> => {
   }
   logger.debug('Email fetched from DB', { emailId });
 
+  // 3. Check max attempts before sending
+  await checkIfMaxAttemptsReached(currentAttempt, EmailPriority.HIGH, [email]);
+
   const clientIdDimension = { clientId: email.clientId };
 
-  // 3. Send the email with SES
+  // 4. Send the email with SES
   let providerMessageId: string | undefined;
   try {
     providerMessageId = await sendHighPriorityEmail(email);
@@ -120,7 +136,7 @@ const handleHighPriority = async (record: SQSRecord): Promise<void> => {
     throw new RetryableEmailError('SES transient failure', { emailId }, error);
   }
 
-  // 4. Update the email status in DB
+  // 5. Update the email status in DB
   if (!providerMessageId) {
     await updateEmailStatus({
       emailId,
@@ -143,7 +159,7 @@ const handleHighPriority = async (record: SQSRecord): Promise<void> => {
   await updateEmailStatus({
     emailId,
     status: EmailStatus.Dispatched,
-    providerMessageId: providerMessageId,
+    providerMessageId,
   });
   publishMetrics([
     {
@@ -155,7 +171,10 @@ const handleHighPriority = async (record: SQSRecord): Promise<void> => {
   logger.info('End');
 };
 
-const handleLowPriority = async (record: SQSRecord): Promise<void> => {
+const handleLowPriority = async (
+  record: SQSRecord,
+  currentAttempt: number,
+): Promise<void> => {
   const logger = getNamedLogger(handleLowPriority.name);
   logger.info('Start');
 
@@ -178,64 +197,13 @@ const handleLowPriority = async (record: SQSRecord): Promise<void> => {
     count: emails.length,
   });
 
-  // 3. Send bulk email with SES
-  let updates = [];
-  let successfulEmails = [];
-  const retryableFailures = [];
-  const nonRetryableFailures = [];
+  // 3. Check max attempts before sending
+  await checkIfMaxAttemptsReached(currentAttempt, EmailPriority.LOW, emails);
+
+  // 4. Send bulk email with SES
+  let sesSendResult: BulkSendResult;
   try {
-    const { successful, failed } = await sendLowPriorityEmail(emails);
-    logger.debug('Emails accepted by SES', {
-      requestId,
-      successful: successful.length,
-      failed: failed.length,
-    });
-
-    successfulEmails = successful;
-
-    for (const entry of failed) {
-      if (
-        entry.result.Status &&
-        (RetryableBulkEmailStatuses as string[]).includes(entry.result.Status)
-      ) {
-        retryableFailures.push(entry);
-      } else {
-        nonRetryableFailures.push(entry);
-      }
-    }
-
-    // 4. Batch update statuses in DB
-    updates = [
-      ...successfulEmails.map((entry) => ({
-        item: entry.item,
-        status: EmailStatus.Dispatched,
-        providerMessageId: entry.result.MessageId,
-      })),
-      ...nonRetryableFailures.map((entry) => {
-        logger.error('Email rejected by SES', {
-          emailId: entry.item.emailId,
-          error: entry.result.Error,
-          retryable: false,
-        });
-        return {
-          item: entry.item,
-          status: EmailStatus.Rejected,
-          reason: entry.result.Error,
-        };
-      }),
-      // TODO: align behavior between high and low priority - for high priority we do not update the status in case of retryable errors
-      ...retryableFailures.map((entry) => {
-        logger.error('Email rejected by SES', {
-          emailId: entry.item.emailId,
-          error: entry.result.Error,
-          retryable: true,
-        });
-        return {
-          item: entry.item,
-          status: EmailStatus.Queued,
-        };
-      }),
-    ];
+    sesSendResult = await sendLowPriorityEmail(emails);
   } catch (error) {
     if (error instanceof DryRunValidationError) {
       await batchUpdateEmailStatuses(
@@ -285,12 +253,53 @@ const handleLowPriority = async (record: SQSRecord): Promise<void> => {
     );
   }
 
+  const { successful, failed } = sesSendResult;
+  logger.debug('Emails accepted by SES', {
+    requestId,
+    successful: successful.length,
+    failed: failed.length,
+  });
+
+  const retryableFailures = [];
+  const nonRetryableFailures = [];
+  for (const entry of failed) {
+    const isRetryableError =
+      !isNil(entry.result.Status) &&
+      (RetryableBulkEmailStatuses as string[]).includes(entry.result.Status);
+
+    logger.error('Email rejected by SES', {
+      emailId: entry.item.emailId,
+      error: entry.result.Error,
+      retryable: isRetryableError,
+    });
+
+    if (isRetryableError) {
+      retryableFailures.push(entry);
+    } else {
+      nonRetryableFailures.push(entry);
+    }
+  }
+
+  // 5. Batch update statuses in DB
+  const updates = [
+    ...successful.map((entry) => ({
+      item: entry.item,
+      status: EmailStatus.Dispatched,
+      providerMessageId: entry.result.MessageId,
+    })),
+    ...nonRetryableFailures.map((entry) => ({
+      item: entry.item,
+      status: EmailStatus.Rejected,
+      reason: entry.result.Error,
+    })),
+  ];
+
   await batchUpdateEmailStatuses(updates);
 
   const metrics = [
     {
       name: SenderMetricName.LowPriorityDispatched,
-      value: successfulEmails.length,
+      value: successful.length,
     },
     {
       name: SenderMetricName.LowPriorityRejected,
@@ -314,6 +323,49 @@ const handleLowPriority = async (record: SQSRecord): Promise<void> => {
 
   logger.info('End');
 };
+
+async function checkIfMaxAttemptsReached(
+  currentAttempt: number,
+  priority: EmailPriority,
+  emails: EmailStatusHistoryItem[],
+): Promise<void> {
+  const isHighPriority = priority === EmailPriority.HIGH;
+  const maxAttempts = isHighPriority ? MAX_ATTEMPTS.high : MAX_ATTEMPTS.low;
+  if (currentAttempt <= maxAttempts) return;
+
+  const clientId = emails[0].clientId;
+  const identifier = isHighPriority ? emails[0].emailId : emails[0].requestId;
+
+  if (isHighPriority) {
+    await updateEmailStatus({
+      emailId: identifier,
+      status: EmailStatus.Rejected,
+      reason: 'Max retries exceeded',
+    });
+  } else {
+    await batchUpdateEmailStatuses(
+      emails.map((item) => ({
+        item,
+        status: EmailStatus.Rejected,
+        reason: 'Max retries exceeded',
+      })),
+    );
+  }
+
+  publishMetrics([
+    {
+      name: isHighPriority
+        ? SenderMetricName.HighPriorityExhaustedRetries
+        : SenderMetricName.LowPriorityExhaustedRetries,
+      value: emails.length,
+      dimensions: { clientId },
+    },
+  ]);
+  throw new PermanentEmailError(
+    'Record exceeded max retries',
+    isHighPriority ? { emailId: identifier } : { requestId: identifier },
+  );
+}
 
 function handleSesError(
   error: unknown,

@@ -67,11 +67,13 @@ export const SenderMetricName = {
   HighPriorityDispatched: `${PriorityPrefix[EmailPriority.HIGH]}${EmailStatus.Dispatched}`,
   HighPriorityDryRunError: `${PriorityPrefix[EmailPriority.HIGH]}${EmailStatus.DryRunError}`,
   HighPriorityRejected: `${PriorityPrefix[EmailPriority.HIGH]}${EmailStatus.Rejected}`,
+  HighPriorityExhaustedRetries: `${PriorityPrefix[EmailPriority.HIGH]}ExhaustedRetries`,
   // Low priority
   LowPriorityDispatched: `${PriorityPrefix[EmailPriority.LOW]}${EmailStatus.Dispatched}`,
   LowPriorityDryRunError: `${PriorityPrefix[EmailPriority.LOW]}${EmailStatus.DryRunError}`,
   LowPriorityRejected: `${PriorityPrefix[EmailPriority.LOW]}${EmailStatus.Rejected}`,
   LowPriorityRetryableFailure: `${PriorityPrefix[EmailPriority.LOW]}RetryableFailure`,
+  LowPriorityExhaustedRetries: `${PriorityPrefix[EmailPriority.LOW]}ExhaustedRetries`,
   // Errors
   EmailBatchNotFound: 'EmailBatchNotFound',
   EmailNotFound: 'EmailNotFound',

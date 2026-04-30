@@ -39,8 +39,15 @@ export const makeEmailStatusHistoryItem = (
 
 export const makeQueueRecord = (
   body: Partial<SqsEventItemHigh> | Partial<SqsEventItemLow>,
+  receiveCount = 1,
 ): SQSRecord =>
   ({
     body: JSON.stringify(body),
     eventSourceARN: 'arn:aws:sqs:eu-south-1:123456789012:queue',
+    attributes: {
+      ApproximateReceiveCount: String(receiveCount),
+      SentTimestamp: '0',
+      SenderId: 'test',
+      ApproximateFirstReceiveTimestamp: '0',
+    },
   }) as SQSRecord;
