@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.9.0
+
+### Minor Changes
+
+- fa6eca6: Fix Namespace for ecs alarm and set notBreaching for SES alarms
+
 ## 1.8.0
 
 ### Minor Changes
