@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.7.0
+
+### Minor Changes
+
+- 03a4efd: Custom Metrics Alarms
+
 ## 1.6.0
 
 ### Minor Changes

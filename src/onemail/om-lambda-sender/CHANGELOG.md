@@ -1,5 +1,13 @@
 # om-lambda-sender
 
+## 1.6.3
+
+### Patch Changes
+
+- 4dac33f: max retry handling for lambda sender
+- Updated dependencies [4dac33f]
+  - om-common@1.4.4
+
 ## 1.6.2
 
 ### Patch Changes
