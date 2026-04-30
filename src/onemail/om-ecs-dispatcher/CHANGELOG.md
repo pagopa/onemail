@@ -1,5 +1,12 @@
 # om-ecs-dispatcher
 
+## 1.10.5
+
+### Patch Changes
+
+- Updated dependencies [4dac33f]
+  - om-common@1.4.4
+
 ## 1.10.4
 
 ### Patch Changes

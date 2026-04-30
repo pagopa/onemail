@@ -1,5 +1,11 @@
 # om-common
 
+## 1.4.4
+
+### Patch Changes
+
+- 4dac33f: max retry handling for lambda sender
+
 ## 1.4.3
 
 ### Patch Changes
