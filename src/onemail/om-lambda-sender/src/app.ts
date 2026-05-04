@@ -2,7 +2,6 @@ import type { Context, SQSEvent, SQSHandler, SQSRecord } from 'aws-lambda';
 
 import env from '#config/env';
 import { addLambdaContextToLogger, getLogger } from '#config/logger';
-import { RetryableEmailError } from '#errors/retryableEmail.error';
 import { handleEmailRecordByPriority } from '#services/priority.service';
 import {
   BatchProcessor,
@@ -10,6 +9,7 @@ import {
   processPartialResponse,
 } from '@aws-lambda-powertools/batch';
 import middy from '@middy/core';
+import { RetryableEventError } from 'om-common/errors';
 import {
   flushMetrics,
   publishMetrics,
@@ -21,7 +21,7 @@ const logger = getLogger();
 // Custom global error handler
 class CustomBatchProcessor extends BatchProcessor {
   override failureHandler(record: SQSRecord, error: Error) {
-    if (error instanceof RetryableEmailError) {
+    if (error instanceof RetryableEventError) {
       logger.error(`Retryable error: ${error.message}`, {
         ...error.context,
         error: error.cause,

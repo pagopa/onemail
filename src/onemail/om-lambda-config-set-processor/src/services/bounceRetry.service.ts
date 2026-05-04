@@ -5,6 +5,7 @@ import { getLogger, getNamedLogger } from '#config/logger';
 import { sqsClient } from '#connectors/sqs.connector';
 import { updateEmailStatus } from '#repositories/email.repository';
 import { SendMessageCommand } from '@aws-sdk/client-sqs';
+import { RetryableEventError } from 'om-common/errors';
 import {
   ConfigSetProcessorMetricName,
   publishMetrics,
@@ -207,7 +208,7 @@ const scheduleRetry = async (
   scheduleKey: string,
   priority: EmailPriority,
   attempt: number,
-  input: Record<string, string>,
+  input: { emailId: string } | { requestId: string },
 ): Promise<void> => {
   try {
     const queueUrl =
@@ -246,6 +247,10 @@ const scheduleRetry = async (
       },
     ]);
 
-    throw error;
+    throw new RetryableEventError(
+      'Failed to schedule retry via SQS',
+      { ...input, attempt },
+      error,
+    );
   }
 };

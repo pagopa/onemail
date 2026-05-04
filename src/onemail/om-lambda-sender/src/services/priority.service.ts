@@ -8,8 +8,6 @@ import {
   SqsEventItemLowSchema,
 } from '#dtos/sqsEventItem.dto';
 import { DryRunValidationError } from '#errors/dryRunValidation.error';
-import { PermanentEmailError } from '#errors/permanentEmail.error';
-import { RetryableEmailError } from '#errors/retryableEmail.error';
 import {
   batchUpdateEmailStatuses,
   getEmailById,
@@ -27,6 +25,7 @@ import {
 } from '@aws-sdk/client-sesv2';
 import isEmpty from 'lodash-es/isEmpty.js';
 import isNil from 'lodash-es/isNil.js';
+import { PermanentEventError, RetryableEventError } from 'om-common/errors';
 import { publishMetrics, SenderMetricName } from 'om-common/repositories';
 import {
   EmailPriority,
@@ -52,14 +51,16 @@ export const handleEmailRecordByPriority = async (
       : handleLowPriority(record, currentAttempt));
   } catch (error) {
     // For permanent errors swallow the error to avoid retries
-    if (error instanceof PermanentEmailError) {
-      const logger = getNamedLogger(
-        isHighPriority ? handleHighPriority.name : handleLowPriority.name,
-      );
-      logger.error(`Permanent error: ${error.message}`, {
-        ...error.context,
-        retryable: false,
-      });
+    if (error instanceof PermanentEventError) {
+      if (!error.context.silent) {
+        const logger = getNamedLogger(
+          isHighPriority ? handleHighPriority.name : handleLowPriority.name,
+        );
+        logger.error(`Permanent error: ${error.message}`, {
+          ...error.context,
+          retryable: false,
+        });
+      }
       return;
     }
     // For other errors (retryable) just re-throw to trigger the retry mechanism of the batch processor
@@ -86,7 +87,7 @@ const handleHighPriority = async (
         name: SenderMetricName.EmailNotFound,
       },
     ]);
-    throw new PermanentEmailError('Email not found in DB', { emailId });
+    throw new PermanentEventError('Email not found in DB', { emailId });
   }
   logger.debug('Email fetched from DB', { emailId });
 
@@ -108,7 +109,7 @@ const handleHighPriority = async (
           dimensions: clientIdDimension,
         },
       ]);
-      throw new PermanentEmailError('Dry-run validation failed', {
+      throw new PermanentEventError('Dry-run validation failed', {
         emailId,
         error: error.message,
       });
@@ -127,13 +128,17 @@ const handleHighPriority = async (
           dimensions: clientIdDimension,
         },
       ]);
-      throw new PermanentEmailError('Email rejected by SES', {
+      throw new PermanentEventError('Email rejected by SES', {
         emailId,
         error: errorMessage.message,
       });
     }
 
-    throw new RetryableEmailError('SES transient failure', { emailId }, error);
+    throw new RetryableEventError(
+      'SES transient failure',
+      { emailId, attempt: currentAttempt },
+      error,
+    );
   }
 
   // 5. Update the email status in DB
@@ -149,7 +154,7 @@ const handleHighPriority = async (
         dimensions: clientIdDimension,
       },
     ]);
-    throw new PermanentEmailError('Email rejected by SES', { emailId });
+    throw new PermanentEventError('Email rejected by SES', { emailId });
   }
 
   logger.debug('Email accepted by SES', {
@@ -190,7 +195,7 @@ const handleLowPriority = async (
         name: SenderMetricName.EmailBatchNotFound,
       },
     ]);
-    throw new PermanentEmailError('Emails not found in DB', { requestId });
+    throw new PermanentEventError('Emails not found in DB', { requestId });
   }
   logger.debug('Emails fetched from DB', {
     requestId,
@@ -218,7 +223,7 @@ const handleLowPriority = async (
           value: emails.length,
         },
       ]);
-      throw new PermanentEmailError('Dry-run validation failed', {
+      throw new PermanentEventError('Dry-run validation failed', {
         requestId,
         error: error.message,
       });
@@ -240,15 +245,15 @@ const handleLowPriority = async (
           value: emails.length,
         },
       ]);
-      throw new PermanentEmailError('Email rejected by SES', {
+      throw new PermanentEventError('Email rejected by SES', {
         requestId,
         error: errorMessage.message,
       });
     }
 
-    throw new RetryableEmailError(
+    throw new RetryableEventError(
       'SES transient failure',
-      { requestId },
+      { requestId, attempt: currentAttempt },
       error,
     );
   }
@@ -316,8 +321,9 @@ const handleLowPriority = async (
   }
 
   if (retryableFailures.length > 0) {
-    throw new RetryableEmailError('Retryable per-email SES failures', {
+    throw new RetryableEventError('Retryable per-email SES failures', {
       requestId,
+      attempt: currentAttempt,
     });
   }
 
@@ -361,7 +367,7 @@ async function checkIfMaxAttemptsReached(
       dimensions: { clientId },
     },
   ]);
-  throw new PermanentEmailError(
+  throw new PermanentEventError(
     'Record exceeded max retries',
     isHighPriority ? { emailId: identifier } : { requestId: identifier },
   );
@@ -421,8 +427,8 @@ async function validateRecord(
     parsedBody = JSON.parse(record.body);
   } catch {
     publishMetrics([{ name: SenderMetricName.InvalidRecord }]);
-    throw new PermanentEmailError('Invalid JSON payload', {
-      emailRecord: record.body,
+    throw new PermanentEventError('Invalid JSON payload', {
+      record: record.body,
     });
   }
 
@@ -432,9 +438,9 @@ async function validateRecord(
       .map((issue) => `${issue.path.join('.')} - ${issue.message}`)
       .join('; ');
     publishMetrics([{ name: SenderMetricName.InvalidRecord }]);
-    throw new PermanentEmailError('Invalid payload', {
+    throw new PermanentEventError('Invalid payload', {
       error: errorMessage,
-      emailRecord: record.body,
+      record: record.body,
     });
   }
 

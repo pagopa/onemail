@@ -29,6 +29,11 @@
       "types": "./dist/utils/index.d.ts",
       "default": "./dist/utils/index.js"
     },
+    "./errors": {
+      "local": "./src/errors/index.ts",
+      "types": "./dist/errors/index.d.ts",
+      "default": "./dist/errors/index.js"
+    },
     "./logger": {
       "local": "./src/logger/index.ts",
       "types": "./dist/logger/index.d.ts",

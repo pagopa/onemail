@@ -245,7 +245,7 @@ describe('bounceRetry.service SQS failure', () => {
 
     await expect(
       handleSoftBounceRetry(email, '2025-06-01T12:00:00Z', 'General'),
-    ).rejects.toThrow('SQS unavailable');
+    ).rejects.toThrow('Failed to schedule retry via SQS');
 
     expect(publishMetrics).toHaveBeenCalledWith([
       {

@@ -60,6 +60,7 @@ export const ConfigSetProcessorMetricName = {
   // Other Errors
   ScheduleRetryFailed: 'ScheduleRetryFailed',
   EmailAlreadyQueued: 'EmailAlreadyQueued',
+  UnexpectedRetryableError: 'UnexpectedRetryableError',
 } as const;
 
 export const SenderMetricName = {
