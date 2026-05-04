@@ -1,5 +1,13 @@
 # om-lambda-config-set-processor
 
+## 1.6.6
+
+### Patch Changes
+
+- 2d7fca9: config-set-processor error handling
+- Updated dependencies [2d7fca9]
+  - om-common@1.4.5
+
 ## 1.6.5
 
 ### Patch Changes

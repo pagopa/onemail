@@ -1,5 +1,11 @@
 # om-common
 
+## 1.4.5
+
+### Patch Changes
+
+- 2d7fca9: config-set-processor error handling
+
 ## 1.4.4
 
 ### Patch Changes
