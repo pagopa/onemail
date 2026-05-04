@@ -1,6 +1,6 @@
-import type { Context, SQSEvent, SQSHandler } from 'aws-lambda';
+import type { Context, SQSEvent, SQSHandler, SQSRecord } from 'aws-lambda';
 
-import { addLambdaContextToLogger } from '#config/logger';
+import { addLambdaContextToLogger, getLogger } from '#config/logger';
 import { sqsEventHandler } from '#services/emailStatus.service';
 import {
   BatchProcessor,
@@ -8,9 +8,41 @@ import {
   processPartialResponse,
 } from '@aws-lambda-powertools/batch';
 import middy from '@middy/core';
-import { flushMetrics } from 'om-common/repositories';
+import { RetryableEventError } from 'om-common/errors';
+import {
+  ConfigSetProcessorMetricName,
+  flushMetrics,
+  publishMetrics,
+} from 'om-common/repositories';
 
-const processor = new BatchProcessor(EventType.SQS);
+const logger = getLogger();
+
+// Custom global error handler
+class CustomBatchProcessor extends BatchProcessor {
+  override failureHandler(record: SQSRecord, error: Error) {
+    if (error instanceof RetryableEventError) {
+      logger.error(`Retryable error: ${error.message}`, {
+        ...error.context,
+        error: error.cause,
+        retryable: true,
+      });
+    } else {
+      publishMetrics([
+        {
+          name: ConfigSetProcessorMetricName.UnexpectedRetryableError,
+        },
+      ]);
+      logger.error('Unexpected error, will be retried', {
+        body: record.body,
+        error,
+        retryable: true,
+      });
+    }
+    return super.failureHandler(record, error);
+  }
+}
+
+const processor = new CustomBatchProcessor(EventType.SQS);
 
 const lambdaHandler: SQSHandler = async (event: SQSEvent, context: Context) => {
   addLambdaContextToLogger(context);

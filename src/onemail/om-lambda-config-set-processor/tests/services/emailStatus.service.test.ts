@@ -40,6 +40,7 @@ vi.mock('om-common/repositories', () => ({
     EmailComplaint: 'EmailComplaint',
     EmailRejected: 'EmailRejected',
     EmailRenderingFailure: 'EmailRenderingFailure',
+    UnexpectedRetryableError: 'UnexpectedRetryableError',
   },
   publishMetrics,
 }));
@@ -66,7 +67,7 @@ describe('emailStatus.service validation and guard clauses', () => {
       }),
     );
 
-    expect(publishMetrics).toHaveBeenCalledWith([{ name: 'InvalidRecord' }]);
+    expect(publishMetrics).not.toHaveBeenCalled();
     expect(findEmailByProviderMessageId).not.toHaveBeenCalled();
   });
 
@@ -382,6 +383,21 @@ describe('emailStatus.service reject flow', () => {
         }),
       ],
     );
+  });
+});
+
+describe('emailStatus.service retryable error flow', () => {
+  it('propagates updateEmailStatus rejection as-is (SQS retries the record)', async () => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
+    findEmailByProviderMessageId.mockResolvedValue(email);
+    const cause = new Error('DynamoDB timeout');
+    updateEmailStatus.mockRejectedValueOnce(cause);
+
+    await expect(
+      sqsEventHandler(makeQueueRecord(makeDeliveryEvent('ses-msg-retry'))),
+    ).rejects.toThrow(cause);
   });
 });
 
