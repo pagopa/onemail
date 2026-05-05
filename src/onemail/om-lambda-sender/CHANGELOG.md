@@ -1,5 +1,13 @@
 # om-lambda-sender
 
+## 1.6.4
+
+### Patch Changes
+
+- 2d7fca9: config-set-processor error handling
+- Updated dependencies [2d7fca9]
+  - om-common@1.4.5
+
 ## 1.6.3
 
 ### Patch Changes
