@@ -96,10 +96,24 @@ variable "custom_alarm_config" {
       statistic           = optional(string, "Sum")
       treat_missing_data  = optional(string, "notBreaching")
     }))
+    sender = map(object({
+      comparison_operator = string
+      evaluation_periods  = number
+      threshold           = number
+      metric_name         = string
+      period              = number
+      statistic           = optional(string, "Sum")
+      treat_missing_data  = optional(string, "notBreaching")
+    }))
   })
 }
 
 variable "dashboard_name" {
   type        = string
   description = "CloudWatch dashboard name."
+}
+
+variable "application_dashboard_name" {
+  type        = string
+  description = "CloudWatch application metrics dashboard name."
 }

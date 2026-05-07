@@ -182,4 +182,15 @@ locals {
       })
     }
   ]...)
+
+  custom_alarms_sender = {
+    for key, tpl in var.custom_alarm_config.sender : key => merge(tpl, {
+      alarm_name        = "${local.project_nodomain}-sender-${tpl.metric_name}"
+      alarm_description = "The sender emitted at least ${tpl.threshold} ${tpl.metric_name} event(s) in the last ${tpl.period / 60} minutes."
+      namespace         = local.project_nodomain
+      dimensions = {
+        service = "${local.project_nodomain}-lambda-sender"
+      }
+    })
+  }
 }
