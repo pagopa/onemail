@@ -32,6 +32,7 @@ resource "aws_cloudwatch_dashboard" "application" {
       namespace          = local.project_nodomain
       sender_service     = "${local.project_nodomain}-lambda-sender"
       dispatcher_service = "${local.project_nodomain}-ecs-dispatcher"
+      tenants            = local.tenants
     }
   )
 }

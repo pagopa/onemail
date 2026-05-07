@@ -75,25 +75,27 @@
             "properties": {
                 "markdown": "## Dispatcher -- Request validations\n"
             }
-        },
+        }%{ if length(tenants) > 0 },%{ endif ~}
+%{ for i, tenant_key in keys(tenants) ~}
         {
             "height": 6,
-            "width": 12,
-            "y": 8,
+            "width": 24,
+            "y": ${8 + i * 7},
             "x": 0,
             "type": "metric",
             "properties": {
                 "view": "timeSeries",
                 "stacked": true,
                 "metrics": [
-                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"HighPriorityAccepted\" service=\"${dispatcher_service}\"', 'Sum', 300)", "id": "hp", "label": "HighPriority" } ],
-                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"LowPriorityAccepted\" service=\"${dispatcher_service}\"', 'Sum', 300)", "id": "lp", "label": "LowPriority" } ]
+                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"HighPriorityAccepted\" service=\"${dispatcher_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "id": "hp_${tenant_key}", "label": "HighPriority" } ],
+                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"LowPriorityAccepted\" service=\"${dispatcher_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "id": "lp_${tenant_key}", "label": "LowPriority" } ]
                 ],
                 "region": "${aws_region}",
                 "period": 300,
                 "stat": "Sum",
-                "title": "Accepted Requests"
+                "title": "Accepted Requests - ${tenants[tenant_key].tenant_name}"
             }
-        }
+        }%{ if i < length(tenants) - 1 },%{ endif ~}
+%{ endfor ~}
     ]
 }
