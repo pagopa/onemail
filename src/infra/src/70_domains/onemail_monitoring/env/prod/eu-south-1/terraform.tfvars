@@ -138,6 +138,78 @@ custom_alarm_config = {
       statistic           = "Sum"
       treat_missing_data  = "notBreaching"
     }
+    email_rendering_failure = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 5
+      metric_name         = "EmailRenderingFailure"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    high_priority_max_retries_reached = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 1
+      metric_name         = "HighPriorityMaxRetriesReached"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    low_priority_max_retries_reached = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 3
+      metric_name         = "LowPriorityMaxRetriesReached"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    schedule_retry_failed = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 1
+      metric_name         = "ScheduleRetryFailed"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    email_non_retryable_soft_bounce = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 3
+      metric_name         = "EmailNonRetryableSoftBounce"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    invalid_record = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 1
+      metric_name         = "InvalidRecord"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    email_not_found = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 1
+      metric_name         = "EmailNotFound"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    unexpected_retryable_error = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 1
+      metric_name         = "UnexpectedRetryableError"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
   }
   dispatcher = {
     multiple_tenant_for_client = {
@@ -168,6 +240,90 @@ custom_alarm_config = {
       treat_missing_data  = "notBreaching"
     }
   }
+  sender = {
+    high_priority_rejected = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 1
+      metric_name         = "HighPriorityRejected"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    low_priority_rejected = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 3
+      metric_name         = "LowPriorityRejected"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    email_status_batch_update_failed = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 1
+      metric_name         = "EmailStatusBatchUpdateFailed"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    invalid_record = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 1
+      metric_name         = "InvalidRecord"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    email_not_found = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 1
+      metric_name         = "EmailNotFound"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    email_batch_not_found = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 1
+      metric_name         = "EmailBatchNotFound"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    unexpected_retryable_error = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 1
+      metric_name         = "UnexpectedRetryableError"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    high_priority_exhausted_retries = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 1
+      metric_name         = "HighPriorityExhaustedRetries"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+    low_priority_exhausted_retries = {
+      comparison_operator = "GreaterThanOrEqualToThreshold"
+      evaluation_periods  = 1
+      threshold           = 3
+      metric_name         = "LowPriorityExhaustedRetries"
+      period              = 300
+      statistic           = "Sum"
+      treat_missing_data  = "notBreaching"
+    }
+  }
 }
 
-dashboard_name = "overall-dashboard"
+dashboard_name             = "overall-dashboard"
+application_dashboard_name = "application-dashboard"
