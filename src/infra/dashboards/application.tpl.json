@@ -7,7 +7,7 @@
             "x": 0,
             "type": "text",
             "properties": {
-                "markdown": "## Sender\n"
+                "markdown": "## Sender -- Send Pipeline\n"
             }
         },
         {
@@ -73,7 +73,7 @@
             "x": 0,
             "type": "text",
             "properties": {
-                "markdown": "## Dispatcher\n"
+                "markdown": "## Dispatcher -- Request validations\n"
             }
         },
         {
