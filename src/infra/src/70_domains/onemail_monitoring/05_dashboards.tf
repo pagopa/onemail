@@ -17,6 +17,21 @@ resource "aws_cloudwatch_dashboard" "main" {
       }
       sqs_high_priority = data.aws_sqs_queue.high_priority.name
       sqs_low_priority  = data.aws_sqs_queue.low_priority.name
+      namespace         = local.project_nodomain
+      csp_service       = "${local.project_nodomain}-lambda-config-set-processor"
+    }
+  )
+}
+
+resource "aws_cloudwatch_dashboard" "application" {
+  dashboard_name = "${local.project_nodomain}-${var.application_dashboard_name}"
+
+  dashboard_body = templatefile("${path.module}/../../../dashboards/application.tpl.json",
+    {
+      aws_region         = var.aws_region
+      namespace          = local.project_nodomain
+      sender_service     = "${local.project_nodomain}-lambda-sender"
+      dispatcher_service = "${local.project_nodomain}-ecs-dispatcher"
     }
   )
 }
