@@ -1,5 +1,11 @@
 # om-common
 
+## 1.4.6
+
+### Patch Changes
+
+- 6905e55: Add alarms, dashboards and remove unused metric
+
 ## 1.4.5
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.9.1
+
+### Patch Changes
+
+- 6905e55: Add alarms, dashboards and remove unused metric
+
 ## 1.9.0
 
 ### Minor Changes
