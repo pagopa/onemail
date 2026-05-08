@@ -56,7 +56,6 @@ export const ConfigSetProcessorMetricName = {
   LowPriorityEmailMaxRetriesReached: `${PriorityPrefix[EmailPriority.LOW]}${EmailStatus.MaxRetriesReached}`,
   EmailNotFound: 'EmailNotFound',
   InvalidRecord: 'InvalidRecord',
-  MissingEmailRecordForRetry: 'MissingEmailRecordForRetry',
   // Other Errors
   ScheduleRetryFailed: 'ScheduleRetryFailed',
   EmailAlreadyQueued: 'EmailAlreadyQueued',

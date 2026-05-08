@@ -1,0 +1,101 @@
+{
+    "widgets": [
+        {
+            "height": 1,
+            "width": 24,
+            "y": 0,
+            "x": 0,
+            "type": "text",
+            "properties": {
+                "markdown": "## Sender -- Send Pipeline\n"
+            }
+        },
+        {
+            "height": 6,
+            "width": 8,
+            "y": 1,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "view": "timeSeries",
+                "stacked": true,
+                "metrics": [
+                    [ "${namespace}", "HighPriorityDispatched", "service", "${sender_service}", { "region": "${aws_region}", "label": "HighPriority" } ],
+                    [ ".", "LowPriorityDispatched", ".", ".", { "region": "${aws_region}", "label": "LowPriority" } ]
+                ],
+                "region": "${aws_region}",
+                "period": 300,
+                "stat": "Sum",
+                "title": "Send Throughput"
+            }
+        },
+        {
+            "height": 6,
+            "width": 8,
+            "y": 1,
+            "x": 8,
+            "type": "metric",
+            "properties": {
+                "view": "timeSeries",
+                "stacked": false,
+                "metrics": [
+                    [ "${namespace}", "HighPriorityRejected", "service", "${sender_service}", { "region": "${aws_region}", "label": "HighPriorityRejected" } ],
+                    [ ".", "LowPriorityRejected", ".", ".", { "region": "${aws_region}", "label": "LowPriorityRejected" } ]
+                ],
+                "region": "${aws_region}",
+                "period": 300,
+                "stat": "Sum",
+                "title": "SES Rejections"
+            }
+        },
+        {
+            "height": 6,
+            "width": 8,
+            "y": 1,
+            "x": 16,
+            "type": "metric",
+            "properties": {
+                "view": "singleValue",
+                "metrics": [
+                    [ "${namespace}", "HighPriorityExhaustedRetries", "service", "${sender_service}", { "region": "${aws_region}", "label": "HighPriority" } ],
+                    [ ".", "LowPriorityExhaustedRetries", ".", ".", { "region": "${aws_region}", "label": "LowPriority" } ]
+                ],
+                "region": "${aws_region}",
+                "period": 300,
+                "stat": "Sum",
+                "title": "Sender Exhausted Retries"
+            }
+        },
+        {
+            "height": 1,
+            "width": 24,
+            "y": 7,
+            "x": 0,
+            "type": "text",
+            "properties": {
+                "markdown": "## Dispatcher -- Request validations\n"
+            }
+        }%{ if length(tenants) > 0 },%{ endif ~}
+%{ for i, tenant_key in keys(tenants) ~}
+        {
+            "height": 6,
+            "width": 24,
+            "y": ${8 + i * 7},
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "view": "timeSeries",
+                "stacked": true,
+                "metrics": [
+                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"HighPriorityAccepted\" service=\"${dispatcher_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "id": "hp_${tenant_key}", "label": "HighPriority" } ],
+                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"LowPriorityAccepted\" service=\"${dispatcher_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "id": "lp_${tenant_key}", "label": "LowPriority" } ]
+                ],
+                "region": "${aws_region}",
+                "period": 300,
+                "stat": "Sum",
+                "title": "Accepted Requests - ${tenants[tenant_key].tenant_name}"
+            }
+        }%{ if i < length(tenants) - 1 },%{ endif ~}
+%{ endfor ~}
+    ]
+}

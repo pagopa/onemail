@@ -629,6 +629,77 @@
                     [ { "expression": "m1/PERIOD(m1)", "label": "Consumed", "id": "e1", "color": "#0073BB", "region": "${aws_region}" } ]
                 ]
             }
+        },
+        {
+            "height": 1,
+            "width": 24,
+            "y": 49,
+            "x": 0,
+            "type": "text",
+            "properties": {
+                "markdown": "## Email Outcome Status (SES)\n"
+            }
+        },
+        {
+            "height": 6,
+            "width": 12,
+            "y": 50,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "view": "timeSeries",
+                "stacked": true,
+                "metrics": [
+                    [ "${namespace}", "EmailDelivered", "service", "${csp_service}", { "region": "${aws_region}", "label": "Delivered" } ],
+                    [ ".", "EmailHardBounce", ".", ".", { "region": "${aws_region}", "label": "HardBounce" } ],
+                    [ ".", "EmailRejected", ".", ".", { "region": "${aws_region}", "label": "Rejected" } ],
+                    [ ".", "EmailRenderingFailure", ".", ".", { "region": "${aws_region}", "label": "RenderingFailure" } ],
+                    [ ".", "EmailComplaint", ".", ".", { "region": "${aws_region}", "label": "Complaint" } ]
+                ],
+                "region": "${aws_region}",
+                "period": 300,
+                "stat": "Sum",
+                "title": "Delivery vs Failures"
+            }
+        },
+        {
+            "height": 6,
+            "width": 12,
+            "y": 50,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "view": "timeSeries",
+                "stacked": false,
+                "metrics": [
+                    [ "${namespace}", "EmailSoftBounce", "service", "${csp_service}", { "region": "${aws_region}", "label": "SoftBounce" } ],
+                    [ ".", "EmailNonRetryableSoftBounce", ".", ".", { "region": "${aws_region}", "label": "NonRetryableSoftBounce" } ],
+                    [ ".", "HighPriorityRetry", ".", ".", { "region": "${aws_region}", "label": "HighPriorityRetry" } ],
+                    [ ".", "LowPriorityRetry", ".", ".", { "region": "${aws_region}", "label": "LowPriorityRetry" } ]
+                ],
+                "region": "${aws_region}",
+                "period": 300,
+                "stat": "Sum",
+                "title": "Soft Bounce & Retry"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 56,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "view": "singleValue",
+                "metrics": [
+                    [ "${namespace}", "HighPriorityMaxRetriesReached", "service", "${csp_service}", { "region": "${aws_region}", "label": "HighPriority" } ],
+                    [ ".", "LowPriorityMaxRetriesReached", ".", ".", { "region": "${aws_region}", "label": "LowPriority" } ]
+                ],
+                "region": "${aws_region}",
+                "period": 300,
+                "stat": "Sum",
+                "title": "Retry Exhausted (bounce)"
+            }
         }
     ]
 }
