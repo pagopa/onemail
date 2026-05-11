@@ -1,3 +1,4 @@
+# Keep the registry module explicitly pinned for deterministic integrity checks in CI.
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "6.5.1"

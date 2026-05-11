@@ -79,6 +79,7 @@ data "aws_iam_policy_document" "sender_policy" {
   }
 }
 
+# Keep the registry module explicitly pinned for deterministic integrity checks in CI.
 module "security_group_lambda_sender" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "4.17.2"
