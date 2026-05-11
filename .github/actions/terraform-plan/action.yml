@@ -36,7 +36,26 @@ runs:
       shell: bash
       run: terraform fmt -check --recursive
       working-directory: src/infra/src/${{ inputs.module }}
-    
+
+    - name: Terraform Init
+      id: init
+      shell: bash
+      working-directory: src/infra/src/${{ inputs.module }}
+      run: |
+        ENV_FOLDER="${{ inputs.environment }}/${{ inputs.region }}"
+
+        REPO_OWNER="pagopa"
+        REPO_NAME="terraform-module-integrity-checker"
+        RELEASE_TAG="1.2.0"
+
+        curl -L -o tf "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${RELEASE_TAG}/tf-linux"
+
+        chmod +x tf
+
+        sudo mv tf /usr/local/bin/tf
+
+        tf init -reconfigure -backend-config="./env/$ENV_FOLDER/backend.tfvars"
+
     - name: Terraform Plan
       shell: bash
       working-directory: src/infra/src/${{ inputs.module }}
@@ -44,8 +63,8 @@ runs:
         TF_IN_AUTOMATION: "true"
       run: |
         ENV_FOLDER="${{ inputs.environment }}/${{ inputs.region }}"
-        
+
         echo "Running terraform plan for module: ${{ inputs.module }}"
         echo "Environment folder: $ENV_FOLDER"
-        
-        ./terraform.sh plan "$ENV_FOLDER" --cicd -input=false -lock-timeout=5m
+
+        ./terraform.sh plan "$ENV_FOLDER" --cicd --skip-init -input=false -lock-timeout=5m
