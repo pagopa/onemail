@@ -17,6 +17,7 @@ import {
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
+import { INTERNAL_MAX_ATTEMPTS } from '#utils/constants';
 import { PermanentEventError } from 'om-common/errors';
 import {
   ConfigSetProcessorMetricName,
@@ -150,9 +151,41 @@ const handleBounce = async (
   }
 };
 
+async function checkIfMaxInternalAttemptsReached(
+  currentAttempt: number,
+  email: EmailStatusHistoryItem,
+): Promise<void> {
+  if (currentAttempt <= INTERNAL_MAX_ATTEMPTS) return;
+
+  const clientId = email.clientId;
+  const identifier = email.emailId;
+
+  await updateEmailStatus(identifier, email.status, [
+    {
+      timestamp: new Date().toISOString(),
+      status: EmailStatus.Rejected,
+      reason: 'Max internal retries exceeded',
+    },
+  ]);
+
+  publishMetrics([
+    {
+      name: ConfigSetProcessorMetricName.ExhaustedInternalRetries,
+      dimensions: { clientId },
+    },
+  ]);
+  throw new PermanentEventError('Record exceeded max internal retries', {
+    emailId: identifier,
+  });
+}
+
 export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
   const logger = getNamedLogger(sqsEventHandler.name);
   logger.info('Start');
+
+  const currentAttempt = Number(
+    record.attributes?.ApproximateReceiveCount ?? 1,
+  );
 
   try {
     const eventItem = validateRecord(record);
@@ -166,6 +199,8 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
         providerMessageId: eventItem.mail.messageId,
       });
     }
+
+    await checkIfMaxInternalAttemptsReached(currentAttempt, emailRecord);
 
     // Skip if current status is already Queued to avoid duplicate retries
     if (EmailStatus.Queued === emailRecord.status) {

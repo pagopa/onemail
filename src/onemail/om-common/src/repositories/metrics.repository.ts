@@ -60,6 +60,7 @@ export const ConfigSetProcessorMetricName = {
   ScheduleRetryFailed: 'ScheduleRetryFailed',
   EmailAlreadyQueued: 'EmailAlreadyQueued',
   UnexpectedRetryableError: 'UnexpectedRetryableError',
+  ExhaustedInternalRetries: `ExhaustedInternalRetries`,
 } as const;
 
 export const SenderMetricName = {
@@ -67,13 +68,13 @@ export const SenderMetricName = {
   HighPriorityDispatched: `${PriorityPrefix[EmailPriority.HIGH]}${EmailStatus.Dispatched}`,
   HighPriorityDryRunError: `${PriorityPrefix[EmailPriority.HIGH]}${EmailStatus.DryRunError}`,
   HighPriorityRejected: `${PriorityPrefix[EmailPriority.HIGH]}${EmailStatus.Rejected}`,
-  HighPriorityExhaustedRetries: `${PriorityPrefix[EmailPriority.HIGH]}ExhaustedRetries`,
+  HighPriorityExhaustedInternalRetries: `${PriorityPrefix[EmailPriority.HIGH]}ExhaustedInternalRetries`,
   // Low priority
   LowPriorityDispatched: `${PriorityPrefix[EmailPriority.LOW]}${EmailStatus.Dispatched}`,
   LowPriorityDryRunError: `${PriorityPrefix[EmailPriority.LOW]}${EmailStatus.DryRunError}`,
   LowPriorityRejected: `${PriorityPrefix[EmailPriority.LOW]}${EmailStatus.Rejected}`,
   LowPriorityRetryableFailure: `${PriorityPrefix[EmailPriority.LOW]}RetryableFailure`,
-  LowPriorityExhaustedRetries: `${PriorityPrefix[EmailPriority.LOW]}ExhaustedRetries`,
+  LowPriorityExhaustedInternalRetries: `${PriorityPrefix[EmailPriority.LOW]}ExhaustedInternalRetries`,
   // Errors
   EmailBatchNotFound: 'EmailBatchNotFound',
   EmailNotFound: 'EmailNotFound',
