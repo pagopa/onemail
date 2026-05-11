@@ -117,15 +117,3 @@ variable "application_dashboard_name" {
   type        = string
   description = "CloudWatch application metrics dashboard name."
 }
-
-variable "exhausted_internal_retries_alarm" {
-  description = "Configuration for the ExhaustedInternalRetries metric math alarm (aggregates across all clientId dimensions)."
-
-  type = object({
-    comparison_operator = string
-    evaluation_periods  = number
-    threshold           = number
-    period              = number
-    treat_missing_data  = optional(string, "notBreaching")
-  })
-}

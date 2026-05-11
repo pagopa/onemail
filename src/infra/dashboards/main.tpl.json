@@ -700,39 +700,6 @@
                 "stat": "Sum",
                 "title": "Retry Exhausted (bounce)"
             }
-        },
-        {
-            "height": 6,
-            "width": 6,
-            "y": 56,
-            "x": 6,
-            "type": "metric",
-            "properties": {
-                "view": "singleValue",
-                "metrics": [
-                    [ { "expression": "SUM(SEARCH('{${namespace},service,clientId} MetricName=\"ExhaustedInternalRetries\" service=\"${csp_service}\"', 'Sum', 300))", "id": "total", "label": "Total" } ]
-                ],
-                "region": "${aws_region}",
-                "period": 300,
-                "title": "Exhausted Internal Retries (SQS)"
-            }
-        },
-        {
-            "height": 6,
-            "width": 12,
-            "y": 62,
-            "x": 0,
-            "type": "metric",
-            "properties": {
-                "view": "timeSeries",
-                "stacked": false,
-                "metrics": [
-                    [ { "expression": "SEARCH('{${namespace},service,clientId} MetricName=\"ExhaustedInternalRetries\" service=\"${csp_service}\"', 'Sum', 300)", "id": "e1", "label": "[$${PROP('Dim.clientId')}]" } ]
-                ],
-                "region": "${aws_region}",
-                "period": 300,
-                "title": "Exhausted Internal Retries by Client"
-            }
         }
     ]
 }

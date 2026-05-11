@@ -327,11 +327,3 @@ custom_alarm_config = {
 
 dashboard_name             = "overall-dashboard"
 application_dashboard_name = "application-dashboard"
-
-exhausted_internal_retries_alarm = {
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = 1
-  threshold           = 1
-  period              = 300
-  treat_missing_data  = "notBreaching"
-}
