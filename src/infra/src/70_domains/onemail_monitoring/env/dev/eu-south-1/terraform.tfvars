@@ -308,7 +308,7 @@ custom_alarm_config = {
       comparison_operator = "GreaterThanOrEqualToThreshold"
       evaluation_periods  = 1
       threshold           = 1
-      metric_name         = "HighPriorityExhaustedRetries"
+      metric_name         = "HighPriorityExhaustedInternalRetries"
       period              = 300
       statistic           = "Sum"
       treat_missing_data  = "notBreaching"
@@ -317,7 +317,7 @@ custom_alarm_config = {
       comparison_operator = "GreaterThanOrEqualToThreshold"
       evaluation_periods  = 1
       threshold           = 5
-      metric_name         = "LowPriorityExhaustedRetries"
+      metric_name         = "LowPriorityExhaustedInternalRetries"
       period              = 300
       statistic           = "Sum"
       treat_missing_data  = "notBreaching"
@@ -327,3 +327,11 @@ custom_alarm_config = {
 
 dashboard_name             = "overall-dashboard"
 application_dashboard_name = "application-dashboard"
+
+exhausted_internal_retries_alarm = {
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  threshold           = 1
+  period              = 300
+  treat_missing_data  = "notBreaching"
+}
