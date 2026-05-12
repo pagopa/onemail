@@ -81,8 +81,7 @@ data "aws_iam_policy_document" "sender_policy" {
 
 # Keep the registry module explicitly pinned for deterministic integrity checks in CI.
 module "security_group_lambda_sender" {
-  source  = "terraform-aws-modules/security-group/aws"
-  version = "4.17.2"
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-security-group.git?ref=a0abc9d3a6d94b055fda01b4c935020629585ec6" # v4.17.2
 
   name        = "${local.project_nodomain}-sg-lambda-sender"
   description = "Security group for sender lambda"
@@ -203,8 +202,7 @@ data "aws_iam_policy_document" "set_processor_policy" {
 
 
 module "security_group_lambda_set_processor" {
-  source  = "terraform-aws-modules/security-group/aws"
-  version = "4.17.2"
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-security-group.git?ref=a0abc9d3a6d94b055fda01b4c935020629585ec6" # v4.17.2
 
   name        = "${local.project_nodomain}-sg-lambda-config-set-processor"
   description = "Security group for config set processor lambda"

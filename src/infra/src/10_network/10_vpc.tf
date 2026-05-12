@@ -1,7 +1,5 @@
-# Keep the registry module explicitly pinned for deterministic integrity checks in CI.
 module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "6.5.1"
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-vpc.git?ref=cf73787bc163944d63a82e0898aee2bc7ade27ca" # v6.5.1
 
   name                  = "${local.project}-vpc"
   cidr                  = var.vpc_cidr
@@ -42,8 +40,7 @@ resource "aws_security_group" "vpce_tls" {
 }
 
 module "vpc_endpoints" {
-  source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-  version = "6.5.1"
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-vpc.git//modules/vpc-endpoints?ref=cf73787bc163944d63a82e0898aee2bc7ade27ca" # v6.5.1
 
   vpc_id = module.vpc.vpc_id
 

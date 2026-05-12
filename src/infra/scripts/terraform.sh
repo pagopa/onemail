@@ -4,7 +4,7 @@
 # Usage examples:
 #   ./terraform.sh list
 #   ./terraform.sh init italy-dev
-#   ./terraform.sh plan italy-dev --cicd --skip-init -input=false
+#   ./terraform.sh plan italy-dev --cicd -input=false
 
 ############################################################
 # Terraform script for managing infrastructure on AWS
@@ -234,7 +234,6 @@ filetf=$3
 shift 2
 cicd_mode=false
 dry_run=false
-skip_init=false
 other_args=()
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -244,10 +243,6 @@ while [ $# -gt 0 ]; do
       ;;
     --dry-run)
       dry_run=true
-      shift
-      ;;
-    --skip-init)
-      skip_init=true
       shift
       ;;
     --)
@@ -321,9 +316,7 @@ case "$action" in
     if [ -n "$filetf" ] && [ -f "$filetf" ]; then
       extract_resources "$filetf" "$env"
     else
-      if [ "$skip_init" != true ]; then
-        init_terraform
-      fi
+      init_terraform
       run_with_vars
     fi
     ;;

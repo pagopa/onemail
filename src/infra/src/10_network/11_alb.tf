@@ -61,8 +61,7 @@ resource "aws_security_group" "alb" {
 }
 
 module "acm" {
-  source  = "terraform-aws-modules/acm/aws"
-  version = "5.0.0"
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-acm.git?ref=8d0b22f1f242a1b36e29b8cb38aaeac9b887500d" # v5.0.0
 
   domain_name = local.zone_name
 
@@ -77,8 +76,7 @@ module "acm" {
 }
 
 module "alb" {
-  source  = "terraform-aws-modules/alb/aws"
-  version = "9.12.0"
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-alb.git?ref=5121d715c42a2b63b0e02d41f675e5c5dd73ef50" # v9.12.0
 
   name               = "${local.project}-alb"
   load_balancer_type = "application"
