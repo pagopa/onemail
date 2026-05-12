@@ -24,9 +24,6 @@ runs:
   steps:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
-      with:
-        terraform_version: "1.15.2"
-        terraform_wrapper: false
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@50ac8dd1e1b10d09dac7b8727528b91bed831ac0
@@ -39,7 +36,7 @@ runs:
       shell: bash
       run: terraform fmt -check --recursive
       working-directory: src/infra/src/${{ inputs.module }}
-
+    
     - name: Terraform Plan
       shell: bash
       working-directory: src/infra/src/${{ inputs.module }}
@@ -47,4 +44,8 @@ runs:
         TF_IN_AUTOMATION: "true"
       run: |
         ENV_FOLDER="${{ inputs.environment }}/${{ inputs.region }}"
+        
+        echo "Running terraform plan for module: ${{ inputs.module }}"
+        echo "Environment folder: $ENV_FOLDER"
+        
         ./terraform.sh plan "$ENV_FOLDER" --cicd -input=false -lock-timeout=5m
