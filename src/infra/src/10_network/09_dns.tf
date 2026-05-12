@@ -137,8 +137,7 @@ locals {
 }
 
 module "zone" {
-  source  = "terraform-aws-modules/route53/aws//modules/zones"
-  version = "~> 2.0"
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-route53.git//modules/zones?ref=385af6e72673f90aa8c835f820067553f905bd17" # v2.11.1
 
   zones = {
     "${local.zone_name}" = {
