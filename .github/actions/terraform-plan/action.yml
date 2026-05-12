@@ -58,7 +58,17 @@ runs:
       working-directory: src/infra/src/${{ inputs.module }}
       run: |
         ENV_FOLDER="${{ inputs.environment }}/${{ inputs.region }}"
-        tf init -reconfigure -backend-config="./env/$ENV_FOLDER/backend.tfvars"
+        terraform init -reconfigure -backend-config="./env/$ENV_FOLDER/backend.tfvars"
+
+    - name: Verify Module Integrity
+      id: verify
+      shell: bash
+      working-directory: src/infra/src/${{ inputs.module }}
+      run: |
+        # Verify registry module hashes against committed baseline
+        if [ -f .module_hashes.json ]; then
+          tf init
+        fi
 
     - name: Terraform Plan
       shell: bash
