@@ -24,6 +24,9 @@ runs:
   steps:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+      with:
+        terraform_version: "1.15.2"
+        terraform_wrapper: false
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@50ac8dd1e1b10d09dac7b8727528b91bed831ac0
@@ -37,23 +40,24 @@ runs:
       run: terraform fmt -check --recursive
       working-directory: src/infra/src/${{ inputs.module }}
 
+    - name: Install Module Integrity Checker
+      id: install-tf
+      shell: bash
+      run: |
+        REPO_OWNER="pagopa"
+        REPO_NAME="terraform-module-integrity-checker"
+        RELEASE_TAG="1.2.0"
+
+        curl -L -o tf "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${RELEASE_TAG}/tf-linux"
+        chmod +x tf
+        sudo mv tf /usr/local/bin/tf
+
     - name: Terraform Init
       id: init
       shell: bash
       working-directory: src/infra/src/${{ inputs.module }}
       run: |
         ENV_FOLDER="${{ inputs.environment }}/${{ inputs.region }}"
-
-        REPO_OWNER="pagopa"
-        REPO_NAME="terraform-module-integrity-checker"
-        RELEASE_TAG="1.2.0"
-
-        curl -L -o tf "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${RELEASE_TAG}/tf-linux"
-
-        chmod +x tf
-
-        sudo mv tf /usr/local/bin/tf
-
         tf init -reconfigure -backend-config="./env/$ENV_FOLDER/backend.tfvars"
 
     - name: Terraform Plan
