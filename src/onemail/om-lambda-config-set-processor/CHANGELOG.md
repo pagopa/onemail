@@ -1,5 +1,11 @@
 # om-lambda-config-set-processor
 
+## 1.6.8
+
+### Patch Changes
+
+- a23dd9c: Config set processor internal max retry
+
 ## 1.6.7
 
 ### Patch Changes
