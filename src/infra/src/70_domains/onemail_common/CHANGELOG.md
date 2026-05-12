@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.14.0
+
+### Minor Changes
+
+- 18e025f: Terraform modules version pinning and script symlink
+
 ## 1.13.1
 
 ### Patch Changes

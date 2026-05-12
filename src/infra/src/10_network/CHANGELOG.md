@@ -1,5 +1,11 @@
 # infra-network
 
+## 1.11.0
+
+### Minor Changes
+
+- 18e025f: Terraform modules version pinning and script symlink
+
 ## 1.10.0
 
 ### Minor Changes

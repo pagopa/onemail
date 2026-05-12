@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.10.0
+
+### Minor Changes
+
+- 18e025f: Terraform modules version pinning and script symlink
+
 ## 1.9.1
 
 ### Patch Changes
