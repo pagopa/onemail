@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.20.0
+
+### Minor Changes
+
+- 18e025f: Terraform modules version pinning and script symlink
+
 ## 1.19.0
 
 ### Minor Changes
