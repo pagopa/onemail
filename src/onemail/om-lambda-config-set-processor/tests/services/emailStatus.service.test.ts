@@ -41,6 +41,7 @@ vi.mock('om-common/repositories', () => ({
     EmailRejected: 'EmailRejected',
     EmailRenderingFailure: 'EmailRenderingFailure',
     UnexpectedRetryableError: 'UnexpectedRetryableError',
+    ExhaustedInternalRetries: 'ExhaustedInternalRetries',
   },
   publishMetrics,
 }));
@@ -123,6 +124,62 @@ describe('emailStatus.service validation and guard clauses', () => {
         },
       ],
     );
+  });
+});
+
+describe('emailStatus.service max internal attempts', () => {
+  it('processes normally when currentAttempt is at the limit', async () => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
+    findEmailByProviderMessageId.mockResolvedValue(email);
+
+    const record = {
+      ...makeQueueRecord(makeDeliveryEvent()),
+      attributes: { ApproximateReceiveCount: '3' },
+    } as never;
+
+    await sqsEventHandler(record);
+
+    expect(updateEmailStatus).toHaveBeenCalledWith(
+      email.emailId,
+      email.status,
+      [expect.objectContaining({ status: EmailStatus.Delivered })],
+    );
+  });
+
+  it('escalates to Rejected and publishes ExhaustedInternalRetries when max attempts exceeded', async () => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+      clientId: 'client-1',
+    });
+    findEmailByProviderMessageId.mockResolvedValue(email);
+
+    const record = {
+      ...makeQueueRecord(makeDeliveryEvent()),
+      attributes: { ApproximateReceiveCount: '4' },
+    } as never;
+
+    await sqsEventHandler(record);
+
+    expect(updateEmailStatus).toHaveBeenCalledTimes(1);
+    expect(updateEmailStatus).toHaveBeenCalledWith(
+      email.emailId,
+      email.status,
+      [
+        {
+          timestamp: expect.any(String),
+          status: EmailStatus.Rejected,
+          reason: 'Max internal retries exceeded',
+        },
+      ],
+    );
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'ExhaustedInternalRetries',
+        dimensions: { clientId: 'client-1' },
+      },
+    ]);
   });
 });
 

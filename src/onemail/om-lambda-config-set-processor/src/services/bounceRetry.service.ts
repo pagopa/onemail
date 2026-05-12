@@ -12,10 +12,7 @@ import {
 } from 'om-common/repositories';
 import { EmailPriority, EmailStatus } from 'om-common/types';
 
-import {
-  HIGH_PRIORITY_MAX_ATTEMPTS,
-  LOW_PRIORITY_MAX_ATTEMPTS,
-} from '../utils/constants.js';
+import { SOFT_BOUNCE_MAX_ATTEMPTS } from '../utils/constants.js';
 
 const logger = getLogger();
 
@@ -64,12 +61,12 @@ const handleHighPriorityRetry = async (
   const logger = getNamedLogger(handleHighPriorityRetry.name);
   logger.info('Start');
 
-  if (attempt > HIGH_PRIORITY_MAX_ATTEMPTS) {
+  if (attempt > SOFT_BOUNCE_MAX_ATTEMPTS.high) {
     logger.error(
       'High-priority soft bounce max attempts reached, escalating to MaxRetriesReached',
       {
         emailId,
-        attempts: HIGH_PRIORITY_MAX_ATTEMPTS,
+        attempts: SOFT_BOUNCE_MAX_ATTEMPTS.high,
       },
     );
 
@@ -139,12 +136,12 @@ const handleLowPriorityRetry = async (
   logger.info('Start');
 
   // 1. Check if max attempts reached
-  if (attempt > LOW_PRIORITY_MAX_ATTEMPTS) {
+  if (attempt > SOFT_BOUNCE_MAX_ATTEMPTS.low) {
     logger.error(
       'Low-priority soft bounce max attempts reached, escalating to MaxRetriesReached',
       {
         emailId,
-        attempts: LOW_PRIORITY_MAX_ATTEMPTS,
+        attempts: SOFT_BOUNCE_MAX_ATTEMPTS.low,
       },
     );
 

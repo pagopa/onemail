@@ -3,7 +3,7 @@ export const SQS_QUEUE_ARN = {
   low: 'LOW_PRIORITY_QUEUE_ARN',
 };
 
-export const MAX_ATTEMPTS = {
+export const INTERNAL_MAX_ATTEMPTS = {
   high: 5,
   low: 5,
 };

@@ -57,8 +57,8 @@
             "properties": {
                 "view": "singleValue",
                 "metrics": [
-                    [ "${namespace}", "HighPriorityExhaustedRetries", "service", "${sender_service}", { "region": "${aws_region}", "label": "HighPriority" } ],
-                    [ ".", "LowPriorityExhaustedRetries", ".", ".", { "region": "${aws_region}", "label": "LowPriority" } ]
+                    [ "${namespace}", "HighPriorityExhaustedInternalRetries", "service", "${sender_service}", { "region": "${aws_region}", "label": "HighPriority" } ],
+                    [ ".", "LowPriorityExhaustedInternalRetries", ".", ".", { "region": "${aws_region}", "label": "LowPriority" } ]
                 ],
                 "region": "${aws_region}",
                 "period": 300,

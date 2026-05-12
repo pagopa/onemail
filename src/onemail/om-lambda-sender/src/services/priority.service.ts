@@ -16,7 +16,7 @@ import {
 } from '#repositories/email.repository';
 import { BulkSendResult } from '#types/bulkSendResult.type';
 import { RetryableBulkEmailStatuses } from '#types/retryableSESStatus.type';
-import { MAX_ATTEMPTS } from '#utils/constants';
+import { INTERNAL_MAX_ATTEMPTS } from '#utils/constants';
 import {
   BadRequestException,
   MailFromDomainNotVerifiedException,
@@ -92,7 +92,9 @@ const handleHighPriority = async (
   logger.debug('Email fetched from DB', { emailId });
 
   // 3. Check max attempts before sending
-  await checkIfMaxAttemptsReached(currentAttempt, EmailPriority.HIGH, [email]);
+  await checkIfMaxInternalAttemptsReached(currentAttempt, EmailPriority.HIGH, [
+    email,
+  ]);
 
   const clientIdDimension = { clientId: email.clientId };
 
@@ -203,7 +205,11 @@ const handleLowPriority = async (
   });
 
   // 3. Check max attempts before sending
-  await checkIfMaxAttemptsReached(currentAttempt, EmailPriority.LOW, emails);
+  await checkIfMaxInternalAttemptsReached(
+    currentAttempt,
+    EmailPriority.LOW,
+    emails,
+  );
 
   // 4. Send bulk email with SES
   let sesSendResult: BulkSendResult;
@@ -330,13 +336,15 @@ const handleLowPriority = async (
   logger.info('End');
 };
 
-async function checkIfMaxAttemptsReached(
+async function checkIfMaxInternalAttemptsReached(
   currentAttempt: number,
   priority: EmailPriority,
   emails: EmailStatusHistoryItem[],
 ): Promise<void> {
   const isHighPriority = priority === EmailPriority.HIGH;
-  const maxAttempts = isHighPriority ? MAX_ATTEMPTS.high : MAX_ATTEMPTS.low;
+  const maxAttempts = isHighPriority
+    ? INTERNAL_MAX_ATTEMPTS.high
+    : INTERNAL_MAX_ATTEMPTS.low;
   if (currentAttempt <= maxAttempts) return;
 
   const clientId = emails[0].clientId;
@@ -346,14 +354,14 @@ async function checkIfMaxAttemptsReached(
     await updateEmailStatus({
       emailId: identifier,
       status: EmailStatus.Rejected,
-      reason: 'Max retries exceeded',
+      reason: 'Max internal retries exceeded',
     });
   } else {
     await batchUpdateEmailStatuses(
       emails.map((item) => ({
         item,
         status: EmailStatus.Rejected,
-        reason: 'Max retries exceeded',
+        reason: 'Max internal retries exceeded',
       })),
     );
   }
@@ -361,14 +369,14 @@ async function checkIfMaxAttemptsReached(
   publishMetrics([
     {
       name: isHighPriority
-        ? SenderMetricName.HighPriorityExhaustedRetries
-        : SenderMetricName.LowPriorityExhaustedRetries,
+        ? SenderMetricName.HighPriorityExhaustedInternalRetries
+        : SenderMetricName.LowPriorityExhaustedInternalRetries,
       value: emails.length,
       dimensions: { clientId },
     },
   ]);
   throw new PermanentEventError(
-    'Record exceeded max retries',
+    'Record exceeded max internal retries',
     isHighPriority ? { emailId: identifier } : { requestId: identifier },
   );
 }
