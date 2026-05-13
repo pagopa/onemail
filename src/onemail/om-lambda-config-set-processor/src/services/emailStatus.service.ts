@@ -128,7 +128,12 @@ const handleBounce = async (
         reason: event.bounce.bounceSubType,
       },
     ]);
-    publishMetrics([{ name: ConfigSetProcessorMetricName.EmailHardBounce }]);
+    publishMetrics([
+      {
+        name: ConfigSetProcessorMetricName.EmailHardBounce,
+        dimensions: { tenantName: emailRecord.tenantName },
+      },
+    ]);
   } else if (bounceStatus === EmailStatus.NonRetryableSoftBounce) {
     await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
       {
@@ -138,7 +143,10 @@ const handleBounce = async (
       },
     ]);
     publishMetrics([
-      { name: ConfigSetProcessorMetricName.EmailNonRetryableSoftBounce },
+      {
+        name: ConfigSetProcessorMetricName.EmailNonRetryableSoftBounce,
+        dimensions: { tenantName: emailRecord.tenantName },
+      },
     ]);
   } else {
     // Soft bounce (Undetermined or retryable Transient)
@@ -157,7 +165,6 @@ async function checkIfMaxInternalAttemptsReached(
 ): Promise<void> {
   if (currentAttempt <= INTERNAL_MAX_ATTEMPTS) return;
 
-  const clientId = email.clientId;
   const identifier = email.emailId;
 
   await updateEmailStatus(identifier, email.status, [
@@ -171,7 +178,7 @@ async function checkIfMaxInternalAttemptsReached(
   publishMetrics([
     {
       name: ConfigSetProcessorMetricName.ExhaustedInternalRetries,
-      dimensions: { clientId },
+      dimensions: { tenantName: email.tenantName },
     },
   ]);
   throw new PermanentEventError('Record exceeded max internal retries', {
@@ -228,7 +235,12 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
             reason: eventItem.complaint.complaintSubType ?? undefined,
           },
         ]);
-        publishMetrics([{ name: ConfigSetProcessorMetricName.EmailComplaint }]);
+        publishMetrics([
+          {
+            name: ConfigSetProcessorMetricName.EmailComplaint,
+            dimensions: { tenantName: emailRecord.tenantName },
+          },
+        ]);
         break;
 
       case CapitalizedSesConfigurationSetEventType.Delivery:
@@ -238,7 +250,12 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
             status: EmailStatus.Delivered,
           },
         ]);
-        publishMetrics([{ name: ConfigSetProcessorMetricName.EmailDelivered }]);
+        publishMetrics([
+          {
+            name: ConfigSetProcessorMetricName.EmailDelivered,
+            dimensions: { tenantName: emailRecord.tenantName },
+          },
+        ]);
         break;
 
       case CapitalizedSesConfigurationSetEventType.Reject:
@@ -249,7 +266,12 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
             reason: eventItem.reject.reason ?? 'Bad content',
           },
         ]);
-        publishMetrics([{ name: ConfigSetProcessorMetricName.EmailRejected }]);
+        publishMetrics([
+          {
+            name: ConfigSetProcessorMetricName.EmailRejected,
+            dimensions: { tenantName: emailRecord.tenantName },
+          },
+        ]);
         break;
 
       case CapitalizedSesConfigurationSetEventType.RenderingFailure:
@@ -263,7 +285,10 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
           },
         ]);
         publishMetrics([
-          { name: ConfigSetProcessorMetricName.EmailRenderingFailure },
+          {
+            name: ConfigSetProcessorMetricName.EmailRenderingFailure,
+            dimensions: { tenantName: emailRecord.tenantName },
+          },
         ]);
         break;
     }

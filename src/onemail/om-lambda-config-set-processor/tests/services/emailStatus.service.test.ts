@@ -151,7 +151,6 @@ describe('emailStatus.service max internal attempts', () => {
   it('escalates to Rejected and publishes ExhaustedInternalRetries when max attempts exceeded', async () => {
     const email = makeEmailStatusHistoryItem({
       status: EmailStatus.Dispatched,
-      clientId: 'client-1',
     });
     findEmailByProviderMessageId.mockResolvedValue(email);
 
@@ -177,7 +176,7 @@ describe('emailStatus.service max internal attempts', () => {
     expect(publishMetrics).toHaveBeenCalledWith([
       {
         name: 'ExhaustedInternalRetries',
-        dimensions: { clientId: 'client-1' },
+        dimensions: { tenantName: 'tenant-1' },
       },
     ]);
   });
@@ -199,7 +198,9 @@ describe('emailStatus.service delivery flow', () => {
       email.status,
       [{ timestamp: '2025-06-01T12:00:00Z', status: EmailStatus.Delivered }],
     );
-    expect(publishMetrics).toHaveBeenCalledWith([{ name: 'EmailDelivered' }]);
+    expect(publishMetrics).toHaveBeenCalledWith([
+      { name: 'EmailDelivered', dimensions: { tenantName: 'tenant-1' } },
+    ]);
   });
 });
 
@@ -305,7 +306,9 @@ describe('emailStatus.service bounce flow', () => {
         },
       ],
     );
-    expect(publishMetrics).toHaveBeenCalledWith([{ name: 'EmailHardBounce' }]);
+    expect(publishMetrics).toHaveBeenCalledWith([
+      { name: 'EmailHardBounce', dimensions: { tenantName: 'tenant-1' } },
+    ]);
   });
 
   it.each([
@@ -341,7 +344,10 @@ describe('emailStatus.service bounce flow', () => {
       ],
     );
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'EmailNonRetryableSoftBounce' },
+      {
+        name: 'EmailNonRetryableSoftBounce',
+        dimensions: { tenantName: 'tenant-1' },
+      },
     ]);
     expect(handleSoftBounceRetry).not.toHaveBeenCalled();
   });
@@ -371,7 +377,9 @@ describe('emailStatus.service complaint flow', () => {
         },
       ],
     );
-    expect(publishMetrics).toHaveBeenCalledWith([{ name: 'EmailComplaint' }]);
+    expect(publishMetrics).toHaveBeenCalledWith([
+      { name: 'EmailComplaint', dimensions: { tenantName: 'tenant-1' } },
+    ]);
   });
 
   it('passes undefined reason when complaintSubType is null', async () => {
@@ -419,7 +427,9 @@ describe('emailStatus.service reject flow', () => {
         }),
       ],
     );
-    expect(publishMetrics).toHaveBeenCalledWith([{ name: 'EmailRejected' }]);
+    expect(publishMetrics).toHaveBeenCalledWith([
+      { name: 'EmailRejected', dimensions: { tenantName: 'tenant-1' } },
+    ]);
   });
 
   it('uses fallback reason when reject reason is null', async () => {
@@ -482,7 +492,7 @@ describe('emailStatus.service rendering failure flow', () => {
       ],
     );
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'EmailRenderingFailure' },
+      { name: 'EmailRenderingFailure', dimensions: { tenantName: 'tenant-1' } },
     ]);
   });
 
@@ -509,7 +519,7 @@ describe('emailStatus.service rendering failure flow', () => {
       ],
     );
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'EmailRenderingFailure' },
+      { name: 'EmailRenderingFailure', dimensions: { tenantName: 'tenant-1' } },
     ]);
   });
 });
