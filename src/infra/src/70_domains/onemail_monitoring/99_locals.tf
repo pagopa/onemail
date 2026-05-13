@@ -163,9 +163,10 @@ locals {
       alarm_name        = "${local.project_nodomain}-csp-${tpl.metric_name}"
       alarm_description = "The config-set-processor emitted at least ${tpl.threshold} ${tpl.metric_name} event(s) in the last ${tpl.period / 60} minutes."
       namespace         = local.project_nodomain
-      dimensions = {
-        service = "${local.project_nodomain}-lambda-config-set-processor"
-      }
+      dimensions = merge(
+        { service = "${local.project_nodomain}-lambda-config-set-processor" },
+        tpl.extra_dimensions
+      )
     })
   }
 
@@ -192,5 +193,19 @@ locals {
         service = "${local.project_nodomain}-lambda-sender"
       }
     })
+  }
+
+  # Alarms for CSP metrics that carry a tenantName dimension.
+  # SEARCH aggregates all per-tenant series so the alarm fires on the total count.
+  custom_alarms_config_set_processor_metric_math = {
+    for key, tpl in var.config_set_processor_metric_math_alarm_config : key => {
+      alarm_name          = "${local.project_nodomain}-csp-${tpl.metric_name}"
+      alarm_description   = "The config-set-processor emitted at least ${tpl.threshold} ${tpl.metric_name} event(s) across all tenants in the last ${tpl.period / 60} minutes."
+      comparison_operator = tpl.comparison_operator
+      evaluation_periods  = tpl.evaluation_periods
+      threshold           = tpl.threshold
+      treat_missing_data  = tpl.treat_missing_data
+      expression          = "SUM(SEARCH('{${local.project_nodomain},service,tenantName} MetricName=\"${tpl.metric_name}\" service=\"${local.project_nodomain}-lambda-config-set-processor\"', 'Sum', ${tpl.period}))"
+    }
   }
 }

@@ -111,60 +111,6 @@ infra_alarm_templates = {
 
 custom_alarm_config = {
   config_set_processor = {
-    email_hard_bounce = {
-      comparison_operator = "GreaterThanOrEqualToThreshold"
-      evaluation_periods  = 1
-      threshold           = 2
-      metric_name         = "EmailHardBounce"
-      period              = 300
-      statistic           = "Sum"
-      treat_missing_data  = "notBreaching"
-    }
-    email_complaint = {
-      comparison_operator = "GreaterThanOrEqualToThreshold"
-      evaluation_periods  = 1
-      threshold           = 2
-      metric_name         = "EmailComplaint"
-      period              = 300
-      statistic           = "Sum"
-      treat_missing_data  = "notBreaching"
-    }
-    email_rejected = {
-      comparison_operator = "GreaterThanOrEqualToThreshold"
-      evaluation_periods  = 1
-      threshold           = 2
-      metric_name         = "EmailRejected"
-      period              = 300
-      statistic           = "Sum"
-      treat_missing_data  = "notBreaching"
-    }
-    email_rendering_failure = {
-      comparison_operator = "GreaterThanOrEqualToThreshold"
-      evaluation_periods  = 1
-      threshold           = 5
-      metric_name         = "EmailRenderingFailure"
-      period              = 300
-      statistic           = "Sum"
-      treat_missing_data  = "notBreaching"
-    }
-    high_priority_max_retries_reached = {
-      comparison_operator = "GreaterThanOrEqualToThreshold"
-      evaluation_periods  = 1
-      threshold           = 1
-      metric_name         = "HighPriorityMaxRetriesReached"
-      period              = 300
-      statistic           = "Sum"
-      treat_missing_data  = "notBreaching"
-    }
-    low_priority_max_retries_reached = {
-      comparison_operator = "GreaterThanOrEqualToThreshold"
-      evaluation_periods  = 1
-      threshold           = 5
-      metric_name         = "LowPriorityMaxRetriesReached"
-      period              = 300
-      statistic           = "Sum"
-      treat_missing_data  = "notBreaching"
-    }
     schedule_retry_failed = {
       comparison_operator = "GreaterThanOrEqualToThreshold"
       evaluation_periods  = 1
@@ -173,15 +119,7 @@ custom_alarm_config = {
       period              = 300
       statistic           = "Sum"
       treat_missing_data  = "notBreaching"
-    }
-    email_non_retryable_soft_bounce = {
-      comparison_operator = "GreaterThanOrEqualToThreshold"
-      evaluation_periods  = 1
-      threshold           = 5
-      metric_name         = "EmailNonRetryableSoftBounce"
-      period              = 300
-      statistic           = "Sum"
-      treat_missing_data  = "notBreaching"
+      extra_dimensions    = { reason = "SqsSendMessageFailed" }
     }
     invalid_record = {
       comparison_operator = "GreaterThanOrEqualToThreshold"
@@ -322,6 +260,73 @@ custom_alarm_config = {
       statistic           = "Sum"
       treat_missing_data  = "notBreaching"
     }
+  }
+}
+
+config_set_processor_metric_math_alarm_config = {
+  email_hard_bounce = {
+    comparison_operator = "GreaterThanOrEqualToThreshold"
+    evaluation_periods  = 1
+    threshold           = 2
+    metric_name         = "EmailHardBounce"
+    period              = 300
+    treat_missing_data  = "notBreaching"
+  }
+  email_complaint = {
+    comparison_operator = "GreaterThanOrEqualToThreshold"
+    evaluation_periods  = 1
+    threshold           = 2
+    metric_name         = "EmailComplaint"
+    period              = 300
+    treat_missing_data  = "notBreaching"
+  }
+  email_rejected = {
+    comparison_operator = "GreaterThanOrEqualToThreshold"
+    evaluation_periods  = 1
+    threshold           = 2
+    metric_name         = "EmailRejected"
+    period              = 300
+    treat_missing_data  = "notBreaching"
+  }
+  email_rendering_failure = {
+    comparison_operator = "GreaterThanOrEqualToThreshold"
+    evaluation_periods  = 1
+    threshold           = 5
+    metric_name         = "EmailRenderingFailure"
+    period              = 300
+    treat_missing_data  = "notBreaching"
+  }
+  email_non_retryable_soft_bounce = {
+    comparison_operator = "GreaterThanOrEqualToThreshold"
+    evaluation_periods  = 1
+    threshold           = 5
+    metric_name         = "EmailNonRetryableSoftBounce"
+    period              = 300
+    treat_missing_data  = "notBreaching"
+  }
+  high_priority_max_retries_reached = {
+    comparison_operator = "GreaterThanOrEqualToThreshold"
+    evaluation_periods  = 1
+    threshold           = 1
+    metric_name         = "HighPriorityMaxRetriesReached"
+    period              = 300
+    treat_missing_data  = "notBreaching"
+  }
+  low_priority_max_retries_reached = {
+    comparison_operator = "GreaterThanOrEqualToThreshold"
+    evaluation_periods  = 1
+    threshold           = 5
+    metric_name         = "LowPriorityMaxRetriesReached"
+    period              = 300
+    treat_missing_data  = "notBreaching"
+  }
+  exhausted_internal_retries = {
+    comparison_operator = "GreaterThanOrEqualToThreshold"
+    evaluation_periods  = 1
+    threshold           = 2
+    metric_name         = "ExhaustedInternalRetries"
+    period              = 300
+    treat_missing_data  = "notBreaching"
   }
 }
 
