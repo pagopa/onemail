@@ -1,5 +1,11 @@
 # infra-network
 
+## 1.12.0
+
+### Minor Changes
+
+- 12fdf0a: WAF logging enabled
+
 ## 1.11.0
 
 ### Minor Changes
