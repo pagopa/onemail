@@ -202,3 +202,17 @@ resource "aws_wafv2_web_acl_association" "alb" {
   resource_arn = module.alb.arn
   web_acl_arn  = aws_wafv2_web_acl.alb_waf.arn
 }
+
+resource "aws_cloudwatch_log_group" "waf_logs" {
+  name = "aws-waf-logs-${local.project_nodomain}"
+}
+
+resource "aws_wafv2_web_acl_logging_configuration" "alb_waf_logging" {
+  log_destination_configs = [aws_cloudwatch_log_group.waf_logs.arn]
+  resource_arn            = aws_wafv2_web_acl.alb_waf.arn
+}
+
+resource "aws_cloudwatch_log_resource_policy" "alb_waf_logging_policy" {
+  policy_document = data.aws_iam_policy_document.alb_waf_logging.json
+  policy_name     = "webacl-policy-${local.project_nodomain}"
+}
