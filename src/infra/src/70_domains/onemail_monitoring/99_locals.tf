@@ -196,7 +196,8 @@ locals {
   }
 
   # Alarms for CSP metrics that carry a tenantName dimension.
-  # SEARCH aggregates all per-tenant series so the alarm fires on the total count.
+  # One metric_query block is generated per known tenant; the alarm fires on the aggregate sum.
+  # CloudWatch does not support SEARCH in alarm expressions — per-tenant metric blocks are used instead.
   custom_alarms_config_set_processor_metric_math = {
     for key, tpl in var.config_set_processor_metric_math_alarm_config : key => {
       alarm_name          = "${local.project_nodomain}-csp-${tpl.metric_name}"
@@ -206,7 +207,8 @@ locals {
       threshold           = tpl.threshold
       treat_missing_data  = tpl.treat_missing_data
       period              = tpl.period
-      expression          = "SUM(SEARCH('{${local.project_nodomain},service,tenantName} MetricName=\"${tpl.metric_name}\" service=\"${local.project_nodomain}-lambda-config-set-processor\"', 'Sum', ${tpl.period}))"
+      metric_name         = tpl.metric_name
+      sum_expression      = "SUM([${join(",", [for k in keys(local.tenants) : "m_${replace(k, "-", "_")}"])}])"
     }
   }
 }
