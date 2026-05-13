@@ -729,11 +729,11 @@
                 "view": "timeSeries",
                 "stacked": true,
                 "metrics": [
-                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"EmailDelivered\" service=\"${csp_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "label": "Delivered", "id": "delivered_${tenant_key}", "region": "${aws_region}" } ],
-                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"EmailHardBounce\" service=\"${csp_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "label": "HardBounce", "id": "hardbounce_${tenant_key}", "region": "${aws_region}" } ],
-                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"EmailRejected\" service=\"${csp_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "label": "Rejected", "id": "rejected_${tenant_key}", "region": "${aws_region}" } ],
-                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"EmailComplaint\" service=\"${csp_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "label": "Complaint", "id": "complaint_${tenant_key}", "region": "${aws_region}" } ],
-                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"EmailRenderingFailure\" service=\"${csp_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "label": "RenderingFailure", "id": "renderfail_${tenant_key}", "region": "${aws_region}" } ]
+                    [ "${namespace}", "EmailDelivered", "service", "${csp_service}", "tenantName", "${tenants[tenant_key].tenant_name}", { "region": "${aws_region}", "label": "Delivered", "stat": "Sum" } ],
+                    [ "${namespace}", "EmailHardBounce", "service", "${csp_service}", "tenantName", "${tenants[tenant_key].tenant_name}", { "region": "${aws_region}", "label": "HardBounce", "stat": "Sum" } ],
+                    [ "${namespace}", "EmailRejected", "service", "${csp_service}", "tenantName", "${tenants[tenant_key].tenant_name}", { "region": "${aws_region}", "label": "Rejected", "stat": "Sum" } ],
+                    [ "${namespace}", "EmailComplaint", "service", "${csp_service}", "tenantName", "${tenants[tenant_key].tenant_name}", { "region": "${aws_region}", "label": "Complaint", "stat": "Sum" } ],
+                    [ "${namespace}", "EmailRenderingFailure", "service", "${csp_service}", "tenantName", "${tenants[tenant_key].tenant_name}", { "region": "${aws_region}", "label": "RenderingFailure", "stat": "Sum" } ]
                 ],
                 "region": "${aws_region}",
                 "period": 300,
@@ -750,9 +750,9 @@
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"EmailNonRetryableSoftBounce\" service=\"${csp_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "label": "NonRetryableSoftBounce", "id": "nonretry_${tenant_key}", "region": "${aws_region}" } ],
-                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"HighPriorityMaxRetriesReached\" service=\"${csp_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "label": "HighPriorityMaxRetries", "id": "hipri_${tenant_key}", "region": "${aws_region}" } ],
-                    [ { "expression": "SEARCH('{${namespace},service,tenantName} MetricName=\"LowPriorityMaxRetriesReached\" service=\"${csp_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "label": "LowPriorityMaxRetries", "id": "lopri_${tenant_key}", "region": "${aws_region}" } ]
+                    [ "${namespace}", "EmailNonRetryableSoftBounce", "service", "${csp_service}", "tenantName", "${tenants[tenant_key].tenant_name}", { "region": "${aws_region}", "label": "NonRetryableSoftBounce", "stat": "Sum" } ],
+                    [ "${namespace}", "HighPriorityMaxRetriesReached", "service", "${csp_service}", "tenantName", "${tenants[tenant_key].tenant_name}", { "region": "${aws_region}", "label": "HighPriorityMaxRetries", "stat": "Sum" } ],
+                    [ "${namespace}", "LowPriorityMaxRetriesReached", "service", "${csp_service}", "tenantName", "${tenants[tenant_key].tenant_name}", { "region": "${aws_region}", "label": "LowPriorityMaxRetries", "stat": "Sum" } ]
                 ],
                 "region": "${aws_region}",
                 "period": 300,
