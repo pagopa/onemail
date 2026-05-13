@@ -37,6 +37,7 @@ resource "aws_cloudwatch_metric_alarm" "csp_metric_math" {
     label       = each.value.alarm_name
     return_data = true
     expression  = each.value.expression
+    period      = each.value.period
   }
 
   lifecycle {

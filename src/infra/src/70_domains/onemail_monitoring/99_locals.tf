@@ -205,6 +205,7 @@ locals {
       evaluation_periods  = tpl.evaluation_periods
       threshold           = tpl.threshold
       treat_missing_data  = tpl.treat_missing_data
+      period              = tpl.period
       expression          = "SUM(SEARCH('{${local.project_nodomain},service,tenantName} MetricName=\"${tpl.metric_name}\" service=\"${local.project_nodomain}-lambda-config-set-processor\"', 'Sum', ${tpl.period}))"
     }
   }
