@@ -37,6 +37,7 @@ resource "aws_cloudwatch_metric_alarm" "csp_metric_math" {
     id          = "total"
     expression  = "SUM(SEARCH('{${local.project_nodomain},service,tenantName,clientId} MetricName=\"${each.value.metric_name}\" service=\"${local.project_nodomain}-lambda-config-set-processor\"', 'Sum', ${each.value.period}))"
     label       = each.value.alarm_name
+    period      = each.value.period
     return_data = true
   }
 
@@ -90,6 +91,7 @@ resource "aws_cloudwatch_metric_alarm" "custom_dispatcher_search" {
     id          = "total"
     expression  = "SUM(SEARCH('{${each.value.namespace},service,tenantName,clientId} MetricName=\"${each.value.metric_name}\" service=\"${each.value.service_name}\" tenantName=\"${each.value.tenant_name}\"', 'Sum', ${each.value.period}))"
     label       = each.value.alarm_name
+    period      = each.value.period
     return_data = true
   }
 
@@ -136,6 +138,7 @@ resource "aws_cloudwatch_metric_alarm" "custom_sender_search" {
     id          = "total"
     expression  = "SUM(SEARCH('{${each.value.namespace},service,clientId} MetricName=\"${each.value.metric_name}\" service=\"${each.value.service_name}\"', 'Sum', ${each.value.period}))"
     label       = each.value.alarm_name
+    period      = each.value.period
     return_data = true
   }
 
