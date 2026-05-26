@@ -19,6 +19,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       sqs_low_priority  = data.aws_sqs_queue.low_priority.name
       namespace         = local.project_nodomain
       csp_service       = "${local.project_nodomain}-lambda-config-set-processor"
+      sender_service    = "${local.project_nodomain}-lambda-sender"
       tenants           = local.tenants
     }
   )

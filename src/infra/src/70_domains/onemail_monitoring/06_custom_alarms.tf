@@ -135,7 +135,7 @@ resource "aws_cloudwatch_metric_alarm" "custom_sender_search" {
 
   metric_query {
     id          = "total"
-    expression  = "SELECT SUM(${each.value.metric_name}) FROM SCHEMA(\"${each.value.namespace}\", service, clientId) WHERE service = '${each.value.service_name}'"
+    expression  = "SELECT SUM(${each.value.metric_name}) FROM SCHEMA(\"${each.value.namespace}\", service, clientId, tenantName) WHERE service = '${each.value.service_name}'"
     label       = each.value.alarm_name
     period      = each.value.period
     return_data = true

@@ -198,7 +198,7 @@ locals {
     }
   ]...)
 
-  sender_metrics_with_client_id = toset(["HighPriorityRejected", "HighPriorityExhaustedInternalRetries", "LowPriorityExhaustedInternalRetries"])
+  sender_metrics_with_client_id = toset(["HighPriorityRejected", "LowPriorityRejected", "HighPriorityExhaustedInternalRetries", "LowPriorityExhaustedInternalRetries"])
 
   custom_alarms_sender = {
     for key, tpl in var.custom_alarm_config.sender : key => merge(tpl, {

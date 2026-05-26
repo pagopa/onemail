@@ -20,8 +20,8 @@
                 "view": "timeSeries",
                 "stacked": true,
                 "metrics": [
-                    [ { "expression": "SUM(SEARCH('{${namespace},service,clientId} MetricName=\"HighPriorityDispatched\" service=\"${sender_service}\"', 'Sum', 300))", "label": "HighPriority", "id": "hp_dispatched", "region": "${aws_region}" } ],
-                    [ "${namespace}", "LowPriorityDispatched", "service", "${sender_service}", { "region": "${aws_region}", "label": "LowPriority", "stat": "Sum" } ]
+                    [ { "expression": "SUM(SEARCH('{${namespace},service,clientId,tenantName} MetricName=\"HighPriorityDispatched\" service=\"${sender_service}\"', 'Sum', 300))", "label": "HighPriority", "id": "hp_dispatched", "region": "${aws_region}" } ],
+                    [ { "expression": "SUM(SEARCH('{${namespace},service,clientId,tenantName} MetricName=\"LowPriorityDispatched\" service=\"${sender_service}\"', 'Sum', 300))", "label": "LowPriority", "id": "lp_dispatched", "region": "${aws_region}" } ]
                 ],
                 "region": "${aws_region}",
                 "period": 300,
@@ -38,8 +38,8 @@
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ { "expression": "SUM(SEARCH('{${namespace},service,clientId} MetricName=\"HighPriorityRejected\" service=\"${sender_service}\"', 'Sum', 300))", "label": "HighPriorityRejected", "id": "hp_rejected", "region": "${aws_region}" } ],
-                    [ "${namespace}", "LowPriorityRejected", "service", "${sender_service}", { "region": "${aws_region}", "label": "LowPriorityRejected", "stat": "Sum" } ]
+                    [ { "expression": "SUM(SEARCH('{${namespace},service,clientId,tenantName} MetricName=\"HighPriorityRejected\" service=\"${sender_service}\"', 'Sum', 300))", "label": "HighPriorityRejected", "id": "hp_rejected", "region": "${aws_region}" } ],
+                    [ { "expression": "SUM(SEARCH('{${namespace},service,clientId,tenantName} MetricName=\"LowPriorityRejected\" service=\"${sender_service}\"', 'Sum', 300))", "label": "LowPriorityRejected", "id": "lp_rejected", "region": "${aws_region}" } ]
                 ],
                 "region": "${aws_region}",
                 "period": 300,
@@ -55,8 +55,8 @@
             "properties": {
                 "view": "singleValue",
                 "metrics": [
-                    [ { "expression": "SUM(SEARCH('{${namespace},service,clientId} MetricName=\"HighPriorityExhaustedInternalRetries\" service=\"${sender_service}\"', 'Sum', 300))", "label": "HighPriority", "id": "hp_exhaust", "region": "${aws_region}" } ],
-                    [ { "expression": "SUM(SEARCH('{${namespace},service,clientId} MetricName=\"LowPriorityExhaustedInternalRetries\" service=\"${sender_service}\"', 'Sum', 300))", "label": "LowPriority", "id": "lp_exhaust", "region": "${aws_region}" } ]
+                    [ { "expression": "SUM(SEARCH('{${namespace},service,clientId,tenantName} MetricName=\"HighPriorityExhaustedInternalRetries\" service=\"${sender_service}\"', 'Sum', 300))", "label": "HighPriority", "id": "hp_exhaust", "region": "${aws_region}" } ],
+                    [ { "expression": "SUM(SEARCH('{${namespace},service,clientId,tenantName} MetricName=\"LowPriorityExhaustedInternalRetries\" service=\"${sender_service}\"', 'Sum', 300))", "label": "LowPriority", "id": "lp_exhaust", "region": "${aws_region}" } ]
                 ],
                 "region": "${aws_region}",
                 "period": 300,
