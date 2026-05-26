@@ -110,20 +110,7 @@ variable "custom_alarm_config" {
 }
 
 variable "config_set_processor_metric_math_alarm_config" {
-  description = <<-EOT
-    Configuration for config-set-processor alarms that aggregate across all tenantName
-    values using CloudWatch Metric Math SEARCH expressions.
-
-    Use this variable (instead of custom_alarm_config.config_set_processor) for any
-    CSP metric that carries a dynamic dimension at runtime (e.g. tenantName). The
-    generated alarm uses a metric_query expression, so top-level `statistic` and
-    `dimensions` are not applicable and intentionally absent from this type.
-
-    Metrics currently published with tenantName:
-      EmailHardBounce, EmailNonRetryableSoftBounce, EmailComplaint, EmailRejected,
-      EmailRenderingFailure, HighPriorityMaxRetriesReached, LowPriorityMaxRetriesReached,
-      ExhaustedInternalRetries.
-  EOT
+  description = "Template configuration for config-set-processor alarms using Metric Math SEARCH with dynamic dimensions (tenantName, clientId). Configure per environment in terraform.tfvars."
   type = map(object({
     comparison_operator = string
     evaluation_periods  = number

@@ -170,6 +170,8 @@ locals {
     })
   }
 
+  dispatcher_metrics_with_client_id = toset(["UnauthorizedTenant"])
+
   custom_alarms_dispatcher = merge([
     for key, tpl in var.custom_alarm_config.dispatcher : {
       for tenant_key, tenant in local.tenants : "${key}_${tenant_key}" => merge(tpl, {
@@ -180,9 +182,23 @@ locals {
           service    = "${local.project_nodomain}-ecs-dispatcher"
           tenantName = tenant.tenant_name
         }
-      })
+      }) if !contains(local.dispatcher_metrics_with_client_id, tpl.metric_name)
     }
   ]...)
+
+  custom_alarms_dispatcher_search = merge([
+    for key, tpl in var.custom_alarm_config.dispatcher : {
+      for tenant_key, tenant in local.tenants : "${key}_${tenant_key}" => merge(tpl, {
+        alarm_name        = "${local.project_nodomain}-dispatcher-${tpl.metric_name}-${tenant_key}"
+        alarm_description = "The dispatcher emitted at least ${tpl.threshold} ${tpl.metric_name} event(s) for tenant ${tenant_key} in the last ${tpl.period / 60} minutes."
+        namespace         = local.project_nodomain
+        service_name      = "${local.project_nodomain}-ecs-dispatcher"
+        tenant_name       = tenant.tenant_name
+      }) if contains(local.dispatcher_metrics_with_client_id, tpl.metric_name)
+    }
+  ]...)
+
+  sender_metrics_with_client_id = toset(["HighPriorityRejected", "HighPriorityExhaustedInternalRetries", "LowPriorityExhaustedInternalRetries"])
 
   custom_alarms_sender = {
     for key, tpl in var.custom_alarm_config.sender : key => merge(tpl, {
@@ -192,12 +208,18 @@ locals {
       dimensions = {
         service = "${local.project_nodomain}-lambda-sender"
       }
-    })
+    }) if !contains(local.sender_metrics_with_client_id, tpl.metric_name)
   }
 
-  # Alarms for CSP metrics that carry a tenantName dimension.
-  # One metric_query block is generated per known tenant; the alarm fires on the aggregate sum.
-  # CloudWatch does not support SEARCH in alarm expressions — per-tenant metric blocks are used instead.
+  custom_alarms_sender_search = {
+    for key, tpl in var.custom_alarm_config.sender : key => merge(tpl, {
+      alarm_name        = "${local.project_nodomain}-sender-${tpl.metric_name}"
+      alarm_description = "The sender emitted at least ${tpl.threshold} ${tpl.metric_name} event(s) in the last ${tpl.period / 60} minutes."
+      namespace         = local.project_nodomain
+      service_name      = "${local.project_nodomain}-lambda-sender"
+    }) if contains(local.sender_metrics_with_client_id, tpl.metric_name)
+  }
+
   custom_alarms_config_set_processor_metric_math = {
     for key, tpl in var.config_set_processor_metric_math_alarm_config : key => {
       alarm_name          = "${local.project_nodomain}-csp-${tpl.metric_name}"
@@ -208,7 +230,6 @@ locals {
       treat_missing_data  = tpl.treat_missing_data
       period              = tpl.period
       metric_name         = tpl.metric_name
-      sum_expression      = "SUM([${join(",", [for k in keys(local.tenants) : "m_${replace(k, "-", "_")}"])}])"
     }
   }
 }
