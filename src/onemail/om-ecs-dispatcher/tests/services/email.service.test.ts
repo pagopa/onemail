@@ -20,6 +20,7 @@ import {
 const dynamoSend = vi.hoisted(() => vi.fn());
 const sqsSend = vi.hoisted(() => vi.fn());
 const randomUUID = vi.hoisted(() => vi.fn());
+const publishMetrics = vi.hoisted(() => vi.fn());
 
 vi.mock('#connectors/dynamo.connector', () => ({
   dynamoClient: { send: dynamoSend },
@@ -28,6 +29,17 @@ vi.mock('#connectors/sqs.connector', () => ({
   sqsClient: { send: sqsSend },
 }));
 vi.mock('node:crypto', () => ({ randomUUID }));
+vi.mock('om-common/repositories', () => ({
+  DispatcherMetricName: {
+    HighPriorityAccepted: 'HighPriorityAccepted',
+    LowPriorityAccepted: 'LowPriorityAccepted',
+    EmailStatusNotFound: 'EmailStatusNotFound',
+    MultipleTenantForClient: 'MultipleTenantForClient',
+    TenantConfigurationNotFound: 'TenantConfigurationNotFound',
+    UnauthorizedTenant: 'UnauthorizedTenant',
+  },
+  publishMetrics,
+}));
 
 describe('email.service', () => {
   describe('sendEmailTransactional', () => {
@@ -71,6 +83,13 @@ describe('email.service', () => {
         },
         0,
       );
+
+      expect(publishMetrics).toHaveBeenCalledWith([
+        {
+          name: 'HighPriorityAccepted',
+          dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
+        },
+      ]);
     });
 
     it('throws INVALID_TENANT when tenant configuration is missing', async () => {
@@ -84,6 +103,12 @@ describe('email.service', () => {
       });
 
       expect(sqsSend).not.toHaveBeenCalled();
+      expect(publishMetrics).toHaveBeenCalledWith([
+        {
+          name: 'TenantConfigurationNotFound',
+          dimensions: { tenantName: 'tenant-a' },
+        },
+      ]);
     });
 
     it('throws INVALID_TENANT when more than one tenant configuration exists', async () => {
@@ -106,6 +131,12 @@ describe('email.service', () => {
       });
 
       expect(sqsSend).not.toHaveBeenCalled();
+      expect(publishMetrics).toHaveBeenCalledWith([
+        {
+          name: 'MultipleTenantForClient',
+          dimensions: { tenantName: 'tenant-a' },
+        },
+      ]);
     });
   });
 
@@ -164,6 +195,14 @@ describe('email.service', () => {
         },
         0,
       );
+
+      expect(publishMetrics).toHaveBeenCalledWith([
+        {
+          name: 'LowPriorityAccepted',
+          value: 26,
+          dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
+        },
+      ]);
     });
 
     it('throws INVALID_TENANT when tenant configuration is missing', async () => {
@@ -255,6 +294,13 @@ describe('email.service - getEmailStatus', () => {
       statusCode: 404,
       errorCode: 'R001',
     });
+
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'EmailStatusNotFound',
+        dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
+      },
+    ]);
   });
 
   it('counts Dispatched events in history as attempts', async () => {
@@ -333,5 +379,12 @@ describe('email.service - getEmailStatus', () => {
       statusCode: 401,
       errorCode: 'T001',
     });
+
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'UnauthorizedTenant',
+        dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
+      },
+    ]);
   });
 });

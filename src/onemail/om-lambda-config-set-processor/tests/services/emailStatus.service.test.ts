@@ -176,7 +176,7 @@ describe('emailStatus.service max internal attempts', () => {
     expect(publishMetrics).toHaveBeenCalledWith([
       {
         name: 'ExhaustedInternalRetries',
-        dimensions: { tenantName: 'tenant-1' },
+        dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
       },
     ]);
   });
@@ -199,7 +199,10 @@ describe('emailStatus.service delivery flow', () => {
       [{ timestamp: '2025-06-01T12:00:00Z', status: EmailStatus.Delivered }],
     );
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'EmailDelivered', dimensions: { tenantName: 'tenant-1' } },
+      {
+        name: 'EmailDelivered',
+        dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+      },
     ]);
   });
 });
@@ -307,7 +310,10 @@ describe('emailStatus.service bounce flow', () => {
       ],
     );
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'EmailHardBounce', dimensions: { tenantName: 'tenant-1' } },
+      {
+        name: 'EmailHardBounce',
+        dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+      },
     ]);
   });
 
@@ -346,7 +352,7 @@ describe('emailStatus.service bounce flow', () => {
     expect(publishMetrics).toHaveBeenCalledWith([
       {
         name: 'EmailNonRetryableSoftBounce',
-        dimensions: { tenantName: 'tenant-1' },
+        dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
       },
     ]);
     expect(handleSoftBounceRetry).not.toHaveBeenCalled();
@@ -378,7 +384,10 @@ describe('emailStatus.service complaint flow', () => {
       ],
     );
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'EmailComplaint', dimensions: { tenantName: 'tenant-1' } },
+      {
+        name: 'EmailComplaint',
+        dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+      },
     ]);
   });
 
@@ -428,7 +437,10 @@ describe('emailStatus.service reject flow', () => {
       ],
     );
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'EmailRejected', dimensions: { tenantName: 'tenant-1' } },
+      {
+        name: 'EmailRejected',
+        dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+      },
     ]);
   });
 
@@ -492,7 +504,10 @@ describe('emailStatus.service rendering failure flow', () => {
       ],
     );
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'EmailRenderingFailure', dimensions: { tenantName: 'tenant-1' } },
+      {
+        name: 'EmailRenderingFailure',
+        dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+      },
     ]);
   });
 
@@ -519,7 +534,10 @@ describe('emailStatus.service rendering failure flow', () => {
       ],
     );
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'EmailRenderingFailure', dimensions: { tenantName: 'tenant-1' } },
+      {
+        name: 'EmailRenderingFailure',
+        dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+      },
     ]);
   });
 });
