@@ -20,8 +20,7 @@ resource "aws_cloudwatch_metric_alarm" "custom_config_set_processor" {
   }
 }
 
-# Config-Set-Processor Metric Math alarms (metrics with tenantName+clientId dimensions — aggregated across all tenants)
-# Uses SEARCH to match the full dimension set without requiring clientId at plan time.
+# Config-Set-Processor Metrics Insights alarms (metrics with tenantName+clientId dimensions, aggregated across all tenants)
 resource "aws_cloudwatch_metric_alarm" "csp_metric_math" {
   for_each = local.custom_alarms_config_set_processor_metric_math
 
@@ -35,7 +34,7 @@ resource "aws_cloudwatch_metric_alarm" "csp_metric_math" {
 
   metric_query {
     id          = "total"
-    expression  = "SUM(SEARCH('{${local.project_nodomain},service,tenantName,clientId} MetricName=\"${each.value.metric_name}\" service=\"${local.project_nodomain}-lambda-config-set-processor\"', 'Sum', ${each.value.period}))"
+    expression  = "SELECT SUM(${each.value.metric_name}) FROM SCHEMA(\"${local.project_nodomain}\", service, tenantName, clientId) WHERE service = '${local.project_nodomain}-lambda-config-set-processor'"
     label       = each.value.alarm_name
     period      = each.value.period
     return_data = true
@@ -75,7 +74,7 @@ resource "aws_cloudwatch_metric_alarm" "custom_dispatcher" {
   }
 }
 
-# Dispatcher alarms for metrics with clientId dimension (uses SEARCH)
+
 resource "aws_cloudwatch_metric_alarm" "custom_dispatcher_search" {
   for_each = local.custom_alarms_dispatcher_search
 
@@ -89,7 +88,7 @@ resource "aws_cloudwatch_metric_alarm" "custom_dispatcher_search" {
 
   metric_query {
     id          = "total"
-    expression  = "SUM(SEARCH('{${each.value.namespace},service,tenantName,clientId} MetricName=\"${each.value.metric_name}\" service=\"${each.value.service_name}\" tenantName=\"${each.value.tenant_name}\"', 'Sum', ${each.value.period}))"
+    expression  = "SELECT SUM(${each.value.metric_name}) FROM SCHEMA(\"${each.value.namespace}\", service, tenantName, clientId) WHERE service = '${each.value.service_name}' AND tenantName = '${each.value.tenant_name}'"
     label       = each.value.alarm_name
     period      = each.value.period
     return_data = true
@@ -122,7 +121,7 @@ resource "aws_cloudwatch_metric_alarm" "custom_sender" {
   }
 }
 
-# Sender alarms for metrics with clientId dimension (uses SEARCH)
+
 resource "aws_cloudwatch_metric_alarm" "custom_sender_search" {
   for_each = local.custom_alarms_sender_search
 
@@ -136,7 +135,7 @@ resource "aws_cloudwatch_metric_alarm" "custom_sender_search" {
 
   metric_query {
     id          = "total"
-    expression  = "SUM(SEARCH('{${each.value.namespace},service,clientId} MetricName=\"${each.value.metric_name}\" service=\"${each.value.service_name}\"', 'Sum', ${each.value.period}))"
+    expression  = "SELECT SUM(${each.value.metric_name}) FROM SCHEMA(\"${each.value.namespace}\", service, clientId) WHERE service = '${each.value.service_name}'"
     label       = each.value.alarm_name
     period      = each.value.period
     return_data = true

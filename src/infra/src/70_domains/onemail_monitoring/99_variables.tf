@@ -110,7 +110,7 @@ variable "custom_alarm_config" {
 }
 
 variable "config_set_processor_metric_math_alarm_config" {
-  description = "Template configuration for config-set-processor alarms using Metric Math SEARCH with dynamic dimensions (tenantName, clientId). Configure per environment in terraform.tfvars."
+  description = "Template configuration for config-set-processor alarms using Metrics Insights with dynamic dimensions (tenantName, clientId). Configure per environment in terraform.tfvars."
   type = map(object({
     comparison_operator = string
     evaluation_periods  = number
