@@ -47,6 +47,9 @@ vi.mock('om-common/repositories', () => ({
     LowPriorityRejected: 'LowPriorityRejected',
     LowPriorityDispatched: 'LowPriorityDispatched',
     LowPriorityRetryableFailure: 'LowPriorityRetryableFailure',
+    HighPriorityExhaustedInternalRetries:
+      'HighPriorityExhaustedInternalRetries',
+    LowPriorityExhaustedInternalRetries: 'LowPriorityExhaustedInternalRetries',
   },
 }));
 
@@ -86,7 +89,7 @@ describe('priority.service high priority flows', () => {
     expect(publishMetrics).toHaveBeenCalledWith([
       {
         name: 'HighPriorityDryRunError',
-        dimensions: { clientId: email.clientId },
+        dimensions: { clientId: email.clientId, tenantName: email.tenantName },
       },
     ]);
   });
@@ -109,7 +112,7 @@ describe('priority.service high priority flows', () => {
     expect(publishMetrics).toHaveBeenCalledWith([
       {
         name: 'HighPriorityDispatched',
-        dimensions: { clientId: email.clientId },
+        dimensions: { clientId: email.clientId, tenantName: email.tenantName },
       },
     ]);
   });
@@ -134,7 +137,7 @@ describe('priority.service high priority flows', () => {
     expect(publishMetrics).toHaveBeenCalledWith([
       {
         name: 'HighPriorityRejected',
-        dimensions: { clientId: email.clientId },
+        dimensions: { clientId: email.clientId, tenantName: email.tenantName },
       },
     ]);
   });
@@ -157,7 +160,7 @@ describe('priority.service high priority flows', () => {
     expect(publishMetrics).toHaveBeenCalledWith([
       {
         name: 'HighPriorityRejected',
-        dimensions: { clientId: email.clientId },
+        dimensions: { clientId: email.clientId, tenantName: email.tenantName },
       },
     ]);
   });
@@ -187,7 +190,7 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     expect(publishMetrics).toHaveBeenCalledWith([
       {
         name: 'HighPriorityRejected',
-        dimensions: { clientId: email.clientId },
+        dimensions: { clientId: email.clientId, tenantName: email.tenantName },
       },
     ]);
   });
@@ -215,7 +218,7 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     expect(publishMetrics).toHaveBeenCalledWith([
       {
         name: 'HighPriorityRejected',
-        dimensions: { clientId: email.clientId },
+        dimensions: { clientId: email.clientId, tenantName: email.tenantName },
       },
     ]);
   });
@@ -266,7 +269,7 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     expect(publishMetrics).toHaveBeenCalledWith([
       {
         name: 'HighPriorityRejected',
-        dimensions: { clientId: email.clientId },
+        dimensions: { clientId: email.clientId, tenantName: email.tenantName },
       },
     ]);
   });
@@ -296,7 +299,7 @@ describe('priority.service high priority SES rejection and guard clauses', () =>
     expect(publishMetrics).toHaveBeenCalledWith([
       {
         name: 'HighPriorityRejected',
-        dimensions: { clientId: email.clientId },
+        dimensions: { clientId: email.clientId, tenantName: email.tenantName },
       },
     ]);
   });
@@ -373,7 +376,14 @@ describe('priority.service low priority flows', () => {
       { item: emails[1], status: EmailStatus.DryRunError },
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'LowPriorityDryRunError', value: 2 },
+      {
+        name: 'LowPriorityDryRunError',
+        value: 2,
+        dimensions: {
+          clientId: emails[0].clientId,
+          tenantName: emails[0].tenantName,
+        },
+      },
     ]);
   });
 
@@ -411,7 +421,14 @@ describe('priority.service low priority flows', () => {
       },
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'LowPriorityRejected', value: 2 },
+      {
+        name: 'LowPriorityRejected',
+        value: 2,
+        dimensions: {
+          clientId: emails[0].clientId,
+          tenantName: emails[0].tenantName,
+        },
+      },
     ]);
   });
 });
@@ -465,8 +482,22 @@ describe('priority.service low priority SES entry result flows', () => {
       },
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'LowPriorityDispatched', value: 1 },
-      { name: 'LowPriorityRetryableFailure', value: 1 },
+      {
+        name: 'LowPriorityDispatched',
+        value: 1,
+        dimensions: {
+          clientId: emails[0].clientId,
+          tenantName: emails[0].tenantName,
+        },
+      },
+      {
+        name: 'LowPriorityRetryableFailure',
+        value: 1,
+        dimensions: {
+          clientId: emails[0].clientId,
+          tenantName: emails[0].tenantName,
+        },
+      },
     ]);
   });
 
@@ -521,8 +552,22 @@ describe('priority.service low priority SES entry result flows', () => {
       },
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'LowPriorityDispatched', value: 1 },
-      { name: 'LowPriorityRejected', value: 1 },
+      {
+        name: 'LowPriorityDispatched',
+        value: 1,
+        dimensions: {
+          clientId: emails[0].clientId,
+          tenantName: emails[0].tenantName,
+        },
+      },
+      {
+        name: 'LowPriorityRejected',
+        value: 1,
+        dimensions: {
+          clientId: emails[0].clientId,
+          tenantName: emails[0].tenantName,
+        },
+      },
     ]);
   });
 });
@@ -569,7 +614,14 @@ describe('priority.service low priority SES rejection and guard clauses', () => 
       },
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'LowPriorityRejected', value: 2 },
+      {
+        name: 'LowPriorityRejected',
+        value: 2,
+        dimensions: {
+          clientId: emails[0].clientId,
+          tenantName: emails[0].tenantName,
+        },
+      },
     ]);
   });
 
@@ -612,7 +664,14 @@ describe('priority.service low priority SES rejection and guard clauses', () => 
       },
     ]);
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'LowPriorityRejected', value: 2 },
+      {
+        name: 'LowPriorityRejected',
+        value: 2,
+        dimensions: {
+          clientId: emails[0].clientId,
+          tenantName: emails[0].tenantName,
+        },
+      },
     ]);
   });
 
@@ -633,5 +692,72 @@ describe('priority.service low priority SES rejection and guard clauses', () => 
       ),
     ).rejects.toThrow('SES transient failure');
     expect(batchUpdateEmailStatuses).not.toHaveBeenCalled();
+  });
+});
+
+describe('priority.service internal retry exhaustion', () => {
+  it('marks high priority email as rejected and publishes exhausted metric when max attempts exceeded', async () => {
+    const email = makeEmailStatusHistoryItem();
+    getEmailById.mockResolvedValue(email);
+
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: email.emailId }, 6),
+      true,
+    );
+
+    expect(updateEmailStatus).toHaveBeenCalledWith({
+      emailId: email.emailId,
+      status: EmailStatus.Rejected,
+      reason: 'Max internal retries exceeded',
+    });
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'HighPriorityExhaustedInternalRetries',
+        value: 1,
+        dimensions: { clientId: email.clientId, tenantName: email.tenantName },
+      },
+    ]);
+  });
+
+  it('marks all low priority emails as rejected and publishes exhausted metric when max attempts exceeded', async () => {
+    const emails = [
+      makeEmailStatusHistoryItem({
+        emailId: 'email-1',
+        priority: EmailPriority.LOW,
+      }),
+      makeEmailStatusHistoryItem({
+        emailId: 'email-2',
+        priority: EmailPriority.LOW,
+      }),
+    ];
+    getEmailsByRequestId.mockResolvedValue(emails);
+
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ requestId: 'request-1' }, 6),
+      false,
+    );
+
+    expect(batchUpdateEmailStatuses).toHaveBeenCalledWith([
+      {
+        item: emails[0],
+        status: EmailStatus.Rejected,
+        reason: 'Max internal retries exceeded',
+      },
+      {
+        item: emails[1],
+        status: EmailStatus.Rejected,
+        reason: 'Max internal retries exceeded',
+      },
+    ]);
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'LowPriorityExhaustedInternalRetries',
+        value: 2,
+        dimensions: {
+          clientId: emails[0].clientId,
+          tenantName: emails[0].tenantName,
+        },
+      },
+    ]);
   });
 });
