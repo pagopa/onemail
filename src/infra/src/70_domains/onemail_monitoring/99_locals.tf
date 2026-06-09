@@ -6,8 +6,16 @@ locals {
   emails                        = var.alarm_subscribers != "" ? split(",", data.aws_ssm_parameter.alarm_subscribers[0].value) : []
   tenants_file_path             = "${path.module}/../../data/tenants/tenants.json"
   raw_tenants                   = jsondecode(file(local.tenants_file_path))
+  tenant_domain_prefix          = var.env == "prod" ? "" : "${var.env}."
   tenant_name_prefix            = "${local.project_nodomain_ses}-tenant"
   configuration_set_name_prefix = "${local.project_nodomain_ses}-configuration-set"
+  tenant_domains = {
+    for tenant_key, tenant_data in local.raw_tenants : tenant_key => try(
+      tenant_data.domain[var.env],
+      format("%s%s", local.tenant_domain_prefix, tenant_data.domain),
+      null
+    )
+  }
 
   lambda_alarm_targets = {
     sender = {
@@ -153,7 +161,7 @@ locals {
     for tenant_key, tenant_data in local.raw_tenants : tenant_key => {
       tenant_name            = "${local.tenant_name_prefix}-${tenant_key}"
       configuration_set_name = "${local.configuration_set_name_prefix}-${tenant_key}"
-    }
+    } if try(length(trimspace(local.tenant_domains[tenant_key])) > 0, false)
   }
 
   # --- Custom application metric alarms ---
