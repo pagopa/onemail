@@ -6,11 +6,18 @@ locals {
   raw_tenants                 = jsondecode(file(local.tenants_file_path))
   tenant_domain_prefix        = var.env == "prod" ? "" : "${var.env}."
   ses_dns_managed_tenant_keys = toset(["onemail"])
+  tenant_domains = {
+    for tenant_key, tenant_data in local.raw_tenants : tenant_key => try(
+      tenant_data.domain[var.env],
+      format("%s%s", local.tenant_domain_prefix, tenant_data.domain),
+      null
+    )
+  }
   tenants_with_managed_ses_dns_records = {
     for tenant_key, tenant_data in local.raw_tenants : tenant_key => {
-      domain      = "${local.tenant_domain_prefix}${tenant_data.domain}"
-      admin_email = format("%s@%s", tenant_data.admin_mailbox, "${local.tenant_domain_prefix}${tenant_data.domain}")
-    } if contains(local.ses_dns_managed_tenant_keys, tenant_key)
+      domain      = local.tenant_domains[tenant_key]
+      admin_email = format("%s@%s", tenant_data.admin_mailbox, local.tenant_domains[tenant_key])
+    } if contains(local.ses_dns_managed_tenant_keys, tenant_key) && try(length(trimspace(local.tenant_domains[tenant_key])) > 0, false)
   }
 
   web_acl_rules = [

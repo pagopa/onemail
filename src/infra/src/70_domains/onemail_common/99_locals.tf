@@ -10,12 +10,19 @@ locals {
   tenant_domain_prefix           = var.env == "prod" ? "" : "${var.env}."
   tenant_name_prefix             = "${local.project_nodomain_ses}-tenant"
   configuration_set_name_prefix  = "${local.project_nodomain_ses}-configuration-set"
+  tenant_domains = {
+    for tenant_key, tenant_data in local.raw_tenants : tenant_key => try(
+      tenant_data.domain[var.env],
+      format("%s%s", local.tenant_domain_prefix, tenant_data.domain),
+      null
+    )
+  }
   tenants = {
     for tenant_key, tenant_data in local.raw_tenants : tenant_key => {
-      domain                 = "${local.tenant_domain_prefix}${tenant_data.domain}"
-      admin_email            = format("%s@%s", tenant_data.admin_mailbox, "${local.tenant_domain_prefix}${tenant_data.domain}")
+      domain                 = local.tenant_domains[tenant_key]
+      admin_email            = format("%s@%s", tenant_data.admin_mailbox, local.tenant_domains[tenant_key])
       tenant_name            = "${local.tenant_name_prefix}-${tenant_key}"
       configuration_set_name = "${local.configuration_set_name_prefix}-${tenant_key}"
-    }
+    } if try(length(trimspace(local.tenant_domains[tenant_key])) > 0, false)
   }
 }
