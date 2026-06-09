@@ -1,5 +1,11 @@
 # infra-data-tenants
 
+## 1.2.0
+
+### Minor Changes
+
+- 4be5377: Ses identity creation env based
+
 ## 1.1.0
 
 ### Minor Changes

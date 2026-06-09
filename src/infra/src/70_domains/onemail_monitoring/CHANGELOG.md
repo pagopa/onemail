@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.11.0
+
+### Minor Changes
+
+- 4be5377: Ses identity creation env based
+
 ## 1.10.0
 
 ### Minor Changes
