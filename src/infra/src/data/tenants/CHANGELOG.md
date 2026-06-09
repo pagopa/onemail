@@ -1,5 +1,11 @@
 # infra-data-tenants
 
+## 1.3.0
+
+### Minor Changes
+
+- d58516f: add selfcare to uat tenants
+
 ## 1.2.0
 
 ### Minor Changes
