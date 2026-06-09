@@ -6,5 +6,11 @@
       "uat": "uat.onemail.pagopa.it",
       "prod": "onemail.pagopa.it"
     }
+  },
+  "selfcare": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": {
+      "uat": "selfcare.pagopa.it"
+    }
   }
 }
