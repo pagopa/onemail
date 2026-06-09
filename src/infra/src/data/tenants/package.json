@@ -1,6 +1,6 @@
 {
   "name": "infra-data-tenants",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Data infrastructure for tenants.",
   "private": true
 }
