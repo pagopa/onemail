@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.15.0
+
+### Minor Changes
+
+- 4be5377: Ses identity creation env based
+
 ## 1.14.0
 
 ### Minor Changes
