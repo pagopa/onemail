@@ -109,7 +109,10 @@ describe('bounceRetry.service high priority retry', () => {
       ],
     );
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'HighPriorityMaxRetriesReached' },
+      {
+        name: 'HighPriorityMaxRetriesReached',
+        dimensions: { tenantName: email.tenantName, clientId: email.clientId },
+      },
     ]);
   });
 
@@ -230,7 +233,10 @@ describe('bounceRetry.service low priority retry', () => {
       ],
     );
     expect(publishMetrics).toHaveBeenCalledWith([
-      { name: 'LowPriorityMaxRetriesReached' },
+      {
+        name: 'LowPriorityMaxRetriesReached',
+        dimensions: { tenantName: email.tenantName, clientId: email.clientId },
+      },
     ]);
   });
 });

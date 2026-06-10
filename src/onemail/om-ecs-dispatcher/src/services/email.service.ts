@@ -74,7 +74,10 @@ export const sendEmailTransactional = async (
   publishMetrics([
     {
       name: DispatcherMetricName.HighPriorityAccepted,
-      dimensions: { tenantName: tenantName },
+      dimensions: {
+        tenantName: tenantName,
+        clientId: tenantConfiguration.clientId,
+      },
     },
   ]);
 
@@ -141,7 +144,10 @@ export const sendEmailLowPriority = async (
     {
       name: DispatcherMetricName.LowPriorityAccepted,
       value: dbListObj.length,
-      dimensions: { tenantName: tenantName },
+      dimensions: {
+        tenantName: tenantName,
+        clientId: tenantConfiguration.clientId,
+      },
     },
   ]);
 
@@ -179,7 +185,10 @@ export const getEmailStatus = async (
     publishMetrics([
       {
         name: DispatcherMetricName.EmailStatusNotFound,
-        dimensions: { tenantName: tenantName },
+        dimensions: {
+          tenantName: tenantName,
+          clientId: tenantConfiguration.clientId,
+        },
       },
     ]);
     throw new ApiError(
@@ -195,7 +204,10 @@ export const getEmailStatus = async (
       publishMetrics([
         {
           name: DispatcherMetricName.UnauthorizedTenant,
-          dimensions: { tenantName: tenantName },
+          dimensions: {
+            tenantName: tenantName,
+            clientId: tenantConfiguration.clientId,
+          },
         },
       ]);
       throw new ApiError(
@@ -237,7 +249,9 @@ const getAndValidateTenantConfiguration = async (
     publishMetrics([
       {
         name: DispatcherMetricName.TenantConfigurationNotFound,
-        dimensions: { tenantName: tenantName },
+        dimensions: {
+          tenantName: tenantName,
+        },
       },
     ]);
     throw new ApiError(

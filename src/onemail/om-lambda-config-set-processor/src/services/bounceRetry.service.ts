@@ -36,6 +36,8 @@ export const handleSoftBounceRetry = async (
       status,
       bounceTimestamp,
       bSubType,
+      emailRecord.tenantName,
+      emailRecord.clientId,
       newAttemptNumber,
     );
   } else {
@@ -45,6 +47,8 @@ export const handleSoftBounceRetry = async (
       requestId,
       bounceTimestamp,
       bSubType,
+      emailRecord.tenantName,
+      emailRecord.clientId,
       newAttemptNumber,
     );
   }
@@ -56,6 +60,8 @@ const handleHighPriorityRetry = async (
   currentStatus: EmailStatus,
   bounceTimestamp: string,
   bounceSubType: string | undefined,
+  tenantName: string,
+  clientId: string,
   attempt: number,
 ): Promise<void> => {
   const logger = getNamedLogger(handleHighPriorityRetry.name);
@@ -86,7 +92,7 @@ const handleHighPriorityRetry = async (
     publishMetrics([
       {
         name: ConfigSetProcessorMetricName.HighPriorityEmailMaxRetriesReached,
-        //TODO: add clientId dimension
+        dimensions: { tenantName, clientId },
       },
     ]);
     return;
@@ -130,6 +136,8 @@ const handleLowPriorityRetry = async (
   requestId: string,
   bounceTimestamp: string,
   bounceSubType: string | undefined,
+  tenantName: string,
+  clientId: string,
   attempt: number,
 ): Promise<void> => {
   const logger = getNamedLogger(handleLowPriorityRetry.name);
@@ -162,7 +170,7 @@ const handleLowPriorityRetry = async (
     publishMetrics([
       {
         name: ConfigSetProcessorMetricName.LowPriorityEmailMaxRetriesReached,
-        //TODO: add clientId dimension
+        dimensions: { tenantName, clientId },
       },
     ]);
 

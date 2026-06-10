@@ -86,6 +86,7 @@ variable "custom_alarm_config" {
       period              = number
       statistic           = optional(string, "Sum")
       treat_missing_data  = optional(string, "notBreaching")
+      extra_dimensions    = optional(map(string), {})
     }))
     dispatcher = map(object({
       comparison_operator = string
@@ -106,6 +107,19 @@ variable "custom_alarm_config" {
       treat_missing_data  = optional(string, "notBreaching")
     }))
   })
+}
+
+variable "config_set_processor_metric_math_alarm_config" {
+  description = "Template configuration for config-set-processor alarms using Metrics Insights with dynamic dimensions (tenantName, clientId). Configure per environment in terraform.tfvars."
+  type = map(object({
+    comparison_operator = string
+    evaluation_periods  = number
+    threshold           = number
+    metric_name         = string
+    period              = number
+    treat_missing_data  = optional(string, "notBreaching")
+  }))
+  default = {}
 }
 
 variable "dashboard_name" {

@@ -96,7 +96,10 @@ const handleHighPriority = async (
     email,
   ]);
 
-  const clientIdDimension = { clientId: email.clientId };
+  const metricDimensions = {
+    clientId: email.clientId,
+    tenantName: email.tenantName,
+  };
 
   // 4. Send the email with SES
   let providerMessageId: string | undefined;
@@ -108,7 +111,7 @@ const handleHighPriority = async (
       publishMetrics([
         {
           name: SenderMetricName.HighPriorityDryRunError,
-          dimensions: clientIdDimension,
+          dimensions: metricDimensions,
         },
       ]);
       throw new PermanentEventError('Dry-run validation failed', {
@@ -127,7 +130,7 @@ const handleHighPriority = async (
       publishMetrics([
         {
           name: SenderMetricName.HighPriorityRejected,
-          dimensions: clientIdDimension,
+          dimensions: metricDimensions,
         },
       ]);
       throw new PermanentEventError('Email rejected by SES', {
@@ -153,7 +156,7 @@ const handleHighPriority = async (
     publishMetrics([
       {
         name: SenderMetricName.HighPriorityRejected,
-        dimensions: clientIdDimension,
+        dimensions: metricDimensions,
       },
     ]);
     throw new PermanentEventError('Email rejected by SES', { emailId });
@@ -171,7 +174,7 @@ const handleHighPriority = async (
   publishMetrics([
     {
       name: SenderMetricName.HighPriorityDispatched,
-      dimensions: clientIdDimension,
+      dimensions: metricDimensions,
     },
   ]);
 
@@ -210,6 +213,10 @@ const handleLowPriority = async (
     EmailPriority.LOW,
     emails,
   );
+  const metricDimensions = {
+    clientId: emails[0].clientId,
+    tenantName: emails[0].tenantName,
+  };
 
   // 4. Send bulk email with SES
   let sesSendResult: BulkSendResult;
@@ -227,6 +234,7 @@ const handleLowPriority = async (
         {
           name: SenderMetricName.LowPriorityDryRunError,
           value: emails.length,
+          dimensions: metricDimensions,
         },
       ]);
       throw new PermanentEventError('Dry-run validation failed', {
@@ -249,6 +257,7 @@ const handleLowPriority = async (
         {
           name: SenderMetricName.LowPriorityRejected,
           value: emails.length,
+          dimensions: metricDimensions,
         },
       ]);
       throw new PermanentEventError('Email rejected by SES', {
@@ -311,14 +320,17 @@ const handleLowPriority = async (
     {
       name: SenderMetricName.LowPriorityDispatched,
       value: successful.length,
+      dimensions: metricDimensions,
     },
     {
       name: SenderMetricName.LowPriorityRejected,
       value: nonRetryableFailures.length,
+      dimensions: metricDimensions,
     },
     {
       name: SenderMetricName.LowPriorityRetryableFailure,
       value: retryableFailures.length,
+      dimensions: metricDimensions,
     },
   ].filter((m) => m.value > 0);
 
@@ -348,6 +360,7 @@ async function checkIfMaxInternalAttemptsReached(
   if (currentAttempt <= maxAttempts) return;
 
   const clientId = emails[0].clientId;
+  const tenantName = emails[0].tenantName;
   const identifier = isHighPriority ? emails[0].emailId : emails[0].requestId;
 
   if (isHighPriority) {
@@ -372,7 +385,7 @@ async function checkIfMaxInternalAttemptsReached(
         ? SenderMetricName.HighPriorityExhaustedInternalRetries
         : SenderMetricName.LowPriorityExhaustedInternalRetries,
       value: emails.length,
-      dimensions: { clientId },
+      dimensions: { clientId, tenantName },
     },
   ]);
   throw new PermanentEventError(
