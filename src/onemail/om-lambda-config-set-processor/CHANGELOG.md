@@ -1,5 +1,11 @@
 # om-lambda-config-set-processor
 
+## 1.6.9
+
+### Patch Changes
+
+- 46a05a5: add tenantname and clientid dimensions, add alarm and dashboards
+
 ## 1.6.8
 
 ### Patch Changes

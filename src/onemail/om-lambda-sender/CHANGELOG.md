@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.6.7
+
+### Patch Changes
+
+- 46a05a5: add tenantname and clientid dimensions, add alarm and dashboards
+
 ## 1.6.6
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.10.8
+
+### Patch Changes
+
+- 46a05a5: add tenantname and clientid dimensions, add alarm and dashboards
+
 ## 1.10.7
 
 ### Patch Changes
