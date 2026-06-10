@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.11.1
+
+### Patch Changes
+
+- 46a05a5: add tenantname and clientid dimensions, add alarm and dashboards
+
 ## 1.11.0
 
 ### Minor Changes
