@@ -1,8 +1,8 @@
 # general
-env_short               = "u"
-env                     = "uat"
-github_repository       = "pagopa/onemail"
-aws_region              = "eu-south-1"
+env_short                              = "u"
+env                                    = "uat"
+github_repository                      = "pagopa/onemail"
+aws_region                             = "eu-south-1"
 create_primary_region_github_iac_roles = true
-lambda_code_bucket_name = "oml-u-eus1-lambda-code-deploy-046043523632"
+lambda_code_bucket_name                = "oml-u-eus1-lambda-code-deploy-046043523632"
 
