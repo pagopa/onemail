@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.16.0
+
+### Minor Changes
+
+- 633c2ef: Deploy lambda eu-central roles and s3 code bucket
+
 ## 1.15.0
 
 ### Minor Changes
