@@ -5,11 +5,9 @@ inputs:
   event_name:
     description: 'GitHub event name (github.event_name)'
     required: true
-    type: string
   environment_input:
     description: 'Environment input from workflow_dispatch (github.event.inputs.environment)'
     required: false
-    type: string
     default: ''
 
 outputs:
@@ -28,9 +26,13 @@ runs:
         echo "environment input: ${{ inputs.environment_input }}"
 
         if [ "${{ inputs.event_name }}" == "workflow_dispatch" ]; then
-          matrixStringifiedObject="{\"include\":[{\"environment\":\"${{ inputs.environment_input }}\", \"region\":\"eu-south-1\"}]}"
+          if [ "${{ inputs.environment_input }}" == "prod" ]; then
+            matrixStringifiedObject="{\"include\":[{\"environment\":\"prod\", \"region\":\"eu-south-1\"}, {\"environment\":\"prod\", \"region\":\"eu-central-1\"}]}"
+          else
+            matrixStringifiedObject="{\"include\":[{\"environment\":\"${{ inputs.environment_input }}\", \"region\":\"eu-south-1\"}]}"
+          fi
         else
-          matrixStringifiedObject="{\"include\":[{\"environment\":\"dev\", \"region\":\"eu-south-1\"}, {\"environment\":\"uat\", \"region\":\"eu-south-1\"}, {\"environment\":\"prod\", \"region\":\"eu-south-1\"}]}"
+          matrixStringifiedObject="{\"include\":[{\"environment\":\"dev\", \"region\":\"eu-south-1\"}, {\"environment\":\"uat\", \"region\":\"eu-south-1\"}, {\"environment\":\"prod\", \"region\":\"eu-south-1\"}, {\"environment\":\"prod\", \"region\":\"eu-central-1\"}]}"
         fi
 
         echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT

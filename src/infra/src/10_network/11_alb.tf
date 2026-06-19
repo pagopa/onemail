@@ -61,18 +61,50 @@ resource "aws_security_group" "alb" {
 }
 
 module "acm" {
-  source = "git::https://github.com/terraform-aws-modules/terraform-aws-acm.git?ref=8d0b22f1f242a1b36e29b8cb38aaeac9b887500d" # v5.0.0
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-acm.git?ref=8d0b22f1f242a1b36e29b8cb38aaeac9b887500d"
 
-  domain_name = local.zone_name
-
-  zone_id = module.zone.route53_zone_zone_id[local.zone_name]
-
+  domain_name            = local.zone_name
   validation_method      = "DNS"
-  create_route53_records = true
+  create_route53_records = false
+  validate_certificate   = false
+  wait_for_validation    = false
 
   tags = {
     Name = local.zone_name
   }
+}
+
+# ACM reuses the same DNS validation CNAME across regions, so only the primary
+# region owns the Route53 record while secondary regions still wait for issuance.
+resource "aws_route53_record" "alb_certificate_validation" {
+  for_each = var.create_primary_region_public_entrypoint ? {
+    for option in module.acm.acm_certificate_domain_validation_options : option.domain_name => {
+      name   = option.resource_record_name
+      record = option.resource_record_value
+      type   = option.resource_record_type
+    }
+  } : {}
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = module.zone[0].route53_zone_zone_id[local.zone_name]
+}
+
+locals {
+  alb_certificate_validation_record_fqdns = var.create_primary_region_public_entrypoint ? values(aws_route53_record.alb_certificate_validation)[*].fqdn : [
+    for option in module.acm.acm_certificate_domain_validation_options : option.resource_record_name
+  ]
+}
+
+resource "aws_acm_certificate_validation" "alb" {
+  certificate_arn = module.acm.acm_certificate_arn
+
+  validation_record_fqdns = local.alb_certificate_validation_record_fqdns
+
+  depends_on = [aws_route53_record.alb_certificate_validation]
 }
 
 module "alb" {
@@ -98,7 +130,12 @@ module "alb" {
   listeners     = {}
   target_groups = {}
 
-  tags = module.tag_config.tags
+  tags = merge(
+    module.tag_config.tags,
+    {
+      Name = "${local.project}-alb"
+    }
+  )
 }
 
 # Target Group for private API Gateway (via VPC Endpoint)
@@ -128,10 +165,22 @@ resource "aws_lb_target_group" "apigw_tg" {
   )
 }
 
-# Extract network interface IPs from VPC Endpoint and attach to target group
+# Resolve one API Gateway endpoint ENI per private subnet using static keys,
+# so Terraform can plan attachments before the endpoint ENI IDs exist.
 data "aws_network_interface" "apigw_enis" {
-  for_each = toset(module.vpc_endpoints.endpoints["apigw"].network_interface_ids)
-  id       = each.value
+  for_each = {
+    for index, _ in var.vpc_private_subnets_cidr : tostring(index) => module.vpc.private_subnets[index]
+  }
+
+  filter {
+    name   = "subnet-id"
+    values = [each.value]
+  }
+
+  filter {
+    name   = "description"
+    values = ["VPC Endpoint Interface ${module.vpc_endpoints.endpoints["apigw"].id}"]
+  }
 }
 
 resource "aws_lb_target_group_attachment" "apigw_attachment" {
@@ -146,7 +195,7 @@ resource "aws_lb_listener" "https" {
   load_balancer_arn = module.alb.arn
   port              = 443
   protocol          = "HTTPS"
-  certificate_arn   = module.acm.acm_certificate_arn
+  certificate_arn   = aws_acm_certificate_validation.alb.certificate_arn
   ssl_policy        = var.alb_ssl_policy
 
   default_action {

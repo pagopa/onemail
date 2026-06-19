@@ -1,12 +1,12 @@
 # Route53 Hosted Zones Configuration
 
 data "aws_ses_domain_identity" "tenant" {
-  for_each = var.enable_ses_dns_records ? local.tenants_with_managed_ses_dns_records : {}
+  for_each = var.create_primary_region_public_entrypoint && var.enable_ses_dns_records ? local.tenants_with_managed_ses_dns_records : {}
   domain   = each.value.domain
 }
 
 data "aws_sesv2_email_identity" "tenant" {
-  for_each       = var.enable_ses_dns_records ? local.tenants_with_managed_ses_dns_records : {}
+  for_each       = var.create_primary_region_public_entrypoint && var.enable_ses_dns_records ? local.tenants_with_managed_ses_dns_records : {}
   email_identity = each.value.domain
 }
 
@@ -15,7 +15,7 @@ locals {
   zone_name = var.env == "prod" ? var.dns_zone_name : "${var.env}.${var.dns_zone_name}"
 
   # All possible DNS records with consistent object structure
-  dns_records_base = {
+  dns_records_base = var.create_primary_region_public_entrypoint ? {
     # NS delegation records (PROD only)
     "ns_dev" = {
       display_name = "dev"
@@ -37,7 +37,7 @@ locals {
       alias_config = null
       include      = var.env == "prod"
     }
-    # Global Accelerator alias record (all environments)
+    # Global Accelerator alias record (all environments in the primary region)
     "root_ga_alias" = {
       display_name = "root_ga_alias"
       name         = ""
@@ -46,15 +46,15 @@ locals {
       records      = null
       is_alias     = true
       alias_config = {
-        name                   = aws_globalaccelerator_accelerator.this.dns_name
-        zone_id                = aws_globalaccelerator_accelerator.this.hosted_zone_id
+        name                   = aws_globalaccelerator_accelerator.this[0].dns_name
+        zone_id                = aws_globalaccelerator_accelerator.this[0].hosted_zone_id
         evaluate_target_health = true
       }
       include = true
     }
-  }
+  } : {}
 
-  tenant_dns_records = var.enable_ses_dns_records && length(local.tenants_with_managed_ses_dns_records) > 0 ? {
+  tenant_dns_records = var.create_primary_region_public_entrypoint && var.enable_ses_dns_records && length(local.tenants_with_managed_ses_dns_records) > 0 ? {
     for record in concat(
       [
         for tenant_key, tenant_data in local.tenants_with_managed_ses_dns_records : {
@@ -137,6 +137,8 @@ locals {
 }
 
 module "zone" {
+  count = var.create_primary_region_public_entrypoint ? 1 : 0
+
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-route53.git//modules/zones?ref=385af6e72673f90aa8c835f820067553f905bd17" # v2.11.1
 
   zones = {
@@ -156,9 +158,9 @@ module "zone" {
 
 # DNS Records
 resource "aws_route53_record" "dns_records" {
-  for_each = local.all_dns_records
+  for_each = var.create_primary_region_public_entrypoint ? local.all_dns_records : {}
 
-  zone_id = module.zone.route53_zone_zone_id[local.zone_name]
+  zone_id = module.zone[0].route53_zone_zone_id[local.zone_name]
   name    = each.value.absolute_name ? each.value.name : (each.value.name == "" ? local.zone_name : "${each.value.name}.${local.zone_name}")
   type    = each.value.type
 
