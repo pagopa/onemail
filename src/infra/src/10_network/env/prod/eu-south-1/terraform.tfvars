@@ -1,11 +1,11 @@
 # general
-prefix         = "oml"
-env_short      = "p"
-env            = "prod"
-domain         = "network"
-location_short = "eus1"
-aws_region     = "eu-south-1"
-secondary_aws_region = "eu-central-1"
+prefix                   = "oml"
+env_short                = "p"
+env                      = "prod"
+domain                   = "network"
+location_short           = "eus1"
+aws_region               = "eu-south-1"
+secondary_aws_region     = "eu-central-1"
 secondary_location_short = "euc1"
 
 # # VPC Configuration
