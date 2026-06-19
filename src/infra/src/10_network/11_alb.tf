@@ -93,16 +93,6 @@ locals {
   ]
 }
 
-moved {
-  from = module.acm.aws_route53_record.validation[0]
-  to   = aws_route53_record.alb_certificate_validation[0]
-}
-
-moved {
-  from = module.acm.aws_acm_certificate_validation.this[0]
-  to   = aws_acm_certificate_validation.alb
-}
-
 resource "aws_acm_certificate_validation" "alb" {
   certificate_arn = module.acm.acm_certificate_arn
 

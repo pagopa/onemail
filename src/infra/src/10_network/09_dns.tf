@@ -146,11 +146,6 @@ locals {
   }
 }
 
-moved {
-  from = aws_route53_record.dns_records["root_ga_alias"]
-  to   = aws_route53_record.dns_alias_records["root_ga_alias"]
-}
-
 module "zone" {
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-route53.git//modules/zones?ref=385af6e72673f90aa8c835f820067553f905bd17" # v2.11.1
 
