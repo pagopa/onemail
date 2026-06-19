@@ -77,26 +77,30 @@ module "acm" {
 # ACM reuses the same DNS validation CNAME across regions, so only the primary
 # region owns the Route53 record while secondary regions still wait for issuance.
 resource "aws_route53_record" "alb_certificate_validation" {
-  for_each = var.create_primary_region_public_entrypoint ? {
-    for option in module.acm.acm_certificate_domain_validation_options : option.domain_name => {
-      name   = option.resource_record_name
-      record = option.resource_record_value
-      type   = option.resource_record_type
-    }
-  } : {}
+  count = var.create_primary_region_public_entrypoint ? 1 : 0
 
   allow_overwrite = true
-  name            = each.value.name
-  records         = [each.value.record]
+  name            = module.acm.acm_certificate_domain_validation_options[0].resource_record_name
+  records         = [module.acm.acm_certificate_domain_validation_options[0].resource_record_value]
   ttl             = 60
-  type            = each.value.type
-  zone_id         = module.zone[0].route53_zone_zone_id[local.zone_name]
+  type            = module.acm.acm_certificate_domain_validation_options[0].resource_record_type
+  zone_id         = module.zone.route53_zone_zone_id[local.zone_name]
 }
 
 locals {
-  alb_certificate_validation_record_fqdns = var.create_primary_region_public_entrypoint ? values(aws_route53_record.alb_certificate_validation)[*].fqdn : [
+  alb_certificate_validation_record_fqdns = var.create_primary_region_public_entrypoint ? [aws_route53_record.alb_certificate_validation[0].fqdn] : [
     for option in module.acm.acm_certificate_domain_validation_options : option.resource_record_name
   ]
+}
+
+moved {
+  from = module.acm.aws_route53_record.validation[0]
+  to   = aws_route53_record.alb_certificate_validation[0]
+}
+
+moved {
+  from = module.acm.aws_acm_certificate_validation.this[0]
+  to   = aws_acm_certificate_validation.alb
 }
 
 resource "aws_acm_certificate_validation" "alb" {
@@ -165,10 +169,15 @@ resource "aws_lb_target_group" "apigw_tg" {
   )
 }
 
-# Resolve one API Gateway endpoint ENI per private subnet using static keys,
-# so Terraform can plan attachments before the endpoint ENI IDs exist.
-data "aws_network_interface" "apigw_enis" {
-  for_each = {
+data "aws_network_interface" "apigw_enis_primary" {
+  for_each = var.create_primary_region_public_entrypoint ? toset(module.vpc_endpoints.endpoints["apigw"].network_interface_ids) : toset([])
+  id       = each.value
+}
+
+# In the secondary region the endpoint ENI IDs are unknown during the first
+# plan, so resolve one ENI per private subnet using static keys.
+data "aws_network_interface" "apigw_enis_secondary" {
+  for_each = var.create_primary_region_public_entrypoint ? {} : {
     for index, _ in var.vpc_private_subnets_cidr : tostring(index) => module.vpc.private_subnets[index]
   }
 
@@ -183,10 +192,18 @@ data "aws_network_interface" "apigw_enis" {
   }
 }
 
+locals {
+  apigw_target_group_attachment_ips = var.create_primary_region_public_entrypoint ? {
+    for eni_id, eni in data.aws_network_interface.apigw_enis_primary : eni_id => eni.private_ip
+    } : {
+    for key, eni in data.aws_network_interface.apigw_enis_secondary : key => eni.private_ip
+  }
+}
+
 resource "aws_lb_target_group_attachment" "apigw_attachment" {
-  for_each         = data.aws_network_interface.apigw_enis
+  for_each         = local.apigw_target_group_attachment_ips
   target_group_arn = aws_lb_target_group.apigw_tg.arn
-  target_id        = each.value.private_ip
+  target_id        = each.value
   port             = 443
 }
 
