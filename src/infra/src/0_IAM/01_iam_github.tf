@@ -11,6 +11,8 @@ data "aws_caller_identity" "current" {}
 
 # github openid identity provider.
 resource "aws_iam_openid_connect_provider" "github" {
+  count = var.create_primary_region_github_iac_roles ? 1 : 0
+
   url = "https://token.actions.githubusercontent.com"
 
   client_id_list = [
@@ -24,6 +26,8 @@ resource "aws_iam_openid_connect_provider" "github" {
 }
 
 resource "aws_iam_role" "githubiac" {
+  count = var.create_primary_region_github_iac_roles ? 1 : 0
+
   name        = "${local.project}-github-iac-role"
   description = "Role to assume to create the infrastructure."
 
@@ -56,11 +60,15 @@ resource "aws_iam_role" "githubiac" {
 }
 
 resource "aws_iam_role_policy_attachment" "githubiac" {
-  role       = aws_iam_role.githubiac.name
+  count = var.create_primary_region_github_iac_roles ? 1 : 0
+
+  role       = aws_iam_role.githubiac[0].name
   policy_arn = data.aws_iam_policy.admin_access.arn
 }
 
 resource "aws_iam_role" "githubiac_plan" {
+  count = var.create_primary_region_github_iac_roles ? 1 : 0
+
   name        = "${local.project}-github-iac-role-plan"
   description = "Role to assume to create the infrastructure."
 
@@ -89,11 +97,15 @@ resource "aws_iam_role" "githubiac_plan" {
 }
 
 resource "aws_iam_role_policy_attachment" "githubiac_plan" {
-  role       = aws_iam_role.githubiac_plan.name
+  count = var.create_primary_region_github_iac_roles ? 1 : 0
+
+  role       = aws_iam_role.githubiac_plan[0].name
   policy_arn = data.aws_iam_policy.read_access.arn
 }
 
 resource "aws_iam_policy" "githubiac_plan_policy" {
+  count = var.create_primary_region_github_iac_roles ? 1 : 0
+
   name        = "${local.project}-github-iac-policy-plan"
   description = "Policy to plan Infrastructure"
 
@@ -117,7 +129,9 @@ resource "aws_iam_policy" "githubiac_plan_policy" {
 
 
 resource "aws_iam_role_policy_attachment" "githubiac_plan_policy" {
-  role       = aws_iam_role.githubiac_plan.name
-  policy_arn = aws_iam_policy.githubiac_plan_policy.arn
+  count = var.create_primary_region_github_iac_roles ? 1 : 0
+
+  role       = aws_iam_role.githubiac_plan[0].name
+  policy_arn = aws_iam_policy.githubiac_plan_policy[0].arn
 }
 

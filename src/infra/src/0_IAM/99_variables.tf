@@ -38,3 +38,9 @@ variable "lambda_code_bucket_name" {
   type        = string
   description = "Lambda code S3 bucket name."
 }
+
+variable "create_primary_region_github_iac_roles" {
+  type        = bool
+  description = "Whether to create account-global GitHub OIDC and Terraform plan/apply roles in this regional stack."
+  default     = true
+}
