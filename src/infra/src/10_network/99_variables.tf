@@ -3,6 +3,12 @@ variable "aws_region" {
   description = "AWS region."
 }
 
+variable "secondary_aws_region" {
+  type        = string
+  description = "Secondary AWS region used by the primary-region Global Accelerator stack to discover an additional ALB endpoint."
+  default     = null
+}
+
 variable "prefix" {
   type        = string
   description = "Prefix for resource names."
@@ -29,6 +35,12 @@ variable "env_short" {
 variable "location_short" {
   type        = string
   description = "Location short like eg: neu, weu."
+}
+
+variable "secondary_location_short" {
+  type        = string
+  description = "Secondary location short used by the primary-region Global Accelerator stack to discover an additional ALB endpoint."
+  default     = null
 }
 
 variable "domain" {
@@ -88,6 +100,12 @@ variable "enable_ses_dns_records" {
   type        = bool
   description = "Enable SES-related DNS records and SES data lookups only for tenants allowlisted in the network stack. Set to true only after SES resources are created in onemail_common."
   default     = false
+}
+
+variable "create_primary_region_public_entrypoint" {
+  type        = bool
+  description = "Whether to create shared public-entrypoint resources that must stay in the primary region, such as Route53 public records, SES DNS records, and Global Accelerator."
+  default     = true
 }
 
 variable "web_acl" {

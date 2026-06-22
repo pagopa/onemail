@@ -1,22 +1,22 @@
 # general
-prefix                   = "oml"
-env_short                = "p"
-env                      = "prod"
-domain                   = "network"
-location_short           = "eus1"
-aws_region               = "eu-south-1"
-secondary_aws_region     = "eu-central-1"
-secondary_location_short = "euc1"
+prefix         = "oml"
+env_short      = "p"
+env            = "prod"
+domain         = "network"
+location_short = "euc1"
+aws_region     = "eu-central-1"
 
-# # VPC Configuration
+# VPC Configuration
 vpc_cidr                  = "10.2.0.0/16"
-azs                       = ["eu-south-1a", "eu-south-1b", "eu-south-1c"]
+azs                       = ["eu-central-1a", "eu-central-1b", "eu-central-1c"]
 vpc_private_subnets_cidr  = ["10.2.80.0/20", "10.2.64.0/20", "10.2.48.0/20"]
 vpc_public_subnets_cidr   = ["10.2.120.0/21", "10.2.112.0/21", "10.2.104.0/21"]
 vpc_internal_subnets_cidr = ["10.2.32.0/20", "10.2.16.0/20", "10.2.0.0/20"]
 enable_nat_gateway        = false
 single_nat_gateway        = false
 
+# Shared DNS and Global Accelerator resources stay in the primary region
+create_primary_region_public_entrypoint = false
 
 # Waf configuration
 web_acl = {

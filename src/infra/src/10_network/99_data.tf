@@ -21,5 +21,13 @@ data "aws_iam_policy_document" "alb_waf_logging" {
   }
 }
 
+data "aws_lbs" "secondary_alb" {
+  count = var.create_primary_region_public_entrypoint && var.secondary_aws_region != null && var.secondary_location_short != null ? 1 : 0
+
+  region = var.secondary_aws_region
+  tags = {
+    Name = "${var.prefix}-${var.env_short}-${var.secondary_location_short}-alb"
+  }
+}
 
 data "aws_caller_identity" "current" {}
