@@ -1,5 +1,11 @@
 # infra-network
 
+## 1.14.0
+
+### Minor Changes
+
+- f785823: Network infra for secondary region
+
 ## 1.13.0
 
 ### Minor Changes
