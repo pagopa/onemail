@@ -2,4 +2,4 @@
 'infra-core': minor
 ---
 
-ECR config secondary region
+ECR secondary region config
