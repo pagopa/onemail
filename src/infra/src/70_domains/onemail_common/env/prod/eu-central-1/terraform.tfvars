@@ -6,6 +6,7 @@ domain         = "onemail_com"
 location       = "eu-central-1"
 location_short = "euc1"
 aws_region     = "eu-central-1"
+ses_deed_parent_region = "eu-south-1"
 
 
 # ECS Cluster

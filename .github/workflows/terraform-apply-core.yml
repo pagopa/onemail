@@ -37,14 +37,14 @@ jobs:
           environment_input: ${{ github.event.inputs.environment }}
 
   terraform-apply:
-    name: Terraform Apply ${{ matrix.environment }}
+    name: Terraform Apply ${{ matrix.environment }}-${{ matrix.region }}
     runs-on: ubuntu-22.04
     needs: setup-matrix
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
     environment: ${{ matrix.environment }}
-    concurrency: terraform-onemail-app-${{ matrix.environment }}
+    concurrency: terraform-core-${{ matrix.environment }}-${{ matrix.region }}
     permissions:
       id-token: write
       contents: read
