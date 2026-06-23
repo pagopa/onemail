@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.17.0
+
+### Minor Changes
+
+- 9b28052: SES Multi-region configuration
+
 ## 1.16.0
 
 ### Minor Changes
