@@ -1,5 +1,11 @@
 # infra-network
 
+## 1.15.0
+
+### Minor Changes
+
+- 9b28052: SES Multi-region configuration
+
 ## 1.14.0
 
 ### Minor Changes
