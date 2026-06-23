@@ -89,3 +89,21 @@ variable "dns_zone_name" {
   description = "Name of the DNS hosted zone. For prod: 'onemail.pagopa.it', for dev/uat: subdomain will be automatically prefixed."
   default     = "onemail.pagopa.it"
 }
+
+variable "secondary_aws_region" {
+  type        = string
+  description = "Secondary AWS region used by the SES multi-region endpoint."
+  default     = null
+}
+
+variable "create_ses_multi_region_endpoint" {
+  type        = bool
+  description = "Whether to manage the SES multi-region endpoint in this region. Enable it only in the primary prod region after the secondary regional SES resources are in place."
+  default     = false
+}
+
+variable "ses_deed_parent_region" {
+  type        = string
+  description = "Parent region for DEED replica SES identities. Leave null in the parent region."
+  default     = null
+}

@@ -94,6 +94,17 @@ locals {
           absolute_name = true
         }
       ],
+      var.create_primary_region_public_entrypoint && var.secondary_aws_region != null && var.secondary_location_short != null ? [
+        for tenant_key, tenant_data in local.tenants_with_managed_ses_dns_records : {
+          id            = "${tenant_key}-mail-from-mx-secondary"
+          name          = "bounce.${var.secondary_location_short}.${tenant_data.domain}"
+          type          = "MX"
+          ttl           = 600
+          records       = ["10 feedback-smtp.${var.secondary_aws_region}.amazonses.com"]
+          alias         = null
+          absolute_name = true
+        }
+      ] : [],
       [
         for tenant_key, tenant_data in local.tenants_with_managed_ses_dns_records : {
           id            = "${tenant_key}-mail-from-spf"
@@ -105,6 +116,17 @@ locals {
           absolute_name = true
         }
       ],
+      var.create_primary_region_public_entrypoint && var.secondary_aws_region != null && var.secondary_location_short != null ? [
+        for tenant_key, tenant_data in local.tenants_with_managed_ses_dns_records : {
+          id            = "${tenant_key}-mail-from-spf-secondary"
+          name          = "bounce.${var.secondary_location_short}.${tenant_data.domain}"
+          type          = "TXT"
+          ttl           = 600
+          records       = ["v=spf1 include:amazonses.com ~all"]
+          alias         = null
+          absolute_name = true
+        }
+      ] : [],
       [
         for tenant_key, tenant_data in local.tenants_with_managed_ses_dns_records : {
           id            = "${tenant_key}-dmarc"

@@ -5,7 +5,7 @@ locals {
   tenants_file_path           = "${path.module}/../data/tenants/tenants.json"
   raw_tenants                 = jsondecode(file(local.tenants_file_path))
   tenant_domain_prefix        = var.env == "prod" ? "" : "${var.env}."
-  ses_dns_managed_tenant_keys = toset(["onemail"])
+  route53_managed_tenant_keys = toset(["onemail"])
   tenant_domains = {
     for tenant_key, tenant_data in local.raw_tenants : tenant_key => try(
       tenant_data.domain[var.env],
@@ -17,7 +17,7 @@ locals {
     for tenant_key, tenant_data in local.raw_tenants : tenant_key => {
       domain      = local.tenant_domains[tenant_key]
       admin_email = format("%s@%s", tenant_data.admin_mailbox, local.tenant_domains[tenant_key])
-    } if contains(local.ses_dns_managed_tenant_keys, tenant_key) && try(length(trimspace(local.tenant_domains[tenant_key])) > 0, false)
+    } if contains(local.route53_managed_tenant_keys, tenant_key) && try(length(trimspace(local.tenant_domains[tenant_key])) > 0, false)
   }
 
   web_acl_rules = [

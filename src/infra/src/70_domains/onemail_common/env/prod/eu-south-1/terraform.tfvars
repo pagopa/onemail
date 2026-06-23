@@ -1,11 +1,13 @@
 # general
-prefix         = "oml"
-env_short      = "p"
-env            = "prod"
-domain         = "onemail_com"
-location       = "eu-south"
-location_short = "eus1"
-aws_region     = "eu-south-1"
+prefix                           = "oml"
+env_short                        = "p"
+env                              = "prod"
+domain                           = "onemail_com"
+location                         = "eu-south"
+location_short                   = "eus1"
+aws_region                       = "eu-south-1"
+secondary_aws_region             = "eu-central-1"
+create_ses_multi_region_endpoint = true
 
 # DynamoDB configuration for prod
 dynamodb_tables = {
@@ -21,6 +23,7 @@ dynamodb_tables = {
     create_kms_key                 = true
     kms_alias                      = "/dynamodb/emailstatushistory"
     server_side_encryption_enabled = true
+    deletion_protection_enabled    = true
     attributes = [
       {
         name = "emailId"
@@ -65,6 +68,7 @@ dynamodb_tables = {
     create_kms_key                 = true
     kms_alias                      = "/dynamodb/tenantconfig"
     server_side_encryption_enabled = true
+    deletion_protection_enabled    = true
     attributes = [
       {
         name = "clientId"
