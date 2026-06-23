@@ -34,15 +34,33 @@ resource "terraform_data" "tenant_identity_deed" {
     command = <<-EOT
       set -euo pipefail
 
-      aws sesv2 put-email-identity-dkim-signing-attributes \
+      if aws sesv2 get-email-identity --email-identity "$SES_EMAIL_IDENTITY" >/dev/null 2>&1; then
+        current_signing_origin="$(aws sesv2 get-email-identity \
+          --email-identity "$SES_EMAIL_IDENTITY" \
+          --query 'DkimAttributes.SigningAttributesOrigin' \
+          --output text)"
+
+        if [[ "$current_signing_origin" != "$SES_PARENT_SIGNING_ORIGIN" ]]; then
+          aws sesv2 delete-email-identity --email-identity "$SES_EMAIL_IDENTITY"
+        else
+          aws sesv2 put-email-identity-configuration-set-attributes \
+            --email-identity "$SES_EMAIL_IDENTITY" \
+            --configuration-set-name "$SES_CONFIGURATION_SET_NAME"
+          exit 0
+        fi
+      fi
+
+      aws sesv2 create-email-identity \
         --email-identity "$SES_EMAIL_IDENTITY" \
-        --signing-attributes-origin "$SES_PARENT_SIGNING_ORIGIN"
+        --configuration-set-name "$SES_CONFIGURATION_SET_NAME" \
+        --dkim-signing-attributes "{\"DomainSigningAttributesOrigin\":\"$SES_PARENT_SIGNING_ORIGIN\"}"
     EOT
 
     environment = {
-      AWS_REGION                = var.aws_region
-      SES_EMAIL_IDENTITY        = each.value.domain
-      SES_PARENT_SIGNING_ORIGIN = "AWS_SES_${upper(replace(var.ses_deed_parent_region, "-", "_"))}"
+      AWS_REGION                 = var.aws_region
+      SES_EMAIL_IDENTITY         = each.value.domain
+      SES_CONFIGURATION_SET_NAME = aws_sesv2_configuration_set.config_set[each.key].configuration_set_name
+      SES_PARENT_SIGNING_ORIGIN  = "AWS_SES_${upper(replace(var.ses_deed_parent_region, "-", "_"))}"
     }
 
     interpreter = ["/usr/bin/env", "bash", "-c"]
@@ -52,6 +70,7 @@ resource "terraform_data" "tenant_identity_deed" {
 # Custom MAIL FROM domain for SPF and DMARC alignment per tenant
 resource "aws_ses_domain_mail_from" "tenant_mail_from" {
   for_each         = local.tenants
+  depends_on       = [terraform_data.tenant_identity_deed]
   domain           = aws_sesv2_email_identity.tenant_identities[each.key].email_identity
   mail_from_domain = var.ses_deed_parent_region == null ? "bounce.${each.value.domain}" : "bounce.${var.location_short}.${each.value.domain}"
   # In test phase: allow SES fallback if the custom MAIL FROM MX is not ready yet.
@@ -82,6 +101,7 @@ resource "aws_sesv2_configuration_set" "config_set" {
 
 resource "aws_sesv2_tenant_resource_association" "identity_assoc" {
   for_each     = local.tenants
+  depends_on   = [terraform_data.tenant_identity_deed]
   tenant_name  = aws_sesv2_tenant.tenants[each.key].tenant_name
   resource_arn = aws_sesv2_email_identity.tenant_identities[each.key].arn
 }
