@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.18.0
+
+### Minor Changes
+
+- a767c06: SES Identity deed setup
+
 ## 1.17.0
 
 ### Minor Changes
