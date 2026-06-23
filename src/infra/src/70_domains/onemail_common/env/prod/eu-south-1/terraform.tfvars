@@ -1,13 +1,13 @@
 # general
-prefix         = "oml"
-env_short      = "p"
-env            = "prod"
-domain         = "onemail_com"
-location       = "eu-south"
-location_short = "eus1"
-aws_region     = "eu-south-1"
-secondary_aws_region              = "eu-central-1"
-create_ses_multi_region_endpoint  = true
+prefix                           = "oml"
+env_short                        = "p"
+env                              = "prod"
+domain                           = "onemail_com"
+location                         = "eu-south"
+location_short                   = "eus1"
+aws_region                       = "eu-south-1"
+secondary_aws_region             = "eu-central-1"
+create_ses_multi_region_endpoint = true
 
 # DynamoDB configuration for prod
 dynamodb_tables = {
