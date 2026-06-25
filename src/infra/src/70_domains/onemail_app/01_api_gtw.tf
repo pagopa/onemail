@@ -75,7 +75,7 @@ resource "aws_api_gateway_vpc_link" "apigw" {
 
 # Api Gateway API Keys for each tenant
 resource "aws_api_gateway_api_key" "api_keys" {
-  for_each = local.api_key_list
+  for_each = local.is_primary_api_key_region ? local.api_key_list : {}
   name     = each.value.api_key_name
 }
 
@@ -96,8 +96,13 @@ resource "aws_api_gateway_usage_plan" "api_keys" {
 }
 
 resource "aws_api_gateway_usage_plan_key" "api_keys" {
-  for_each      = local.api_key_list
-  key_id        = aws_api_gateway_api_key.api_keys[each.key].id
+  for_each = local.is_primary_api_key_region ? local.api_key_list : {
+    for usage_plan_name, api_key_config in local.api_key_list :
+    usage_plan_name => api_key_config
+    if local.api_key_ids[usage_plan_name] != null
+  }
+
+  key_id        = local.api_key_ids[each.key]
   key_type      = "API_KEY"
   usage_plan_id = aws_api_gateway_usage_plan.api_keys[each.key].id
 }

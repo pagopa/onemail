@@ -11,11 +11,11 @@ data "aws_sqs_queue" "sqs_set_processor" {
 }
 
 data "aws_vpc_endpoint" "dynamodb" {
-  service_name = "com.amazonaws.eu-south-1.dynamodb"
+  service_name = "com.amazonaws.${var.aws_region}.dynamodb"
 }
 
 data "aws_vpc_endpoint" "api_gtw" {
-  service_name = "com.amazonaws.eu-south-1.execute-api"
+  service_name = "com.amazonaws.${var.aws_region}.execute-api"
   vpc_id       = data.aws_vpc.core.id
 }
 
