@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.10.9
+
+### Patch Changes
+
+- 42c8ed8: Lambdas and ECS deploy eu-central
+
 ## 1.10.8
 
 ### Patch Changes

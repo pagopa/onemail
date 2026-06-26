@@ -1,5 +1,11 @@
 # om-lambda-config-set-processor
 
+## 1.6.10
+
+### Patch Changes
+
+- 42c8ed8: Lambdas and ECS deploy eu-central
+
 ## 1.6.9
 
 ### Patch Changes
