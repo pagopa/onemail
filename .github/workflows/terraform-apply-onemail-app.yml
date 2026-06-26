@@ -28,10 +28,14 @@ jobs:
   setup-matrix:
     name: Setup Environment Matrix
     runs-on: ubuntu-22.04
+    timeout-minutes: 5
     permissions:
       contents: read
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
+      primary_matrix: ${{ steps.split.outputs.primary_matrix }}
+      secondary_matrix: ${{ steps.split.outputs.secondary_matrix }}
+      has_secondary_matrix: ${{ steps.split.outputs.has_secondary_matrix }}
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1 https://github.com/actions/checkout/releases/tag/v4.3.1
@@ -43,15 +47,64 @@ jobs:
           event_name: ${{ github.event_name }}
           environment_input: ${{ inputs.environment_input || github.event.inputs.environment }}
 
-  terraform-apply:
-    name: Terraform Apply ${{ matrix.environment }}
+      - name: Split Matrix By Region
+        id: split
+        shell: bash
+        env:
+          MATRIX: ${{ steps.matrix.outputs.matrix }}
+        run: |
+          set -euo pipefail
+
+          primary_matrix="$(jq -c '{include: [.include[] | select(.region == "eu-south-1")]}' <<<"$MATRIX")"
+          secondary_matrix="$(jq -c '{include: [.include[] | select(.region == "eu-central-1")]}' <<<"$MATRIX")"
+          has_secondary_matrix="false"
+
+          if [[ "$(jq '.include | length' <<<"$secondary_matrix")" -gt 0 ]]; then
+            has_secondary_matrix="true"
+          fi
+
+          echo "primary_matrix=$primary_matrix" >> "$GITHUB_OUTPUT"
+          echo "secondary_matrix=$secondary_matrix" >> "$GITHUB_OUTPUT"
+          echo "has_secondary_matrix=$has_secondary_matrix" >> "$GITHUB_OUTPUT"
+
+  terraform-apply-primary:
+    name: Terraform Apply ${{ matrix.environment }} ${{ matrix.region }}
     runs-on: ubuntu-22.04
+    timeout-minutes: 60
     needs: setup-matrix
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.setup-matrix.outputs.primary_matrix) }}
     environment: ${{ matrix.environment }}
-    concurrency: terraform-onemail-app-${{ matrix.environment }}
+    concurrency: terraform-onemail-app-${{ matrix.environment }}-${{ matrix.region }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1 https://github.com/actions/checkout/releases/tag/v4.3.1
+
+      - name: Run Terraform Apply
+        uses: ./.github/actions/terraform-apply
+        with:
+          module: 70_domains/onemail_app
+          environment: ${{ matrix.environment }}
+          region: ${{ matrix.region }}
+          iac_role_arn: ${{ vars.IAM_ROLE_IAC }}
+
+  terraform-apply-secondary:
+    name: Terraform Apply ${{ matrix.environment }} ${{ matrix.region }}
+    runs-on: ubuntu-22.04
+    if: ${{ needs.setup-matrix.outputs.has_secondary_matrix == 'true' }}
+    timeout-minutes: 60
+    needs:
+      - setup-matrix
+      - terraform-apply-primary
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup-matrix.outputs.secondary_matrix) }}
+    environment: ${{ matrix.environment }}
+    concurrency: terraform-onemail-app-${{ matrix.environment }}-${{ matrix.region }}
     permissions:
       id-token: write
       contents: read
