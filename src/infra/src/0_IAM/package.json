@@ -1,6 +1,6 @@
 {
   "name": "infra-iam",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "IAM infrastructure code.",
   "private": true
 }

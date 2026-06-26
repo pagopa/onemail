@@ -1,5 +1,11 @@
 # infra-iam
 
+## 1.2.1
+
+### Patch Changes
+
+- 42c8ed8: Lambdas and ECS deploy eu-central
+
 ## 1.2.0
 
 ### Minor Changes

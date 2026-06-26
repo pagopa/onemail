@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.6.8
+
+### Patch Changes
+
+- 42c8ed8: Lambdas and ECS deploy eu-central
+
 ## 1.6.7
 
 ### Patch Changes
