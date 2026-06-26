@@ -21,6 +21,28 @@ locals {
       }
     ]
   })
+  api_gateway_inline_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect    = "Allow",
+        Principal = "*",
+        Action    = "execute-api:Invoke",
+        Resource  = "execute-api:/*"
+      },
+      {
+        Effect    = "Deny",
+        Principal = "*",
+        Action    = "execute-api:Invoke",
+        Resource  = "execute-api:/*",
+        Condition = {
+          StringNotEquals = {
+            "aws:sourceVpce" : data.aws_vpc_endpoint.api_gtw.id
+          }
+        }
+      }
+    ]
+  })
 }
 
 module "api_gateway" {
@@ -29,6 +51,7 @@ module "api_gateway" {
   product_name       = "onemail"
   idvh_resource_tier = "standard"
   name               = "${local.project_nodomain}-api-gateway"
+  policy             = !local.is_primary_api_key_region && local.api_key_secondary_region != null ? local.api_gateway_inline_policy : null
   body = templatefile("${path.module}/${var.openapi_template_file}", {
     connection_id           = aws_api_gateway_vpc_link.apigw.id
     env                     = var.env
@@ -63,6 +86,8 @@ resource "aws_api_gateway_base_path_mapping" "main" {
 }
 
 resource "aws_api_gateway_rest_api_policy" "main" {
+  count = !local.is_primary_api_key_region && local.api_key_secondary_region != null ? 0 : 1
+
   rest_api_id = module.api_gateway.rest_api_id
   policy      = local.api_gateway_policy
 }
