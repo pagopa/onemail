@@ -99,7 +99,7 @@ jobs:
           path: ./om-lambda-${{ inputs.lambda_name }}.zip
 
   deploy:
-    name: Deploy Lambda OneMail ${{ inputs.lambda_name }} ${{ matrix.environment }}
+    name: Deploy Lambda OneMail ${{ inputs.lambda_name }} ${{ matrix.environment }} ${{ matrix.region }}
     timeout-minutes: 20
     if: ${{ needs.setup-matrix.outputs.matrix != '' }}
     runs-on: ubuntu-22.04
@@ -107,12 +107,14 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
     continue-on-error: false
-    environment: ${{ matrix.environment }}
+    environment: ${{ matrix.environment == 'prod' && matrix.region == 'eu-central-1' && 'prod/eu-central-1' || matrix.environment }}
     env:
       ENV_SHORT: ${{ fromJSON('{"dev":"d","uat":"u","prod":"p"}')[matrix.environment] }}
-      LAMBDA_NAME: oml-${{ fromJSON('{"dev":"d","uat":"u","prod":"p"}')[matrix.environment] }}-eus1-lambda-${{ inputs.lambda_name }}
+      REGION_SHORT: ${{ fromJSON('{"eu-south-1":"eus1","eu-central-1":"euc1"}')[matrix.region] }}
       ARTIFACT_NAME: om-lambda-${{ inputs.lambda_name }}
       LAMBDA_S3_KEY: ${{ vars[inputs.lambda_s3_key_var] }}
+      LAMBDA_CODE_BUCKET_NAME: ${{ vars.LAMBDA_CODE_BUCKET_NAME }}
+      LAMBDA_NAME: oml-${{ fromJSON('{"dev":"d","uat":"u","prod":"p"}')[matrix.environment] }}-${{ fromJSON('{"eu-south-1":"eus1","eu-central-1":"euc1"}')[matrix.region] }}-lambda-${{ inputs.lambda_name }}
     permissions:
       id-token: write
       contents: read
@@ -131,11 +133,11 @@ jobs:
 
       - name: Upload Lambda zip to S3
         run: |
-          aws s3 cp "./${ARTIFACT_NAME}.zip" "s3://${{ vars.LAMBDA_CODE_BUCKET_NAME }}/${LAMBDA_S3_KEY}"
+          aws s3 cp "./${ARTIFACT_NAME}.zip" "s3://${LAMBDA_CODE_BUCKET_NAME}/${LAMBDA_S3_KEY}"
 
       - name: Deploy Lambda function
         run: |
           aws lambda update-function-code \
             --function-name "${LAMBDA_NAME}" \
-            --s3-bucket "${{ vars.LAMBDA_CODE_BUCKET_NAME }}" \
+            --s3-bucket "${LAMBDA_CODE_BUCKET_NAME}" \
             --s3-key "${LAMBDA_S3_KEY}"
