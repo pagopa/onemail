@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.12.0
+
+### Minor Changes
+
+- f26dfd7: Setup alarms on secondary region
+
 ## 1.11.1
 
 ### Patch Changes
