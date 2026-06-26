@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.22.0
+
+### Minor Changes
+
+- 39618f7: Setup Onemail app in secondary region
+
 ## 1.21.0
 
 ### Minor Changes
