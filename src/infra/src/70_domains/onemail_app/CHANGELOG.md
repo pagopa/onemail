@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.23.0
+
+### Minor Changes
+
+- b42ae42: Fix ApiGtw resource policy
+
 ## 1.22.0
 
 ### Minor Changes
