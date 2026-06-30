@@ -10,6 +10,9 @@ export default {
       process.env.AWS_EMAIL_DB_REQUEST_ID_GSI ??
       throwMissingRequiredEnvVar('AWS_EMAIL_DB_REQUEST_ID_GSI'),
   },
+  ses: {
+    sesMultiRegionEndpointId: process.env.SES_MULTI_REGION_ENDPOINT_ID,
+  },
   sqs: {
     highPriorityQueueARN:
       process.env[SQS_QUEUE_ARN.high] ??

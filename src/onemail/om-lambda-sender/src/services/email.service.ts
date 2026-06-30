@@ -11,6 +11,7 @@ import {
 import { EmailStatusHistoryItem } from 'om-common/types';
 
 import { BulkSendResult } from '../types/bulkSendResult.type.js';
+import env from '#config/env';
 
 export const sendHighPriorityEmail = async (
   input: EmailStatusHistoryItem,
@@ -19,7 +20,12 @@ export const sendHighPriorityEmail = async (
   const sesInput = mapDbHighPriorityItemToSesModel(input);
 
   //2. send email with ses connector
-  const command = new SendEmailCommand(sesInput);
+  //const command = new SendEmailCommand(sesInput);
+  const command = new SendEmailCommand(
+  env.ses.sesMultiRegionEndpointId
+    ? { ...sesInput, EndpointId: env.ses.sesMultiRegionEndpointId }
+    : sesInput,
+);
   const { MessageId } = await sesClient.send(command);
   return MessageId;
 };
@@ -31,7 +37,11 @@ export const sendLowPriorityEmail = async (
   const sesInput = mapDbLowPriorityItemToSesModel(items);
 
   //2. send email with ses connector
-  const command = new SendBulkEmailCommand(sesInput);
+  const command = new SendBulkEmailCommand(
+    env.ses.sesMultiRegionEndpointId
+      ? { ...sesInput, EndpointId: env.ses.sesMultiRegionEndpointId }
+      : sesInput,
+  );
   const { BulkEmailEntryResults } = await sesClient.send(command);
 
   //3. correlate results with input items (positional mapping)
