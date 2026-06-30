@@ -59,7 +59,8 @@
     "overrides": {
       "path-to-regexp": ">=8.4.0",
       "yaml": ">=2.8.3",
-      "qs": ">=6.14.2"
+      "qs": ">=6.14.2",
+      "@smithy/signature-v4": "5.5.3"
     }
   }
 }
