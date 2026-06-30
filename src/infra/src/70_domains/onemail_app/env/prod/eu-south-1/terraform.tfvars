@@ -6,6 +6,8 @@ domain         = "onemail_app"
 location       = "eu-south"
 location_short = "eus1"
 aws_region     = "eu-south-1"
+ses_multi_region_endpoint_enabled = true
+ses_regions                       = ["eu-south-1", "eu-central-1"]
 
 # API Gateway
 api_gateway_deployment_version = "1.0.0"

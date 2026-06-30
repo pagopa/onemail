@@ -88,6 +88,23 @@ variable "lambda_sender" {
   })
 }
 
+variable "ses_multi_region_endpoint_enabled" {
+  type        = bool
+  description = "Whether to inject the SES multi-region endpoint id into the sender Lambda."
+  default     = false
+}
+
+variable "ses_regions" {
+  type        = list(string)
+  description = "SES regions whose identities, templates, and configuration sets may be used by sender requests."
+  default     = []
+
+  validation {
+    condition     = !var.ses_multi_region_endpoint_enabled || length(var.ses_regions) >= 2
+    error_message = "Provide at least two SES regions when ses_multi_region_endpoint_enabled is true."
+  }
+}
+
 variable "deploy_role_github_repository" {
   type        = string
   description = "Role to deploy ecs"
