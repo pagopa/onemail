@@ -1,4 +1,5 @@
-import { SESv2Client } from '@aws-sdk/client-sesv2'; // ES Modules import
+import '@aws-sdk/signature-v4a';
+import { SESv2Client } from '@aws-sdk/client-sesv2';
 
-const config = {}; // type is SESv2ClientConfig
-export const sesClient = new SESv2Client(config);
+// Register the SigV4a signer required when SES multi-region EndpointId is used.
+export const sesClient = new SESv2Client({});

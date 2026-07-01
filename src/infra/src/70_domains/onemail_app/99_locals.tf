@@ -1,18 +1,20 @@
 locals {
-  project                       = "${var.prefix}-${var.env_short}-${var.location_short}-${var.domain}"
-  project_nodomain              = "${var.prefix}-${var.env_short}-${var.location_short}"
-  project_nodomain_ses          = "${var.prefix}-${var.env_short}"
-  product                       = "${var.prefix}-${var.env_short}"
-  zone_name                     = var.env == "prod" ? var.dns_zone_name : "${var.env}.${var.dns_zone_name}"
-  api_key_primary_region        = "eu-south-1"
-  api_key_secondary_region      = var.env == "prod" ? "eu-central-1" : null
-  is_primary_api_key_region     = var.aws_region == local.api_key_primary_region
-  api_key_sync_script           = abspath("${path.module}/../../../scripts/apigateway-api-key-secondary-sync.sh")
-  tenants_file_path             = "${path.module}/../../data/tenants/tenants.json"
-  raw_tenants                   = jsondecode(file(local.tenants_file_path))
-  tenant_domain_prefix          = var.env == "prod" ? "" : "${var.env}."
-  tenant_name_prefix            = "${local.project_nodomain_ses}-tenant"
-  configuration_set_name_prefix = "${local.project_nodomain_ses}-configuration-set"
+  project                         = "${var.prefix}-${var.env_short}-${var.location_short}-${var.domain}"
+  project_nodomain                = "${var.prefix}-${var.env_short}-${var.location_short}"
+  project_nodomain_ses            = "${var.prefix}-${var.env_short}"
+  product                         = "${var.prefix}-${var.env_short}"
+  ses_authorization_regions       = length(var.ses_regions) > 0 ? var.ses_regions : [var.aws_region]
+  ses_multi_region_parameter_name = "/onemail/${local.product}/ses/multi-region-endpoint-id"
+  zone_name                       = var.env == "prod" ? var.dns_zone_name : "${var.env}.${var.dns_zone_name}"
+  api_key_primary_region          = "eu-south-1"
+  api_key_secondary_region        = var.env == "prod" ? "eu-central-1" : null
+  is_primary_api_key_region       = var.aws_region == local.api_key_primary_region
+  api_key_sync_script             = abspath("${path.module}/../../../scripts/apigateway-api-key-secondary-sync.sh")
+  tenants_file_path               = "${path.module}/../../data/tenants/tenants.json"
+  raw_tenants                     = jsondecode(file(local.tenants_file_path))
+  tenant_domain_prefix            = var.env == "prod" ? "" : "${var.env}."
+  tenant_name_prefix              = "${local.project_nodomain_ses}-tenant"
+  configuration_set_name_prefix   = "${local.project_nodomain_ses}-configuration-set"
   tenant_domains = {
     for tenant_key, tenant_data in local.raw_tenants : tenant_key => try(
       tenant_data.domain[var.env],

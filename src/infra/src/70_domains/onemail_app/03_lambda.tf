@@ -20,11 +20,13 @@ data "aws_iam_policy_document" "sender_policy" {
       "ses:SendBulkEmail",
       "ses:SendBulkTemplatedEmail"
     ]
-    resources = var.env != "dev" ? distinct(concat(
-      ["arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:template/*"],
-      [for tenant_key, _ in local.tenants : data.aws_ses_domain_identity.tenant[tenant_key].arn],
-      [for tenant_key, _ in local.tenants : data.aws_sesv2_configuration_set.tenant_config_set[tenant_key].arn]
-    )) : ["*"]
+    resources = var.env != "dev" ? distinct(flatten([
+      for region in local.ses_authorization_regions : concat(
+        ["arn:aws:ses:${region}:${data.aws_caller_identity.current.account_id}:template/*"],
+        [for tenant in values(local.tenants) : "arn:aws:ses:${region}:${data.aws_caller_identity.current.account_id}:identity/${tenant.domain}"],
+        [for tenant in values(local.tenants) : "arn:aws:ses:${region}:${data.aws_caller_identity.current.account_id}:configuration-set/${tenant.configuration_set_name}"]
+      )
+    ])) : ["*"]
 
 
     dynamic "condition" {
@@ -90,10 +92,6 @@ module "security_group_lambda_sender" {
   egress_cidr_blocks      = []
   egress_ipv6_cidr_blocks = []
 
-  egress_prefix_list_ids = [
-    data.aws_vpc_endpoint.dynamodb.prefix_list_id
-  ]
-
   egress_with_cidr_blocks = [
     {
       from_port   = 443
@@ -101,8 +99,27 @@ module "security_group_lambda_sender" {
       protocol    = "tcp"
       description = "HTTPS to VPC"
       cidr_blocks = data.aws_vpc.core.cidr_block
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      description = "HTTPS to public endpoints via NAT"
+      cidr_blocks = "0.0.0.0/0"
     }
   ]
+}
+
+resource "aws_security_group_rule" "lambda_sender_egress_dynamodb" {
+  type              = "egress"
+  security_group_id = module.security_group_lambda_sender.security_group_id
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  prefix_list_ids   = [data.aws_vpc_endpoint.dynamodb.prefix_list_id]
+  description       = "HTTPS to DynamoDB gateway endpoint"
+
+  depends_on = [module.security_group_lambda_sender]
 }
 
 module "lambda_sender" {
@@ -120,16 +137,21 @@ module "lambda_sender" {
 
   memory_size                    = 256
   reserved_concurrent_executions = var.lambda_sender.reserved_concurrent_executions
-  environment_variables = {
-    AWS_EMAIL_DB_TABLE               = data.aws_dynamodb_table.EmailStatusHistory.name
-    AWS_EMAIL_DB_REQUEST_ID_GSI      = local.gsis["gsi_request_id_idx"].name
-    HIGH_PRIORITY_QUEUE_ARN          = data.aws_sqs_queue.high_priority.arn
-    LOW_PRIORITY_QUEUE_ARN           = data.aws_sqs_queue.low_priority.arn
-    SERVICE_PREFIX                   = "${local.project_nodomain}"
-    AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-sender"
-    NODE_ENV                         = "production"
-    POWERTOOLS_LOG_LEVEL             = "DEBUG"
-  }
+  environment_variables = merge(
+    {
+      AWS_EMAIL_DB_TABLE               = data.aws_dynamodb_table.EmailStatusHistory.name
+      AWS_EMAIL_DB_REQUEST_ID_GSI      = local.gsis["gsi_request_id_idx"].name
+      HIGH_PRIORITY_QUEUE_ARN          = data.aws_sqs_queue.high_priority.arn
+      LOW_PRIORITY_QUEUE_ARN           = data.aws_sqs_queue.low_priority.arn
+      SERVICE_PREFIX                   = "${local.project_nodomain}"
+      AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-sender"
+      NODE_ENV                         = "production"
+      POWERTOOLS_LOG_LEVEL             = "DEBUG"
+    },
+    var.ses_multi_region_endpoint_enabled ? {
+      SES_MULTI_REGION_ENDPOINT_ID = data.aws_ssm_parameter.ses_multi_region_endpoint_id[0].value
+    } : {}
+  )
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_sender.security_group_id]
 

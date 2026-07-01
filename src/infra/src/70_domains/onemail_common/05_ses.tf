@@ -131,7 +131,7 @@ resource "terraform_data" "ses_multi_region_endpoint" {
 
   input = {
     aws_region    = var.aws_region
-    endpoint_name = "${local.project_nodomain_ses}-ses-multi-region-endpoint"
+    endpoint_name = local.ses_multi_region_endpoint_name
   }
 
   triggers_replace = [var.secondary_aws_region]
@@ -152,7 +152,7 @@ resource "terraform_data" "ses_multi_region_endpoint" {
 
     environment = {
       AWS_REGION           = var.aws_region
-      SES_ENDPOINT_NAME    = "${local.project_nodomain_ses}-ses-multi-region-endpoint"
+      SES_ENDPOINT_NAME    = local.ses_multi_region_endpoint_name
       SES_SECONDARY_REGION = var.secondary_aws_region
     }
 

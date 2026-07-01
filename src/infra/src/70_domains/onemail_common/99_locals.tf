@@ -2,6 +2,7 @@ locals {
   project                        = "${var.prefix}-${var.env_short}-${var.location_short}-${var.domain}"
   project_nodomain               = "${var.prefix}-${var.env_short}-${var.location_short}"
   project_nodomain_ses           = "${var.prefix}-${var.env_short}"
+  ses_multi_region_endpoint_name = "${local.project_nodomain_ses}-ses-multi-region-endpoint"
   zone_name                      = var.env == "prod" ? var.dns_zone_name : "${var.env}.${var.dns_zone_name}"
   product                        = "${var.prefix}-${var.env_short}"
   tenants_file_path              = "${path.module}/../../data/tenants/tenants.json"

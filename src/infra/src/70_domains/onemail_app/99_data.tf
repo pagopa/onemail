@@ -10,6 +10,11 @@ data "aws_sqs_queue" "sqs_set_processor" {
   name = "${local.project_nodomain}-sqs-config-set-processor"
 }
 
+data "aws_ssm_parameter" "ses_multi_region_endpoint_id" {
+  count = var.ses_multi_region_endpoint_enabled ? 1 : 0
+  name  = local.ses_multi_region_parameter_name
+}
+
 data "aws_vpc_endpoint" "dynamodb" {
   service_name = "com.amazonaws.${var.aws_region}.dynamodb"
 }
@@ -69,20 +74,10 @@ data "aws_route53_zone" "onemail" {
   private_zone = false
 }
 
-data "aws_ses_domain_identity" "tenant" {
-  for_each = local.tenants
-  domain   = each.value.domain
-}
-
 
 data "aws_lb_listener" "ecs_core" {
   load_balancer_arn = data.aws_lb.nlb.arn
   port              = 3000
-}
-
-data "aws_sesv2_configuration_set" "tenant_config_set" {
-  for_each               = local.tenants
-  configuration_set_name = each.value.configuration_set_name
 }
 
 data "aws_caller_identity" "current" {}
