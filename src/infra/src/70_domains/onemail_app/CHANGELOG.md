@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.24.0
+
+### Minor Changes
+
+- 6624cc4: Setup SES Multi region
+
 ## 1.23.0
 
 ### Minor Changes
