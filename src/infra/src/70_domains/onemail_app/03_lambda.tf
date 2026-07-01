@@ -92,10 +92,6 @@ module "security_group_lambda_sender" {
   egress_cidr_blocks      = []
   egress_ipv6_cidr_blocks = []
 
-  egress_prefix_list_ids = [
-    data.aws_vpc_endpoint.dynamodb.prefix_list_id
-  ]
-
   egress_with_cidr_blocks = [
     {
       from_port   = 443
@@ -103,8 +99,27 @@ module "security_group_lambda_sender" {
       protocol    = "tcp"
       description = "HTTPS to VPC"
       cidr_blocks = data.aws_vpc.core.cidr_block
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      description = "HTTPS to public endpoints via NAT"
+      cidr_blocks = "0.0.0.0/0"
     }
   ]
+}
+
+resource "aws_security_group_rule" "lambda_sender_egress_dynamodb" {
+  type              = "egress"
+  security_group_id = module.security_group_lambda_sender.security_group_id
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  prefix_list_ids   = [data.aws_vpc_endpoint.dynamodb.prefix_list_id]
+  description       = "HTTPS to DynamoDB gateway endpoint"
+
+  depends_on = [module.security_group_lambda_sender]
 }
 
 module "lambda_sender" {

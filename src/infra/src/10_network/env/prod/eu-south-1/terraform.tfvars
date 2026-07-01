@@ -14,8 +14,8 @@ azs                       = ["eu-south-1a", "eu-south-1b", "eu-south-1c"]
 vpc_private_subnets_cidr  = ["10.2.80.0/20", "10.2.64.0/20", "10.2.48.0/20"]
 vpc_public_subnets_cidr   = ["10.2.120.0/21", "10.2.112.0/21", "10.2.104.0/21"]
 vpc_internal_subnets_cidr = ["10.2.32.0/20", "10.2.16.0/20", "10.2.0.0/20"]
-enable_nat_gateway        = false
-single_nat_gateway        = false
+enable_nat_gateway        = true
+single_nat_gateway        = true
 
 
 # Waf configuration
