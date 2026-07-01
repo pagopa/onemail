@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.7.0
+
+### Minor Changes
+
+- 6624cc4: Setup SES Multi region
+
 ## 1.6.8
 
 ### Patch Changes
