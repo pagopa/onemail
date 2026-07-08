@@ -12,5 +12,11 @@
     "domain": {
       "uat": "selfcare.pagopa.it"
     }
+  },
+  "ioapp": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": {
+      "uat": "uat.ioapp.it"
+    }
   }
 }
