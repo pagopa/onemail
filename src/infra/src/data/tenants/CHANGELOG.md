@@ -1,5 +1,11 @@
 # infra-data-tenants
 
+## 1.4.0
+
+### Minor Changes
+
+- 170b096: Add new client to uat env
+
 ## 1.3.0
 
 ### Minor Changes
