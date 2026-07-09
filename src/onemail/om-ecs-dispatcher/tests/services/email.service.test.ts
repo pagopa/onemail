@@ -1,6 +1,7 @@
 import env from '#config/env';
 import {
   getEmailStatus,
+  sanitizeHtmlContent,
   sendEmailLowPriority,
   sendEmailTransactional,
 } from '#services/email.service';
@@ -386,5 +387,34 @@ describe('email.service - getEmailStatus', () => {
         dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
       },
     ]);
+  });
+});
+
+describe('sanitizeHtmlContent', () => {
+  it('returns the html unchanged and isSanitized false for clean input', () => {
+    const result = sanitizeHtmlContent('<p>Hello World</p>');
+
+    expect(result).toEqual({
+      sanitizedHtml: '<p>Hello World</p>',
+      isSanitized: false,
+    });
+  });
+
+  it('removes script tags and returns isSanitized true', () => {
+    const result = sanitizeHtmlContent('<p>Hello</p><script>alert(1)</script>');
+
+    expect(result).toEqual({
+      sanitizedHtml: '<p>Hello</p>',
+      isSanitized: true,
+    });
+  });
+
+  it('removes disallowed attributes and returns isSanitized true', () => {
+    const result = sanitizeHtmlContent('<p onclick="evil()">Click me</p>');
+
+    expect(result).toEqual({
+      sanitizedHtml: '<p>Click me</p>',
+      isSanitized: true,
+    });
   });
 });
