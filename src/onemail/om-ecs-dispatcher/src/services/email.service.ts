@@ -11,12 +11,17 @@ import {
   EmailLowPriorityResponseDTO,
 } from '#dtos/email/emailLowPriority.dto';
 import { EmailStatusResponseDTO } from '#dtos/email/emailStatus.dto';
+import { SanitizeHtmlResponseDTO } from '#dtos/email/validateHtml.dto';
 import { ERROR_CODES } from '#dtos/error.dto';
 import { ApiError } from '#errors/api.error';
 import {
   mapEmailLowPriorityToDbItem,
   mapEmailTransactionalToDbItem,
 } from '#utils/dbMapper';
+import {
+  hasMeaningfulHtmlSanitizationChange,
+  sanitizeEmailHtml,
+} from '#utils/htmlSanitizer';
 import { SendMessageCommand } from '@aws-sdk/client-sqs';
 import {
   BatchWriteCommand,
@@ -153,6 +158,17 @@ export const sendEmailLowPriority = async (
 
   logger.info('End');
   return { requestId };
+};
+
+export const sanitizeHtmlContent = (
+  htmlContent: string,
+): SanitizeHtmlResponseDTO => {
+  const sanitizedHtml = sanitizeEmailHtml(htmlContent);
+  const isSanitized = hasMeaningfulHtmlSanitizationChange(
+    htmlContent,
+    sanitizedHtml,
+  );
+  return { sanitizedHtml, isSanitized };
 };
 
 export const getEmailStatus = async (

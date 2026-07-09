@@ -49,3 +49,11 @@ export const emailSanitizerOptions: sanitizeHtml.IOptions = {
   disallowedTagsMode: 'discard',
   allowProtocolRelative: false,
 };
+
+// HTML normalization (no validation)
+export const htmlNormalizationOptions: sanitizeHtml.IOptions = {
+  allowedTags: false,
+  allowedAttributes: false,
+  allowedSchemesAppliedToAttributes: [],
+  allowProtocolRelative: true,
+};

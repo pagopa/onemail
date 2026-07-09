@@ -75,7 +75,8 @@ export const sanitizeHtmlContent = async (
   req: Request<unknown, unknown, SanitizeHtmlDTO>,
   res: Response<SanitizeHtmlResponseDTO>,
 ) => {
-  res.status(StatusCodes.OK).json({ sanitizedHtml: req.body.htmlContent });
+  const result = emailService.sanitizeHtmlContent(req.body.htmlContent);
+  res.status(StatusCodes.OK).json(result);
 };
 
 export const getEmailStatus = async (
