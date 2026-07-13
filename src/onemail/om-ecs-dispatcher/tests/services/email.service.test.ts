@@ -400,6 +400,29 @@ describe('sanitizeHtmlContent', () => {
     });
   });
 
+  it('preserves html doctype when present and keeps isSanitized false', () => {
+    const result = sanitizeHtmlContent(
+      '<!DOCTYPE html><html><body><p>Hello World</p></body></html>',
+    );
+
+    expect(result).toEqual({
+      sanitizedHtml:
+        '<!DOCTYPE html>\n<html><body><p>Hello World</p></body></html>',
+      isSanitized: false,
+    });
+  });
+
+  it('keeps style content and returns isSanitized false', () => {
+    const result = sanitizeHtmlContent(
+      '<style>.hero{color:red}</style><p class="hero">Hi</p>',
+    );
+
+    expect(result).toEqual({
+      sanitizedHtml: '<style>.hero{color:red}</style><p class="hero">Hi</p>',
+      isSanitized: false,
+    });
+  });
+
   it('removes script tags and returns isSanitized true', () => {
     const result = sanitizeHtmlContent('<p>Hello</p><script>alert(1)</script>');
 

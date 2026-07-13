@@ -44,6 +44,42 @@ describe('sanitizeEmailHtml', () => {
       '<p style="color:red">Styled</p>',
     );
   });
+
+  it('preserves html doctype when present in input', () => {
+    expect(
+      sanitizeEmailHtml(
+        '<!DOCTYPE html><html><body><p>Hello World</p></body></html>',
+      ),
+    ).toBe('<!DOCTYPE html>\n<html><body><p>Hello World</p></body></html>');
+  });
+
+  it('keeps style tag content when allowVulnerableTags is true', () => {
+    expect(
+      sanitizeEmailHtml(
+        '<style>.hero{color:red}</style><p class="hero">Hi</p>',
+      ),
+    ).toBe('<style>.hero{color:red}</style><p class="hero">Hi</p>');
+  });
+
+  it('keeps allowed link tag and attributes', () => {
+    expect(
+      sanitizeEmailHtml(
+        '<head><link href="https://cdn.example.com/main.css" rel="stylesheet" type="text/css"></head>',
+      ),
+    ).toBe(
+      '<head><link href="https://cdn.example.com/main.css" rel="stylesheet" type="text/css" /></head>',
+    );
+  });
+
+  it('keeps allowed aria and role attributes', () => {
+    expect(
+      sanitizeEmailHtml(
+        '<div role="presentation" aria-label="hero" aria-hidden="false">Section</div>',
+      ),
+    ).toBe(
+      '<div role="presentation" aria-label="hero" aria-hidden="false">Section</div>',
+    );
+  });
 });
 
 describe('hasMeaningfulHtmlSanitizationChange', () => {
