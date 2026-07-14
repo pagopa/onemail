@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.10.10
+
+### Patch Changes
+
+- a99498c: blocking html validation error
+
 ## 1.10.9
 
 ### Patch Changes
