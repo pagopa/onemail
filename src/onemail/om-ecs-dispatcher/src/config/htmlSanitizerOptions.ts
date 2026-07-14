@@ -53,9 +53,10 @@ export const emailSanitizerOptions: sanitizeHtml.IOptions = {
   ],
   allowedAttributes: {
     // document structure
-    html: ['lang', 'dir', 'xmlns'],
+    html: ['lang', 'dir', 'xmlns', 'xmlns:v', 'xmlns:o', 'xml:lang'],
     meta: ['charset', 'name', 'content', 'http-equiv'],
     link: ['href', 'rel', 'type'],
+    style: ['type', 'media'],
     // text and media
     a: ['href', 'name', 'target', 'rel', 'title'],
     img: ['src', 'alt', 'title', 'width', 'height'],
