@@ -26,11 +26,13 @@ const createResponseMock = () => {
 const sendEmailTransactionalMock = vi.hoisted(() => vi.fn());
 const sendEmailLowPriorityMock = vi.hoisted(() => vi.fn());
 const getEmailStatusMock = vi.hoisted(() => vi.fn());
+const sanitizeHtmlContentMock = vi.hoisted(() => vi.fn());
 
 vi.mock('#services/email.service', () => ({
   sendEmailTransactional: sendEmailTransactionalMock,
   sendEmailLowPriority: sendEmailLowPriorityMock,
   getEmailStatus: getEmailStatusMock,
+  sanitizeHtmlContent: sanitizeHtmlContentMock,
 }));
 
 describe('email.controller', () => {
@@ -110,19 +112,47 @@ describe('email.controller', () => {
     expect(response.json).toHaveBeenCalledWith({ requestId: 'request-id-2' });
   });
 
-  it('returns sanitized html content as-is', async () => {
+  it('returns sanitized html content with isSanitized false when input is clean', async () => {
+    sanitizeHtmlContentMock.mockReturnValue({
+      sanitizedHtml: '<p>safe</p>',
+      isSanitized: false,
+    });
+    const response = createResponseMock();
+
+    await sanitizeHtmlContent(
+      { body: { htmlContent: '<p>safe</p>' } } as never,
+      response as never,
+    );
+
+    expect(sanitizeHtmlContentMock).toHaveBeenCalledWith('<p>safe</p>');
+    expect(response.status).toHaveBeenCalledWith(200);
+    expect(response.json).toHaveBeenCalledWith({
+      sanitizedHtml: '<p>safe</p>',
+      isSanitized: false,
+    });
+  });
+
+  it('returns sanitized html content with isSanitized true when unsafe content is removed', async () => {
+    sanitizeHtmlContentMock.mockReturnValue({
+      sanitizedHtml: '<p>safe</p>',
+      isSanitized: true,
+    });
     const response = createResponseMock();
 
     await sanitizeHtmlContent(
       {
-        body: { htmlContent: '<p>safe</p>' },
+        body: { htmlContent: '<p>safe</p><script>alert(1)</script>' },
       } as never,
       response as never,
     );
 
+    expect(sanitizeHtmlContentMock).toHaveBeenCalledWith(
+      '<p>safe</p><script>alert(1)</script>',
+    );
     expect(response.status).toHaveBeenCalledWith(200);
     expect(response.json).toHaveBeenCalledWith({
       sanitizedHtml: '<p>safe</p>',
+      isSanitized: true,
     });
   });
 

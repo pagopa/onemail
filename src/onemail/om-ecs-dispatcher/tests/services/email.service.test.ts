@@ -1,6 +1,7 @@
 import env from '#config/env';
 import {
   getEmailStatus,
+  sanitizeHtmlContent,
   sendEmailLowPriority,
   sendEmailTransactional,
 } from '#services/email.service';
@@ -386,5 +387,57 @@ describe('email.service - getEmailStatus', () => {
         dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
       },
     ]);
+  });
+});
+
+describe('sanitizeHtmlContent', () => {
+  it('returns the html unchanged and isSanitized false for clean input', () => {
+    const result = sanitizeHtmlContent('<p>Hello World</p>');
+
+    expect(result).toEqual({
+      sanitizedHtml: '<p>Hello World</p>',
+      isSanitized: false,
+    });
+  });
+
+  it('preserves html doctype when present and keeps isSanitized false', () => {
+    const result = sanitizeHtmlContent(
+      '<!DOCTYPE html><html><body><p>Hello World</p></body></html>',
+    );
+
+    expect(result).toEqual({
+      sanitizedHtml:
+        '<!DOCTYPE html>\n<html><body><p>Hello World</p></body></html>',
+      isSanitized: false,
+    });
+  });
+
+  it('keeps style content and returns isSanitized false', () => {
+    const result = sanitizeHtmlContent(
+      '<style>.hero{color:red}</style><p class="hero">Hi</p>',
+    );
+
+    expect(result).toEqual({
+      sanitizedHtml: '<style>.hero{color:red}</style><p class="hero">Hi</p>',
+      isSanitized: false,
+    });
+  });
+
+  it('removes script tags and returns isSanitized true', () => {
+    const result = sanitizeHtmlContent('<p>Hello</p><script>alert(1)</script>');
+
+    expect(result).toEqual({
+      sanitizedHtml: '<p>Hello</p>',
+      isSanitized: true,
+    });
+  });
+
+  it('removes disallowed attributes and returns isSanitized true', () => {
+    const result = sanitizeHtmlContent('<p onclick="evil()">Click me</p>');
+
+    expect(result).toEqual({
+      sanitizedHtml: '<p>Click me</p>',
+      isSanitized: true,
+    });
   });
 });
