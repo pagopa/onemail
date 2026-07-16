@@ -1,5 +1,11 @@
 # infra-data-tenants
 
+## 1.5.0
+
+### Minor Changes
+
+- b5845b6: Add internal-apps to uat env
+
 ## 1.4.0
 
 ### Minor Changes
