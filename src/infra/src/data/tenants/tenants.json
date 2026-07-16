@@ -18,5 +18,11 @@
     "domain": {
       "uat": "uat.ioapp.it"
     }
+  },
+  "internal-apps": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": {
+      "uat": "uat.internal-apps.platform.pagopa.it"
+    }
   }
 }
