@@ -44,7 +44,6 @@ registerOpenApiRoute({
   tags: [tag],
   isAuthenticated: true,
   queryParams: EmailStatusQueryParamsSchema,
-  headers: TenantNameHeaderSchema,
   responses: {
     [StatusCodes.OK]: {
       schema: EmailStatusResponseSchema,
@@ -70,7 +69,6 @@ registerOpenApiRoute({
   isAuthenticated: true,
   queryParams: EmailHighPriorityQueryParamsSchema,
   requestBody: EmailHighPriorityBodySchema,
-  headers: TenantNameHeaderSchema,
   responses: {
     [StatusCodes.ACCEPTED]: {
       schema: EmailHighPriorityResponseSchema,
@@ -96,7 +94,6 @@ registerOpenApiRoute({
   isAuthenticated: true,
   queryParams: EmailLowPriorityQueryParamsSchema,
   requestBody: EmailLowPriorityBodySchema,
-  headers: TenantNameHeaderSchema,
   responses: {
     [StatusCodes.ACCEPTED]: {
       schema: EmailLowPriorityResponseSchema,
