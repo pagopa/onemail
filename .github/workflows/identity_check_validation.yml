@@ -1,0 +1,48 @@
+name: Identity Check Validation
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * *' # Runs every day at 9 AM
+
+jobs:
+  setup-matrix:
+    name: Setup Environment Matrix
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1 https://github.com/actions/checkout/releases/tag/v4.3.1
+
+      - name: Setup Matrix
+        id: matrix
+        uses: ./.github/actions/env-matrix
+        with:
+          event_name: schedule
+
+  validate_identity:
+    name: Validate identities ${{ matrix.environment }} ${{ matrix.region }}
+    runs-on: ubuntu-22.04
+    needs: setup-matrix
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
+    environment: ${{ matrix.environment }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1 https://github.com/actions/checkout/releases/tag/v4.3.1
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@50ac8dd1e1b10d09dac7b8727528b91bed831ac0 # v5.1.0 https://github.com/aws-actions/configure-aws-credentials/releases/tag/v5.1.0
+        with:
+          role-to-assume: ${{ vars.IAM_ROLE_IAC_PLAN }}
+          aws-region: ${{ matrix.region }}
+
+      - name: Run identity check validation script
+        run: bash src/infra/scripts/identity_domain_check_validation.sh
