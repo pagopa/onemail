@@ -14,7 +14,12 @@
   },
   "servers": [
     {
-      "url": "${server_url}"
+      "url": "https://uat.onemail.pagopa.it",
+      "description": "UAT environment"
+    },
+    {
+      "url": "https://onemail.pagopa.it",
+      "description": "Production environment"
     }
   ],
   "components": {

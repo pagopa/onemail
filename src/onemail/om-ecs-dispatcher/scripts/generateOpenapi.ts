@@ -3,8 +3,14 @@ import { dirname, resolve } from 'node:path';
 
 import { generateSwaggerDocs } from '../src/config/apidocs.js';
 
+// Base DNS zone name — mirrors the Terraform variable for var.dns_zone_name.
+const DNS_ZONE = 'onemail.pagopa.it';
+
 const CONFIG = {
-  SERVER_URL: '${server_url}',
+  SERVERS: [
+    { url: `https://uat.${DNS_ZONE}`, description: 'UAT environment' },
+    { url: `https://${DNS_ZONE}`, description: 'Production environment' },
+  ],
   ROUTES_ENTRY: 'src/routes/index.ts',
   ZOD_EXTEND: 'src/config/zodExtend.ts',
   OUTPUT_DIR: 'apidoc',
@@ -23,7 +29,7 @@ async function generate() {
     await import(resolve(root, CONFIG.ROUTES_ENTRY));
 
     const docs = generateSwaggerDocs();
-    docs.servers = [{ url: CONFIG.SERVER_URL }];
+    docs.servers = CONFIG.SERVERS;
 
     await mkdir(dirname(outputPath), { recursive: true });
     await writeFile(outputPath, JSON.stringify(docs, null, 2) + '\n', 'utf-8');
