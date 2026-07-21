@@ -4,15 +4,27 @@ import sanitizeHtml from 'sanitize-html';
 const decodeUrlAttribute = (url: string): string => {
   // Decode HTML entities
   const entityDecoded = he.decode(url, { isAttributeValue: true });
+
   // Strip control chars and null bytes
   // eslint-disable-next-line no-control-regex
   const stripped = entityDecoded.replace(/[\u0000-\u001F\u007F]/g, '');
 
-  // Decode percent-encoding
-  try {
-    return decodeURIComponent(stripped);
-  } catch {
+  // Decode percent-encoded scheme
+  const colonIndex = stripped.indexOf(':');
+  if (colonIndex <= 0) {
     return stripped;
+  } else {
+    const scheme = stripped.slice(0, colonIndex);
+    const rest = stripped.slice(colonIndex);
+
+    let decodedScheme = scheme;
+    try {
+      decodedScheme = decodeURIComponent(scheme);
+    } catch {
+      // Keep original scheme if percent-decoding fails
+    }
+
+    return `${decodedScheme}${rest}`;
   }
 };
 

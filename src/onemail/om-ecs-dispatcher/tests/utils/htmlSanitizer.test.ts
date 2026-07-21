@@ -81,8 +81,8 @@ describe('sanitizeEmailHtml', () => {
     );
   });
 
-  it('decodes percent-encoded href and preserves allowed scheme', () => {
-    // %68%74%74%70%73 = "https", scheme check must see decoded value
+  it('decodes percent-encoded href scheme when allowed', () => {
+    // %68%74%74%70%73 = "https", decode only applies to the scheme token.
     expect(
       sanitizeEmailHtml('<a href="%68%74%74%70%73://example.com">link</a>'),
     ).toBe('<a href="https://example.com">link</a>');
@@ -109,7 +109,7 @@ describe('sanitizeEmailHtml', () => {
     ).toBe('<a>click</a>');
   });
 
-  it('decodes percent-encoded img src and preserves allowed scheme', () => {
+  it('decodes percent-encoded img src scheme when allowed', () => {
     expect(
       sanitizeEmailHtml(
         '<img src="%68%74%74%70%73://example.com/img.png" alt="x" />',
@@ -117,7 +117,7 @@ describe('sanitizeEmailHtml', () => {
     ).toBe('<img src="https://example.com/img.png" alt="x" />');
   });
 
-  it('decodes percent-encoded link href and preserves allowed scheme', () => {
+  it('decodes percent-encoded link href scheme when allowed', () => {
     expect(
       sanitizeEmailHtml(
         '<head><link href="%68%74%74%70%73://cdn.example.com/style.css" rel="stylesheet" type="text/css"></head>',
