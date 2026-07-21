@@ -1,4 +1,32 @@
+import he from 'he';
 import sanitizeHtml from 'sanitize-html';
+
+const decodeUrlAttribute = (url: string): string => {
+  // Decode HTML entities
+  const entityDecoded = he.decode(url, { isAttributeValue: true });
+
+  // Strip control chars and null bytes
+  // eslint-disable-next-line no-control-regex
+  const stripped = entityDecoded.replace(/[\u0000-\u001F\u007F]/g, '');
+
+  // Decode percent-encoded scheme
+  const colonIndex = stripped.indexOf(':');
+  if (colonIndex <= 0) {
+    return stripped;
+  } else {
+    const scheme = stripped.slice(0, colonIndex);
+    const rest = stripped.slice(colonIndex);
+
+    let decodedScheme = scheme;
+    try {
+      decodedScheme = decodeURIComponent(scheme);
+    } catch {
+      // Keep original scheme if percent-decoding fails
+    }
+
+    return `${decodedScheme}${rest}`;
+  }
+};
 
 // 1. Define the allowed rules for Email HTML
 export const emailSanitizerOptions: sanitizeHtml.IOptions = {
@@ -92,6 +120,28 @@ export const emailSanitizerOptions: sanitizeHtml.IOptions = {
     font: ['face', 'size', 'color'],
   },
   allowedSchemes: ['https', 'mailto', 'tel'],
+  // Normalize and decode HTML entities/percent-encoded URLs before validation runs
+  // This prevents bypass rules via encodings
+  transformTags: {
+    a: (tagName, attribs) => ({
+      tagName,
+      attribs: attribs['href']
+        ? { ...attribs, href: decodeUrlAttribute(attribs['href']) }
+        : attribs,
+    }),
+    img: (tagName, attribs) => ({
+      tagName,
+      attribs: attribs['src']
+        ? { ...attribs, src: decodeUrlAttribute(attribs['src']) }
+        : attribs,
+    }),
+    link: (tagName, attribs) => ({
+      tagName,
+      attribs: attribs['href']
+        ? { ...attribs, href: decodeUrlAttribute(attribs['href']) }
+        : attribs,
+    }),
+  },
   // Explicitly remove dangerous tags (sanitize-html does this by default, but it's good to be explicit)
   disallowedTagsMode: 'discard',
   allowProtocolRelative: false,

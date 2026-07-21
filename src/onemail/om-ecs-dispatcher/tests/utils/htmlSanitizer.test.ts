@@ -80,6 +80,52 @@ describe('sanitizeEmailHtml', () => {
       '<div role="presentation" aria-label="hero" aria-hidden="false">Section</div>',
     );
   });
+
+  it('decodes percent-encoded href scheme when allowed', () => {
+    // %68%74%74%70%73 = "https", decode only applies to the scheme token.
+    expect(
+      sanitizeEmailHtml('<a href="%68%74%74%70%73://example.com">link</a>'),
+    ).toBe('<a href="https://example.com">link</a>');
+  });
+
+  it('strips percent-encoded href with disallowed scheme after decoding', () => {
+    // %6A%61%76%61%73%63%72%69%70%74 = "javascript"
+    expect(
+      sanitizeEmailHtml(
+        '<a href="%6A%61%76%61%73%63%72%69%70%74:alert(1)">click</a>',
+      ),
+    ).toBe('<a>click</a>');
+  });
+
+  it('strips entity-encoded javascript scheme', () => {
+    expect(
+      sanitizeEmailHtml("<a href='&#0000106avascript:alert(1)'>click</a>"),
+    ).toBe('<a>click</a>');
+  });
+
+  it('strips href with null-byte-prefixed javascript scheme', () => {
+    expect(
+      sanitizeEmailHtml('<a href="\u0000javascript:alert(1)">click</a>'),
+    ).toBe('<a>click</a>');
+  });
+
+  it('decodes percent-encoded img src scheme when allowed', () => {
+    expect(
+      sanitizeEmailHtml(
+        '<img src="%68%74%74%70%73://example.com/img.png" alt="x" />',
+      ),
+    ).toBe('<img src="https://example.com/img.png" alt="x" />');
+  });
+
+  it('decodes percent-encoded link href scheme when allowed', () => {
+    expect(
+      sanitizeEmailHtml(
+        '<head><link href="%68%74%74%70%73://cdn.example.com/style.css" rel="stylesheet" type="text/css"></head>',
+      ),
+    ).toBe(
+      '<head><link href="https://cdn.example.com/style.css" rel="stylesheet" type="text/css" /></head>',
+    );
+  });
 });
 
 describe('hasMeaningfulHtmlSanitizationChange', () => {
