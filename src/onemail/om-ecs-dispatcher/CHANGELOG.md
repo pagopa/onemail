@@ -1,5 +1,12 @@
 # om-ecs-dispatcher
 
+## 1.10.11
+
+### Patch Changes
+
+- 20b5651: improve HTML urls sanitization by adding URL decoding and entity handling
+- 222b88f: update OpenAPI to use server URLs and remove tenant name header
+
 ## 1.10.10
 
 ### Patch Changes
