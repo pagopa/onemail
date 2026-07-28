@@ -23,4 +23,4 @@ web_acl = {
 
 enable_ses_dns_records = true
 
-alb_ssl_policy = "ELBSecurityPolicy-TLS13-1-0-PQ-2025-09"
+alb_ssl_policy = "ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09"
