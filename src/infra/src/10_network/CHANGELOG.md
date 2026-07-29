@@ -1,5 +1,11 @@
 # infra-network
 
+## 1.16.1
+
+### Patch Changes
+
+- fa63008: fix: removed tls 1.0 and 1.1 support
+
 ## 1.16.0
 
 ### Minor Changes
