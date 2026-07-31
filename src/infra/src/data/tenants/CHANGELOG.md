@@ -1,5 +1,11 @@
 # infra-data-tenants
 
+## 1.6.0
+
+### Minor Changes
+
+- d7bcba8: add internal-apps tenant to prod env
+
 ## 1.5.0
 
 ### Minor Changes
