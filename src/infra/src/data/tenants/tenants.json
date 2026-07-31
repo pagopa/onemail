@@ -22,7 +22,8 @@
   "internal-apps": {
     "admin_mailbox": "ops-dmarc",
     "domain": {
-      "uat": "uat.internal-apps.platform.pagopa.it"
+      "uat": "uat.internal-apps.platform.pagopa.it",
+      "prod": "internal-apps.platform.pagopa.it"
     }
   }
 }
