@@ -38,11 +38,6 @@ runs:
         TF_IN_AUTOMATION: "true"
       run: |
         ENV_FOLDER="${{ inputs.environment }}/${{ inputs.region }}"
-        if [[ "${{ inputs.environment }}" == "prod" ]]; then
-          ENV_FOLDER="${{ inputs.environment }}"
-        else
-          ENV_FOLDER="${{ inputs.environment }}/${{ inputs.region }}"
-        fi
         echo "Running terraform apply for module: ${{ inputs.module }}"
         echo "Environment folder: $ENV_FOLDER"
         
