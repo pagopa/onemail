@@ -107,7 +107,7 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
     continue-on-error: false
-    environment: ${{ matrix.environment == 'prod' && matrix.region == 'eu-central-1' && 'prod/eu-central-1' || matrix.environment }}
+    environment: ${{ matrix.environment == 'prod' && format('{0}/{1}', matrix.environment, matrix.region) || matrix.environment }}
     env:
       ENV_SHORT: ${{ fromJSON('{"dev":"d","uat":"u","prod":"p"}')[matrix.environment] }}
       REGION_SHORT: ${{ fromJSON('{"eu-south-1":"eus1","eu-central-1":"euc1"}')[matrix.region] }}

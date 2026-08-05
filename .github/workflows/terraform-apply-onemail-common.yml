@@ -55,7 +55,7 @@ jobs:
     strategy:
       fail-fast: ${{ inputs.fail_fast == true }}
       matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
-    environment: ${{ matrix.environment }}
+    environment: ${{ matrix.environment == 'prod' && format('{0}/{1}', matrix.environment, matrix.region) || matrix.environment }}
     concurrency: terraform-onemail-common-${{ matrix.environment }}-${{ matrix.region }}
     permissions:
       id-token: write

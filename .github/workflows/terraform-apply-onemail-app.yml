@@ -75,7 +75,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup-matrix.outputs.primary_matrix) }}
-    environment: ${{ matrix.environment }}
+    environment: ${{ matrix.environment == 'prod' && format('{0}/{1}', matrix.environment, matrix.region) || matrix.environment }}
     concurrency: terraform-onemail-app-${{ matrix.environment }}-${{ matrix.region }}
     permissions:
       id-token: write
@@ -103,7 +103,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup-matrix.outputs.secondary_matrix) }}
-    environment: ${{ matrix.environment }}
+    environment: ${{ matrix.environment == 'prod' && format('{0}/{1}', matrix.environment, matrix.region) || matrix.environment }}
     concurrency: terraform-onemail-app-${{ matrix.environment }}-${{ matrix.region }}
     permissions:
       id-token: write
