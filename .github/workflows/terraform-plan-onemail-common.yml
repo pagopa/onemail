@@ -57,6 +57,6 @@ jobs:
         uses: ./.github/actions/terraform-plan
         with:
           module: 70_domains/onemail_common
-          environment: ${{ matrix.environment }}
+          environment: ${{ matrix.environment == 'prod' && format('{0}/{1}', matrix.environment, matrix.region) || matrix.environment }}
           region: ${{ matrix.region }}
           iac_role_plan_arn: ${{ vars.IAM_ROLE_IAC_PLAN }}
