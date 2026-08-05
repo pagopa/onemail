@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.20.0
+
+### Minor Changes
+
+- c59ea0b: Secondary region ses identity fix
+
 ## 1.19.0
 
 ### Minor Changes
