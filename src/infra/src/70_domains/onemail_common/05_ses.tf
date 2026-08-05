@@ -6,24 +6,19 @@ resource "aws_sesv2_tenant" "tenants" {
 
 # Email identities for each tenant
 resource "aws_sesv2_email_identity" "tenant_identities" {
-  for_each       = local.tenants
+  for_each = var.ses_deed_parent_region == null ? local.tenants : {}
+
   email_identity = each.value.domain
 
   configuration_set_name = aws_sesv2_configuration_set.config_set[each.key].configuration_set_name
 
-  dynamic "dkim_signing_attributes" {
-    for_each = var.ses_deed_parent_region == null ? [1] : []
-
-    content {
-      next_signing_key_length = "RSA_2048_BIT"
-    }
+  dkim_signing_attributes {
+    next_signing_key_length = "RSA_2048_BIT"
   }
 }
 
 resource "terraform_data" "tenant_identity_deed" {
   for_each = var.ses_deed_parent_region != null ? local.tenants : {}
-
-  depends_on = [aws_sesv2_email_identity.tenant_identities]
 
   triggers_replace = [
     each.value.domain,
@@ -39,27 +34,40 @@ resource "terraform_data" "tenant_identity_deed" {
           --email-identity "$SES_EMAIL_IDENTITY" \
           --query 'DkimAttributes.SigningAttributesOrigin' \
           --output text)"
+        verification_status="$(aws sesv2 get-email-identity \
+          --email-identity "$SES_EMAIL_IDENTITY" \
+          --query 'VerificationStatus' \
+          --output text)"
+        dkim_status="$(aws sesv2 get-email-identity \
+          --email-identity "$SES_EMAIL_IDENTITY" \
+          --query 'DkimAttributes.Status' \
+          --output text)"
 
-        if [[ "$current_signing_origin" != "$SES_PARENT_SIGNING_ORIGIN" ]]; then
+        if [[ "$current_signing_origin" != "$SES_PARENT_SIGNING_ORIGIN" || "$verification_status" == "FAILED" || "$dkim_status" == "FAILED" ]]; then
+          echo "Recreating SES DEED identity '$SES_EMAIL_IDENTITY'."
           aws sesv2 delete-email-identity --email-identity "$SES_EMAIL_IDENTITY"
         else
-          aws sesv2 put-email-identity-configuration-set-attributes \
-            --email-identity "$SES_EMAIL_IDENTITY" \
-            --configuration-set-name "$SES_CONFIGURATION_SET_NAME"
-          exit 0
+          echo "SES DEED identity '$SES_EMAIL_IDENTITY' is already reconcilable."
         fi
       fi
 
-      aws sesv2 create-email-identity \
+      if ! aws sesv2 get-email-identity --email-identity "$SES_EMAIL_IDENTITY" >/dev/null 2>&1; then
+        aws sesv2 create-email-identity \
+          --email-identity "$SES_EMAIL_IDENTITY" \
+          --configuration-set-name "$SES_CONFIGURATION_SET_NAME" \
+          --dkim-signing-attributes "{\"DomainSigningAttributesOrigin\":\"$SES_PARENT_SIGNING_ORIGIN\"}"
+      fi
+
+      aws sesv2 put-email-identity-configuration-set-attributes \
         --email-identity "$SES_EMAIL_IDENTITY" \
-        --configuration-set-name "$SES_CONFIGURATION_SET_NAME" \
-        --dkim-signing-attributes "{\"DomainSigningAttributesOrigin\":\"$SES_PARENT_SIGNING_ORIGIN\"}"
+        --configuration-set-name "$SES_CONFIGURATION_SET_NAME"
     EOT
 
     environment = {
       AWS_REGION                 = var.aws_region
       SES_EMAIL_IDENTITY         = each.value.domain
       SES_CONFIGURATION_SET_NAME = aws_sesv2_configuration_set.config_set[each.key].configuration_set_name
+      SES_DEED_PARENT_REGION     = var.ses_deed_parent_region
       SES_PARENT_SIGNING_ORIGIN  = "AWS_SES_${upper(replace(var.ses_deed_parent_region, "-", "_"))}"
     }
 
@@ -71,11 +79,12 @@ resource "terraform_data" "tenant_identity_deed" {
 resource "aws_ses_domain_mail_from" "tenant_mail_from" {
   for_each         = local.tenants
   depends_on       = [terraform_data.tenant_identity_deed]
-  domain           = aws_sesv2_email_identity.tenant_identities[each.key].email_identity
+  domain           = each.value.domain
   mail_from_domain = var.ses_deed_parent_region == null ? "bounce.${each.value.domain}" : "bounce.${var.location_short}.${each.value.domain}"
   # In test phase: allow SES fallback if the custom MAIL FROM MX is not ready yet.
   # Production: set this to "RejectMessage" to avoid implicit fallback.
   behavior_on_mx_failure = var.env == "prod" ? "RejectMessage" : "UseDefaultValue"
+
 }
 
 # resource "aws_ses_account_suppression_attributes" "main" {
@@ -103,7 +112,8 @@ resource "aws_sesv2_tenant_resource_association" "identity_assoc" {
   for_each     = local.tenants
   depends_on   = [terraform_data.tenant_identity_deed]
   tenant_name  = aws_sesv2_tenant.tenants[each.key].tenant_name
-  resource_arn = aws_sesv2_email_identity.tenant_identities[each.key].arn
+  resource_arn = "arn:${data.aws_partition.current.partition}:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:identity/${each.value.domain}"
+
 }
 
 resource "aws_sesv2_tenant_resource_association" "config_set_assoc" {
