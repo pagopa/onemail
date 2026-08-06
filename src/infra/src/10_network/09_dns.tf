@@ -133,7 +133,7 @@ locals {
           name          = "_dmarc.${tenant_data.domain}"
           type          = "TXT"
           ttl           = 600
-          records       = ["v=DMARC1; p=none; adkim=r; aspf=r; fo=1; rua=mailto:${tenant_data.admin_email}"]
+          records       = ["v=DMARC1; p=quarantine; adkim=s; aspf=s; fo=0; rua=mailto:${var.dmarc_aggregate_report_email}; pct=100"]
           alias         = null
           absolute_name = true
         }

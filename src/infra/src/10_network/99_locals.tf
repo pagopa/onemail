@@ -15,8 +15,7 @@ locals {
   }
   tenants_with_managed_ses_dns_records = {
     for tenant_key, tenant_data in local.raw_tenants : tenant_key => {
-      domain      = local.tenant_domains[tenant_key]
-      admin_email = format("%s@%s", tenant_data.admin_mailbox, local.tenant_domains[tenant_key])
+      domain = local.tenant_domains[tenant_key]
     } if contains(local.route53_managed_tenant_keys, tenant_key) && try(length(trimspace(local.tenant_domains[tenant_key])) > 0, false)
   }
 

@@ -23,4 +23,5 @@ web_acl = {
 
 enable_ses_dns_records = true
 
-alb_ssl_policy = "ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09"
+alb_ssl_policy               = "ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09"
+dmarc_aggregate_report_email = "dmarc@0f1qy7b5.uriports.com"
