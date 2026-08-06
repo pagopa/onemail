@@ -120,3 +120,8 @@ variable "alb_ssl_policy" {
   type        = string
   description = "ALB Listener security policy"
 }
+
+variable "dmarc_aggregate_report_email" {
+  type        = string
+  description = "Email address to receive DMARC aggregate reports."
+}
