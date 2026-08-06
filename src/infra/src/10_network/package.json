@@ -1,6 +1,6 @@
 {
   "name": "infra-network",
-  "version": "1.16.1",
+  "version": "1.17.0",
   "description": "Network infrastructure code.",
   "private": true
 }
