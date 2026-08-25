@@ -84,8 +84,8 @@
                 "view": "timeSeries",
                 "stacked": true,
                 "metrics": [
-                    [ { "expression": "SEARCH('{${namespace},service,tenantName,clientId} MetricName=\"HighPriorityAccepted\" service=\"${dispatcher_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "id": "hp_${tenant_key}", "label": "HighPriority" } ],
-                    [ { "expression": "SEARCH('{${namespace},service,tenantName,clientId} MetricName=\"LowPriorityAccepted\" service=\"${dispatcher_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "id": "lp_${tenant_key}", "label": "LowPriority" } ]
+                    [ { "expression": "SEARCH('{${namespace},service,tenantName,clientId} MetricName=\"HighPriorityAccepted\" service=\"${dispatcher_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "id": "hp_${tenants[tenant_key].metric_id}", "label": "HighPriority" } ],
+                    [ { "expression": "SEARCH('{${namespace},service,tenantName,clientId} MetricName=\"LowPriorityAccepted\" service=\"${dispatcher_service}\" tenantName=\"${tenants[tenant_key].tenant_name}\"', 'Sum', 300)", "id": "lp_${tenants[tenant_key].metric_id}", "label": "LowPriority" } ]
                 ],
                 "region": "${aws_region}",
                 "period": 300,
