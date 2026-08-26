@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.10.12
+
+### Patch Changes
+
+- 0d8f34f: update sanitaze
+
 ## 1.10.11
 
 ### Patch Changes

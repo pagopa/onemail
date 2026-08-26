@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.12.1
+
+### Patch Changes
+
+- 2043124: Sanitize CloudWatch dashboard metric ids for tenant keys that contain hyphens.
+
 ## 1.12.0
 
 ### Minor Changes
