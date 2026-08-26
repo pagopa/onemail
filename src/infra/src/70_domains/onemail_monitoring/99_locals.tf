@@ -161,6 +161,7 @@ locals {
     for tenant_key, tenant_data in local.raw_tenants : tenant_key => {
       tenant_name            = "${local.tenant_name_prefix}-${tenant_key}"
       configuration_set_name = "${local.configuration_set_name_prefix}-${tenant_key}"
+      metric_id              = replace(lower(tenant_key), "/[^a-z0-9_]/", "_")
     } if try(length(trimspace(local.tenant_domains[tenant_key])) > 0, false)
   }
 
