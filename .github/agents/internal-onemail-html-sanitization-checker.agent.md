@@ -37,9 +37,18 @@ If the user's target files don't match either shape, ask for (or use the explici
 5. Extract the HTML string per the rule in "Supported input formats" (or the user-specified property path).
 6. Write each extracted HTML string into `src/onemail/om-ecs-dispatcher/test-html-sanitization/input/<original-basename>.txt` per the README's input convention.
 7. Run the check script exactly as documented in the README.
-8. Parse the script's per-file log lines into a summary table: file name, status, and (if failed) the output paths reported by the README's "compare the generated files" step.
-9. Ask the user whether to remove the fetched files from `test-html-sanitization/input/` afterwards, unless they already said they want to keep them.
+8. Parse the script's per-file log lines into a summary table: file name and status.
+9. For every file reported as `HTML check failed: sanitized`, run the documented unified diff command between that file's `original.html` and `sanitized.html` outputs. Do not run a diff for passing files.
+10. For every failed file, explain the diff in user-facing language: identify what the sanitizer removed, changed, or normalized, point to the relevant HTML element or attribute when visible, and state why that change indicates the input is not accepted unchanged. Keep the explanation grounded in the actual diff; do not infer a security cause that the diff does not show.
+11. Report the complete diff for each failed file in a separate fenced `diff` block, preceded by its readable explanation. If there are no failed files, explicitly state that no diffs were generated.
+12. Ask the user whether to remove the fetched files from `test-html-sanitization/input/` afterwards, unless they already said they want to keep them.
 
 ## Handoff
-- Report: source folder URL, number of candidate files found (per format), pass/fail table, and paths to any generated diff artifacts for failed files.
+- Report: source folder URL, number of candidate files found (per format), pass/fail table, paths to any generated diff artifacts, and a per-file failure analysis for every failed file.
+- Use this response structure:
+	1. `Summary`: source URL, candidate counts, and totals for passed/failed/unprocessed files.
+	2. `Results`: a compact table with `Input`, `Status`, and `Output`.
+	3. `Sanitization differences`: one subsection per failed input containing the output paths, a plain-language explanation of the observed change, and the complete unified diff in a fenced `diff` block. Use `None detected` when there are no failed files.
+	4. `Fetch or processing errors`: list the exact error for each file that could not be fetched, parsed, or processed, or write `None`.
+	5. `Cleanup`: state that the fetched input files remain and ask whether they should be removed, unless the user already specified cleanup behavior.
 - If any file could not be fetched, parsed, or processed, report it separately with the exact error instead of silently skipping it.
