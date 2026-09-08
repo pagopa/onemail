@@ -132,3 +132,6 @@ web_modules/
 .env.production.local
 .env.local
 docker/.env
+
+**/test-html-sanitization/outputs/*.html
+**/test-html-sanitization/input/*.txt
