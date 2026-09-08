@@ -133,5 +133,5 @@ web_modules/
 .env.local
 docker/.env
 
-**/test-html-sanitization/outputs/*.html
+**/test-html-sanitization/outputs/**/*.html
 **/test-html-sanitization/input/*.txt
