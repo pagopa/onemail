@@ -42,6 +42,10 @@ data "aws_dynamodb_table" "TenantConfig" {
   name = "TenantConfig"
 }
 
+data "aws_s3_bucket" "email_attachments" {
+  bucket = "${local.project_nodomain}-email-attachments"
+}
+
 data "aws_ecs_cluster" "core" {
   cluster_name = "${local.project_nodomain}-ecs-cluster"
 }

@@ -12,3 +12,13 @@ output "dynamodb_stream_arns" {
   description = "DynamoDB Stream ARNs keyed by logical table name"
   value       = { for k, v in module.dynamodb_table : k => try(v.table_stream_arn, v.dynamodb_table_stream_arn, null) }
 }
+
+output "attachments_bucket_name" {
+  description = "S3 bucket name for email attachments"
+  value       = module.s3_email_attachments_bucket.name
+}
+
+output "attachments_bucket_arn" {
+  description = "S3 bucket ARN for email attachments"
+  value       = module.s3_email_attachments_bucket.arn
+}

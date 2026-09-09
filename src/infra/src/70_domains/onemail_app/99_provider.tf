@@ -20,5 +20,5 @@ provider "aws" {
 }
 
 module "aws_modules" {
-  source = "git::https://github.com/pagopa/technology-aws-modules.git?ref=main"
+  source = "git::https://github.com/pagopa/technology-aws-modules.git?ref=b67558d9742f7d1824ab3ed034bc49f8f45e020a"
 }

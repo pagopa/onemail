@@ -65,6 +65,12 @@ data "aws_iam_policy_document" "sender_policy" {
     ]
   }
 
+  statement {
+    sid       = "S3EmailAttachmentsReadAccess"
+    actions   = ["s3:GetObject"]
+    resources = ["${data.aws_s3_bucket.email_attachments.arn}/*"]
+  }
+
   dynamic "statement" {
     for_each = local.dynamodb_kms_key_arn != null ? [local.dynamodb_kms_key_arn] : []
 
@@ -135,12 +141,13 @@ module "lambda_sender" {
   package_path       = "${path.module}/${var.lambda_sender.package_path}"
   lambda_policy_json = data.aws_iam_policy_document.sender_policy.json
 
-  memory_size                    = 256
+  memory_size                    = 1024
   reserved_concurrent_executions = var.lambda_sender.reserved_concurrent_executions
   environment_variables = merge(
     {
       AWS_EMAIL_DB_TABLE               = data.aws_dynamodb_table.EmailStatusHistory.name
       AWS_EMAIL_DB_REQUEST_ID_GSI      = local.gsis["gsi_request_id_idx"].name
+      AWS_ATTACHMENTS_BUCKET           = data.aws_s3_bucket.email_attachments.bucket
       HIGH_PRIORITY_QUEUE_ARN          = data.aws_sqs_queue.high_priority.arn
       LOW_PRIORITY_QUEUE_ARN           = data.aws_sqs_queue.low_priority.arn
       SERVICE_PREFIX                   = "${local.project_nodomain}"

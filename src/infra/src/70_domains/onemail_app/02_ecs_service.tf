@@ -57,6 +57,17 @@ data "aws_iam_policy_document" "ecs_task_policy" {
 
   }
 
+  statement {
+    sid = "S3EmailAttachmentsWriteAccess"
+
+    actions = [
+      "s3:PutObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = ["${data.aws_s3_bucket.email_attachments.arn}/*"]
+  }
+
   dynamic "statement" {
     for_each = toset(compact([
       local.dynamodb_kms_key_arn,
@@ -75,7 +86,7 @@ data "aws_iam_policy_document" "ecs_task_policy" {
 }
 
 module "ecs_service" {
-  source = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/ecs_service?ref=main"
+  source = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/ecs_service?ref=b67558d9742f7d1824ab3ed034bc49f8f45e020a"
 
   env                           = var.env
   product_name                  = "onemail"
@@ -110,6 +121,10 @@ module "ecs_service" {
     {
       name  = "AWS_EMAIL_DB_TABLE"
       value = data.aws_dynamodb_table.EmailStatusHistory.name
+    },
+    {
+      name  = "AWS_ATTACHMENTS_BUCKET"
+      value = data.aws_s3_bucket.email_attachments.bucket
     },
     {
       name  = "AWS_EMAIL_DB_REQUEST_ID_GSI"

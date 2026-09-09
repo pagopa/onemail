@@ -1,6 +1,6 @@
 module "dynamodb_table" {
   for_each = var.dynamodb_tables
-  source   = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/dynamodb?ref=main"
+  source   = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/dynamodb?ref=b67558d9742f7d1824ab3ed034bc49f8f45e020a"
 
   env                = var.env
   product_name       = "onemail"
