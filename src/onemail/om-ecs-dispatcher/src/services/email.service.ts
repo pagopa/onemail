@@ -64,14 +64,12 @@ export const sendEmailTransactional = async (
     tenantName,
     tenantConfiguration.clientId,
   );
-  const attachmentRefs = dryRun
-    ? undefined
-    : await uploadAttachments(
-        validatedAttachments,
-        tenantName,
-        requestId,
-        logger,
-      );
+  const attachmentRefs = await uploadAttachments(
+    validatedAttachments,
+    tenantName,
+    requestId,
+    logger,
+  );
   const dbObj = mapEmailTransactionalToDbItem(
     emailData,
     requestId,
@@ -129,14 +127,12 @@ export const sendEmailLowPriority = async (
     tenantName,
     tenantConfiguration.clientId,
   );
-  const attachmentRefs = dryRun
-    ? undefined
-    : await uploadAttachments(
-        validatedAttachments,
-        tenantName,
-        requestId,
-        logger,
-      );
+  const attachmentRefs = await uploadAttachments(
+    validatedAttachments,
+    tenantName,
+    requestId,
+    logger,
+  );
   const dbListObj = mapEmailLowPriorityToDbItem(
     emailData,
     requestId,

@@ -62,10 +62,11 @@ data "aws_iam_policy_document" "ecs_task_policy" {
 
     actions = [
       "s3:PutObject",
-      "s3:AbortMultipartUpload"
+      "s3:AbortMultipartUpload",
+      "s3:DeleteObject"
     ]
 
-    resources = ["${data.aws_s3_bucket.email_attachments.arn}/*"]
+    resources = ["${data.terraform_remote_state.onemail_common.outputs.attachments_bucket_arn}/*"]
   }
 
   dynamic "statement" {
@@ -124,7 +125,7 @@ module "ecs_service" {
     },
     {
       name  = "AWS_ATTACHMENTS_BUCKET"
-      value = data.aws_s3_bucket.email_attachments.bucket
+      value = data.terraform_remote_state.onemail_common.outputs.attachments_bucket_name
     },
     {
       name  = "AWS_EMAIL_DB_REQUEST_ID_GSI"

@@ -42,8 +42,15 @@ data "aws_dynamodb_table" "TenantConfig" {
   name = "TenantConfig"
 }
 
-data "aws_s3_bucket" "email_attachments" {
-  bucket = "${local.project_nodomain}-email-attachments"
+data "terraform_remote_state" "onemail_common" {
+  backend = "s3"
+
+  config = {
+    bucket       = "terraform-state-onemail-${var.env}-${var.aws_region}"
+    key          = "70_domains/onemail_common/terraform.tfstate"
+    region       = var.aws_region
+    use_lockfile = true
+  }
 }
 
 data "aws_ecs_cluster" "core" {

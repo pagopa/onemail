@@ -68,7 +68,7 @@ data "aws_iam_policy_document" "sender_policy" {
   statement {
     sid       = "S3EmailAttachmentsReadAccess"
     actions   = ["s3:GetObject"]
-    resources = ["${data.aws_s3_bucket.email_attachments.arn}/*"]
+    resources = ["${data.terraform_remote_state.onemail_common.outputs.attachments_bucket_arn}/*"]
   }
 
   dynamic "statement" {
@@ -147,7 +147,7 @@ module "lambda_sender" {
     {
       AWS_EMAIL_DB_TABLE               = data.aws_dynamodb_table.EmailStatusHistory.name
       AWS_EMAIL_DB_REQUEST_ID_GSI      = local.gsis["gsi_request_id_idx"].name
-      AWS_ATTACHMENTS_BUCKET           = data.aws_s3_bucket.email_attachments.bucket
+      AWS_ATTACHMENTS_BUCKET           = data.terraform_remote_state.onemail_common.outputs.attachments_bucket_name
       HIGH_PRIORITY_QUEUE_ARN          = data.aws_sqs_queue.high_priority.arn
       LOW_PRIORITY_QUEUE_ARN           = data.aws_sqs_queue.low_priority.arn
       SERVICE_PREFIX                   = "${local.project_nodomain}"
