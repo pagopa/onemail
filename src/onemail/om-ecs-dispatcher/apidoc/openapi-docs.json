@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.10.10",
+    "version": "1.10.12",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -207,6 +207,45 @@
                   "maxLength": 255
                 },
                 "description": "Custom tags/categories for the email"
+              },
+              "attachments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "filename": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255,
+                      "pattern": "^[\\w.\\- ()]+$"
+                    },
+                    "contentType": {
+                      "type": "string",
+                      "enum": [
+                        "application/pdf",
+                        "image/jpeg",
+                        "image/png",
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                        "text/plain",
+                        "text/csv"
+                      ]
+                    },
+                    "content": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Base64-encoded attachment content"
+                    }
+                  },
+                  "required": [
+                    "filename",
+                    "contentType",
+                    "content"
+                  ]
+                },
+                "maxItems": 5,
+                "description": "Optional inline attachments (max 5)"
               }
             },
             "required": [
@@ -342,6 +381,45 @@
               "maxLength": 255
             },
             "description": "Custom tags/categories for the email"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "filename": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255,
+                  "pattern": "^[\\w.\\- ()]+$"
+                },
+                "contentType": {
+                  "type": "string",
+                  "enum": [
+                    "application/pdf",
+                    "image/jpeg",
+                    "image/png",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                    "text/plain",
+                    "text/csv"
+                  ]
+                },
+                "content": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Base64-encoded attachment content"
+                }
+              },
+              "required": [
+                "filename",
+                "contentType",
+                "content"
+              ]
+            },
+            "maxItems": 5,
+            "description": "Optional inline attachments (max 5)"
           },
           "replyTo": {
             "allOf": [

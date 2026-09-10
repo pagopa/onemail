@@ -15,6 +15,14 @@ import { SanitizeHtmlResponseDTO } from '#dtos/email/validateHtml.dto';
 import { ERROR_CODES } from '#dtos/error.dto';
 import { ApiError } from '#errors/api.error';
 import {
+  deleteAttachment,
+  putAttachment,
+} from '#repositories/attachment.repository';
+import {
+  validateAttachments,
+  ValidatedAttachment,
+} from '#utils/attachmentValidator';
+import {
   mapEmailLowPriorityToDbItem,
   mapEmailTransactionalToDbItem,
 } from '#utils/dbMapper';
@@ -32,6 +40,7 @@ import { StatusCodes } from 'http-status-codes';
 import { randomUUID } from 'node:crypto';
 import { DispatcherMetricName, publishMetrics } from 'om-common/repositories';
 import {
+  EmailAttachmentRef,
   EmailStatus,
   EmailStatusHistoryItem,
   TenantConfigurationItem,
@@ -50,12 +59,25 @@ export const sendEmailTransactional = async (
     await getAndValidateTenantConfiguration(tenantName);
   const requestId = randomUUID();
   const tableName = env.aws.emailDbTable;
-
+  const validatedAttachments = await validateRequestAttachments(
+    emailData.attachments,
+    tenantName,
+    tenantConfiguration.clientId,
+  );
+  const attachmentRefs = dryRun
+    ? undefined
+    : await uploadAttachments(
+        validatedAttachments,
+        tenantName,
+        requestId,
+        logger,
+      );
   const dbObj = mapEmailTransactionalToDbItem(
     emailData,
     requestId,
     tenantConfiguration,
     dryRun,
+    attachmentRefs,
   );
 
   logger.debug('Saving email to DynamoDB', { emailId: dbObj.emailId });
@@ -67,7 +89,6 @@ export const sendEmailTransactional = async (
       },
     }),
   );
-
   logger.debug('Publishing message to SQS', { emailId: dbObj.emailId });
   await sqsClient.send(
     new SendMessageCommand({
@@ -75,17 +96,17 @@ export const sendEmailTransactional = async (
       MessageBody: JSON.stringify({ emailId: dbObj.emailId }),
     }),
   );
-
   publishMetrics([
     {
       name: DispatcherMetricName.HighPriorityAccepted,
-      dimensions: {
-        tenantName: tenantName,
-        clientId: tenantConfiguration.clientId,
-      },
+      dimensions: { tenantName, clientId: tenantConfiguration.clientId },
     },
   ]);
-
+  publishAttachmentMetric(
+    validatedAttachments,
+    tenantName,
+    tenantConfiguration.clientId,
+  );
   logger.info('End');
   return { requestId };
 };
@@ -103,12 +124,25 @@ export const sendEmailLowPriority = async (
     await getAndValidateTenantConfiguration(tenantName);
   const requestId = randomUUID();
   const tableName = env.aws.emailDbTable;
-
+  const validatedAttachments = await validateRequestAttachments(
+    emailData.attachments,
+    tenantName,
+    tenantConfiguration.clientId,
+  );
+  const attachmentRefs = dryRun
+    ? undefined
+    : await uploadAttachments(
+        validatedAttachments,
+        tenantName,
+        requestId,
+        logger,
+      );
   const dbListObj = mapEmailLowPriorityToDbItem(
     emailData,
     requestId,
     tenantConfiguration,
     dryRun,
+    attachmentRefs,
   );
 
   // BatchWriteCommand max chunk size is 25
@@ -127,35 +161,32 @@ export const sendEmailLowPriority = async (
         new BatchWriteCommand({
           RequestItems: {
             [tableName]: batch.map((item) => ({
-              PutRequest: {
-                Item: { ...item },
-              },
+              PutRequest: { Item: { ...item } },
             })),
           },
         }),
       ),
     ),
   );
-
   logger.debug('Publishing message to SQS', { requestId });
   await sqsClient.send(
     new SendMessageCommand({
       QueueUrl: env.aws.sqs.lowPriorityQueueUrl,
-      MessageBody: JSON.stringify({ requestId: requestId }),
+      MessageBody: JSON.stringify({ requestId }),
     }),
   );
-
   publishMetrics([
     {
       name: DispatcherMetricName.LowPriorityAccepted,
       value: dbListObj.length,
-      dimensions: {
-        tenantName: tenantName,
-        clientId: tenantConfiguration.clientId,
-      },
+      dimensions: { tenantName, clientId: tenantConfiguration.clientId },
     },
   ]);
-
+  publishAttachmentMetric(
+    validatedAttachments,
+    tenantName,
+    tenantConfiguration.clientId,
+  );
   logger.info('End');
   return { requestId };
 };
@@ -164,11 +195,13 @@ export const sanitizeHtmlContent = (
   htmlContent: string,
 ): SanitizeHtmlResponseDTO => {
   const sanitizedHtml = sanitizeEmailHtml(htmlContent);
-  const isSanitized = hasMeaningfulHtmlSanitizationChange(
-    htmlContent,
+  return {
     sanitizedHtml,
-  );
-  return { sanitizedHtml, isSanitized };
+    isSanitized: hasMeaningfulHtmlSanitizationChange(
+      htmlContent,
+      sanitizedHtml,
+    ),
+  };
 };
 
 export const getEmailStatus = async (
@@ -180,7 +213,6 @@ export const getEmailStatus = async (
 
   const tenantConfiguration =
     await getAndValidateTenantConfiguration(tenantName);
-
   const result = await dynamoClient.send(
     new QueryCommand({
       TableName: env.aws.emailDbTable,
@@ -194,17 +226,12 @@ export const getEmailStatus = async (
       },
     }),
   );
-
   const items = result.Items as EmailStatusHistoryItem[] | undefined;
-
   if (!items || items.length === 0) {
     publishMetrics([
       {
         name: DispatcherMetricName.EmailStatusNotFound,
-        dimensions: {
-          tenantName: tenantName,
-          clientId: tenantConfiguration.clientId,
-        },
+        dimensions: { tenantName, clientId: tenantConfiguration.clientId },
       },
     ]);
     throw new ApiError(
@@ -213,17 +240,12 @@ export const getEmailStatus = async (
       ERROR_CODES.RESOURCE_NOT_FOUND,
     );
   }
-
   const mapped = items.map((item) => {
-    // Sort history in descending order based on changedAt timestamp
     if (tenantConfiguration.tenantName !== item.tenantName) {
       publishMetrics([
         {
           name: DispatcherMetricName.UnauthorizedTenant,
-          dimensions: {
-            tenantName: tenantName,
-            clientId: tenantConfiguration.clientId,
-          },
+          dimensions: { tenantName, clientId: tenantConfiguration.clientId },
         },
       ]);
       throw new ApiError(
@@ -232,26 +254,22 @@ export const getEmailStatus = async (
         ERROR_CODES.INVALID_TENANT,
       );
     }
-
+    // Sort history in descending order based on changedAt timestamp
     const sortedHistory = [...item.history].sort(
       (a, b) =>
         new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime(),
     );
-
-    const attempts = item.history.filter(
-      (event) => event.status === EmailStatus.Dispatched,
-    ).length;
-
     return {
       status: item.status,
       priority: item.priority,
       history: sortedHistory,
       to: item.content.to,
       emailId: item.emailId,
-      attempts,
+      attempts: item.history.filter(
+        (event) => event.status === EmailStatus.Dispatched,
+      ).length,
     };
   });
-
   logger.info('End');
   return mapped;
 };
@@ -276,7 +294,6 @@ const getAndValidateTenantConfiguration = async (
       ERROR_CODES.INVALID_TENANT,
     );
   }
-
   if (tenantConfigurations.length > 1) {
     publishMetrics([
       {
@@ -309,6 +326,97 @@ const getTenantConfigurationByTenantName = async (
       },
     }),
   );
-
   return (result.Items as TenantConfigurationItem[] | undefined) ?? [];
+};
+
+const validateRequestAttachments = async (
+  attachments:
+    | EmailHighPriorityBodyDTO['attachments']
+    | EmailLowPriorityBodyDTO['attachments'],
+  tenantName: string,
+  clientId: string,
+): Promise<ValidatedAttachment[]> => {
+  if (!attachments?.length) return [];
+
+  try {
+    return await validateAttachments(attachments);
+  } catch (error) {
+    publishMetrics([
+      {
+        name: DispatcherMetricName.AttachmentRejected,
+        dimensions: { tenantName, clientId },
+      },
+    ]);
+    throw error;
+  }
+};
+
+const uploadAttachments = async (
+  attachments: ValidatedAttachment[],
+  tenantName: string,
+  requestId: string,
+  logger: ReturnType<typeof getNamedLogger>,
+): Promise<EmailAttachmentRef[] | undefined> => {
+  if (!attachments.length) return undefined;
+
+  const uploadedKeys: string[] = [];
+  try {
+    return await Promise.all(
+      attachments.map(async (attachment) => {
+        const attachmentId = randomUUID();
+        const key = `${tenantName}/${requestId}/${attachmentId}/${attachment.filename}`;
+        await putAttachment({
+          key,
+          body: attachment.bytes,
+          contentType: attachment.contentType,
+        });
+        uploadedKeys.push(key);
+        logger.info('Attachment uploaded', {
+          filename: attachment.filename,
+          size: attachment.size,
+          sha256: attachment.sha256,
+        });
+        return {
+          filename: attachment.filename,
+          contentType: attachment.contentType,
+          size: attachment.size,
+          sha256: attachment.sha256,
+          s3Bucket: env.aws.attachmentsBucket,
+          s3Key: key,
+        };
+      }),
+    );
+  } catch (error) {
+    logger.error('Attachment upload failed', {
+      uploadedCount: uploadedKeys.length,
+      error,
+    });
+    const deleteResults = await Promise.allSettled(
+      uploadedKeys.map((key) => deleteAttachment(key)),
+    );
+    deleteResults.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        logger.error('Failed to delete attachment after upload failure', {
+          key: uploadedKeys[index],
+          reason: result.reason,
+        });
+      }
+    });
+    throw error;
+  }
+};
+
+const publishAttachmentMetric = (
+  attachments: ValidatedAttachment[],
+  tenantName: string,
+  clientId: string,
+): void => {
+  if (!attachments.length) return;
+  publishMetrics([
+    {
+      name: DispatcherMetricName.AttachmentAccepted,
+      value: attachments.length,
+      dimensions: { tenantName, clientId },
+    },
+  ]);
 };

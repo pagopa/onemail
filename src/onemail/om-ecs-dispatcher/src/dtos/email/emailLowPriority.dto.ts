@@ -1,6 +1,7 @@
 import z from 'zod';
 
 import {
+  AttachmentsSchema,
   DryRunQueryParamsSchema,
   EmailAddressSchema,
   EmailSuccessResponseSchema,
@@ -24,6 +25,7 @@ export const EmailLowPriorityBodySchema = z
   .object({
     from: EmailAddressSchema.describe('Sender of the email'),
     tag: TagSchema.optional(),
+    attachments: AttachmentsSchema.optional(),
     replyTo: EmailAddressSchema.optional().describe(
       'Reply-to address for the email',
     ),
