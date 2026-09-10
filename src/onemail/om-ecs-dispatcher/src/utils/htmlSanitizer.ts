@@ -4,8 +4,19 @@ import {
 } from '#config/htmlSanitizerOptions';
 import sanitizeHtml from 'sanitize-html';
 
-export const normalizeHtml = (html: string): string =>
-  sanitizeHtml(html, htmlNormalizationOptions).replace(/>\s+</g, '><').trim();
+// Strips directive markers before normalizing so callers can compare directives inner content
+export const normalizeHtml = (
+  html: string,
+  hasDirectives?: boolean,
+): string => {
+  const htmlContainsDirective = hasDirectives ?? containsDirectives(html);
+  const htmlToNormalize = htmlContainsDirective
+    ? stripDirectivesMarkers(html)
+    : html;
+  return sanitizeHtml(htmlToNormalize, htmlNormalizationOptions)
+    .replace(/>\s+</g, '><')
+    .trim();
+};
 
 const preserveDoctype = (
   originalHtml: string,
@@ -36,10 +47,6 @@ const containsDirectives = (html: string): boolean =>
 const tokenizeDirectives = (
   html: string,
 ): { processedHtml: string; tokens: Map<string, string> } => {
-  // if (!containsDirectives(html)) {
-  //   return { processedHtml: html, tokens: new Map() };
-  // }
-
   // nonce prevents token injection via crafted content
   const nonce = Math.random().toString(36).slice(2, 10);
   const tokens = new Map<string, string>();
@@ -80,20 +87,10 @@ const stripDirectivesMarkers = (html: string): string =>
 export const hasHtmlSanitizationChange = (
   originalHtml: string,
   sanitizedHtml: string,
-  hasDirectives = false,
-): boolean => {
-  const comparableOriginalHtml = hasDirectives
-    ? stripDirectivesMarkers(originalHtml)
-    : originalHtml;
-  const comparableSanitizedHtml = hasDirectives
-    ? stripDirectivesMarkers(sanitizedHtml)
-    : sanitizedHtml;
-
-  return (
-    normalizeHtml(comparableOriginalHtml) !==
-    normalizeHtml(comparableSanitizedHtml)
-  );
-};
+  hasDirectives?: boolean,
+): boolean =>
+  normalizeHtml(originalHtml, hasDirectives) !==
+  normalizeHtml(sanitizedHtml, hasDirectives);
 
 export type SanitizationResult = {
   sanitizedHtml: string;
@@ -102,21 +99,20 @@ export type SanitizationResult = {
 
 // Sanitize HTML content using configured allowlists and preserve the DOCTYPE if present
 export const sanitizeEmailHtml = (html: string): SanitizationResult => {
-  let result: string;
-  let isSanitized: boolean;
+  const hasDirectives = containsDirectives(html);
+  let sanitized: string;
 
-  if (containsDirectives(html)) {
+  if (hasDirectives) {
     // keep and sanitize directives
     const { processedHtml, tokens } = tokenizeDirectives(html);
-    const sanitized = sanitizeHtml(processedHtml, emailSanitizerOptions);
-    const restoredHtml = restoreDirectives(sanitized, tokens);
-    result = preserveDoctype(html, restoredHtml);
-    isSanitized = hasHtmlSanitizationChange(html, result, true);
+    sanitized = sanitizeHtml(processedHtml, emailSanitizerOptions);
+    sanitized = restoreDirectives(sanitized, tokens);
   } else {
-    const sanitized = sanitizeHtml(html, emailSanitizerOptions);
-    result = preserveDoctype(html, sanitized);
-    isSanitized = hasHtmlSanitizationChange(html, result);
+    sanitized = sanitizeHtml(html, emailSanitizerOptions);
   }
+
+  const result = preserveDoctype(html, sanitized);
+  const isSanitized = hasHtmlSanitizationChange(html, result, hasDirectives);
 
   return { sanitizedHtml: result, isSanitized };
 };
