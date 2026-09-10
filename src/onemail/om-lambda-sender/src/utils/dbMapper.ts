@@ -145,6 +145,7 @@ function mapAttachments(
     FileName: attachment.filename,
     ContentType: attachment.contentType,
     ContentDisposition: 'ATTACHMENT',
+    ContentTransferEncoding: 'BASE64',
   }));
 }
 
