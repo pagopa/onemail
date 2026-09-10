@@ -4,7 +4,7 @@ import {
 } from '#config/htmlSanitizerOptions';
 import sanitizeHtml from 'sanitize-html';
 
-const normalizeHtml = (html: string): string =>
+export const normalizeHtml = (html: string): string =>
   sanitizeHtml(html, htmlNormalizationOptions).replace(/>\s+</g, '><').trim();
 
 const preserveDoctype = (
