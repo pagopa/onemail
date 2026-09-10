@@ -64,12 +64,14 @@ export const sendEmailTransactional = async (
     tenantName,
     tenantConfiguration.clientId,
   );
-  const attachmentRefs = await uploadAttachments(
-    validatedAttachments,
-    tenantName,
-    requestId,
-    logger,
-  );
+  const attachmentRefs = dryRun
+    ? undefined
+    : await uploadAttachments(
+        validatedAttachments,
+        tenantName,
+        requestId,
+        logger,
+      );
   const dbObj = mapEmailTransactionalToDbItem(
     emailData,
     requestId,
@@ -127,12 +129,14 @@ export const sendEmailLowPriority = async (
     tenantName,
     tenantConfiguration.clientId,
   );
-  const attachmentRefs = await uploadAttachments(
-    validatedAttachments,
-    tenantName,
-    requestId,
-    logger,
-  );
+  const attachmentRefs = dryRun
+    ? undefined
+    : await uploadAttachments(
+        validatedAttachments,
+        tenantName,
+        requestId,
+        logger,
+      );
   const dbListObj = mapEmailLowPriorityToDbItem(
     emailData,
     requestId,
@@ -355,37 +359,44 @@ const uploadAttachments = async (
 ): Promise<EmailAttachmentRef[] | undefined> => {
   if (!attachments.length) return undefined;
 
-  const uploadedKeys: string[] = [];
-  try {
-    return await Promise.all(
-      attachments.map(async (attachment) => {
-        const attachmentId = randomUUID();
-        const key = `${tenantName}/${requestId}/${attachmentId}/${attachment.filename}`;
-        await putAttachment({
-          key,
-          body: attachment.bytes,
-          contentType: attachment.contentType,
-        });
-        uploadedKeys.push(key);
-        logger.info('Attachment uploaded', {
-          filename: attachment.filename,
-          size: attachment.size,
-          sha256: attachment.sha256,
-        });
-        return {
+  const uploadResults = await Promise.allSettled(
+    attachments.map(async (attachment) => {
+      const attachmentId = randomUUID();
+      const key = `${tenantName}/${requestId}/${attachmentId}/${attachment.filename}`;
+      await putAttachment({
+        key,
+        body: attachment.bytes,
+        contentType: attachment.contentType,
+      });
+      logger.info('Attachment uploaded', {
+        filename: attachment.filename,
+        size: attachment.size,
+        sha256: attachment.sha256,
+      });
+      return {
+        key,
+        ref: {
           filename: attachment.filename,
           contentType: attachment.contentType,
           size: attachment.size,
           sha256: attachment.sha256,
           s3Bucket: env.aws.attachmentsBucket,
           s3Key: key,
-        };
-      }),
+        },
+      };
+    }),
+  );
+
+  const failedUpload = uploadResults.find(
+    (result): result is PromiseRejectedResult => result.status === 'rejected',
+  );
+  if (failedUpload) {
+    const uploadedKeys = uploadResults.flatMap((result) =>
+      result.status === 'fulfilled' ? [result.value.key] : [],
     );
-  } catch (error) {
     logger.error('Attachment upload failed', {
       uploadedCount: uploadedKeys.length,
-      error,
+      error: failedUpload.reason,
     });
     const deleteResults = await Promise.allSettled(
       uploadedKeys.map((key) => deleteAttachment(key)),
@@ -398,8 +409,15 @@ const uploadAttachments = async (
         });
       }
     });
-    throw error;
+    throw failedUpload.reason;
   }
+
+  return uploadResults.map((result) => {
+    if (result.status !== 'fulfilled') {
+      throw new Error('Attachment upload result was unexpectedly rejected');
+    }
+    return result.value.ref;
+  });
 };
 
 const publishAttachmentMetric = (
