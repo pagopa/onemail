@@ -136,9 +136,12 @@ function mapAttachments(
   attachmentsBytes?: Uint8Array[],
 ): Attachment[] | undefined {
   if (!attachments?.length || !attachmentsBytes?.length) return undefined;
+  if (attachments.length !== attachmentsBytes.length) {
+    throw new Error('Attachment metadata and content counts do not match');
+  }
 
   return attachments.map((attachment, index) => ({
-    RawContent: attachmentsBytes[index],
+    RawContent: Buffer.from(attachmentsBytes[index]),
     FileName: attachment.filename,
     ContentType: attachment.contentType,
     ContentDisposition: 'ATTACHMENT',

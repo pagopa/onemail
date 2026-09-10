@@ -13,7 +13,7 @@ export const getAttachment = async (
     throw new Error(`S3 attachment has no body: ${key}`);
   }
 
-  const bytes = await response.Body.transformToByteArray();
+  const bytes = Buffer.from(await response.Body.transformToByteArray());
   if (!bytes.length) {
     throw new Error(`S3 attachment is empty: ${key}`);
   }
