@@ -24,6 +24,7 @@
   "dependencies": {
     "@aws-lambda-powertools/batch": "catalog:aws-lambda",
     "@aws-sdk/client-dynamodb": "catalog:aws-sdk",
+    "@aws-sdk/client-s3": "catalog:aws-sdk",
     "@aws-sdk/client-sesv2": "catalog:aws-sdk",
     "@aws-sdk/lib-dynamodb": "catalog:aws-sdk",
     "@aws-sdk/signature-v4a": "3.1076.0",

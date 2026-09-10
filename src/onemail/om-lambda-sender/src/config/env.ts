@@ -9,6 +9,9 @@ export default {
     emailDbRequestIdGSI:
       process.env.AWS_EMAIL_DB_REQUEST_ID_GSI ??
       throwMissingRequiredEnvVar('AWS_EMAIL_DB_REQUEST_ID_GSI'),
+    attachmentsBucket:
+      process.env.AWS_ATTACHMENTS_BUCKET ??
+      throwMissingRequiredEnvVar('AWS_ATTACHMENTS_BUCKET'),
   },
   ses: {
     sesMultiRegionEndpointId: process.env.SES_MULTI_REGION_ENDPOINT_ID,

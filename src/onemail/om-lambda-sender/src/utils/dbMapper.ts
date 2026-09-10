@@ -1,5 +1,6 @@
 import { DryRunValidationError } from '#errors/dryRunValidation.error';
 import {
+  Attachment,
   Body,
   BulkEmailEntry,
   EmailContent,
@@ -11,6 +12,7 @@ import { SES_SIMULATOR } from 'om-common/utils';
 
 export function mapDbHighPriorityItemToSesModel(
   item: EmailStatusHistoryItem,
+  attachmentsBytes?: Uint8Array[],
 ): SendEmailCommandInput {
   const { content } = item;
 
@@ -20,6 +22,7 @@ export function mapDbHighPriorityItemToSesModel(
     Name: h.N,
     Value: h.V,
   }));
+  const attachments = mapAttachments(content.attachments, attachmentsBytes);
 
   const content_obj: EmailContent = {};
 
@@ -28,6 +31,7 @@ export function mapDbHighPriorityItemToSesModel(
       TemplateName: content.template.id,
       TemplateData: content.template.matchedAttributes ?? '{}',
       Headers: headers,
+      ...(attachments ? { Attachments: attachments } : {}),
     };
   } else if (content.body) {
     const simpleBodyContent: Body = {};
@@ -40,6 +44,7 @@ export function mapDbHighPriorityItemToSesModel(
       Subject: { Data: content.subject },
       Body: simpleBodyContent,
       Headers: headers,
+      ...(attachments ? { Attachments: attachments } : {}),
     };
   }
 
@@ -58,6 +63,7 @@ export function mapDbHighPriorityItemToSesModel(
 
 export function mapDbLowPriorityItemToSesModel(
   items: EmailStatusHistoryItem[],
+  attachmentsBytes?: Uint8Array[],
 ): SendBulkEmailCommandInput {
   // Use the first item to derive shared defaults (from, template name)
   const firstContent = items[0].content;
@@ -69,6 +75,11 @@ export function mapDbLowPriorityItemToSesModel(
       'SendBulkEmail only supports template-based content. Body content is not allowed.',
     );
   }
+
+  const attachments = mapAttachments(
+    firstContent.attachments,
+    attachmentsBytes,
+  );
 
   const bulkEntries: BulkEmailEntry[] = items.map((item) => {
     const { content } = item;
@@ -109,6 +120,7 @@ export function mapDbLowPriorityItemToSesModel(
       Template: {
         TemplateName: firstContent.template.id,
         TemplateData: '{}', // default empty, as we validate template attributes before and we are using ReplacementTemplateData for each entry
+        ...(attachments ? { Attachments: attachments } : {}),
       },
     },
     BulkEmailEntries: bulkEntries,
@@ -117,6 +129,20 @@ export function mapDbLowPriorityItemToSesModel(
   };
 
   return input;
+}
+
+function mapAttachments(
+  attachments: EmailStatusHistoryItem['content']['attachments'],
+  attachmentsBytes?: Uint8Array[],
+): Attachment[] | undefined {
+  if (!attachments?.length || !attachmentsBytes?.length) return undefined;
+
+  return attachments.map((attachment, index) => ({
+    RawContent: attachmentsBytes[index],
+    FileName: attachment.filename,
+    ContentType: attachment.contentType,
+    ContentDisposition: 'ATTACHMENT',
+  }));
 }
 
 // Validates that dry-run items target an approved SES simulator address.
