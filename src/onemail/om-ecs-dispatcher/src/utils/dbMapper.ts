@@ -3,6 +3,7 @@ import { EmailLowPriorityBodyDTO } from '#dtos/email/emailLowPriority.dto';
 import { randomUUID } from 'node:crypto';
 import {
   DbEmailContent,
+  EmailAttachmentRef,
   EmailContent,
   EmailPriority,
   EmailStatus,
@@ -17,6 +18,7 @@ export function mapEmailLowPriorityToDbItem(
   requestId: string,
   tenantConfiguration: TenantConfigurationItem,
   dryRun: boolean,
+  attachments?: EmailAttachmentRef[],
 ): EmailStatusHistoryItem[] {
   const templateId = body.templateId;
   // 1. Initialize dbTemplate and emailHistoryList
@@ -41,12 +43,13 @@ export function mapEmailLowPriorityToDbItem(
       replyTo: body.replyTo,
       extendedHeaders: element.extendedHeaders,
       template: dbTemplate,
+      attachments,
     };
 
     // 3. add to emailHistoryList
     emailHistoryList.push({
       emailId: randomUUID(),
-      requestId: requestId,
+      requestId,
       priority: lowPriority,
       status: initialStatus,
       history: [
@@ -72,14 +75,13 @@ export function mapEmailTransactionalToDbItem(
   requestId: string,
   tenantConfiguration: TenantConfigurationItem,
   dryRun: boolean,
+  attachments?: EmailAttachmentRef[],
 ): EmailStatusHistoryItem {
-  const now = new Date().toISOString();
-
-  // 1. Mutually exclusive mapping of Template and Body
   let dbTemplate: TemplateContent | undefined;
   let dbBody: EmailContent | undefined;
   let dbEmailSubject: string | undefined;
 
+  // 1. Mutually exclusive mapping of Template and Body
   if ('templateContent' in body) {
     dbTemplate = {
       id: body.templateContent.templateId,
@@ -104,6 +106,7 @@ export function mapEmailTransactionalToDbItem(
     extendedHeaders: body.extendedHeaders,
     template: dbTemplate,
     body: dbBody,
+    attachments,
   };
 
   // 3. Building the final DB item
@@ -118,7 +121,7 @@ export function mapEmailTransactionalToDbItem(
     history: [
       {
         status: initialStatus,
-        changedAt: now,
+        changedAt: new Date().toISOString(),
       },
     ],
     content: content,

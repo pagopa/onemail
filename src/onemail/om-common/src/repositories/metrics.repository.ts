@@ -81,11 +81,15 @@ export const SenderMetricName = {
   EmailStatusBatchUpdateFailed: 'EmailStatusBatchUpdateFailed',
   InvalidRecord: 'InvalidRecord',
   UnexpectedRetryableError: 'UnexpectedRetryableError',
+  AttachmentFetchFailed: 'AttachmentFetchFailed',
+  EmailWithAttachmentsDispatched: 'EmailWithAttachmentsDispatched',
 } as const;
 
 export const DispatcherMetricName = {
   HighPriorityAccepted: `${PriorityPrefix[EmailPriority.HIGH]}Accepted`,
   LowPriorityAccepted: `${PriorityPrefix[EmailPriority.LOW]}Accepted`,
+  AttachmentAccepted: 'AttachmentAccepted',
+  AttachmentRejected: 'AttachmentRejected',
   EmailStatusNotFound: 'EmailStatusNotFound',
   MultipleTenantForClient: 'MultipleTenantForClient',
   TenantConfigurationNotFound: 'TenantConfigurationNotFound',

@@ -56,6 +56,38 @@ export const TagSchema = z
   .array(stringCheckedSchema())
   .describe('Custom tags/categories for the email');
 
+export const AttachmentInputSchema = z.object({
+  filename: z
+    .string()
+    .min(1)
+    .max(255)
+    .regex(/^[\w.\- ()]+$/, {
+      message: 'Attachment filename contains unsafe characters',
+    })
+    .refine((filename) => !filename.includes('..'), {
+      message: 'Attachment filename must not contain consecutive dots',
+    })
+    .refine((filename) => !filename.includes('/') && !filename.includes('\\'), {
+      message: 'Attachment filename must be a basename',
+    }),
+  contentType: z.enum([
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain',
+    'text/csv',
+  ]),
+  content: z.string().min(1).describe('Base64-encoded attachment content'),
+});
+
+export const AttachmentsSchema = z
+  .array(AttachmentInputSchema)
+  .max(5)
+  .describe('Optional inline attachments (max 5)');
+
 // Dynamic attributes for template rendering
 export const TemplateAttributesSchema = z
   .record(stringCheckedSchema().describe('Key'), z.any().describe('Value'))

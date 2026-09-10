@@ -2,6 +2,7 @@ import z from 'zod';
 
 export const ERROR_CODES = {
   INVALID_INPUT_DATA: 'I001',
+  INVALID_ATTACHMENT: 'A001',
   EMAIL_DUPLICATE_ERROR: 'E001',
   DB_ERROR: {
     GENERIC: 'D001',
