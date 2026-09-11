@@ -78,6 +78,11 @@ export const emailSanitizerOptions: sanitizeHtml.IOptions = {
     'center',
     'u',
     'font',
+    'noscript',
+    'xml',
+    'o:officedocumentsettings',
+    'o:allowpng',
+    'o:pixelsperinch',
   ],
   allowedAttributes: {
     // document structure

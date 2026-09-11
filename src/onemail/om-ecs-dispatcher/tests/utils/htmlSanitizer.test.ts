@@ -1,8 +1,11 @@
 import {
-  hasMeaningfulHtmlSanitizationChange,
-  sanitizeEmailHtml,
+  hasHtmlSanitizationChange,
+  sanitizeEmailHtml as sanitizeEmailHtmlResult,
 } from '#utils/htmlSanitizer';
 import { describe, expect, it } from 'vitest';
+
+const sanitizeEmailHtml = (html: string): string =>
+  sanitizeEmailHtmlResult(html).sanitizedHtml;
 
 describe('sanitizeEmailHtml', () => {
   it('keeps allowed tags intact', () => {
@@ -131,40 +134,68 @@ describe('sanitizeEmailHtml', () => {
 describe('hasMeaningfulHtmlSanitizationChange', () => {
   it('returns false for identical input and sanitized output', () => {
     const html = '<p>Hello</p>';
-    expect(hasMeaningfulHtmlSanitizationChange(html, html)).toBe(false);
+    expect(hasHtmlSanitizationChange(html, html)).toBe(false);
   });
 
   it('returns false when only whitespace between tags differs (no false positive)', () => {
     const original = '<p>Hello</p>  <p>World</p>';
     const sanitized = '<p>Hello</p><p>World</p>';
-    expect(hasMeaningfulHtmlSanitizationChange(original, sanitized)).toBe(
-      false,
-    );
+    expect(hasHtmlSanitizationChange(original, sanitized)).toBe(false);
   });
 
   it('returns false when tag casing differs (no false positive)', () => {
     const original = '<P>Hello</P>';
     const sanitized = '<p>Hello</p>';
-    expect(hasMeaningfulHtmlSanitizationChange(original, sanitized)).toBe(
-      false,
-    );
+    expect(hasHtmlSanitizationChange(original, sanitized)).toBe(false);
   });
 
   it('returns true when a tag is removed', () => {
     const original = '<p>Hello</p><script>alert(1)</script>';
     const sanitized = '<p>Hello</p>';
-    expect(hasMeaningfulHtmlSanitizationChange(original, sanitized)).toBe(true);
+    expect(hasHtmlSanitizationChange(original, sanitized)).toBe(true);
   });
 
   it('returns true when an attribute is removed', () => {
     const original = '<p onclick="evil()">Click</p>';
     const sanitized = '<p>Click</p>';
-    expect(hasMeaningfulHtmlSanitizationChange(original, sanitized)).toBe(true);
+    expect(hasHtmlSanitizationChange(original, sanitized)).toBe(true);
   });
 
   it('returns true when content is fully stripped', () => {
     const original = '<script>alert(1)</script>';
     const sanitized = '';
-    expect(hasMeaningfulHtmlSanitizationChange(original, sanitized)).toBe(true);
+    expect(hasHtmlSanitizationChange(original, sanitized)).toBe(true);
+  });
+});
+
+describe('sanitizeEmailHtml result', () => {
+  it('returns false when sanitization does not change the HTML', () => {
+    const result = sanitizeEmailHtmlResult('<p>Hello</p>');
+
+    expect(result).toEqual({
+      sanitizedHtml: '<p>Hello</p>',
+      isSanitized: false,
+    });
+  });
+
+  it('returns true when sanitization changes the HTML', () => {
+    const result = sanitizeEmailHtmlResult('<p onclick="evil()">Hello</p>');
+
+    expect(result).toEqual({
+      sanitizedHtml: '<p>Hello</p>',
+      isSanitized: true,
+    });
+  });
+
+  it('preserves and sanitizes MSO directive content', () => {
+    const result = sanitizeEmailHtmlResult(
+      '<!--[if mso]><table><tr><td onclick="evil()">X</td></tr></table><![endif]-->',
+    );
+
+    expect(result).toEqual({
+      sanitizedHtml:
+        '<!--[if mso]><table><tr><td>X</td></tr></table><![endif]-->',
+      isSanitized: true,
+    });
   });
 });

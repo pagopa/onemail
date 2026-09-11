@@ -4,7 +4,6 @@ import { basename, extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  hasMeaningfulHtmlSanitizationChange,
   normalizeHtml,
   sanitizeEmailHtml,
 } from '../src/utils/htmlSanitizer.js';
@@ -60,11 +59,7 @@ const checkSingleFile = async (inputFilePath: string): Promise<void> => {
   const inputName = basename(inputFilePath, extname(inputFilePath));
   const originalHtml = await loadOriginalHtml(inputFilePath);
 
-  const sanitizedHtml = sanitizeEmailHtml(originalHtml);
-  const isSanitized = hasMeaningfulHtmlSanitizationChange(
-    originalHtml,
-    sanitizedHtml,
-  );
+  const { sanitizedHtml, isSanitized } = sanitizeEmailHtml(originalHtml);
 
   if (!isSanitized) {
     console.log(`[${inputName}] HTML check passed: not sanitized`);

@@ -18,10 +18,7 @@ import {
   mapEmailLowPriorityToDbItem,
   mapEmailTransactionalToDbItem,
 } from '#utils/dbMapper';
-import {
-  hasMeaningfulHtmlSanitizationChange,
-  sanitizeEmailHtml,
-} from '#utils/htmlSanitizer';
+import { sanitizeEmailHtml } from '#utils/htmlSanitizer';
 import { SendMessageCommand } from '@aws-sdk/client-sqs';
 import {
   BatchWriteCommand,
@@ -163,11 +160,7 @@ export const sendEmailLowPriority = async (
 export const sanitizeHtmlContent = (
   htmlContent: string,
 ): SanitizeHtmlResponseDTO => {
-  const sanitizedHtml = sanitizeEmailHtml(htmlContent);
-  const isSanitized = hasMeaningfulHtmlSanitizationChange(
-    htmlContent,
-    sanitizedHtml,
-  );
+  const { sanitizedHtml, isSanitized } = sanitizeEmailHtml(htmlContent);
   return { sanitizedHtml, isSanitized };
 };
 
