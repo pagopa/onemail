@@ -1,5 +1,5 @@
 module "ecs_cluster" {
-  source = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/ecs_cluster?ref=b67558d9742f7d1824ab3ed034bc49f8f45e020a"
+  source = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/ecs_cluster?ref=main"
   #source                    = "./.terraform/modules/aws_modules/IDVH/ecs_cluster"
   env                       = var.env
   product_name              = "onemail"

@@ -87,7 +87,7 @@ data "aws_iam_policy_document" "ecs_task_policy" {
 }
 
 module "ecs_service" {
-  source = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/ecs_service?ref=b67558d9742f7d1824ab3ed034bc49f8f45e020a"
+  source = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/ecs_service?ref=main"
 
   env                           = var.env
   product_name                  = "onemail"
