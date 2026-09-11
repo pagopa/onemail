@@ -4,7 +4,7 @@ import {
 } from '#config/htmlSanitizerOptions';
 import sanitizeHtml from 'sanitize-html';
 
-// Strips directive markers before normalizing so callers can compare directives inner content
+// Strips directive markers before normalizing
 export const normalizeHtml = (
   html: string,
   hasDirectives?: boolean,
