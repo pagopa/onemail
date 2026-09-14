@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.20.1
+
+### Patch Changes
+
+- 95bba61: remove ses click tracking
+
 ## 1.20.0
 
 ### Minor Changes
