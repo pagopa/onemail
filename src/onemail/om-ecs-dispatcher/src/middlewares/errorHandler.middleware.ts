@@ -1,6 +1,7 @@
 import { getLogger } from '#config/logger';
 import { ERROR_CODES } from '#dtos/error.dto';
 import { ApiError } from '#errors/api.error';
+import { InvalidHtmlRawError } from '#errors/invalidHtmlRawError.error';
 import {
   ConditionalCheckFailedException,
   DynamoDBServiceException,
@@ -28,6 +29,12 @@ export const errorHandler = (
   if (err instanceof ZodError) {
     errorResponse = new ApiError(
       'Invalid data',
+      StatusCodes.BAD_REQUEST,
+      ERROR_CODES.INVALID_INPUT_DATA,
+    );
+  } else if (err instanceof InvalidHtmlRawError) {
+    errorResponse = new ApiError(
+      err.message,
       StatusCodes.BAD_REQUEST,
       ERROR_CODES.INVALID_INPUT_DATA,
     );

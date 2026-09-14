@@ -1,12 +1,7 @@
 import env from '#config/env';
-import { ERROR_CODES } from '#dtos/error.dto';
-import { ApiError } from '#errors/api.error';
+import { InvalidHtmlRawError } from '#errors/invalidHtmlRawError.error';
 import { APP_ENV_VALUES, headerTenantName } from '#utils/constants';
-import {
-  hasMeaningfulHtmlSanitizationChange,
-  sanitizeEmailHtml,
-} from '#utils/htmlSanitizer';
-import { StatusCodes } from 'http-status-codes';
+import { sanitizeEmailHtml } from '#utils/htmlSanitizer';
 import { z } from 'zod';
 
 export const stringCheckedSchema = ({
@@ -113,13 +108,9 @@ export const EmailSuccessResponseSchema = z
 
 export const htmlInputSchema = stringCheckedSchema({ min: 10, max: 150000 });
 export const htmlContentSchema = htmlInputSchema.transform((html) => {
-  const sanitizedHtml = sanitizeEmailHtml(html);
-  if (hasMeaningfulHtmlSanitizationChange(html, sanitizedHtml)) {
-    throw new ApiError(
-      'Invalid HTML provided: unsafe content was detected.',
-      StatusCodes.BAD_REQUEST,
-      ERROR_CODES.INVALID_INPUT_DATA,
-    );
+  const { sanitizedHtml, isSanitized } = sanitizeEmailHtml(html);
+  if (isSanitized) {
+    throw new InvalidHtmlRawError();
   }
   return sanitizedHtml;
 });
