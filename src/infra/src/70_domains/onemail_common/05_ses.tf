@@ -92,6 +92,7 @@ resource "aws_ses_domain_mail_from" "tenant_mail_from" {
 # }
 
 resource "aws_sesv2_dedicated_ip_pool" "managed_pool" {
+  count        = var.env == "prod" ? 1 : 0
   pool_name    = "${local.project_nodomain}-managed-ip-pool"
   scaling_mode = "MANAGED"
 }
@@ -109,7 +110,7 @@ resource "aws_sesv2_configuration_set" "config_set" {
   }
 
   delivery_options {
-    sending_pool_name = aws_sesv2_dedicated_ip_pool.managed_pool.pool_name
+    sending_pool_name = var.env == "prod" ? aws_sesv2_dedicated_ip_pool.managed_pool[0].pool_name : null
     tls_policy        = "REQUIRE"
   }
 }
