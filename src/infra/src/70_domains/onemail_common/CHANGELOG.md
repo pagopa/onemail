@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.21.0
+
+### Minor Changes
+
+- 6dcdff1: Config Dedicated IP for SES
+
 ## 1.20.1
 
 ### Patch Changes
