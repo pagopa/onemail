@@ -106,6 +106,12 @@ resource "aws_sesv2_configuration_set" "config_set" {
   delivery_options {
     tls_policy = "REQUIRE"
   }
+
+  vdm_options {
+    dashboard_options {
+      engagement_metrics = "DISABLED"
+    }
+  }
 }
 
 resource "aws_sesv2_tenant_resource_association" "identity_assoc" {
