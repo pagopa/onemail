@@ -24,6 +24,9 @@ export default {
     tenantDbConfigurationTenantNameGSI:
       process.env.AWS_TENANT_DB_CONFIG_TENANT_NAME_GSI ??
       throwMissingRequiredEnvVar('AWS_TENANT_DB_CONFIG_TENANT_NAME_GSI'),
+    attachmentsBucket:
+      process.env.AWS_ATTACHMENTS_BUCKET ??
+      throwMissingRequiredEnvVar('AWS_ATTACHMENTS_BUCKET'),
     localDynamoDb: {
       endpoint: process.env.AWS_DYNAMODB_ENDPOINT || 'http://localhost:8000',
       accessKeyId: process.env.AWS_DYNAMODB_ACCESS_KEY_ID || 'local',

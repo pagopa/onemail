@@ -1,5 +1,7 @@
+import { ERROR_CODES } from '#dtos/error.dto';
+import { ApiError } from '#errors/api.error';
 import { NextFunction, Request, Response } from 'express';
-import { ZodType } from 'zod';
+import { ZodError, ZodType } from 'zod';
 
 // middleware for input validation (body, path param, query param)
 export function validate(schemas: {
@@ -26,6 +28,19 @@ export function validate(schemas: {
       }
       next();
     } catch (error) {
+      if (
+        error instanceof ZodError &&
+        error.issues.some((issue) => issue.path[0] === 'attachments')
+      ) {
+        next(
+          new ApiError(
+            'Invalid attachment',
+            400,
+            ERROR_CODES.INVALID_ATTACHMENT,
+          ),
+        );
+        return;
+      }
       next(error);
     }
   };

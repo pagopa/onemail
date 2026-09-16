@@ -1,6 +1,7 @@
 import z from 'zod';
 
 import {
+  AttachmentsSchema,
   DryRunQueryParamsSchema,
   EmailAddressSchema,
   EmailSuccessResponseSchema,
@@ -28,6 +29,7 @@ export const EmailLowPriorityBodySchema = z
       'Reply-to address for the email',
     ),
     templateId: TemplateIdSchema,
+    attachments: AttachmentsSchema.optional(),
     sendingInfo: z
       .array(SendingInfoSchema)
       .max(10)

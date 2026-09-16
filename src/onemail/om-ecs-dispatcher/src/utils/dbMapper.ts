@@ -3,6 +3,7 @@ import { EmailLowPriorityBodyDTO } from '#dtos/email/emailLowPriority.dto';
 import { randomUUID } from 'node:crypto';
 import {
   DbEmailContent,
+  EmailAttachmentRef,
   EmailContent,
   EmailPriority,
   EmailStatus,
@@ -17,6 +18,7 @@ export function mapEmailLowPriorityToDbItem(
   requestId: string,
   tenantConfiguration: TenantConfigurationItem,
   dryRun: boolean,
+  attachments?: EmailAttachmentRef[],
 ): EmailStatusHistoryItem[] {
   const templateId = body.templateId;
   // 1. Initialize dbTemplate and emailHistoryList
@@ -41,6 +43,7 @@ export function mapEmailLowPriorityToDbItem(
       replyTo: body.replyTo,
       extendedHeaders: element.extendedHeaders,
       template: dbTemplate,
+      attachments,
     };
 
     // 3. add to emailHistoryList
@@ -72,6 +75,7 @@ export function mapEmailTransactionalToDbItem(
   requestId: string,
   tenantConfiguration: TenantConfigurationItem,
   dryRun: boolean,
+  attachments?: EmailAttachmentRef[],
 ): EmailStatusHistoryItem {
   const now = new Date().toISOString();
 
@@ -104,6 +108,7 @@ export function mapEmailTransactionalToDbItem(
     extendedHeaders: body.extendedHeaders,
     template: dbTemplate,
     body: dbBody,
+    attachments,
   };
 
   // 3. Building the final DB item

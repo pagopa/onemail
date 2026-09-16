@@ -1,3 +1,5 @@
+import { ERROR_CODES } from '#dtos/error.dto';
+import { ApiError } from '#errors/api.error';
 import { validate } from '#middlewares/validateApiInput.middleware';
 import { describe, expect, it, vi } from 'vitest';
 import z, { ZodError } from 'zod';
@@ -81,6 +83,66 @@ describe('validateApiInput middleware', () => {
 
     expect(request.headers['x-tenant-name']).toBe('tenant-a');
     expect(request.headers.host).toBe('localhost');
+    expect(next).toHaveBeenCalledWith();
+  });
+
+  it('maps attachment schema errors to A001', () => {
+    const next = vi.fn();
+    const middleware = validate({
+      body: z.object({
+        attachments: z.array(
+          z.object({
+            content: z.string().min(1),
+          }),
+        ),
+      }),
+    });
+
+    middleware(
+      { body: { attachments: [{ content: '' }] } } as never,
+      {} as never,
+      next,
+    );
+
+    expect(next.mock.calls[0]?.[0]).toBeInstanceOf(ApiError);
+    expect(next.mock.calls[0]?.[0]).toMatchObject({
+      statusCode: 400,
+      errorCode: ERROR_CODES.INVALID_ATTACHMENT,
+      message: 'Invalid attachment',
+    });
+  });
+
+  it('preserves non-attachment schema errors as ZodError', () => {
+    const next = vi.fn();
+    const middleware = validate({
+      body: z.object({ subject: z.string().min(1) }),
+    });
+
+    middleware({ body: { subject: '' } } as never, {} as never, next);
+
+    expect(next.mock.calls[0]?.[0]).toBeInstanceOf(ZodError);
+  });
+
+  it('accepts five attachment entries', () => {
+    const next = vi.fn();
+    const middleware = validate({
+      body: z.object({
+        attachments: z.array(z.object({ content: z.string().min(1) })).max(5),
+      }),
+    });
+
+    middleware(
+      {
+        body: {
+          attachments: Array.from({ length: 5 }, () => ({
+            content: 'encoded',
+          })),
+        },
+      } as never,
+      {} as never,
+      next,
+    );
+
     expect(next).toHaveBeenCalledWith();
   });
 });
