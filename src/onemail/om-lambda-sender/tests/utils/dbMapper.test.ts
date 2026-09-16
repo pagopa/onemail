@@ -18,6 +18,68 @@ vi.mock('#config/env', () => ({
 }));
 
 describe('dbMapper high priority utils', () => {
+  it('maps fetched attachment bytes to a high priority SES request', () => {
+    const item = makeEmailStatusHistoryItem({
+      content: {
+        from: { email: 'sender@example.com' },
+        to: { email: 'user@example.com' },
+        body: { html: '<p>Hello</p>' },
+        attachments: [
+          {
+            filename: 'document.txt',
+            contentType: 'text/plain',
+            size: 3,
+            sha256: 'hash',
+            s3Bucket: 'bucket-a',
+            s3Key: 'key-a',
+          },
+        ],
+      },
+    });
+
+    expect(
+      mapDbHighPriorityItemToSesModel(
+        item,
+        new Map([['bucket-a\u0000key-a', Uint8Array.from([1, 2, 3])]]),
+      ).Content,
+    ).toMatchObject({
+      Simple: {
+        Attachments: [
+          {
+            RawContent: Uint8Array.from([1, 2, 3]),
+            FileName: 'document.txt',
+            ContentDisposition: 'ATTACHMENT',
+            ContentType: 'text/plain',
+          },
+        ],
+      },
+    });
+  });
+
+  it('rejects attachment metadata when fetched bytes are missing', () => {
+    const item = makeEmailStatusHistoryItem({
+      content: {
+        from: { email: 'sender@example.com' },
+        to: { email: 'user@example.com' },
+        body: { html: '<p>Hello</p>' },
+        attachments: [
+          {
+            filename: 'document.txt',
+            contentType: 'text/plain',
+            size: 3,
+            sha256: 'hash',
+            s3Bucket: 'bucket-a',
+            s3Key: 'key-a',
+          },
+        ],
+      },
+    });
+
+    expect(() => mapDbHighPriorityItemToSesModel(item)).toThrow(
+      'Attachment bytes are required when attachments are present',
+    );
+  });
+
   it('maps a high priority item with body content to the SES send input', () => {
     const input = makeEmailStatusHistoryItem({
       content: {
