@@ -6,7 +6,7 @@ import {
   sendEmailTransactional,
 } from '#services/email.service';
 import { EmailPriority, EmailStatus } from 'om-common/types';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   expectCommandInput,
@@ -22,6 +22,9 @@ const dynamoSend = vi.hoisted(() => vi.fn());
 const sqsSend = vi.hoisted(() => vi.fn());
 const randomUUID = vi.hoisted(() => vi.fn());
 const publishMetrics = vi.hoisted(() => vi.fn());
+const putAttachment = vi.hoisted(() => vi.fn());
+const deleteAttachment = vi.hoisted(() => vi.fn());
+const validateAttachments = vi.hoisted(() => vi.fn());
 
 vi.mock('#connectors/dynamo.connector', () => ({
   dynamoClient: { send: dynamoSend },
@@ -29,6 +32,11 @@ vi.mock('#connectors/dynamo.connector', () => ({
 vi.mock('#connectors/sqs.connector', () => ({
   sqsClient: { send: sqsSend },
 }));
+vi.mock('#repositories/attachment.repository', () => ({
+  putAttachment,
+  deleteAttachment,
+}));
+vi.mock('#utils/attachmentValidator', () => ({ validateAttachments }));
 vi.mock('node:crypto', () => ({ randomUUID }));
 vi.mock('om-common/repositories', () => ({
   DispatcherMetricName: {
@@ -38,186 +46,436 @@ vi.mock('om-common/repositories', () => ({
     MultipleTenantForClient: 'MultipleTenantForClient',
     TenantConfigurationNotFound: 'TenantConfigurationNotFound',
     UnauthorizedTenant: 'UnauthorizedTenant',
+    AttachmentAccepted: 'AttachmentAccepted',
+    AttachmentRejected: 'AttachmentRejected',
   },
   publishMetrics,
 }));
 
-describe('email.service', () => {
-  describe('sendEmailTransactional', () => {
-    it('persists the email and publishes the high priority message', async () => {
-      dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
-      randomUUID
-        .mockReturnValueOnce('request-id-1')
-        .mockReturnValueOnce('email-id-1');
+beforeEach(() => {
+  vi.clearAllMocks();
+  validateAttachments.mockResolvedValue([]);
+});
 
-      const result = await sendEmailTransactional(
-        makeHighPriorityEmailDto(),
-        false,
-        'tenant-a',
-      );
+describe('email.service - sendEmailTransactional', () => {
+  it('persists the email and publishes the high priority message', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    randomUUID
+      .mockReturnValueOnce('request-id-1')
+      .mockReturnValueOnce('email-id-1');
 
-      expect(result).toEqual({ requestId: 'request-id-1' });
-      const putCommand = expectCommandInput(
-        dynamoSend,
-        { TableName: env.aws.emailDbTable },
-        1,
-      );
-      const putItem = (
-        putCommand.input as {
-          Item: {
-            requestId: string;
-            emailId: string;
-            content: { to: { email: string } };
-          };
-        }
-      ).Item;
-      expect(putItem.requestId).toBe('request-id-1');
-      expect(putItem.emailId).toBe('email-id-1');
-      expect(putItem.content.to.email).toBe('user@example.com');
-      expect((putItem as { clientId?: string }).clientId).toBe('client-id-a');
+    const result = await sendEmailTransactional(
+      makeHighPriorityEmailDto(),
+      false,
+      'tenant-a',
+    );
 
-      expectCommandInput(
-        sqsSend,
-        {
-          QueueUrl: env.aws.sqs.highPriorityQueueUrl,
-          MessageBody: JSON.stringify({ emailId: 'email-id-1' }),
-        },
-        0,
-      );
+    expect(result).toEqual({ requestId: 'request-id-1' });
+    const putCommand = expectCommandInput(
+      dynamoSend,
+      { TableName: env.aws.emailDbTable },
+      1,
+    );
+    const putItem = (
+      putCommand.input as {
+        Item: {
+          requestId: string;
+          emailId: string;
+          content: { to: { email: string } };
+        };
+      }
+    ).Item;
+    expect(putItem.requestId).toBe('request-id-1');
+    expect(putItem.emailId).toBe('email-id-1');
+    expect(putItem.content.to.email).toBe('user@example.com');
+    expect((putItem as { clientId?: string }).clientId).toBe('client-id-a');
 
-      expect(publishMetrics).toHaveBeenCalledWith([
-        {
-          name: 'HighPriorityAccepted',
-          dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
-        },
-      ]);
-    });
+    expectCommandInput(
+      sqsSend,
+      {
+        QueueUrl: env.aws.sqs.highPriorityQueueUrl,
+        MessageBody: JSON.stringify({ emailId: 'email-id-1' }),
+      },
+      0,
+    );
 
-    it('throws INVALID_TENANT when tenant configuration is missing', async () => {
-      dynamoSend.mockResolvedValueOnce({ Items: [] });
-
-      await expect(
-        sendEmailTransactional(makeHighPriorityEmailDto(), false, 'tenant-a'),
-      ).rejects.toMatchObject({
-        statusCode: 401,
-        errorCode: 'T001',
-      });
-
-      expect(sqsSend).not.toHaveBeenCalled();
-      expect(publishMetrics).toHaveBeenCalledWith([
-        {
-          name: 'TenantConfigurationNotFound',
-          dimensions: { tenantName: 'tenant-a' },
-        },
-      ]);
-    });
-
-    it('throws INVALID_TENANT when more than one tenant configuration exists', async () => {
-      dynamoSend.mockResolvedValueOnce({
-        Items: [
-          makeTenantConfiguration(),
-          {
-            tenantName: 'tenant-a',
-            configSetName: 'config-set-b',
-            clientId: 'client-id-b',
-          },
-        ],
-      });
-
-      await expect(
-        sendEmailTransactional(makeHighPriorityEmailDto(), false, 'tenant-a'),
-      ).rejects.toMatchObject({
-        statusCode: 401,
-        errorCode: 'T001',
-      });
-
-      expect(sqsSend).not.toHaveBeenCalled();
-      expect(publishMetrics).toHaveBeenCalledWith([
-        {
-          name: 'MultipleTenantForClient',
-          dimensions: { tenantName: 'tenant-a' },
-        },
-      ]);
-    });
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'HighPriorityAccepted',
+        dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
+      },
+    ]);
   });
 
-  describe('sendEmailLowPriority', () => {
-    it('splits low priority batches over the DynamoDB write limit', async () => {
-      dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
-      randomUUID.mockReturnValueOnce('request-id-2');
-      for (let index = 1; index <= 26; index += 1) {
-        randomUUID.mockReturnValueOnce(`email-id-${index}`);
-      }
+  it('throws INVALID_TENANT when tenant configuration is missing', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [] });
 
-      const sendingInfo = Array.from({ length: 26 }, (_, index) => ({
-        to: { email: `user${index + 1}@example.com` },
-        templateAttributes: { item: index + 1 },
-      }));
+    await expect(
+      sendEmailTransactional(makeHighPriorityEmailDto(), false, 'tenant-a'),
+    ).rejects.toMatchObject({
+      statusCode: 401,
+      errorCode: 'T001',
+    });
 
-      const result = await sendEmailLowPriority(
-        makeLowPriorityEmailDto({ sendingInfo }),
+    expect(sqsSend).not.toHaveBeenCalled();
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'TenantConfigurationNotFound',
+        dimensions: { tenantName: 'tenant-a' },
+      },
+    ]);
+  });
+
+  it('throws INVALID_TENANT when more than one tenant configuration exists', async () => {
+    dynamoSend.mockResolvedValueOnce({
+      Items: [
+        makeTenantConfiguration(),
+        {
+          tenantName: 'tenant-a',
+          configSetName: 'config-set-b',
+          clientId: 'client-id-b',
+        },
+      ],
+    });
+
+    await expect(
+      sendEmailTransactional(makeHighPriorityEmailDto(), false, 'tenant-a'),
+    ).rejects.toMatchObject({
+      statusCode: 401,
+      errorCode: 'T001',
+    });
+
+    expect(sqsSend).not.toHaveBeenCalled();
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'MultipleTenantForClient',
+        dimensions: { tenantName: 'tenant-a' },
+      },
+    ]);
+  });
+});
+
+describe('email.service - transactional attachments', () => {
+  it('uploads an attachment before persisting its reference and publishing SQS', async () => {
+    const attachment = {
+      filename: 'document.pdf',
+      contentType: 'application/pdf' as const,
+      content: 'ignored-by-mocked-validator',
+    };
+    const validatedAttachment = {
+      filename: attachment.filename,
+      contentType: attachment.contentType,
+      size: 12,
+      sha256: 'sha256',
+      bytes: Buffer.from('%PDF-1.4'),
+    };
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    validateAttachments.mockResolvedValueOnce([validatedAttachment]);
+    randomUUID
+      .mockReturnValueOnce('request-with-attachment')
+      .mockReturnValueOnce('attachment-id')
+      .mockReturnValueOnce('email-with-attachment');
+
+    await sendEmailTransactional(
+      makeHighPriorityEmailDto({ attachments: [attachment] }),
+      false,
+      'tenant-a',
+    );
+
+    expect(putAttachment).toHaveBeenCalledWith({
+      key: 'tenant-a/request-with-attachment/attachment-id/document.pdf',
+      body: validatedAttachment.bytes,
+      contentType: 'application/pdf',
+    });
+    const putCommand = expectCommandInput(
+      dynamoSend,
+      { TableName: env.aws.emailDbTable },
+      1,
+    );
+    expect(
+      (putCommand.input as { Item: { content: { attachments: unknown[] } } })
+        .Item.content.attachments,
+    ).toMatchObject([
+      {
+        filename: 'document.pdf',
+        s3Key: 'tenant-a/request-with-attachment/attachment-id/document.pdf',
+        sha256: 'sha256',
+      },
+    ]);
+    expect(sqsSend).toHaveBeenCalledTimes(1);
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'AttachmentAccepted',
+        value: 1,
+        dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
+      },
+    ]);
+  });
+
+  it('does not persist or publish when attachment validation fails', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    validateAttachments.mockRejectedValueOnce(new Error('invalid attachment'));
+
+    await expect(
+      sendEmailTransactional(
+        makeHighPriorityEmailDto({
+          attachments: [
+            {
+              filename: 'document.pdf',
+              contentType: 'application/pdf',
+              content: 'invalid',
+            },
+          ],
+        }),
         false,
         'tenant-a',
-      );
+      ),
+    ).rejects.toThrow('invalid attachment');
 
-      expect(result).toEqual({ requestId: 'request-id-2' });
-      expect(dynamoSend).toHaveBeenCalledTimes(3);
+    expect(putAttachment).not.toHaveBeenCalled();
+    expect(sqsSend).not.toHaveBeenCalled();
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'AttachmentRejected',
+        dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
+      },
+    ]);
+    expect(publishMetrics).not.toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'AttachmentAccepted' }),
+    ]);
+  });
 
-      const firstBatch = getNthCommand(dynamoSend, 1) as {
-        input: { RequestItems: Record<string, unknown[]> };
-      };
-      const secondBatch = getNthCommand(dynamoSend, 2) as {
-        input: { RequestItems: Record<string, unknown[]> };
-      };
+  it('deletes already uploaded attachments when a later upload fails', async () => {
+    const firstAttachment = {
+      filename: 'first.pdf',
+      contentType: 'application/pdf' as const,
+      size: 12,
+      sha256: 'sha-first',
+      bytes: Buffer.from('%PDF-1.4 first'),
+    };
+    const secondAttachment = {
+      filename: 'second.pdf',
+      contentType: 'application/pdf' as const,
+      size: 12,
+      sha256: 'sha-second',
+      bytes: Buffer.from('%PDF-1.4 second'),
+    };
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    validateAttachments.mockResolvedValueOnce([
+      firstAttachment,
+      secondAttachment,
+    ]);
+    randomUUID
+      .mockReturnValueOnce('request-id')
+      .mockReturnValueOnce('first-attachment-id')
+      .mockReturnValueOnce('second-attachment-id');
+    putAttachment
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('s3 error'));
 
-      expect(firstBatch.input.RequestItems[env.aws.emailDbTable]).toHaveLength(
-        25,
-      );
-      expect(secondBatch.input.RequestItems[env.aws.emailDbTable]).toHaveLength(
-        1,
-      );
+    await expect(
+      sendEmailTransactional(
+        makeHighPriorityEmailDto({
+          attachments: [
+            {
+              filename: 'first.pdf',
+              contentType: 'application/pdf',
+              content: 'ignored',
+            },
+            {
+              filename: 'second.pdf',
+              contentType: 'application/pdf',
+              content: 'ignored',
+            },
+          ],
+        }),
+        false,
+        'tenant-a',
+      ),
+    ).rejects.toThrow('s3 error');
 
-      const firstBatchFirstItem = firstBatch.input.RequestItems[
-        env.aws.emailDbTable
-      ][0] as {
-        PutRequest: {
-          Item: {
-            clientId: string;
-          };
+    expect(putAttachment).toHaveBeenCalledTimes(2);
+    expect(deleteAttachment).toHaveBeenCalledTimes(1);
+    expect(deleteAttachment).toHaveBeenCalledWith(
+      'tenant-a/request-id/first-attachment-id/first.pdf',
+    );
+    expect(publishMetrics).not.toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'AttachmentAccepted' }),
+    ]);
+    expect(dynamoSend).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: expect.objectContaining({
+          TableName: env.aws.emailDbTable,
+          Item: expect.anything(),
+        }),
+      }),
+    );
+    expect(sqsSend).not.toHaveBeenCalled();
+  });
+});
+
+describe('email.service - sendEmailLowPriority', () => {
+  it('splits low priority batches over the DynamoDB write limit', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    randomUUID.mockReturnValueOnce('request-id-2');
+    for (let index = 1; index <= 26; index += 1) {
+      randomUUID.mockReturnValueOnce(`email-id-${index}`);
+    }
+
+    const sendingInfo = Array.from({ length: 26 }, (_, index) => ({
+      to: { email: `user${index + 1}@example.com` },
+      templateAttributes: { item: index + 1 },
+    }));
+
+    const result = await sendEmailLowPriority(
+      makeLowPriorityEmailDto({ sendingInfo }),
+      false,
+      'tenant-a',
+    );
+
+    expect(result).toEqual({ requestId: 'request-id-2' });
+    expect(dynamoSend).toHaveBeenCalledTimes(3);
+
+    const firstBatch = getNthCommand(dynamoSend, 1) as {
+      input: { RequestItems: Record<string, unknown[]> };
+    };
+    const secondBatch = getNthCommand(dynamoSend, 2) as {
+      input: { RequestItems: Record<string, unknown[]> };
+    };
+
+    expect(firstBatch.input.RequestItems[env.aws.emailDbTable]).toHaveLength(
+      25,
+    );
+    expect(secondBatch.input.RequestItems[env.aws.emailDbTable]).toHaveLength(
+      1,
+    );
+
+    const firstBatchFirstItem = firstBatch.input.RequestItems[
+      env.aws.emailDbTable
+    ][0] as {
+      PutRequest: {
+        Item: {
+          clientId: string;
         };
       };
-      expect(firstBatchFirstItem.PutRequest.Item.clientId).toBe('client-id-a');
+    };
+    expect(firstBatchFirstItem.PutRequest.Item.clientId).toBe('client-id-a');
 
-      expectCommandInput(
-        sqsSend,
-        {
-          QueueUrl: env.aws.sqs.lowPriorityQueueUrl,
-          MessageBody: JSON.stringify({ requestId: 'request-id-2' }),
-        },
-        0,
-      );
+    expectCommandInput(
+      sqsSend,
+      {
+        QueueUrl: env.aws.sqs.lowPriorityQueueUrl,
+        MessageBody: JSON.stringify({ requestId: 'request-id-2' }),
+      },
+      0,
+    );
 
-      expect(publishMetrics).toHaveBeenCalledWith([
-        {
-          name: 'LowPriorityAccepted',
-          value: 26,
-          dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
-        },
-      ]);
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'LowPriorityAccepted',
+        value: 26,
+        dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
+      },
+    ]);
+  });
+
+  it('throws INVALID_TENANT when tenant configuration is missing', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [] });
+
+    await expect(
+      sendEmailLowPriority(makeLowPriorityEmailDto(), false, 'tenant-a'),
+    ).rejects.toMatchObject({
+      statusCode: 401,
+      errorCode: 'T001',
     });
 
-    it('throws INVALID_TENANT when tenant configuration is missing', async () => {
-      dynamoSend.mockResolvedValueOnce({ Items: [] });
+    expect(sqsSend).not.toHaveBeenCalled();
+  });
 
-      await expect(
-        sendEmailLowPriority(makeLowPriorityEmailDto(), false, 'tenant-a'),
-      ).rejects.toMatchObject({
-        statusCode: 401,
-        errorCode: 'T001',
-      });
+  it('uploads one shared attachment for all low-priority recipients', async () => {
+    const attachment = {
+      filename: 'document.pdf',
+      contentType: 'application/pdf' as const,
+      content: 'ignored-by-mocked-validator',
+    };
+    const validatedAttachment = {
+      filename: attachment.filename,
+      contentType: attachment.contentType,
+      size: 12,
+      sha256: 'sha256',
+      bytes: Buffer.from('%PDF-1.4'),
+    };
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    validateAttachments.mockResolvedValueOnce([validatedAttachment]);
+    randomUUID
+      .mockReturnValueOnce('low-request')
+      .mockReturnValueOnce('low-attachment-id')
+      .mockReturnValueOnce('low-email-1')
+      .mockReturnValueOnce('low-email-2');
 
-      expect(sqsSend).not.toHaveBeenCalled();
-    });
+    const result = await sendEmailLowPriority(
+      makeLowPriorityEmailDto({
+        attachments: [attachment],
+        sendingInfo: [
+          { to: { email: 'first@example.com' } },
+          { to: { email: 'second@example.com' } },
+        ],
+      }),
+      false,
+      'tenant-a',
+    );
+
+    expect(result).toEqual({ requestId: 'low-request' });
+    expect(putAttachment).toHaveBeenCalledTimes(1);
+    const batchCommand = getNthCommand(dynamoSend, 1) as {
+      input: {
+        RequestItems: Record<
+          string,
+          {
+            PutRequest: {
+              Item: { content: { attachments: { s3Key: string }[] } };
+            };
+          }[]
+        >;
+      };
+    };
+    const items = batchCommand.input.RequestItems[env.aws.emailDbTable];
+    expect(items[0].PutRequest.Item.content.attachments[0].s3Key).toBe(
+      items[1].PutRequest.Item.content.attachments[0].s3Key,
+    );
+    expect(items[0].PutRequest.Item.content.attachments[0].s3Key).toContain(
+      'low-request/',
+    );
+  });
+
+  it('validates dry-run attachments without uploading them', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    validateAttachments.mockResolvedValueOnce([
+      {
+        filename: 'document.pdf',
+        contentType: 'application/pdf',
+        size: 12,
+        sha256: 'sha256',
+        bytes: Buffer.from('%PDF-1.4'),
+      },
+    ]);
+
+    await sendEmailLowPriority(
+      makeLowPriorityEmailDto({
+        attachments: [
+          {
+            filename: 'document.pdf',
+            contentType: 'application/pdf',
+            content: 'ignored-by-mocked-validator',
+          },
+        ],
+      }),
+      true,
+      'tenant-a',
+    );
+
+    expect(validateAttachments).toHaveBeenCalledTimes(1);
+    expect(putAttachment).not.toHaveBeenCalled();
   });
 });
 
@@ -244,6 +502,16 @@ describe('email.service - getEmailStatus', () => {
           content: {
             from: { email: 'sender@example.com' },
             to: { email: 'user@example.com' },
+            attachments: [
+              {
+                filename: 'document.pdf',
+                contentType: 'application/pdf',
+                size: 12,
+                sha256: 'sha256',
+                s3Bucket: 'private-bucket',
+                s3Key: 'tenant-a/request-id/document.pdf',
+              },
+            ],
           },
           clientId: 'client-id',
           dryRun: false,
@@ -282,6 +550,10 @@ describe('email.service - getEmailStatus', () => {
         attempts: 0,
       },
     ]);
+    expect(JSON.stringify(result)).not.toContain('private-bucket');
+    expect(JSON.stringify(result)).not.toContain(
+      'tenant-a/request-id/document.pdf',
+    );
   });
 
   it('throws an ApiError when the requested email status does not exist', async () => {
