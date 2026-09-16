@@ -141,7 +141,7 @@ module "lambda_sender" {
   package_path       = "${path.module}/${var.lambda_sender.package_path}"
   lambda_policy_json = data.aws_iam_policy_document.sender_policy.json
 
-  memory_size                    = 512
+  memory_size                    = 256
   reserved_concurrent_executions = var.lambda_sender.reserved_concurrent_executions
   environment_variables = merge(
     {
