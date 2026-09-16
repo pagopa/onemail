@@ -57,6 +57,18 @@ data "aws_iam_policy_document" "ecs_task_policy" {
 
   }
 
+  statement {
+    sid = "EmailAttachmentsWriteAccess"
+
+    actions = [
+      "s3:PutObject",
+      "s3:AbortMultipartUpload",
+      "s3:DeleteObject"
+    ]
+
+    resources = ["${data.aws_s3_bucket.email_attachments.arn}/*"]
+  }
+
   dynamic "statement" {
     for_each = toset(compact([
       local.dynamodb_kms_key_arn,
@@ -142,6 +154,10 @@ module "ecs_service" {
     {
       name  = "AWS_TENANT_DB_CONFIG_TENANT_NAME_GSI"
       value = local.tenant_config_gsis["gsi_tenant_name_idx"].name
+    },
+    {
+      name  = "AWS_ATTACHMENTS_BUCKET"
+      value = data.aws_s3_bucket.email_attachments.bucket
     },
   ]
 
