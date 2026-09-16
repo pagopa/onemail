@@ -65,6 +65,12 @@ data "aws_iam_policy_document" "sender_policy" {
     ]
   }
 
+  statement {
+    sid       = "EmailAttachmentsReadAccess"
+    actions   = ["s3:GetObject"]
+    resources = ["${data.aws_s3_bucket.email_attachments.arn}/*"]
+  }
+
   dynamic "statement" {
     for_each = local.dynamodb_kms_key_arn != null ? [local.dynamodb_kms_key_arn] : []
 
@@ -135,7 +141,7 @@ module "lambda_sender" {
   package_path       = "${path.module}/${var.lambda_sender.package_path}"
   lambda_policy_json = data.aws_iam_policy_document.sender_policy.json
 
-  memory_size                    = 256
+  memory_size                    = 512
   reserved_concurrent_executions = var.lambda_sender.reserved_concurrent_executions
   environment_variables = merge(
     {
@@ -147,6 +153,7 @@ module "lambda_sender" {
       AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-sender"
       NODE_ENV                         = "production"
       POWERTOOLS_LOG_LEVEL             = "DEBUG"
+      AWS_ATTACHMENTS_BUCKET           = data.aws_s3_bucket.email_attachments.bucket
     },
     var.ses_multi_region_endpoint_enabled ? {
       SES_MULTI_REGION_ENDPOINT_ID = data.aws_ssm_parameter.ses_multi_region_endpoint_id[0].value
