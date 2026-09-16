@@ -74,6 +74,54 @@ export const TemplateIdSchema = stringCheckedSchema().describe(
   'Identifier of the email template',
 );
 
+export const AttachmentInputSchema = z
+  .object({
+    filename: z
+      .string()
+      .min(1)
+      .max(255)
+      .regex(/^[\w.\- ()]+$/, {
+        message: 'Attachment filename contains unsupported characters',
+      })
+      .refine((filename) => !filename.includes('..'), {
+        message:
+          'Attachment filename must not contain path traversal sequences',
+      })
+      .refine(
+        (filename) => !filename.includes('/') && !filename.includes('\\'),
+        {
+          message: 'Attachment filename must not contain path separators',
+        },
+      )
+      .describe(
+        'Attachment filename including its extension. Allowed characters: ASCII letters, digits, underscore, dots, hyphens, spaces, and parentheses. Path separators and path traversal sequences are not allowed.',
+      ),
+    contentType: z
+      .enum([
+        'application/pdf',
+        'image/jpeg',
+        'image/png',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'text/plain',
+        'text/csv',
+      ])
+      .describe('Declared attachment MIME type'),
+    content: z
+      .string()
+      .describe('Base64-encoded attachment content without a data URI prefix.'),
+  })
+  .openapi('AttachmentInput');
+
+export const AttachmentsSchema = z
+  .array(AttachmentInputSchema)
+  .max(5)
+  .describe(
+    'Up to 5 base64-encoded attachments. The decoded total is limited to 7 MiB. Invalid attachments return HTTP 400 with error code A001.',
+  )
+  .openapi('Attachments');
+
 // Dry Run Query Parameters
 export const DryRunQueryParamsSchema = z
   .object({

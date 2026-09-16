@@ -1,6 +1,7 @@
 import z from 'zod';
 
 import {
+  AttachmentsSchema,
   DryRunQueryParamsSchema,
   EmailAddressSchema,
   EmailSuccessResponseSchema,
@@ -36,6 +37,7 @@ const BaseEmailSchema = z.object({
   ),
   extendedHeaders: ExtendedHeadersSchema.optional(),
   tag: TagSchema.optional(),
+  attachments: AttachmentsSchema.optional(),
 });
 
 export const EmailHighPriorityBodySchema = BaseEmailSchema.and(

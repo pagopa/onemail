@@ -25,10 +25,12 @@
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.4.1",
     "@aws-sdk/client-dynamodb": "catalog:aws-sdk",
+    "@aws-sdk/client-s3": "catalog:aws-sdk",
     "@aws-sdk/client-sqs": "catalog:aws-sdk",
     "@aws-sdk/lib-dynamodb": "catalog:aws-sdk",
     "dotenv": "^17.2.4",
     "express": "^5.2.1",
+    "file-type": "^21.3.4",
     "he": "^1.2.0",
     "http-status-codes": "^2.3.0",
     "lodash-es": "catalog:",
