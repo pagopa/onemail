@@ -1,5 +1,11 @@
 # infra-data-tenants
 
+## 1.7.0
+
+### Minor Changes
+
+- 1709f61: Add CED client to OneMail
+
 ## 1.6.0
 
 ### Minor Changes
