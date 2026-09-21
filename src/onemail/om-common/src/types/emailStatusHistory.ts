@@ -19,9 +19,6 @@ export enum EmailStatus {
 export interface EmailAttachmentRef {
   filename: string;
   contentType: string;
-  size: number;
-  sha256: string;
-  s3Bucket: string;
   s3Key: string;
 }
 

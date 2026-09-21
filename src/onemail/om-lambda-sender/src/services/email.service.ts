@@ -69,22 +69,14 @@ const fetchAttachments = async (
   if (!attachments?.length) return undefined;
 
   const uniqueAttachments = [
-    ...new Map(
-      attachments.map((attachment) => [
-        getAttachmentMapKey(attachment.s3Bucket, attachment.s3Key),
-        attachment,
-      ]),
-    ),
+    ...new Map(attachments.map((attachment) => [attachment.s3Key, attachment])),
   ];
   try {
     const fetched = await Promise.all(
-      uniqueAttachments.map(
-        async ([mapKey, attachment]) =>
-          [
-            mapKey,
-            await getAttachment(attachment.s3Bucket, attachment.s3Key),
-          ] as const,
-      ),
+      uniqueAttachments.map(async ([key, attachment]) => {
+        const bucket = env.aws.attachmentsBucket;
+        return [key, await getAttachment(bucket, attachment.s3Key)] as const;
+      }),
     );
     return new Map(fetched);
   } catch (error) {
@@ -92,6 +84,3 @@ const fetchAttachments = async (
     throw error;
   }
 };
-
-const getAttachmentMapKey = (bucket: string, key: string): string =>
-  `${bucket}\u0000${key}`;

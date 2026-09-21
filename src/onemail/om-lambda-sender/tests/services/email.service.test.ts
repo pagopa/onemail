@@ -18,6 +18,9 @@ const publishMetrics = vi.hoisted(() => vi.fn());
 const mapDbHighPriorityItemToSesModel = vi.hoisted(() => vi.fn());
 const mapDbLowPriorityItemToSesModel = vi.hoisted(() => vi.fn());
 const envConfig = vi.hoisted(() => ({
+  aws: {
+    attachmentsBucket: 'bucket-a',
+  },
   ses: {
     sesMultiRegionEndpointId: undefined as string | undefined,
   },
@@ -101,25 +104,16 @@ describe('email.service', () => {
           {
             filename: 'one.txt',
             contentType: 'text/plain',
-            size: 3,
-            sha256: 'hash-one',
-            s3Bucket: 'bucket-a',
             s3Key: 'key-one',
           },
           {
             filename: 'duplicate.txt',
             contentType: 'text/plain',
-            size: 3,
-            sha256: 'hash-duplicate',
-            s3Bucket: 'bucket-a',
             s3Key: 'key-one',
           },
           {
             filename: 'two.txt',
             contentType: 'text/plain',
-            size: 3,
-            sha256: 'hash-two',
-            s3Bucket: 'bucket-b',
             s3Key: 'key-one',
           },
         ],
@@ -130,15 +124,11 @@ describe('email.service', () => {
 
     await sendHighPriorityEmail(item);
 
-    expect(getAttachment).toHaveBeenCalledTimes(2);
+    expect(getAttachment).toHaveBeenCalledTimes(1);
     expect(getAttachment).toHaveBeenCalledWith('bucket-a', 'key-one');
-    expect(getAttachment).toHaveBeenCalledWith('bucket-b', 'key-one');
     expect(mapDbHighPriorityItemToSesModel).toHaveBeenCalledWith(
       item,
-      new Map([
-        ['bucket-a\u0000key-one', Uint8Array.from([1, 2, 3])],
-        ['bucket-b\u0000key-one', Uint8Array.from([1, 2, 3])],
-      ]),
+      new Map([['key-one', Uint8Array.from([1, 2, 3])]]),
     );
   });
 
@@ -152,9 +142,6 @@ describe('email.service', () => {
           {
             filename: 'one.txt',
             contentType: 'text/plain',
-            size: 3,
-            sha256: 'hash-one',
-            s3Bucket: 'bucket-a',
             s3Key: 'key-one',
           },
         ],

@@ -41,7 +41,7 @@ const loadErrorHandler = () => {
 };
 
 const registerZodErrorTest = () => {
-  it('returns a bad request response for zod errors', () => {
+  it('returns a bad request response for generic zod errors', () => {
     const { errorHandler, response } = loadErrorHandler();
     const error = new ZodError([]);
 
@@ -52,6 +52,23 @@ const registerZodErrorTest = () => {
       expect.objectContaining({
         message: 'Invalid data',
         errorCode: ERROR_CODES.INVALID_INPUT_DATA,
+      }),
+    );
+  });
+
+  it('returns a bad request response for invalid attachment zod errors', () => {
+    const { errorHandler, response } = loadErrorHandler();
+    const issue = new ZodError([
+      { path: ['attachments', 0, 'content'] } as never,
+    ]);
+
+    errorHandler(issue, {} as never, response as never, vi.fn());
+
+    expect(response.status).toHaveBeenCalledWith(400);
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Invalid attachment',
+        errorCode: ERROR_CODES.INVALID_ATTACHMENT,
       }),
     );
   });

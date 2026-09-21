@@ -46,7 +46,6 @@ vi.mock('om-common/repositories', () => ({
     MultipleTenantForClient: 'MultipleTenantForClient',
     TenantConfigurationNotFound: 'TenantConfigurationNotFound',
     UnauthorizedTenant: 'UnauthorizedTenant',
-    AttachmentAccepted: 'AttachmentAccepted',
     AttachmentRejected: 'AttachmentRejected',
   },
   publishMetrics,
@@ -165,8 +164,6 @@ describe('email.service - transactional attachments', () => {
     const validatedAttachment = {
       filename: attachment.filename,
       contentType: attachment.contentType,
-      size: 12,
-      sha256: 'sha256',
       bytes: Buffer.from('%PDF-1.4'),
     };
     dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
@@ -183,7 +180,7 @@ describe('email.service - transactional attachments', () => {
     );
 
     expect(putAttachment).toHaveBeenCalledWith({
-      key: 'tenant-a/request-with-attachment/attachment-id/document.pdf',
+      key: 'tenant-a/attachment-id/document.pdf',
       body: validatedAttachment.bytes,
       contentType: 'application/pdf',
     });
@@ -198,17 +195,12 @@ describe('email.service - transactional attachments', () => {
     ).toMatchObject([
       {
         filename: 'document.pdf',
-        s3Key: 'tenant-a/request-with-attachment/attachment-id/document.pdf',
-        sha256: 'sha256',
+        s3Key: 'tenant-a/attachment-id/document.pdf',
       },
     ]);
     expect(sqsSend).toHaveBeenCalledTimes(1);
-    expect(publishMetrics).toHaveBeenCalledWith([
-      {
-        name: 'AttachmentAccepted',
-        value: 1,
-        dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
-      },
+    expect(publishMetrics).not.toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'AttachmentRejected' }),
     ]);
   });
 
@@ -240,24 +232,17 @@ describe('email.service - transactional attachments', () => {
         dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
       },
     ]);
-    expect(publishMetrics).not.toHaveBeenCalledWith([
-      expect.objectContaining({ name: 'AttachmentAccepted' }),
-    ]);
   });
 
   it('deletes already uploaded attachments when a later upload fails', async () => {
     const firstAttachment = {
       filename: 'first.pdf',
       contentType: 'application/pdf' as const,
-      size: 12,
-      sha256: 'sha-first',
       bytes: Buffer.from('%PDF-1.4 first'),
     };
     const secondAttachment = {
       filename: 'second.pdf',
       contentType: 'application/pdf' as const,
-      size: 12,
-      sha256: 'sha-second',
       bytes: Buffer.from('%PDF-1.4 second'),
     };
     dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
@@ -297,11 +282,8 @@ describe('email.service - transactional attachments', () => {
     expect(putAttachment).toHaveBeenCalledTimes(2);
     expect(deleteAttachment).toHaveBeenCalledTimes(1);
     expect(deleteAttachment).toHaveBeenCalledWith(
-      'tenant-a/request-id/first-attachment-id/first.pdf',
+      'tenant-a/first-attachment-id/first.pdf',
     );
-    expect(publishMetrics).not.toHaveBeenCalledWith([
-      expect.objectContaining({ name: 'AttachmentAccepted' }),
-    ]);
     expect(dynamoSend).not.toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
@@ -401,8 +383,6 @@ describe('email.service - sendEmailLowPriority', () => {
     const validatedAttachment = {
       filename: attachment.filename,
       contentType: attachment.contentType,
-      size: 12,
-      sha256: 'sha256',
       bytes: Buffer.from('%PDF-1.4'),
     };
     dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
@@ -444,7 +424,7 @@ describe('email.service - sendEmailLowPriority', () => {
       items[1].PutRequest.Item.content.attachments[0].s3Key,
     );
     expect(items[0].PutRequest.Item.content.attachments[0].s3Key).toContain(
-      'low-request/',
+      'tenant-a/',
     );
   });
 
@@ -454,8 +434,6 @@ describe('email.service - sendEmailLowPriority', () => {
       {
         filename: 'document.pdf',
         contentType: 'application/pdf',
-        size: 12,
-        sha256: 'sha256',
         bytes: Buffer.from('%PDF-1.4'),
       },
     ]);
@@ -506,10 +484,7 @@ describe('email.service - getEmailStatus', () => {
               {
                 filename: 'document.pdf',
                 contentType: 'application/pdf',
-                size: 12,
-                sha256: 'sha256',
-                s3Bucket: 'private-bucket',
-                s3Key: 'tenant-a/request-id/document.pdf',
+                s3Key: 'tenant-a/document.pdf',
               },
             ],
           },
@@ -551,9 +526,7 @@ describe('email.service - getEmailStatus', () => {
       },
     ]);
     expect(JSON.stringify(result)).not.toContain('private-bucket');
-    expect(JSON.stringify(result)).not.toContain(
-      'tenant-a/request-id/document.pdf',
-    );
+    expect(JSON.stringify(result)).not.toContain('tenant-a/document.pdf');
   });
 
   it('throws an ApiError when the requested email status does not exist', async () => {

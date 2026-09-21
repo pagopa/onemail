@@ -1,7 +1,5 @@
-import { ERROR_CODES } from '#dtos/error.dto';
-import { ApiError } from '#errors/api.error';
 import { NextFunction, Request, Response } from 'express';
-import { ZodError, ZodType } from 'zod';
+import { ZodType } from 'zod';
 
 // middleware for input validation (body, path param, query param)
 export function validate(schemas: {
@@ -11,38 +9,21 @@ export function validate(schemas: {
   headers?: ZodType;
 }) {
   return (req: Request, res: Response, next: NextFunction) => {
-    try {
-      // validate and overwrite req with validated data
-      if (schemas.body) req.body = schemas.body.parse(req.body);
-      if (schemas.query) {
-        const validatedQuery = schemas.query.parse(req.query);
-        updateTargetWithValidatedData(req, 'query', validatedQuery);
-      }
-      if (schemas.params) {
-        const validatedParams = schemas.params.parse(req.params);
-        updateTargetWithValidatedData(req, 'params', validatedParams);
-      }
-      if (schemas.headers) {
-        const validatedHeaders = schemas.headers.parse(req.headers);
-        updateHeadersWithValidatedData(req, validatedHeaders);
-      }
-      next();
-    } catch (error) {
-      if (
-        error instanceof ZodError &&
-        error.issues.some((issue) => issue.path[0] === 'attachments')
-      ) {
-        next(
-          new ApiError(
-            'Invalid attachment',
-            400,
-            ERROR_CODES.INVALID_ATTACHMENT,
-          ),
-        );
-        return;
-      }
-      next(error);
+    // validate and overwrite req with validated data
+    if (schemas.body) req.body = schemas.body.parse(req.body);
+    if (schemas.query) {
+      const validatedQuery = schemas.query.parse(req.query);
+      updateTargetWithValidatedData(req, 'query', validatedQuery);
     }
+    if (schemas.params) {
+      const validatedParams = schemas.params.parse(req.params);
+      updateTargetWithValidatedData(req, 'params', validatedParams);
+    }
+    if (schemas.headers) {
+      const validatedHeaders = schemas.headers.parse(req.headers);
+      updateHeadersWithValidatedData(req, validatedHeaders);
+    }
+    next();
   };
 }
 

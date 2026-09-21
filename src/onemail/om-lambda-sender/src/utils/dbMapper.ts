@@ -137,9 +137,7 @@ function mapAttachments(
   }
 
   return attachments.map((attachment) => {
-    const rawContent = attachmentBytes.get(
-      `${attachment.s3Bucket}\u0000${attachment.s3Key}`,
-    );
+    const rawContent = attachmentBytes.get(attachment.s3Key);
     if (!rawContent) {
       throw new Error(`Attachment bytes not found for key ${attachment.s3Key}`);
     }

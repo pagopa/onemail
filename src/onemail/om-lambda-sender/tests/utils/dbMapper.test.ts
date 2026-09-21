@@ -11,6 +11,7 @@ import { makeEmailStatusHistoryItem } from '../__helpers__/emailFixtures.js';
 vi.mock('#config/env', () => ({
   default: {
     aws: {
+      attachmentsBucket: 'bucket-a',
       configurationSetName: 'config-set',
       tenantName: 'tenant-name',
     },
@@ -28,9 +29,6 @@ describe('dbMapper high priority utils', () => {
           {
             filename: 'document.txt',
             contentType: 'text/plain',
-            size: 3,
-            sha256: 'hash',
-            s3Bucket: 'bucket-a',
             s3Key: 'key-a',
           },
         ],
@@ -40,7 +38,7 @@ describe('dbMapper high priority utils', () => {
     expect(
       mapDbHighPriorityItemToSesModel(
         item,
-        new Map([['bucket-a\u0000key-a', Uint8Array.from([1, 2, 3])]]),
+        new Map([['key-a', Uint8Array.from([1, 2, 3])]]),
       ).Content,
     ).toMatchObject({
       Simple: {
@@ -66,9 +64,6 @@ describe('dbMapper high priority utils', () => {
           {
             filename: 'document.txt',
             contentType: 'text/plain',
-            size: 3,
-            sha256: 'hash',
-            s3Bucket: 'bucket-a',
             s3Key: 'key-a',
           },
         ],

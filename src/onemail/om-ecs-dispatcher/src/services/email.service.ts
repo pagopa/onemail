@@ -63,12 +63,7 @@ export const sendEmailTransactional = async (
   );
   const attachmentRefs = dryRun
     ? undefined
-    : await uploadAttachments(
-        validatedAttachments,
-        tenantName,
-        requestId,
-        logger,
-      );
+    : await uploadAttachments(validatedAttachments, tenantName, logger);
 
   const dbObj = mapEmailTransactionalToDbItem(
     emailData,
@@ -105,11 +100,6 @@ export const sendEmailTransactional = async (
       },
     },
   ]);
-  publishAttachmentMetric(
-    validatedAttachments,
-    tenantName,
-    tenantConfiguration.clientId,
-  );
 
   logger.info('End');
   return { requestId };
@@ -135,12 +125,7 @@ export const sendEmailLowPriority = async (
   );
   const attachmentRefs = dryRun
     ? undefined
-    : await uploadAttachments(
-        validatedAttachments,
-        tenantName,
-        requestId,
-        logger,
-      );
+    : await uploadAttachments(validatedAttachments, tenantName, logger);
 
   const dbListObj = mapEmailLowPriorityToDbItem(
     emailData,
@@ -194,11 +179,6 @@ export const sendEmailLowPriority = async (
       },
     },
   ]);
-  publishAttachmentMetric(
-    validatedAttachments,
-    tenantName,
-    tenantConfiguration.clientId,
-  );
 
   logger.info('End');
   return { requestId };
@@ -378,7 +358,6 @@ const validateRequestAttachments = async (
 const uploadAttachments = async (
   attachments: ValidatedAttachment[],
   tenantName: string,
-  requestId: string,
   logger: ReturnType<typeof getNamedLogger>,
 ): Promise<EmailAttachmentRef[] | undefined> => {
   if (!attachments.length) return undefined;
@@ -386,7 +365,7 @@ const uploadAttachments = async (
   const uploadResults = await Promise.allSettled(
     attachments.map(async (attachment) => {
       const attachmentId = randomUUID();
-      const key = `${tenantName}/${requestId}/${attachmentId}/${attachment.filename}`;
+      const key = `${tenantName}/${attachmentId}/${attachment.filename}`;
       await putAttachment({
         key,
         body: attachment.bytes,
@@ -394,8 +373,6 @@ const uploadAttachments = async (
       });
       logger.info('Attachment uploaded', {
         filename: attachment.filename,
-        size: attachment.size,
-        sha256: attachment.sha256,
       });
       return { key, attachment };
     }),
@@ -433,25 +410,7 @@ const uploadAttachments = async (
     return {
       filename: result.value.attachment.filename,
       contentType: result.value.attachment.contentType,
-      size: result.value.attachment.size,
-      sha256: result.value.attachment.sha256,
-      s3Bucket: env.aws.attachmentsBucket,
       s3Key: result.value.key,
     };
   });
-};
-
-const publishAttachmentMetric = (
-  attachments: ValidatedAttachment[],
-  tenantName: string,
-  clientId: string,
-): void => {
-  if (!attachments.length) return;
-  publishMetrics([
-    {
-      name: DispatcherMetricName.AttachmentAccepted,
-      value: attachments.length,
-      dimensions: { tenantName, clientId },
-    },
-  ]);
 };

@@ -27,11 +27,23 @@ export const errorHandler = (
   let errorResponse: ApiError;
 
   if (err instanceof ZodError) {
-    errorResponse = new ApiError(
-      'Invalid data',
-      StatusCodes.BAD_REQUEST,
-      ERROR_CODES.INVALID_INPUT_DATA,
+    const isAttachmentError = err.issues.some(
+      (issue) => issue.path[0] === 'attachments',
     );
+
+    if (isAttachmentError) {
+      errorResponse = new ApiError(
+        'Invalid attachment',
+        StatusCodes.BAD_REQUEST,
+        ERROR_CODES.INVALID_ATTACHMENT,
+      );
+    } else {
+      errorResponse = new ApiError(
+        'Invalid data',
+        StatusCodes.BAD_REQUEST,
+        ERROR_CODES.INVALID_INPUT_DATA,
+      );
+    }
   } else if (err instanceof InvalidHtmlRawError) {
     errorResponse = new ApiError(
       err.message,

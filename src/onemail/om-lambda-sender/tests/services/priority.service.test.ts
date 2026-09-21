@@ -128,9 +128,6 @@ describe('priority.service high priority flows', () => {
           {
             filename: 'document.txt',
             contentType: 'text/plain',
-            size: 3,
-            sha256: 'hash',
-            s3Bucket: 'bucket-a',
             s3Key: 'key-a',
           },
         ],

@@ -1,5 +1,4 @@
 import { validateAttachments } from '#utils/attachmentValidator';
-import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 
 const encode = (bytes: Uint8Array): string =>
@@ -21,6 +20,7 @@ const attachment = (
   contentType:
     | 'application/pdf'
     | 'image/jpeg'
+    | 'image/jpg'
     | 'image/png'
     | 'text/plain'
     | 'text/csv',
@@ -37,28 +37,49 @@ const expectInvalidAttachment = async (
 };
 
 describe('validateAttachments', () => {
-  it('returns decoded bytes, size, and sha256 for supported files', async () => {
+  it('returns decoded bytes for supported files', async () => {
     const bytes = pdf();
     const result = await validateAttachments([
       attachment(bytes, 'document.pdf', 'application/pdf'),
       attachment(png(), 'image.png', 'image/png'),
       attachment(jpeg(), 'photo.jpg', 'image/jpeg'),
+      attachment(jpeg(), 'photo.jpg', 'image/jpg'),
       attachment(Buffer.from('first,last\n1,2'), 'data.csv', 'text/csv'),
     ]);
 
-    expect(result).toHaveLength(4);
+    expect(result).toHaveLength(5);
     expect(result[0]).toMatchObject({
       filename: 'document.pdf',
       contentType: 'application/pdf',
       bytes,
-      size: bytes.length,
-      sha256: createHash('sha256').update(bytes).digest('hex'),
     });
   });
 
   it('accepts omitted and empty attachments', async () => {
     await expect(validateAttachments()).resolves.toEqual([]);
     await expect(validateAttachments([])).resolves.toEqual([]);
+  });
+
+  it('does not duplicate filename validation from the HTTP DTO schema', async () => {
+    await expect(
+      validateAttachments([
+        attachment(pdf(), 'document.txt', 'application/pdf'),
+      ]),
+    ).resolves.toHaveLength(1);
+  });
+
+  it('does not duplicate the max-attachments HTTP DTO check', async () => {
+    await expect(
+      validateAttachments(
+        Array.from({ length: 6 }, (_, index) =>
+          attachment(
+            Buffer.from(`file-${index}`),
+            `file-${index}.txt`,
+            'text/plain',
+          ),
+        ),
+      ),
+    ).resolves.toHaveLength(6);
   });
 
   it('accepts five files within the limits', async () => {
@@ -105,28 +126,10 @@ describe('validateAttachments', () => {
         ),
       ],
     ],
-    ['invalid filename', [attachment(pdf(), '../file.pdf', 'application/pdf')]],
-    [
-      'invalid extension',
-      [attachment(pdf(), 'document.txt', 'application/pdf')],
-    ],
   ])('rejects %s', async (_name, input) => {
     expect.assertions(1);
     await expectInvalidAttachment(
       input as Parameters<typeof validateAttachments>[0],
-    );
-  });
-
-  it('rejects more than five files', async () => {
-    expect.assertions(1);
-    await expectInvalidAttachment(
-      Array.from({ length: 6 }, (_, index) =>
-        attachment(
-          Buffer.from(`file-${index}`),
-          `file-${index}.txt`,
-          'text/plain',
-        ),
-      ),
     );
   });
 

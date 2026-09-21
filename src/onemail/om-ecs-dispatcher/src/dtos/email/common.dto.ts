@@ -76,31 +76,23 @@ export const TemplateIdSchema = stringCheckedSchema().describe(
 
 export const AttachmentInputSchema = z
   .object({
-    filename: z
-      .string()
-      .min(1)
-      .max(255)
-      .regex(/^[\w.\- ()]+$/, {
-        message: 'Attachment filename contains unsupported characters',
+    filename: stringCheckedSchema({ min: 1, max: 255 })
+      .regex(/^(?!.*\.\.)(?!.*[\\/])[\w.\- ()]+$/, {
+        message: 'Attachment filename is invalid',
       })
-      .refine((filename) => !filename.includes('..'), {
-        message:
-          'Attachment filename must not contain path traversal sequences',
-      })
-      .refine(
-        (filename) => !filename.includes('/') && !filename.includes('\\'),
-        {
-          message: 'Attachment filename must not contain path separators',
-        },
-      )
       .describe(
-        'Attachment filename including its extension. Allowed characters: ASCII letters, digits, underscore, dots, hyphens, spaces, and parentheses. Path separators and path traversal sequences are not allowed.',
+        'Attachment filename including its extension. Allowed characters: ASCII letters, digits, underscores, dots, hyphens, spaces, and parentheses. Path separators and path traversal sequences are not allowed.',
       ),
     contentType: z
       .enum([
         'application/pdf',
         'image/jpeg',
+        'image/jpg',
         'image/png',
+        'image/heic',
+        'application/vnd.ms-excel',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.oasis.opendocument.text',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',

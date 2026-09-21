@@ -321,15 +321,20 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 255,
-            "pattern": "^[\\w.\\- ()]+$",
-            "description": "Attachment filename including its extension. Allowed characters: ASCII letters, digits, underscore, dots, hyphens, spaces, and parentheses. Path separators and path traversal sequences are not allowed."
+            "pattern": "^(?!.*\\.\\.)(?!.*[\\\\/])[\\w.\\- ()]+$",
+            "description": "Attachment filename including its extension. Allowed characters: ASCII letters, digits, underscores, dots, hyphens, spaces, and parentheses. Path separators and path traversal sequences are not allowed."
           },
           "contentType": {
             "type": "string",
             "enum": [
               "application/pdf",
               "image/jpeg",
+              "image/jpg",
               "image/png",
+              "image/heic",
+              "application/vnd.ms-excel",
+              "application/vnd.ms-powerpoint",
+              "application/vnd.oasis.opendocument.text",
               "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
               "application/vnd.openxmlformats-officedocument.presentationml.presentation",

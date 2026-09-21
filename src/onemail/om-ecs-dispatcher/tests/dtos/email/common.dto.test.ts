@@ -21,12 +21,17 @@ describe('AttachmentsSchema', () => {
     ).toBe(false);
   });
 
-  it.each(['../document.pdf', 'folder/document.pdf', 'doc-à.pdf', 'file+.pdf'])(
+  it.each(['../document.pdf', 'folder/document.pdf', 'file+.pdf', 'doc-à.pdf'])(
     'rejects filename %s',
     (filename) => {
-      expect(
-        AttachmentsSchema.safeParse([{ ...validAttachment, filename }]).success,
-      ).toBe(false);
+      const result = AttachmentsSchema.safeParse([
+        { ...validAttachment, filename },
+      ]);
+      expect(result.success).toBe(false);
+      const errorMessage = result.success
+        ? undefined
+        : result.error.issues[0]?.message;
+      expect(errorMessage).toBe('Attachment filename is invalid');
     },
   );
 

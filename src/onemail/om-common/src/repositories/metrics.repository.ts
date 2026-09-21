@@ -92,7 +92,6 @@ export const DispatcherMetricName = {
   MultipleTenantForClient: 'MultipleTenantForClient',
   TenantConfigurationNotFound: 'TenantConfigurationNotFound',
   UnauthorizedTenant: 'UnauthorizedTenant',
-  AttachmentAccepted: 'AttachmentAccepted',
   AttachmentRejected: 'AttachmentRejected',
 } as const;
 

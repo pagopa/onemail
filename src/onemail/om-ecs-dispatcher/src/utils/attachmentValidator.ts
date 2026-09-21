@@ -1,38 +1,33 @@
 import { ERROR_CODES } from '#dtos/error.dto';
 import { ApiError } from '#errors/api.error';
 import { fileTypeFromBuffer } from 'file-type';
-import { createHash } from 'node:crypto';
 
 const MAX_TOTAL_ATTACHMENT_SIZE = 7 * 1024 * 1024;
 
-const MIME_EXTENSIONS = {
-  'application/pdf': ['.pdf'],
-  'image/jpeg': ['.jpg', '.jpeg'],
-  'image/png': ['.png'],
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
-    '.docx',
-  ],
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [
-    '.xlsx',
-  ],
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': [
-    '.pptx',
-  ],
-  'text/plain': ['.txt'],
-  'text/csv': ['.csv'],
-} as const;
+type AttachmentContentType =
+  | 'application/pdf'
+  | 'image/jpeg'
+  | 'image/jpg'
+  | 'image/png'
+  | 'image/heic'
+  | 'application/vnd.ms-excel'
+  | 'application/vnd.ms-powerpoint'
+  | 'application/vnd.oasis.opendocument.text'
+  | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  | 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+  | 'text/plain'
+  | 'text/csv';
 
 type AttachmentInput = {
   filename: string;
-  contentType: keyof typeof MIME_EXTENSIONS;
+  contentType: AttachmentContentType;
   content: string;
 };
 
 export type ValidatedAttachment = {
   filename: string;
   contentType: AttachmentInput['contentType'];
-  size: number;
-  sha256: string;
   bytes: Uint8Array;
 };
 
@@ -40,29 +35,60 @@ const invalidAttachment = (message: string): never => {
   throw new ApiError(message, 400, ERROR_CODES.INVALID_ATTACHMENT);
 };
 
-const decodeBase64 = (content: string): Uint8Array => {
-  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(content) || content.length % 4 !== 0) {
-    return invalidAttachment('Attachment content must be valid base64');
-  }
-
-  const bytes = Buffer.from(content, 'base64');
-  if (bytes.length === 0 || bytes.toString('base64') !== content) {
-    return invalidAttachment('Attachment content must be valid base64');
-  }
-
-  return bytes;
+const isBase64Character = (character: string): boolean => {
+  const code = character.charCodeAt(0);
+  return (
+    (code >= 65 && code <= 90) ||
+    (code >= 97 && code <= 122) ||
+    (code >= 48 && code <= 57) ||
+    character === '+' ||
+    character === '/'
+  );
 };
 
-const validateFilename = (filename: string): void => {
-  if (
-    filename.length === 0 ||
-    filename.length > 255 ||
-    !/^[\w.\- ()]+$/.test(filename) ||
-    filename.includes('..') ||
-    filename.includes('/') ||
-    filename.includes('\\')
-  ) {
-    invalidAttachment('Attachment filename is invalid');
+const decodeBase64 = (content: string): Uint8Array => {
+  if (!content || content.trim().length === 0) {
+    invalidAttachment('Attachment content must be valid base64');
+  }
+
+  if (content.length % 4 !== 0) {
+    invalidAttachment('Attachment content must be valid base64');
+  }
+
+  const firstPaddingIndex = content.indexOf('=');
+  const contentEnd =
+    firstPaddingIndex === -1 ? content.length : firstPaddingIndex;
+  const paddingLength = content.length - contentEnd;
+  if (paddingLength > 2) {
+    invalidAttachment('Attachment content must be valid base64');
+  }
+  for (let index = 0; index < contentEnd; index += 1) {
+    if (!isBase64Character(content[index])) {
+      invalidAttachment('Attachment content must be valid base64');
+    }
+  }
+  for (let index = contentEnd; index < content.length; index += 1) {
+    if (content[index] !== '=') {
+      invalidAttachment('Attachment content must be valid base64');
+    }
+  }
+
+  try {
+    const bytes = Buffer.from(content, 'base64');
+    if (bytes.length === 0) {
+      throw new ApiError(
+        'Attachment content must be valid base64',
+        400,
+        ERROR_CODES.INVALID_ATTACHMENT,
+      );
+    }
+    return bytes;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    invalidAttachment('Attachment content must be valid base64');
+    throw new Error('Attachment content must be valid base64');
   }
 };
 
@@ -78,58 +104,76 @@ const containsDisallowedTextMarkup = (bytes: Uint8Array): boolean => {
 
 const validateFileType = async (
   bytes: Uint8Array,
-  contentType: AttachmentInput['contentType'],
+  contentType: AttachmentContentType,
 ): Promise<void> => {
   const detected = await fileTypeFromBuffer(bytes);
-  if (contentType === 'text/plain' || contentType === 'text/csv') {
-    if (detected || !isUtf8Text(bytes) || containsDisallowedTextMarkup(bytes)) {
-      invalidAttachment('Attachment content does not match its content type');
-    }
+  const expectedMime = contentType === 'image/jpg' ? 'image/jpeg' : contentType;
+
+  if (isTextContentType(contentType)) {
+    validateTextContent(bytes, detected);
     return;
   }
 
-  if (!detected || detected.mime !== contentType) {
-    const isOpenXmlDocument =
-      contentType.startsWith(
-        'application/vnd.openxmlformats-officedocument.',
-      ) && detected?.mime === 'application/zip';
-    if (isOpenXmlDocument) return;
+  if (
+    detected?.mime === expectedMime ||
+    isAllowedContainer(contentType, detected?.mime)
+  ) {
+    return;
+  }
+  invalidAttachment('Attachment content does not match its content type');
+};
+
+const isTextContentType = (contentType: AttachmentContentType): boolean =>
+  contentType === 'text/plain' || contentType === 'text/csv';
+
+const validateTextContent = (
+  bytes: Uint8Array,
+  detected: Awaited<ReturnType<typeof fileTypeFromBuffer>>,
+): void => {
+  if (detected || !isUtf8Text(bytes) || containsDisallowedTextMarkup(bytes)) {
     invalidAttachment('Attachment content does not match its content type');
   }
+};
+
+const isAllowedContainer = (
+  contentType: AttachmentContentType,
+  detectedMime: string | undefined,
+): boolean => {
+  if (detectedMime === 'application/zip') {
+    return (
+      contentType.startsWith('application/vnd.openxmlformats.') ||
+      contentType === 'application/vnd.oasis.opendocument.text'
+    );
+  }
+  if (detectedMime === 'application/x-cfb') {
+    return (
+      contentType === 'application/vnd.ms-excel' ||
+      contentType === 'application/vnd.ms-powerpoint'
+    );
+  }
+  return (
+    contentType === 'image/heic' &&
+    (detectedMime === 'image/heic' || detectedMime === 'image/heif')
+  );
 };
 
 export const validateAttachments = async (
   attachments: readonly AttachmentInput[] = [],
 ): Promise<ValidatedAttachment[]> => {
-  if (attachments.length > 5) {
-    invalidAttachment('A maximum of 5 attachments is allowed');
-  }
-
   let totalSize = 0;
   const validatedAttachments: ValidatedAttachment[] = [];
 
   for (const attachment of attachments) {
-    validateFilename(attachment.filename);
-    const extensions = MIME_EXTENSIONS[attachment.contentType];
-    const filename = attachment.filename.toLowerCase();
-    if (!extensions.some((extension) => filename.endsWith(extension))) {
-      invalidAttachment('Attachment filename does not match its content type');
-    }
-
     const bytes = decodeBase64(attachment.content);
     totalSize += bytes.length;
     if (totalSize > MAX_TOTAL_ATTACHMENT_SIZE) {
-      invalidAttachment(
-        'Attachments exceed the maximum total size of 7.340 MB',
-      );
+      invalidAttachment('Attachments exceed the maximum total size of 7 MiB');
     }
 
     await validateFileType(bytes, attachment.contentType);
     validatedAttachments.push({
       filename: attachment.filename,
       contentType: attachment.contentType,
-      size: bytes.length,
-      sha256: createHash('sha256').update(bytes).digest('hex'),
       bytes,
     });
   }
