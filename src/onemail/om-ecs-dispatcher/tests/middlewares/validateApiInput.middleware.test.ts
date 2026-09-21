@@ -37,7 +37,7 @@ describe('validateApiInput middleware', () => {
     expect(next).toHaveBeenCalledWith();
   });
 
-  it('throws validation errors instead of mapping them in the middleware', () => {
+  it('forwards validation errors to the error handler', () => {
     const next = vi.fn();
     const request = {
       body: {},
@@ -53,10 +53,9 @@ describe('validateApiInput middleware', () => {
       }),
     });
 
-    expect(() => middleware(request as never, {} as never, next)).toThrow(
-      ZodError,
-    );
-    expect(next).not.toHaveBeenCalled();
+    middleware(request as never, {} as never, next);
+
+    expect(next).toHaveBeenCalledWith(expect.any(ZodError));
   });
 
   it('validates headers and assigns parsed values to request', () => {
@@ -84,7 +83,7 @@ describe('validateApiInput middleware', () => {
     expect(next).toHaveBeenCalledWith();
   });
 
-  it('passes attachment schema errors through as ZodError', () => {
+  it('forwards attachment schema errors as ZodError', () => {
     const next = vi.fn();
     const middleware = validate({
       body: z.object({
@@ -96,26 +95,24 @@ describe('validateApiInput middleware', () => {
       }),
     });
 
-    expect(() =>
-      middleware(
-        { body: { attachments: [{ content: '' }] } } as never,
-        {} as never,
-        next,
-      ),
-    ).toThrow(ZodError);
-    expect(next).not.toHaveBeenCalled();
+    middleware(
+      { body: { attachments: [{ content: '' }] } } as never,
+      {} as never,
+      next,
+    );
+
+    expect(next).toHaveBeenCalledWith(expect.any(ZodError));
   });
 
-  it('preserves non-attachment schema errors as a thrown ZodError', () => {
+  it('forwards non-attachment schema errors as ZodError', () => {
     const next = vi.fn();
     const middleware = validate({
       body: z.object({ subject: z.string().min(1) }),
     });
 
-    expect(() =>
-      middleware({ body: { subject: '' } } as never, {} as never, next),
-    ).toThrow(ZodError);
-    expect(next).not.toHaveBeenCalled();
+    middleware({ body: { subject: '' } } as never, {} as never, next);
+
+    expect(next).toHaveBeenCalledWith(expect.any(ZodError));
   });
 
   it('accepts five attachment entries', () => {

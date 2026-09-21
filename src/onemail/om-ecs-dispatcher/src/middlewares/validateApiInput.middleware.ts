@@ -9,21 +9,25 @@ export function validate(schemas: {
   headers?: ZodType;
 }) {
   return (req: Request, res: Response, next: NextFunction) => {
-    // validate and overwrite req with validated data
-    if (schemas.body) req.body = schemas.body.parse(req.body);
-    if (schemas.query) {
-      const validatedQuery = schemas.query.parse(req.query);
-      updateTargetWithValidatedData(req, 'query', validatedQuery);
+    try {
+      // validate and overwrite req with validated data
+      if (schemas.body) req.body = schemas.body.parse(req.body);
+      if (schemas.query) {
+        const validatedQuery = schemas.query.parse(req.query);
+        updateTargetWithValidatedData(req, 'query', validatedQuery);
+      }
+      if (schemas.params) {
+        const validatedParams = schemas.params.parse(req.params);
+        updateTargetWithValidatedData(req, 'params', validatedParams);
+      }
+      if (schemas.headers) {
+        const validatedHeaders = schemas.headers.parse(req.headers);
+        updateHeadersWithValidatedData(req, validatedHeaders);
+      }
+      next();
+    } catch (error) {
+      next(error);
     }
-    if (schemas.params) {
-      const validatedParams = schemas.params.parse(req.params);
-      updateTargetWithValidatedData(req, 'params', validatedParams);
-    }
-    if (schemas.headers) {
-      const validatedHeaders = schemas.headers.parse(req.headers);
-      updateHeadersWithValidatedData(req, validatedHeaders);
-    }
-    next();
   };
 }
 

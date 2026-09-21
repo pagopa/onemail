@@ -118,7 +118,7 @@ describe('priority.service high priority flows', () => {
     ]);
   });
 
-  it('publishes an attachment dispatch metric when an attached email is sent', async () => {
+  it('dispatches high priority emails with attachments', async () => {
     const email = makeEmailStatusHistoryItem({
       content: {
         from: { email: 'sender@example.com' },
@@ -141,9 +141,15 @@ describe('priority.service high priority flows', () => {
       true,
     );
 
+    expect(sendHighPriorityEmail).toHaveBeenCalledWith(email);
+    expect(updateEmailStatus).toHaveBeenCalledWith({
+      emailId: email.emailId,
+      status: EmailStatus.Dispatched,
+      providerMessageId: 'ses-message-id',
+    });
     expect(publishMetrics).toHaveBeenCalledWith([
       {
-        name: 'EmailWithAttachmentsDispatched',
+        name: 'HighPriorityDispatched',
         dimensions: { clientId: email.clientId, tenantName: email.tenantName },
       },
     ]);

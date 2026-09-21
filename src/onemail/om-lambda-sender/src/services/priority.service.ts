@@ -177,14 +177,6 @@ const handleHighPriority = async (
       dimensions: metricDimensions,
     },
   ]);
-  if (email.content.attachments?.length) {
-    publishMetrics([
-      {
-        name: SenderMetricName.EmailWithAttachmentsDispatched,
-        dimensions: metricDimensions,
-      },
-    ]);
-  }
 
   logger.info('End');
 };
