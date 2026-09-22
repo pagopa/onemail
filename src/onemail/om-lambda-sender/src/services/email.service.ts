@@ -1,3 +1,5 @@
+import type { AttachmentBytesByKey } from '#types/attachmentBytes.type';
+
 import env from '#config/env';
 import { sesClient } from '#connectors/ses.connector';
 import { getAttachment } from '#repositories/attachment.repository';
@@ -64,7 +66,8 @@ export const sendLowPriorityEmail = async (
 
 const fetchAttachments = async (
   items: EmailStatusHistoryItem[],
-): Promise<Map<string, Uint8Array> | undefined> => {
+): Promise<AttachmentBytesByKey | undefined> => {
+  // High priority passes a single-item array. Low priority passes multiple emails from the same request, where attachments are shared, so reading the first item is enough.
   const attachments = items[0]?.content.attachments;
   if (!attachments?.length) return undefined;
 
@@ -72,11 +75,12 @@ const fetchAttachments = async (
     ...new Map(attachments.map((attachment) => [attachment.s3Key, attachment])),
   ];
   try {
+    const bucket = env.aws.attachmentsBucket;
     const fetched = await Promise.all(
-      uniqueAttachments.map(async ([key, attachment]) => {
-        const bucket = env.aws.attachmentsBucket;
-        return [key, await getAttachment(bucket, attachment.s3Key)] as const;
-      }),
+      uniqueAttachments.map(
+        async ([key, attachment]) =>
+          [key, await getAttachment(bucket, attachment.s3Key)] as const,
+      ),
     );
     return new Map(fetched);
   } catch (error) {

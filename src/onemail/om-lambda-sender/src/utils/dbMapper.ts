@@ -1,3 +1,5 @@
+import type { AttachmentBytesByKey } from '#types/attachmentBytes.type';
+
 import { DryRunValidationError } from '#errors/dryRunValidation.error';
 import {
   Attachment,
@@ -12,7 +14,7 @@ import { SES_SIMULATOR } from 'om-common/utils';
 
 export function mapDbHighPriorityItemToSesModel(
   item: EmailStatusHistoryItem,
-  attachmentBytes?: Map<string, Uint8Array>,
+  attachmentBytes?: AttachmentBytesByKey,
 ): SendEmailCommandInput {
   const { content } = item;
 
@@ -62,7 +64,7 @@ export function mapDbHighPriorityItemToSesModel(
 
 export function mapDbLowPriorityItemToSesModel(
   items: EmailStatusHistoryItem[],
-  attachmentBytes?: Map<string, Uint8Array>,
+  attachmentBytes?: AttachmentBytesByKey,
 ): SendBulkEmailCommandInput {
   // Use the first item to derive shared defaults (from, template name)
   const firstContent = items[0].content;
@@ -127,7 +129,7 @@ export function mapDbLowPriorityItemToSesModel(
 
 function mapAttachments(
   attachments: EmailStatusHistoryItem['content']['attachments'],
-  attachmentBytes?: Map<string, Uint8Array>,
+  attachmentBytes?: AttachmentBytesByKey,
 ): Attachment[] | undefined {
   if (!attachments?.length) return undefined;
   if (!attachmentBytes) {
