@@ -29,7 +29,7 @@
    "ced": {
     "admin_mailbox": "ops-dmarc",
     "domain": {
-      "prod": "portal.ced.pagopa.it"
+      "prod": "ced.pagopa.it"
     }
   }
 }
