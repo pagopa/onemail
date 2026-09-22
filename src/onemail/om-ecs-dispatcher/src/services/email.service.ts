@@ -358,7 +358,7 @@ const uploadAttachments = async (
   attachments: ValidatedAttachment[],
   tenantName: string,
 ): Promise<EmailAttachmentRef[] | undefined> => {
-  const logger = getNamedLogger('uploadAttachments');
+  const logger = getNamedLogger(uploadAttachments.name);
   if (!attachments.length) return undefined;
 
   // Try to upload every attachment
