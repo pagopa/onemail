@@ -329,9 +329,11 @@
             "enum": [
               "application/pdf",
               "image/jpeg",
-              "image/jpg",
               "image/png",
+              "image/webp",
               "image/heic",
+              "image/heif",
+              "application/msword",
               "application/vnd.ms-excel",
               "application/vnd.ms-powerpoint",
               "application/vnd.oasis.opendocument.text",
@@ -345,6 +347,7 @@
           },
           "content": {
             "type": "string",
+            "minLength": 1,
             "description": "Base64-encoded attachment content without a data URI prefix."
           }
         },
