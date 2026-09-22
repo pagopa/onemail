@@ -1,4 +1,3 @@
-/* eslint-disable max-lines-per-function */
 import env from '#config/env';
 import { getNamedLogger } from '#config/logger';
 import {

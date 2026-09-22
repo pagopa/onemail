@@ -15,14 +15,14 @@ export type ValidatedAttachment = {
   bytes: Uint8Array;
 };
 
-const invalidAttachment = (message: string): never => {
+const throwInvalidAttachment = (message: string): never => {
   throw new ApiError(message, 400, ERROR_CODES.INVALID_ATTACHMENT);
 };
 
 const decodeBase64 = (content: string): Uint8Array => {
   const bytes = Buffer.from(content, 'base64');
   if (bytes.length === 0) {
-    invalidAttachment('Attachment content must be valid base64');
+    throwInvalidAttachment('Attachment content must be valid base64');
   }
   return bytes;
 };
@@ -37,7 +37,7 @@ const containsDisallowedTextMarkup = (bytes: Uint8Array): boolean => {
   return /<\/?(html|script|svg|xml)\b|javascript\s*:/i.test(text);
 };
 
-const validateFileType = async (
+const validateDecodedFileType = async (
   bytes: Uint8Array,
   contentType: AttachmentAllowedContentType,
 ): Promise<void> => {
@@ -54,7 +54,7 @@ const validateFileType = async (
   ) {
     return;
   }
-  invalidAttachment('Attachment content does not match its content type');
+  throwInvalidAttachment('Attachment content does not match its content type');
 };
 
 const isTextContentType = (
@@ -66,7 +66,9 @@ const validateTextContent = (
   detected: Awaited<ReturnType<typeof fileTypeFromBuffer>>,
 ): void => {
   if (detected || !isUtf8Text(bytes) || containsDisallowedTextMarkup(bytes)) {
-    invalidAttachment('Attachment content does not match its content type');
+    throwInvalidAttachment(
+      'Attachment content does not match its content type',
+    );
   }
 };
 
@@ -102,10 +104,12 @@ export const validateAttachments = async (
     const bytes = decodeBase64(attachment.content);
     totalSize += bytes.length;
     if (totalSize > MAX_TOTAL_ATTACHMENT_SIZE) {
-      invalidAttachment('Attachments exceed the maximum total size of 7 MiB');
+      throwInvalidAttachment(
+        'Attachments exceed the maximum total size of 7 MiB',
+      );
     }
 
-    await validateFileType(bytes, attachment.contentType);
+    await validateDecodedFileType(bytes, attachment.contentType);
     validatedAttachments.push({
       filename: attachment.filename,
       contentType: attachment.contentType,
