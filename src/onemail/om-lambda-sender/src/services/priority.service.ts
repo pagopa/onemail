@@ -337,15 +337,6 @@ const handleLowPriority = async (
   if (metrics.length > 0) {
     publishMetrics(metrics);
   }
-  if (emails[0].content.attachments?.length && successful.length > 0) {
-    publishMetrics([
-      {
-        name: SenderMetricName.EmailWithAttachmentsDispatched,
-        value: successful.length,
-        dimensions: metricDimensions,
-      },
-    ]);
-  }
 
   if (retryableFailures.length > 0) {
     throw new RetryableEventError('Retryable per-email SES failures', {
