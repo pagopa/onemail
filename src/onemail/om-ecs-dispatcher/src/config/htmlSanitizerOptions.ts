@@ -1,3 +1,4 @@
+import { cleanInlineCss } from '#utils/cssSanitizer';
 import he from 'he';
 import sanitizeHtml from 'sanitize-html';
 
@@ -26,6 +27,18 @@ const decodeUrlAttribute = (url: string): string => {
 
     return `${decodedScheme}${rest}`;
   }
+};
+
+const sanitizeStyleAttribute: sanitizeHtml.Transformer = (tagName, attribs) => {
+  const inlineStyle = attribs['style'];
+  if (!inlineStyle) {
+    return { tagName, attribs };
+  }
+
+  return {
+    tagName,
+    attribs: { ...attribs, style: cleanInlineCss(inlineStyle) },
+  };
 };
 
 // 1. Define the allowed rules for Email HTML
@@ -128,6 +141,7 @@ export const emailSanitizerOptions: sanitizeHtml.IOptions = {
   // Normalize and decode HTML entities/percent-encoded URLs before validation runs
   // This prevents bypass rules via encodings
   transformTags: {
+    '*': sanitizeStyleAttribute,
     a: (tagName, attribs) => ({
       tagName,
       attribs: attribs['href']
@@ -150,6 +164,8 @@ export const emailSanitizerOptions: sanitizeHtml.IOptions = {
   // Explicitly remove dangerous tags (sanitize-html does this by default, but it's good to be explicit)
   disallowedTagsMode: 'discard',
   allowProtocolRelative: false,
+  // Inline styles are already parsed and sanitized by sanitizeStyleAttribute.
+  parseStyleAttributes: false,
 
   // Allow style tags (on head) and preserve their content, since sanitize-html treats <style> as a "vulnerable tag" due to XSS risks
   // If this option is not set to true, the <style> tag is preserved but the CSS inside it is removed.
