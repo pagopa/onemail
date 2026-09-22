@@ -1,5 +1,23 @@
 # infra-data-tenants
 
+## 1.9.0
+
+### Minor Changes
+
+- e252656: Rename portal to ced
+
+## 1.8.0
+
+### Minor Changes
+
+- d9edadc: Remove portal.ced client
+
+## 1.7.0
+
+### Minor Changes
+
+- 1709f61: Add CED client to OneMail
+
 ## 1.6.0
 
 ### Minor Changes

@@ -25,5 +25,11 @@
       "uat": "uat.internal-apps.platform.pagopa.it",
       "prod": "internal-apps.platform.pagopa.it"
     }
+  },
+  "ced": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": {
+      "prod": "ced.pagopa.it"
+    }
   }
 }
