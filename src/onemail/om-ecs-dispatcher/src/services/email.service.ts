@@ -64,7 +64,7 @@ export const sendEmailTransactional = async (
   );
   const attachmentRefs = dryRun
     ? undefined
-    : await uploadAttachments(validatedAttachments, tenantName, logger);
+    : await uploadAttachments(validatedAttachments, tenantName);
 
   const dbObj = mapEmailTransactionalToDbItem(
     emailData,
@@ -126,7 +126,7 @@ export const sendEmailLowPriority = async (
   );
   const attachmentRefs = dryRun
     ? undefined
-    : await uploadAttachments(validatedAttachments, tenantName, logger);
+    : await uploadAttachments(validatedAttachments, tenantName);
 
   const dbListObj = mapEmailLowPriorityToDbItem(
     emailData,
@@ -357,10 +357,11 @@ const validateRequestAttachments = async (
 const uploadAttachments = async (
   attachments: ValidatedAttachment[],
   tenantName: string,
-  logger: ReturnType<typeof getNamedLogger>,
 ): Promise<EmailAttachmentRef[] | undefined> => {
+  const logger = getNamedLogger('uploadAttachments');
   if (!attachments.length) return undefined;
 
+  // Try to upload every attachment
   const uploadResults = await Promise.allSettled(
     attachments.map(async (attachment) => {
       const attachmentId = randomUUID();
@@ -377,32 +378,35 @@ const uploadAttachments = async (
     }),
   );
 
-  const failedUpload = uploadResults.find(
+  const failedUploads = uploadResults.filter(
     (result): result is PromiseRejectedResult => result.status === 'rejected',
   );
-  if (failedUpload) {
+  if (failedUploads.length > 0) {
+    // If any upload fails, remove the attachments that were already stored for this request.
     const uploadedKeys = uploadResults.flatMap((result) =>
       result.status === 'fulfilled' ? [result.value.key] : [],
     );
     logger.error('Attachment upload failed', {
       uploadedCount: uploadedKeys.length,
-      error: failedUpload.reason,
+      errors: failedUploads.map((result) => result.reason),
     });
     const deleteResults = await Promise.allSettled(
       uploadedKeys.map((key) => deleteAttachment(key)),
     );
     deleteResults.forEach((result, index) => {
       if (result.status === 'rejected') {
+        // If deletion of an uploaded attachment fails, log the error
         logger.error('Failed to delete attachment after upload failure', {
           key: uploadedKeys[index],
           reason: result.reason,
         });
       }
     });
-    throw failedUpload.reason;
+    throw new Error('Attachment upload failed');
   }
 
   return uploadResults.map((result) => {
+    // This is a defensive guard: failed uploads are handled before this point.
     if (result.status !== 'fulfilled') {
       throw new Error('Attachment upload result was unexpectedly rejected');
     }

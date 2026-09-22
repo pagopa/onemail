@@ -1,4 +1,6 @@
+/* eslint-disable max-lines-per-function */
 import env from '#config/env';
+import { getNamedLogger } from '#config/logger';
 import {
   getEmailStatus,
   sanitizeHtmlContent,
@@ -277,9 +279,10 @@ describe('email.service - transactional attachments', () => {
         false,
         'tenant-a',
       ),
-    ).rejects.toThrow('s3 error');
+    ).rejects.toThrow('Attachment upload failed');
 
     expect(putAttachment).toHaveBeenCalledTimes(2);
+    expect(getNamedLogger).toHaveBeenCalledWith('uploadAttachments');
     expect(deleteAttachment).toHaveBeenCalledTimes(1);
     expect(deleteAttachment).toHaveBeenCalledWith(
       'tenant-a/first-attachment-id/first.pdf',
@@ -292,6 +295,58 @@ describe('email.service - transactional attachments', () => {
         }),
       }),
     );
+    expect(sqsSend).not.toHaveBeenCalled();
+  });
+
+  it('throws a generic upload error when every attachment upload fails', async () => {
+    const firstAttachment = {
+      filename: 'first.pdf',
+      contentType: 'application/pdf' as const,
+      bytes: Buffer.from('%PDF-1.4 first'),
+    };
+    const secondAttachment = {
+      filename: 'second.pdf',
+      contentType: 'application/pdf' as const,
+      bytes: Buffer.from('%PDF-1.4 second'),
+    };
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    validateAttachments.mockResolvedValueOnce([
+      firstAttachment,
+      secondAttachment,
+    ]);
+    randomUUID
+      .mockReturnValueOnce('request-id')
+      .mockReturnValueOnce('first-attachment-id')
+      .mockReturnValueOnce('second-attachment-id');
+    putAttachment
+      .mockRejectedValueOnce(new Error('first s3 error'))
+      .mockRejectedValueOnce(new Error('second s3 error'));
+
+    await expect(
+      sendEmailTransactional(
+        makeHighPriorityEmailDto({
+          attachments: [
+            {
+              filename: 'first.pdf',
+              contentType: 'application/pdf',
+              content: 'ignored',
+            },
+            {
+              filename: 'second.pdf',
+              contentType: 'application/pdf',
+              content: 'ignored',
+            },
+          ],
+        }),
+        false,
+        'tenant-a',
+      ),
+    ).rejects.toThrow('Attachment upload failed');
+
+    expect(putAttachment).toHaveBeenCalledTimes(2);
+    expect(getNamedLogger).toHaveBeenCalledWith('uploadAttachments');
+    expect(deleteAttachment).not.toHaveBeenCalled();
+    expect(dynamoSend).toHaveBeenCalledTimes(1);
     expect(sqsSend).not.toHaveBeenCalled();
   });
 });
