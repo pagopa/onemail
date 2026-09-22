@@ -87,9 +87,11 @@ export const AttachmentInputSchema = z
       .enum([
         'application/pdf',
         'image/jpeg',
-        'image/jpg',
         'image/png',
+        'image/webp',
         'image/heic',
+        'image/heif',
+        'application/msword',
         'application/vnd.ms-excel',
         'application/vnd.ms-powerpoint',
         'application/vnd.oasis.opendocument.text',
@@ -101,7 +103,8 @@ export const AttachmentInputSchema = z
       ])
       .describe('Declared attachment MIME type'),
     content: z
-      .string()
+      .base64('Attachment content must be valid base64')
+      .min(1)
       .describe('Base64-encoded attachment content without a data URI prefix.'),
   })
   .openapi('AttachmentInput');

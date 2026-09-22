@@ -19,61 +19,12 @@ const invalidAttachment = (message: string): never => {
   throw new ApiError(message, 400, ERROR_CODES.INVALID_ATTACHMENT);
 };
 
-const isBase64Character = (character: string): boolean => {
-  const code = character.charCodeAt(0);
-  return (
-    (code >= 65 && code <= 90) ||
-    (code >= 97 && code <= 122) ||
-    (code >= 48 && code <= 57) ||
-    character === '+' ||
-    character === '/'
-  );
-};
-
 const decodeBase64 = (content: string): Uint8Array => {
-  if (!content || content.trim().length === 0) {
+  const bytes = Buffer.from(content, 'base64');
+  if (bytes.length === 0) {
     invalidAttachment('Attachment content must be valid base64');
   }
-
-  if (content.length % 4 !== 0) {
-    invalidAttachment('Attachment content must be valid base64');
-  }
-
-  const firstPaddingIndex = content.indexOf('=');
-  const contentEnd =
-    firstPaddingIndex === -1 ? content.length : firstPaddingIndex;
-  const paddingLength = content.length - contentEnd;
-  if (paddingLength > 2) {
-    invalidAttachment('Attachment content must be valid base64');
-  }
-  for (let index = 0; index < contentEnd; index += 1) {
-    if (!isBase64Character(content[index])) {
-      invalidAttachment('Attachment content must be valid base64');
-    }
-  }
-  for (let index = contentEnd; index < content.length; index += 1) {
-    if (content[index] !== '=') {
-      invalidAttachment('Attachment content must be valid base64');
-    }
-  }
-
-  try {
-    const bytes = Buffer.from(content, 'base64');
-    if (bytes.length === 0) {
-      throw new ApiError(
-        'Attachment content must be valid base64',
-        400,
-        ERROR_CODES.INVALID_ATTACHMENT,
-      );
-    }
-    return bytes;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    invalidAttachment('Attachment content must be valid base64');
-    throw new Error('Attachment content must be valid base64');
-  }
+  return bytes;
 };
 
 const isUtf8Text = (bytes: Uint8Array): boolean => {
@@ -91,7 +42,6 @@ const validateFileType = async (
   contentType: AttachmentAllowedContentType,
 ): Promise<void> => {
   const detected = await fileTypeFromBuffer(bytes);
-  const expectedMime = contentType === 'image/jpg' ? 'image/jpeg' : contentType;
 
   if (isTextContentType(contentType)) {
     validateTextContent(bytes, detected);
@@ -99,7 +49,7 @@ const validateFileType = async (
   }
 
   if (
-    detected?.mime === expectedMime ||
+    detected?.mime === contentType ||
     isAllowedContainer(contentType, detected?.mime)
   ) {
     return;
@@ -124,22 +74,22 @@ const isAllowedContainer = (
   contentType: AttachmentAllowedContentType,
   detectedMime: string | undefined,
 ): boolean => {
+  // For office/openDocument files, the detected mime type is often 'application/zip'
   if (detectedMime === 'application/zip') {
     return (
       contentType.startsWith('application/vnd.openxmlformats.') ||
       contentType === 'application/vnd.oasis.opendocument.text'
     );
   }
+  // For older Microsoft Office files, the detected mime type is often 'application/x-cfb'
   if (detectedMime === 'application/x-cfb') {
     return (
+      contentType === 'application/msword' ||
       contentType === 'application/vnd.ms-excel' ||
       contentType === 'application/vnd.ms-powerpoint'
     );
   }
-  return (
-    contentType === 'image/heic' &&
-    (detectedMime === 'image/heic' || detectedMime === 'image/heif')
-  );
+  return false;
 };
 
 export const validateAttachments = async (

@@ -1,3 +1,5 @@
+import type { AttachmentAllowedContentType } from '#dtos/email/common.dto';
+
 import { validateAttachments } from '#utils/attachmentValidator';
 import { describe, expect, it } from 'vitest';
 
@@ -13,17 +15,20 @@ const jpeg = (): Buffer =>
   Buffer.from([
     0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
   ]);
+const webp = (): Buffer =>
+  Buffer.from([
+    0x52, 0x49, 0x46, 0x46, 0x1a, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50,
+    0x56, 0x50, 0x38, 0x20,
+  ]);
+const cfb = (): Buffer =>
+  Buffer.from([
+    0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1, 0x00, 0x00, 0x00, 0x00,
+  ]);
 
 const attachment = (
   bytes: Uint8Array,
   filename: string,
-  contentType:
-    | 'application/pdf'
-    | 'image/jpeg'
-    | 'image/jpg'
-    | 'image/png'
-    | 'text/plain'
-    | 'text/csv',
+  contentType: AttachmentAllowedContentType,
 ) => ({ filename, contentType, content: encode(bytes) });
 
 const expectInvalidAttachment = async (
@@ -43,7 +48,7 @@ describe('validateAttachments', () => {
       attachment(bytes, 'document.pdf', 'application/pdf'),
       attachment(png(), 'image.png', 'image/png'),
       attachment(jpeg(), 'photo.jpg', 'image/jpeg'),
-      attachment(jpeg(), 'photo.jpg', 'image/jpg'),
+      attachment(webp(), 'image.webp', 'image/webp'),
       attachment(Buffer.from('first,last\n1,2'), 'data.csv', 'text/csv'),
     ]);
 
@@ -53,6 +58,16 @@ describe('validateAttachments', () => {
       contentType: 'application/pdf',
       bytes,
     });
+  });
+
+  it('accepts legacy Microsoft Office CFB containers for declared Office MIME types', async () => {
+    await expect(
+      validateAttachments([
+        attachment(cfb(), 'document.doc', 'application/msword'),
+        attachment(cfb(), 'spreadsheet.xls', 'application/vnd.ms-excel'),
+        attachment(cfb(), 'presentation.ppt', 'application/vnd.ms-powerpoint'),
+      ]),
+    ).resolves.toHaveLength(3);
   });
 
   it('accepts omitted and empty attachments', async () => {
