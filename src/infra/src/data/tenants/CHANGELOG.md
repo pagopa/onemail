@@ -1,5 +1,11 @@
 # infra-data-tenants
 
+## 1.8.0
+
+### Minor Changes
+
+- d9edadc: Remove portal.ced client
+
 ## 1.7.0
 
 ### Minor Changes
