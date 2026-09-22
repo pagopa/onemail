@@ -1,5 +1,11 @@
 # infra-data-tenants
 
+## 1.9.0
+
+### Minor Changes
+
+- e252656: Rename portal to ced
+
 ## 1.8.0
 
 ### Minor Changes
