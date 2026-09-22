@@ -114,6 +114,9 @@ export const AttachmentsSchema = z
   )
   .openapi('Attachments');
 
+export type AttachmentInputDTO = z.infer<typeof AttachmentInputSchema>;
+export type AttachmentAllowedContentType = AttachmentInputDTO['contentType'];
+
 // Dry Run Query Parameters
 export const DryRunQueryParamsSchema = z
   .object({

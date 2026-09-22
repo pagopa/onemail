@@ -2,6 +2,7 @@ import env from '#config/env';
 import { getNamedLogger } from '#config/logger';
 import { dynamoClient } from '#connectors/dynamo.connector';
 import { sqsClient } from '#connectors/sqs.connector';
+import { AttachmentInputDTO } from '#dtos/email/common.dto';
 import {
   EmailHighPriorityBodyDTO,
   EmailHighPriorityResponseDTO,
@@ -57,9 +58,9 @@ export const sendEmailTransactional = async (
   const requestId = randomUUID();
   const tableName = env.aws.emailDbTable;
   const validatedAttachments = await validateRequestAttachments(
-    emailData.attachments,
     tenantName,
     tenantConfiguration.clientId,
+    emailData.attachments,
   );
   const attachmentRefs = dryRun
     ? undefined
@@ -119,9 +120,9 @@ export const sendEmailLowPriority = async (
   const requestId = randomUUID();
   const tableName = env.aws.emailDbTable;
   const validatedAttachments = await validateRequestAttachments(
-    emailData.attachments,
     tenantName,
     tenantConfiguration.clientId,
+    emailData.attachments,
   );
   const attachmentRefs = dryRun
     ? undefined
@@ -334,11 +335,9 @@ const getTenantConfigurationByTenantName = async (
 };
 
 const validateRequestAttachments = async (
-  attachments:
-    | EmailHighPriorityBodyDTO['attachments']
-    | EmailLowPriorityBodyDTO['attachments'],
   tenantName: string,
   clientId: string,
+  attachments?: AttachmentInputDTO[],
 ): Promise<ValidatedAttachment[]> => {
   if (!attachments?.length) return [];
 

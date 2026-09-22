@@ -1,33 +1,17 @@
+import type {
+  AttachmentAllowedContentType,
+  AttachmentInputDTO,
+} from '#dtos/email/common.dto';
+
 import { ERROR_CODES } from '#dtos/error.dto';
 import { ApiError } from '#errors/api.error';
 import { fileTypeFromBuffer } from 'file-type';
 
 const MAX_TOTAL_ATTACHMENT_SIZE = 7 * 1024 * 1024;
 
-type AttachmentContentType =
-  | 'application/pdf'
-  | 'image/jpeg'
-  | 'image/jpg'
-  | 'image/png'
-  | 'image/heic'
-  | 'application/vnd.ms-excel'
-  | 'application/vnd.ms-powerpoint'
-  | 'application/vnd.oasis.opendocument.text'
-  | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-  | 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-  | 'text/plain'
-  | 'text/csv';
-
-type AttachmentInput = {
-  filename: string;
-  contentType: AttachmentContentType;
-  content: string;
-};
-
 export type ValidatedAttachment = {
   filename: string;
-  contentType: AttachmentInput['contentType'];
+  contentType: AttachmentAllowedContentType;
   bytes: Uint8Array;
 };
 
@@ -104,7 +88,7 @@ const containsDisallowedTextMarkup = (bytes: Uint8Array): boolean => {
 
 const validateFileType = async (
   bytes: Uint8Array,
-  contentType: AttachmentContentType,
+  contentType: AttachmentAllowedContentType,
 ): Promise<void> => {
   const detected = await fileTypeFromBuffer(bytes);
   const expectedMime = contentType === 'image/jpg' ? 'image/jpeg' : contentType;
@@ -123,8 +107,9 @@ const validateFileType = async (
   invalidAttachment('Attachment content does not match its content type');
 };
 
-const isTextContentType = (contentType: AttachmentContentType): boolean =>
-  contentType === 'text/plain' || contentType === 'text/csv';
+const isTextContentType = (
+  contentType: AttachmentAllowedContentType,
+): boolean => contentType === 'text/plain' || contentType === 'text/csv';
 
 const validateTextContent = (
   bytes: Uint8Array,
@@ -136,7 +121,7 @@ const validateTextContent = (
 };
 
 const isAllowedContainer = (
-  contentType: AttachmentContentType,
+  contentType: AttachmentAllowedContentType,
   detectedMime: string | undefined,
 ): boolean => {
   if (detectedMime === 'application/zip') {
@@ -158,7 +143,7 @@ const isAllowedContainer = (
 };
 
 export const validateAttachments = async (
-  attachments: readonly AttachmentInput[] = [],
+  attachments: readonly AttachmentInputDTO[] = [],
 ): Promise<ValidatedAttachment[]> => {
   let totalSize = 0;
   const validatedAttachments: ValidatedAttachment[] = [];
