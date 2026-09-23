@@ -344,7 +344,8 @@
               "text/plain",
               "text/csv"
             ],
-            "description": "Declared attachment MIME type"
+            "description": "Declared attachment MIME type",
+            "example": "application/pdf"
           },
           "content": {
             "type": "string",

@@ -120,9 +120,9 @@ export const AttachmentInputSchema = z
         'Attachment filename including an extension allowed for the declared content type. Allowed characters: ASCII letters, digits, underscores, dots, hyphens, spaces, and parentheses. Path separators and path traversal sequences are not allowed.',
       )
       .openapi({ example: 'document.pdf' }),
-    contentType: attachmentContentTypeSchema.describe(
-      'Declared attachment MIME type',
-    ),
+    contentType: attachmentContentTypeSchema
+      .describe('Declared attachment MIME type')
+      .openapi({ example: 'application/pdf' }),
     content: z
       .base64('Attachment content must be valid base64')
       .min(1)
