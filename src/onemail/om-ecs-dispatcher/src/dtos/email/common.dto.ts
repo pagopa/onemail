@@ -118,14 +118,16 @@ export const AttachmentInputSchema = z
       })
       .describe(
         'Attachment filename including an extension allowed for the declared content type. Allowed characters: ASCII letters, digits, underscores, dots, hyphens, spaces, and parentheses. Path separators and path traversal sequences are not allowed.',
-      ),
-    contentType: attachmentContentTypeSchema.describe(
-      'Declared attachment MIME type',
-    ),
+      )
+      .openapi({ example: 'document.pdf' }),
+    contentType: attachmentContentTypeSchema
+      .describe('Declared attachment MIME type')
+      .openapi({ example: 'application/pdf' }),
     content: z
       .base64('Attachment content must be valid base64')
       .min(1)
-      .describe('Base64-encoded attachment content without a data URI prefix.'),
+      .describe('Base64-encoded attachment content without a data URI prefix.')
+      .openapi({ example: 'JVBERi0xLjcK' }),
   })
   .superRefine((attachment, context) => {
     const extension = filenameExtension(attachment.filename);

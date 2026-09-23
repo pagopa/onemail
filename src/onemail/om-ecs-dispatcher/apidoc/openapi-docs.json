@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.10.13",
+    "version": "1.11.0",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -322,7 +322,8 @@
             "minLength": 1,
             "maxLength": 255,
             "pattern": "^(?!.*\\.\\.)(?!.*[\\\\/])[\\w.\\- ()]+$",
-            "description": "Attachment filename including its extension. Allowed characters: ASCII letters, digits, underscores, dots, hyphens, spaces, and parentheses. Path separators and path traversal sequences are not allowed."
+            "description": "Attachment filename including an extension allowed for the declared content type. Allowed characters: ASCII letters, digits, underscores, dots, hyphens, spaces, and parentheses. Path separators and path traversal sequences are not allowed.",
+            "example": "document.pdf"
           },
           "contentType": {
             "type": "string",
@@ -343,12 +344,14 @@
               "text/plain",
               "text/csv"
             ],
-            "description": "Declared attachment MIME type"
+            "description": "Declared attachment MIME type",
+            "example": "application/pdf"
           },
           "content": {
             "type": "string",
             "minLength": 1,
-            "description": "Base64-encoded attachment content without a data URI prefix."
+            "description": "Base64-encoded attachment content without a data URI prefix.",
+            "example": "JVBERi0xLjcK"
           }
         },
         "required": [
