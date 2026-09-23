@@ -1,5 +1,17 @@
 # om-ecs-dispatcher
 
+## 1.11.0
+
+### Minor Changes
+
+- a460b00: Add inline email attachment support across dispatcher, sender, and shared metrics.
+
+### Patch Changes
+
+- 8106231: Sanitize css
+- Updated dependencies [a460b00]
+  - om-common@1.5.0
+
 ## 1.10.13
 
 ### Patch Changes
