@@ -10,6 +10,10 @@ data "aws_sqs_queue" "sqs_set_processor" {
   name = "${local.project_nodomain}-sqs-config-set-processor"
 }
 
+data "aws_s3_bucket" "email_attachments" {
+  bucket = "${local.project_nodomain}-email-attachments-${data.aws_caller_identity.current.account_id}"
+}
+
 data "aws_ssm_parameter" "ses_multi_region_endpoint_id" {
   count = var.ses_multi_region_endpoint_enabled ? 1 : 0
   name  = local.ses_multi_region_parameter_name
