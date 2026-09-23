@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.11.1
+
+### Patch Changes
+
+- 310f62e: add open api attachments description
+
 ## 1.11.0
 
 ### Minor Changes
