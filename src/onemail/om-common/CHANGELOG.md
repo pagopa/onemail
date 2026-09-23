@@ -1,5 +1,11 @@
 # om-common
 
+## 1.5.0
+
+### Minor Changes
+
+- a460b00: Add inline email attachment support across dispatcher, sender, and shared metrics.
+
 ## 1.4.6
 
 ### Patch Changes

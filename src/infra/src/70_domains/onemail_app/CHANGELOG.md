@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.25.0
+
+### Minor Changes
+
+- 0f4a26a: add s3 attchments buckets and permission to lambda and ecs
+
 ## 1.24.0
 
 ### Minor Changes
