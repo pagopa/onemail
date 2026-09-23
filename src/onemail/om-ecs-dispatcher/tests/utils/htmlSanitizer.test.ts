@@ -48,6 +48,14 @@ describe('sanitizeEmailHtml', () => {
     );
   });
 
+  it('removes unsafe inline CSS declarations', () => {
+    expect(
+      sanitizeEmailHtml(
+        '<p style="color:red; background:url(javascript:alert(1))">Styled</p>',
+      ),
+    ).toBe('<p style="color:red">Styled</p>');
+  });
+
   it('preserves html doctype when present in input', () => {
     expect(
       sanitizeEmailHtml(
@@ -62,6 +70,27 @@ describe('sanitizeEmailHtml', () => {
         '<style>.hero{color:red}</style><p class="hero">Hi</p>',
       ),
     ).toBe('<style>.hero{color:red}</style><p class="hero">Hi</p>');
+  });
+
+  it('keeps HTTPS CSS URLs and imports', () => {
+    const html =
+      '<style>@import url("https://cdn.example.com/email.css");.hero{background:url("https://cdn.example.com/image.png")}</style><p class="hero">Hi</p>';
+
+    expect(sanitizeEmailHtml(html)).toBe(html);
+  });
+
+  it('removes unsafe declarations from style tags', () => {
+    expect(
+      sanitizeEmailHtml(
+        '<style>.hero{color:red;background:url("javascript:alert(1)")}</style><p class="hero">Hi</p>',
+      ),
+    ).toBe('<style>.hero{color:red}</style><p class="hero">Hi</p>');
+  });
+
+  it('empties malformed style tags', () => {
+    expect(
+      sanitizeEmailHtml('<style>.hero{color:red</style><p class="hero">Hi</p>'),
+    ).toBe('<style>/* stripped invalid css */</style><p class="hero">Hi</p>');
   });
 
   it('keeps allowed link tag and attributes', () => {
@@ -195,6 +224,18 @@ describe('sanitizeEmailHtml result', () => {
     expect(result).toEqual({
       sanitizedHtml:
         '<!--[if mso]><table><tr><td>X</td></tr></table><![endif]-->',
+      isSanitized: true,
+    });
+  });
+
+  it('preserves MSO directives and sanitizes their CSS', () => {
+    const result = sanitizeEmailHtmlResult(
+      '<!--[if mso]><style>.hero{color:red;background:url("javascript:alert(1)")}</style><p class="hero">X</p><![endif]-->',
+    );
+
+    expect(result).toEqual({
+      sanitizedHtml:
+        '<!--[if mso]><style>.hero{color:red}</style><p class="hero">X</p><![endif]-->',
       isSanitized: true,
     });
   });

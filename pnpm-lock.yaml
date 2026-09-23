@@ -177,6 +177,9 @@ importers:
       on-finished:
         specifier: ^2.4.1
         version: 2.4.1
+      postcss:
+        specifier: ^8.5.28
+        version: 8.5.28
       sanitize-html:
         specifier: ^2.17.1
         version: 2.17.7

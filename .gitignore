@@ -135,3 +135,5 @@ docker/.env
 
 **/test-html-sanitization/outputs/**/*.html
 **/test-html-sanitization/input/*.txt
+**/test-html-sanitization/benchmarks/.bench/*.html
+**/test-html-sanitization/benchmarks/.bench/*.json

@@ -2,6 +2,7 @@ import {
   emailSanitizerOptions,
   htmlNormalizationOptions,
 } from '#config/htmlSanitizerOptions';
+import { cleanCssAst } from '#utils/cssSanitizer';
 import sanitizeHtml from 'sanitize-html';
 
 // Strips directive markers before normalizing
@@ -78,6 +79,20 @@ const restoreDirectives = (
   return result;
 };
 
+const STYLE_TAG_REGEX = /(<style(?:\s[^>]*)?>)([\s\S]*?)(<\/style>)/gi;
+
+const sanitizeStyleBlocks = (html: string): string => {
+  if (!html.toLowerCase().includes('<style')) {
+    return html;
+  }
+
+  return html.replace(
+    STYLE_TAG_REGEX,
+    (_match, openingTag: string, css: string, closingTag: string) =>
+      `${openingTag}${cleanCssAst(css)}${closingTag}`,
+  );
+};
+
 // Remove the enclosing directive markers, exposing the inner content to normalize
 const stripDirectivesMarkers = (html: string): string =>
   html
@@ -106,9 +121,11 @@ export const sanitizeEmailHtml = (html: string): SanitizationResult => {
     // keep and sanitize directives
     const { processedHtml, tokens } = tokenizeDirectives(html);
     sanitized = sanitizeHtml(processedHtml, emailSanitizerOptions);
+    sanitized = sanitizeStyleBlocks(sanitized);
     sanitized = restoreDirectives(sanitized, tokens);
   } else {
     sanitized = sanitizeHtml(html, emailSanitizerOptions);
+    sanitized = sanitizeStyleBlocks(sanitized);
   }
 
   const result = preserveDoctype(html, sanitized);

@@ -36,6 +36,7 @@
     "lodash-es": "catalog:",
     "om-common": "workspace:*",
     "on-finished": "^2.4.1",
+    "postcss": "^8.5.28",
     "sanitize-html": "^2.17.1",
     "swagger-ui-express": "^5.0.1",
     "zod": "catalog:"
