@@ -81,6 +81,8 @@ export const SenderMetricName = {
   EmailStatusBatchUpdateFailed: 'EmailStatusBatchUpdateFailed',
   InvalidRecord: 'InvalidRecord',
   UnexpectedRetryableError: 'UnexpectedRetryableError',
+  AttachmentFetchFailed: 'AttachmentFetchFailed',
+  EmailWithAttachmentsDispatched: 'EmailWithAttachmentsDispatched',
 } as const;
 
 export const DispatcherMetricName = {
@@ -90,6 +92,7 @@ export const DispatcherMetricName = {
   MultipleTenantForClient: 'MultipleTenantForClient',
   TenantConfigurationNotFound: 'TenantConfigurationNotFound',
   UnauthorizedTenant: 'UnauthorizedTenant',
+  AttachmentRejected: 'AttachmentRejected',
 } as const;
 
 interface MetricInput {

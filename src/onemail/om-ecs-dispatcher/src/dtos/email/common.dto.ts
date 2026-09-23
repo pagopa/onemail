@@ -74,6 +74,89 @@ export const TemplateIdSchema = stringCheckedSchema().describe(
   'Identifier of the email template',
 );
 
+const attachmentExtensionByContentType = {
+  'application/pdf': ['pdf'],
+  'image/jpeg': ['jpg', 'jpeg'],
+  'image/png': ['png'],
+  'image/webp': ['webp'],
+  'image/heic': ['heic'],
+  'image/heif': ['heif'],
+  'application/msword': ['doc'],
+  'application/vnd.ms-excel': ['xls'],
+  'application/vnd.ms-powerpoint': ['ppt'],
+  'application/vnd.oasis.opendocument.text': ['odt'],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
+    'docx',
+  ],
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['xlsx'],
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': [
+    'pptx',
+  ],
+  'text/plain': ['txt'],
+  'text/csv': ['csv'],
+} as const;
+
+type AttachmentContentTypeKey = keyof typeof attachmentExtensionByContentType;
+
+const attachmentContentTypes = Object.keys(
+  attachmentExtensionByContentType,
+) as [AttachmentContentTypeKey, ...AttachmentContentTypeKey[]];
+
+const attachmentContentTypeSchema = z.enum(attachmentContentTypes);
+
+const filenameExtension = (filename: string): string | undefined => {
+  const extension = filename.split('.').at(-1);
+  if (!extension || extension === filename) return undefined;
+  return extension.toLowerCase();
+};
+
+export const AttachmentInputSchema = z
+  .object({
+    filename: stringCheckedSchema({ min: 1, max: 255 })
+      .regex(/^(?!.*\.\.)(?!.*[\\/])[\w.\- ()]+$/, {
+        message: 'Attachment filename is invalid',
+      })
+      .describe(
+        'Attachment filename including an extension allowed for the declared content type. Allowed characters: ASCII letters, digits, underscores, dots, hyphens, spaces, and parentheses. Path separators and path traversal sequences are not allowed.',
+      ),
+    contentType: attachmentContentTypeSchema.describe(
+      'Declared attachment MIME type',
+    ),
+    content: z
+      .base64('Attachment content must be valid base64')
+      .min(1)
+      .describe('Base64-encoded attachment content without a data URI prefix.'),
+  })
+  .superRefine((attachment, context) => {
+    const extension = filenameExtension(attachment.filename);
+    const allowedExtensions =
+      attachmentExtensionByContentType[attachment.contentType];
+    if (
+      extension &&
+      (allowedExtensions as readonly string[]).includes(extension)
+    ) {
+      return;
+    }
+
+    context.addIssue({
+      code: 'custom',
+      path: ['filename'],
+      message: 'Attachment filename extension does not match content type',
+    });
+  })
+  .openapi('AttachmentInput');
+
+export const AttachmentsSchema = z
+  .array(AttachmentInputSchema)
+  .max(5)
+  .describe(
+    'Up to 5 base64-encoded attachments. The decoded total is limited to 7 MiB. Invalid attachments return HTTP 400 with error code A001.',
+  )
+  .openapi('Attachments');
+
+export type AttachmentInputDTO = z.infer<typeof AttachmentInputSchema>;
+export type AttachmentAllowedContentType = AttachmentInputDTO['contentType'];
+
 // Dry Run Query Parameters
 export const DryRunQueryParamsSchema = z
   .object({

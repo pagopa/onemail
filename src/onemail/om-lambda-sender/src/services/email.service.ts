@@ -1,5 +1,8 @@
+import type { AttachmentBytesByKey } from '#types/attachmentBytes.type';
+
 import env from '#config/env';
 import { sesClient } from '#connectors/ses.connector';
+import { getAttachment } from '#repositories/attachment.repository';
 import {
   mapDbHighPriorityItemToSesModel,
   mapDbLowPriorityItemToSesModel,
@@ -9,6 +12,7 @@ import {
   SendBulkEmailCommand,
   SendEmailCommand,
 } from '@aws-sdk/client-sesv2';
+import { publishMetrics, SenderMetricName } from 'om-common/repositories';
 import { EmailStatusHistoryItem } from 'om-common/types';
 
 import { BulkSendResult } from '../types/bulkSendResult.type.js';
@@ -16,8 +20,9 @@ import { BulkSendResult } from '../types/bulkSendResult.type.js';
 export const sendHighPriorityEmail = async (
   input: EmailStatusHistoryItem,
 ): Promise<string | undefined> => {
+  const attachmentBytes = await fetchAttachments([input]);
   //1. from dynamodb to ses model
-  const sesInput = mapDbHighPriorityItemToSesModel(input);
+  const sesInput = mapDbHighPriorityItemToSesModel(input, attachmentBytes);
 
   //2. send email with ses connector
   //const command = new SendEmailCommand(sesInput);
@@ -33,8 +38,9 @@ export const sendHighPriorityEmail = async (
 export const sendLowPriorityEmail = async (
   items: EmailStatusHistoryItem[],
 ): Promise<BulkSendResult> => {
+  const attachmentBytes = await fetchAttachments(items);
   //1. from dynamodb to ses model
-  const sesInput = mapDbLowPriorityItemToSesModel(items);
+  const sesInput = mapDbLowPriorityItemToSesModel(items, attachmentBytes);
 
   //2. send email with ses connector
   const command = new SendBulkEmailCommand(
@@ -56,4 +62,29 @@ export const sendLowPriorityEmail = async (
   });
 
   return result;
+};
+
+const fetchAttachments = async (
+  items: EmailStatusHistoryItem[],
+): Promise<AttachmentBytesByKey | undefined> => {
+  // High priority passes a single-item array. Low priority passes multiple emails from the same request, where attachments are shared, so reading the first item is enough.
+  const attachments = items[0]?.content.attachments;
+  if (!attachments?.length) return undefined;
+
+  const uniqueAttachments = [
+    ...new Map(attachments.map((attachment) => [attachment.s3Key, attachment])),
+  ];
+  try {
+    const bucket = env.aws.attachmentsBucket;
+    const fetched = await Promise.all(
+      uniqueAttachments.map(
+        async ([key, attachment]) =>
+          [key, await getAttachment(bucket, attachment.s3Key)] as const,
+      ),
+    );
+    return new Map(fetched);
+  } catch (error) {
+    publishMetrics([{ name: SenderMetricName.AttachmentFetchFailed }]);
+    throw error;
+  }
 };

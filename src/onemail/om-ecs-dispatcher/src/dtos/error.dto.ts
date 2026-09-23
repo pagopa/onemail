@@ -12,6 +12,7 @@ export const ERROR_CODES = {
   RESOURCE_NOT_FOUND: 'R001',
   UNEXPECTED_ERROR: 'U001',
   INVALID_TENANT: 'T001',
+  INVALID_ATTACHMENT: 'A001',
 };
 
 export const ErrorResponseSchema = z

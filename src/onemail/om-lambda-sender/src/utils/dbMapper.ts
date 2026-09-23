@@ -1,5 +1,8 @@
+import type { AttachmentBytesByKey } from '#types/attachmentBytes.type';
+
 import { DryRunValidationError } from '#errors/dryRunValidation.error';
 import {
+  Attachment,
   Body,
   BulkEmailEntry,
   EmailContent,
@@ -11,6 +14,7 @@ import { SES_SIMULATOR } from 'om-common/utils';
 
 export function mapDbHighPriorityItemToSesModel(
   item: EmailStatusHistoryItem,
+  attachmentBytes?: AttachmentBytesByKey,
 ): SendEmailCommandInput {
   const { content } = item;
 
@@ -28,6 +32,7 @@ export function mapDbHighPriorityItemToSesModel(
       TemplateName: content.template.id,
       TemplateData: content.template.matchedAttributes ?? '{}',
       Headers: headers,
+      Attachments: mapAttachments(content.attachments, attachmentBytes),
     };
   } else if (content.body) {
     const simpleBodyContent: Body = {};
@@ -40,6 +45,7 @@ export function mapDbHighPriorityItemToSesModel(
       Subject: { Data: content.subject },
       Body: simpleBodyContent,
       Headers: headers,
+      Attachments: mapAttachments(content.attachments, attachmentBytes),
     };
   }
 
@@ -58,6 +64,7 @@ export function mapDbHighPriorityItemToSesModel(
 
 export function mapDbLowPriorityItemToSesModel(
   items: EmailStatusHistoryItem[],
+  attachmentBytes?: AttachmentBytesByKey,
 ): SendBulkEmailCommandInput {
   // Use the first item to derive shared defaults (from, template name)
   const firstContent = items[0].content;
@@ -109,6 +116,7 @@ export function mapDbLowPriorityItemToSesModel(
       Template: {
         TemplateName: firstContent.template.id,
         TemplateData: '{}', // default empty, as we validate template attributes before and we are using ReplacementTemplateData for each entry
+        Attachments: mapAttachments(firstContent.attachments, attachmentBytes),
       },
     },
     BulkEmailEntries: bulkEntries,
@@ -117,6 +125,32 @@ export function mapDbLowPriorityItemToSesModel(
   };
 
   return input;
+}
+
+function mapAttachments(
+  attachments: EmailStatusHistoryItem['content']['attachments'],
+  attachmentBytes?: AttachmentBytesByKey,
+): Attachment[] | undefined {
+  if (!attachments?.length) return undefined;
+  if (!attachmentBytes) {
+    throw new Error(
+      'Attachment bytes are required when attachments are present',
+    );
+  }
+
+  return attachments.map((attachment) => {
+    const rawContent = attachmentBytes.get(attachment.s3Key);
+    if (!rawContent) {
+      throw new Error(`Attachment bytes not found for key ${attachment.s3Key}`);
+    }
+    return {
+      RawContent: rawContent,
+      FileName: attachment.filename,
+      ContentDisposition: 'ATTACHMENT' as const,
+      ContentType: attachment.contentType,
+      ContentTransferEncoding: 'BASE64',
+    };
+  });
 }
 
 // Validates that dry-run items target an approved SES simulator address.

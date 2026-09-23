@@ -13,9 +13,14 @@ import { getNthCommand } from '../../../testing/commandAssertions.js';
 import { makeEmailStatusHistoryItem } from '../__helpers__/emailFixtures.js';
 
 const sesSend = vi.hoisted(() => vi.fn());
+const getAttachment = vi.hoisted(() => vi.fn());
+const publishMetrics = vi.hoisted(() => vi.fn());
 const mapDbHighPriorityItemToSesModel = vi.hoisted(() => vi.fn());
 const mapDbLowPriorityItemToSesModel = vi.hoisted(() => vi.fn());
 const envConfig = vi.hoisted(() => ({
+  aws: {
+    attachmentsBucket: 'bucket-a',
+  },
   ses: {
     sesMultiRegionEndpointId: undefined as string | undefined,
   },
@@ -24,6 +29,9 @@ const envConfig = vi.hoisted(() => ({
 vi.mock('#connectors/ses.connector', () => ({
   sesClient: { send: sesSend },
 }));
+vi.mock('#repositories/attachment.repository', () => ({
+  getAttachment,
+}));
 vi.mock('#config/env', () => ({
   default: envConfig,
 }));
@@ -31,11 +39,18 @@ vi.mock('#utils/dbMapper', () => ({
   mapDbHighPriorityItemToSesModel,
   mapDbLowPriorityItemToSesModel,
 }));
+vi.mock('om-common/repositories', () => ({
+  publishMetrics,
+  SenderMetricName: {
+    AttachmentFetchFailed: 'AttachmentFetchFailed',
+  },
+}));
 
 describe('email.service', () => {
   beforeEach(() => {
     envConfig.ses.sesMultiRegionEndpointId = undefined;
     vi.clearAllMocks();
+    getAttachment.mockResolvedValue(Uint8Array.from([1, 2, 3]));
   });
 
   it('sends a high priority email through SES and returns the message id', async () => {
@@ -46,6 +61,7 @@ describe('email.service', () => {
 
     await expect(sendHighPriorityEmail(item)).resolves.toBe('ses-message-id');
     expect(sesSend).toHaveBeenCalledTimes(1);
+    expect(getAttachment).not.toHaveBeenCalled();
     const command = getNthCommand(sesSend, 0);
     expect(command).toBeInstanceOf(SendEmailCommand);
     expect((command as SendEmailCommand).input).toEqual(sesInput);
@@ -76,6 +92,68 @@ describe('email.service', () => {
 
     await expect(sendHighPriorityEmail(item)).resolves.toBeUndefined();
     expect(sesSend).toHaveBeenCalledTimes(1);
+  });
+
+  it('fetches each unique attachment once before sending a high priority email', async () => {
+    const item = makeEmailStatusHistoryItem({
+      content: {
+        from: { email: 'sender@example.com' },
+        to: { email: 'user@example.com' },
+        body: { html: '<p>Hello</p>' },
+        attachments: [
+          {
+            filename: 'one.txt',
+            contentType: 'text/plain',
+            s3Key: 'key-one',
+          },
+          {
+            filename: 'duplicate.txt',
+            contentType: 'text/plain',
+            s3Key: 'key-one',
+          },
+          {
+            filename: 'two.txt',
+            contentType: 'text/plain',
+            s3Key: 'key-one',
+          },
+        ],
+      },
+    });
+    sesSend.mockResolvedValue({ MessageId: 'ses-message-id' });
+    mapDbHighPriorityItemToSesModel.mockReturnValue({});
+
+    await sendHighPriorityEmail(item);
+
+    expect(getAttachment).toHaveBeenCalledTimes(1);
+    expect(getAttachment).toHaveBeenCalledWith('bucket-a', 'key-one');
+    expect(mapDbHighPriorityItemToSesModel).toHaveBeenCalledWith(
+      item,
+      new Map([['key-one', Uint8Array.from([1, 2, 3])]]),
+    );
+  });
+
+  it('publishes a fetch failure metric and does not send when S3 fails', async () => {
+    const item = makeEmailStatusHistoryItem({
+      content: {
+        from: { email: 'sender@example.com' },
+        to: { email: 'user@example.com' },
+        body: { html: '<p>Hello</p>' },
+        attachments: [
+          {
+            filename: 'one.txt',
+            contentType: 'text/plain',
+            s3Key: 'key-one',
+          },
+        ],
+      },
+    });
+    getAttachment.mockRejectedValue(new Error('S3 unavailable'));
+
+    await expect(sendHighPriorityEmail(item)).rejects.toThrow('S3 unavailable');
+    expect(sesSend).not.toHaveBeenCalled();
+    expect(publishMetrics).toHaveBeenCalledWith([
+      { name: 'AttachmentFetchFailed' },
+    ]);
   });
 
   it('correlates low priority bulk send results with the original items', async () => {

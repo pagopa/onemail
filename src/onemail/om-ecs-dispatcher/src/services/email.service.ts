@@ -2,6 +2,7 @@ import env from '#config/env';
 import { getNamedLogger } from '#config/logger';
 import { dynamoClient } from '#connectors/dynamo.connector';
 import { sqsClient } from '#connectors/sqs.connector';
+import { AttachmentInputDTO } from '#dtos/email/common.dto';
 import {
   EmailHighPriorityBodyDTO,
   EmailHighPriorityResponseDTO,
@@ -14,6 +15,14 @@ import { EmailStatusResponseDTO } from '#dtos/email/emailStatus.dto';
 import { SanitizeHtmlResponseDTO } from '#dtos/email/validateHtml.dto';
 import { ERROR_CODES } from '#dtos/error.dto';
 import { ApiError } from '#errors/api.error';
+import {
+  deleteAttachment,
+  putAttachment,
+} from '#repositories/attachment.repository';
+import {
+  validateAttachments,
+  ValidatedAttachment,
+} from '#utils/attachmentValidator';
 import {
   mapEmailLowPriorityToDbItem,
   mapEmailTransactionalToDbItem,
@@ -29,6 +38,7 @@ import { StatusCodes } from 'http-status-codes';
 import { randomUUID } from 'node:crypto';
 import { DispatcherMetricName, publishMetrics } from 'om-common/repositories';
 import {
+  EmailAttachmentRef,
   EmailStatus,
   EmailStatusHistoryItem,
   TenantConfigurationItem,
@@ -47,12 +57,21 @@ export const sendEmailTransactional = async (
     await getAndValidateTenantConfiguration(tenantName);
   const requestId = randomUUID();
   const tableName = env.aws.emailDbTable;
+  const validatedAttachments = await validateRequestAttachments(
+    tenantName,
+    tenantConfiguration.clientId,
+    emailData.attachments,
+  );
+  const attachmentRefs = dryRun
+    ? undefined
+    : await uploadAttachments(validatedAttachments, tenantName);
 
   const dbObj = mapEmailTransactionalToDbItem(
     emailData,
     requestId,
     tenantConfiguration,
     dryRun,
+    attachmentRefs,
   );
 
   logger.debug('Saving email to DynamoDB', { emailId: dbObj.emailId });
@@ -100,12 +119,21 @@ export const sendEmailLowPriority = async (
     await getAndValidateTenantConfiguration(tenantName);
   const requestId = randomUUID();
   const tableName = env.aws.emailDbTable;
+  const validatedAttachments = await validateRequestAttachments(
+    tenantName,
+    tenantConfiguration.clientId,
+    emailData.attachments,
+  );
+  const attachmentRefs = dryRun
+    ? undefined
+    : await uploadAttachments(validatedAttachments, tenantName);
 
   const dbListObj = mapEmailLowPriorityToDbItem(
     emailData,
     requestId,
     tenantConfiguration,
     dryRun,
+    attachmentRefs,
   );
 
   // BatchWriteCommand max chunk size is 25
@@ -304,4 +332,88 @@ const getTenantConfigurationByTenantName = async (
   );
 
   return (result.Items as TenantConfigurationItem[] | undefined) ?? [];
+};
+
+const validateRequestAttachments = async (
+  tenantName: string,
+  clientId: string,
+  attachments?: AttachmentInputDTO[],
+): Promise<ValidatedAttachment[]> => {
+  if (!attachments?.length) return [];
+
+  try {
+    return await validateAttachments(attachments);
+  } catch (error) {
+    publishMetrics([
+      {
+        name: DispatcherMetricName.AttachmentRejected,
+        dimensions: { tenantName, clientId },
+      },
+    ]);
+    throw error;
+  }
+};
+
+const uploadAttachments = async (
+  attachments: ValidatedAttachment[],
+  tenantName: string,
+): Promise<EmailAttachmentRef[] | undefined> => {
+  const logger = getNamedLogger(uploadAttachments.name);
+  if (!attachments.length) return undefined;
+
+  // Try to upload every attachment
+  const uploadResults = await Promise.allSettled(
+    attachments.map(async (attachment) => {
+      const attachmentId = randomUUID();
+      const key = `${tenantName}/${attachmentId}/${attachment.filename}`;
+      await putAttachment({
+        key,
+        body: attachment.bytes,
+        contentType: attachment.contentType,
+      });
+      logger.info('Attachment uploaded', {
+        filename: attachment.filename,
+      });
+      return { key, attachment };
+    }),
+  );
+
+  const failedUploads = uploadResults.filter(
+    (result): result is PromiseRejectedResult => result.status === 'rejected',
+  );
+  if (failedUploads.length > 0) {
+    // If any upload fails, remove the attachments that were already stored for this request.
+    const uploadedKeys = uploadResults.flatMap((result) =>
+      result.status === 'fulfilled' ? [result.value.key] : [],
+    );
+    logger.error('Attachment upload failed', {
+      uploadedCount: uploadedKeys.length,
+      errors: failedUploads.map((result) => result.reason),
+    });
+    const deleteResults = await Promise.allSettled(
+      uploadedKeys.map((key) => deleteAttachment(key)),
+    );
+    deleteResults.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        // If deletion of an uploaded attachment fails, log the error
+        logger.error('Failed to delete attachment after upload failure', {
+          key: uploadedKeys[index],
+          reason: result.reason,
+        });
+      }
+    });
+    throw new Error('Attachment upload failed');
+  }
+
+  return uploadResults.map((result) => {
+    // This is a defensive guard: failed uploads are handled before this point.
+    if (result.status !== 'fulfilled') {
+      throw new Error('Attachment upload result was unexpectedly rejected');
+    }
+    return {
+      filename: result.value.attachment.filename,
+      contentType: result.value.attachment.contentType,
+      s3Key: result.value.key,
+    };
+  });
 };

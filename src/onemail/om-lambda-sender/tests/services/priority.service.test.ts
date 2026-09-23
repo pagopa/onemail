@@ -43,6 +43,7 @@ vi.mock('om-common/repositories', () => ({
     HighPriorityDryRunError: 'HighPriorityDryRunError',
     HighPriorityRejected: 'HighPriorityRejected',
     HighPriorityDispatched: 'HighPriorityDispatched',
+    EmailWithAttachmentsDispatched: 'EmailWithAttachmentsDispatched',
     LowPriorityDryRunError: 'LowPriorityDryRunError',
     LowPriorityRejected: 'LowPriorityRejected',
     LowPriorityDispatched: 'LowPriorityDispatched',
@@ -104,6 +105,43 @@ describe('priority.service high priority flows', () => {
       true,
     );
 
+    expect(updateEmailStatus).toHaveBeenCalledWith({
+      emailId: email.emailId,
+      status: EmailStatus.Dispatched,
+      providerMessageId: 'ses-message-id',
+    });
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'HighPriorityDispatched',
+        dimensions: { clientId: email.clientId, tenantName: email.tenantName },
+      },
+    ]);
+  });
+
+  it('dispatches high priority emails with attachments', async () => {
+    const email = makeEmailStatusHistoryItem({
+      content: {
+        from: { email: 'sender@example.com' },
+        to: { email: 'user@example.com' },
+        body: { html: '<p>Hello</p>' },
+        attachments: [
+          {
+            filename: 'document.txt',
+            contentType: 'text/plain',
+            s3Key: 'key-a',
+          },
+        ],
+      },
+    });
+    getEmailById.mockResolvedValue(email);
+    sendHighPriorityEmail.mockResolvedValue('ses-message-id');
+
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: email.emailId }),
+      true,
+    );
+
+    expect(sendHighPriorityEmail).toHaveBeenCalledWith(email);
     expect(updateEmailStatus).toHaveBeenCalledWith({
       emailId: email.emailId,
       status: EmailStatus.Dispatched,

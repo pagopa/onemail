@@ -13,7 +13,7 @@ const PORT = env.server.PORT;
 const logger = getLogger();
 
 // api response type middlewares
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // flush collected metrics when the response is sent
 // only for versioned routes (/v1, /v2, ...), not health checks or other non-application endpoints

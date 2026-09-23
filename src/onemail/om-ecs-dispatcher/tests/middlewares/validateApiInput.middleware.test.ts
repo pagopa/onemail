@@ -37,7 +37,7 @@ describe('validateApiInput middleware', () => {
     expect(next).toHaveBeenCalledWith();
   });
 
-  it('passes validation errors to next', () => {
+  it('forwards validation errors to the error handler', () => {
     const next = vi.fn();
     const request = {
       body: {},
@@ -55,8 +55,7 @@ describe('validateApiInput middleware', () => {
 
     middleware(request as never, {} as never, next);
 
-    expect(next).toHaveBeenCalledTimes(1);
-    expect(next.mock.calls[0]?.[0]).toBeInstanceOf(ZodError);
+    expect(next).toHaveBeenCalledWith(expect.any(ZodError));
   });
 
   it('validates headers and assigns parsed values to request', () => {
@@ -81,6 +80,61 @@ describe('validateApiInput middleware', () => {
 
     expect(request.headers['x-tenant-name']).toBe('tenant-a');
     expect(request.headers.host).toBe('localhost');
+    expect(next).toHaveBeenCalledWith();
+  });
+
+  it('forwards attachment schema errors as ZodError', () => {
+    const next = vi.fn();
+    const middleware = validate({
+      body: z.object({
+        attachments: z.array(
+          z.object({
+            content: z.string().min(1),
+          }),
+        ),
+      }),
+    });
+
+    middleware(
+      { body: { attachments: [{ content: '' }] } } as never,
+      {} as never,
+      next,
+    );
+
+    expect(next).toHaveBeenCalledWith(expect.any(ZodError));
+  });
+
+  it('forwards non-attachment schema errors as ZodError', () => {
+    const next = vi.fn();
+    const middleware = validate({
+      body: z.object({ subject: z.string().min(1) }),
+    });
+
+    middleware({ body: { subject: '' } } as never, {} as never, next);
+
+    expect(next).toHaveBeenCalledWith(expect.any(ZodError));
+  });
+
+  it('accepts five attachment entries', () => {
+    const next = vi.fn();
+    const middleware = validate({
+      body: z.object({
+        attachments: z.array(z.object({ content: z.string().min(1) })).max(5),
+      }),
+    });
+
+    middleware(
+      {
+        body: {
+          attachments: Array.from({ length: 5 }, () => ({
+            content: 'encoded',
+          })),
+        },
+      } as never,
+      {} as never,
+      next,
+    );
+
     expect(next).toHaveBeenCalledWith();
   });
 });

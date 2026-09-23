@@ -16,6 +16,12 @@ export enum EmailStatus {
   MaxRetriesReached = 'MaxRetriesReached',
 }
 
+export interface EmailAttachmentRef {
+  filename: string;
+  contentType: string;
+  s3Key: string;
+}
+
 export interface DbEmailContent {
   subject?: string;
   from: EmailAddress;
@@ -24,6 +30,7 @@ export interface DbEmailContent {
   extendedHeaders?: NameValue[];
   template?: TemplateContent; // mutually exclusive with Body
   body?: EmailContent; // mutually exclusive with Template
+  attachments?: EmailAttachmentRef[];
 }
 
 export interface EmailAddress {
