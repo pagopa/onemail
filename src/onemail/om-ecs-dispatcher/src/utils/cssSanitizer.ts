@@ -1,15 +1,10 @@
 import postcss from 'postcss';
 
 const BLOCKED_PROPERTIES = new Set(['-moz-binding', 'behavior']);
-const BLOCKED_VALUES = [
-  'expression',
-  'javascript:',
-  'vbscript:',
-  'data:',
-  'http://',
-];
+const BLOCKED_VALUES = ['expression'];
 
 const hasUnsafeCssUrl = (value: string): boolean => {
+  // Find every url(...) token
   const urlMatches = value.matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/gi);
 
   for (const match of urlMatches) {
@@ -26,6 +21,27 @@ const hasUnsafeCssUrl = (value: string): boolean => {
   }
 
   return false;
+};
+
+const hasUnsafeCssImport = (value: string): boolean => {
+  const parameters = value.trim();
+
+  if (parameters.toLowerCase().startsWith('url(')) {
+    return hasUnsafeCssUrl(parameters);
+  }
+
+  // Extract first @import parameter, quoted or unquoted
+  const importUrl = parameters.match(/^(?:"([^"]+)"|'([^']+)'|(\S+))/);
+  const normalizedUrl = (
+    importUrl?.[1] ?? // @import "https://example.com/style.css"; - double quoted
+    importUrl?.[2] ?? // @import 'https://example.com/style.css'; - single quoted
+    importUrl?.[3] ?? // @import  https://example.com/style.css; - unquoted
+    ''
+  )
+    .trim()
+    .toLowerCase();
+
+  return !normalizedUrl.startsWith('https://');
 };
 
 export const cleanCssAst = (css: string): string => {
@@ -53,7 +69,7 @@ export const cleanCssAst = (css: string): string => {
       const hasBlockedValue = BLOCKED_VALUES.some((blockedValue) =>
         parameters.includes(blockedValue),
       );
-      const hasUnsafeUrl = hasUnsafeCssUrl(rule.params);
+      const hasUnsafeUrl = hasUnsafeCssImport(rule.params);
 
       if (hasBlockedValue || hasUnsafeUrl) {
         rule.remove();

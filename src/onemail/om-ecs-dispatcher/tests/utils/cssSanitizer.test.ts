@@ -20,6 +20,16 @@ describe('cleanCssAst', () => {
     expect(cleanCssAst(css)).toBe(css);
   });
 
+  it('preserves direct HTTPS imports and removes non-HTTPS imports', () => {
+    const result = cleanCssAst(
+      '@import "https://cdn.example.com/email.css"; @import http://cdn.example.com/unsafe.css; .hero { color: red; }',
+    );
+
+    expect(result).toContain('@import "https://cdn.example.com/email.css";');
+    expect(result).not.toContain('http://cdn.example.com/unsafe.css');
+    expect(result).toContain('.hero { color: red; }');
+  });
+
   it('removes blocked properties and values', () => {
     const result = cleanCssAst(
       '.hero { color: red; behavior: url(x.htc); -moz-binding: url(x.xml); width: expression(alert(1)); background: url("javascript:alert(1)"); }',
