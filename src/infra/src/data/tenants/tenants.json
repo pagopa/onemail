@@ -10,7 +10,8 @@
   "selfcare": {
     "admin_mailbox": "ops-dmarc",
     "domain": {
-      "uat": "selfcare.pagopa.it"
+      "uat": "selfcare.pagopa.it",
+      "prod": "areariservata.pagopa.it"
     }
   },
   "ioapp": {
