@@ -1,5 +1,11 @@
 # infra-data-tenants
 
+## 1.9.1
+
+### Patch Changes
+
+- d17b74f: add area riservata in prod env
+
 ## 1.9.0
 
 ### Minor Changes
