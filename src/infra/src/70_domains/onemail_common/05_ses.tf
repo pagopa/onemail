@@ -111,7 +111,14 @@ resource "aws_sesv2_configuration_set" "config_set" {
 
   delivery_options {
     sending_pool_name = var.env == "prod" ? aws_sesv2_dedicated_ip_pool.managed_pool[0].pool_name : null
-    tls_policy        = "REQUIRE"
+    tls_policy        = each.value.tls_policy
+  }
+
+  lifecycle {
+    precondition {
+      condition     = contains(["OPTIONAL", "REQUIRE"], each.value.tls_policy)
+      error_message = "Tenant '${each.key}' tls_policy must be either OPTIONAL or REQUIRE."
+    }
   }
 
   vdm_options {
