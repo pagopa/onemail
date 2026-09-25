@@ -103,6 +103,16 @@ const validateRecord = (record: SQSRecord): ConfSetEventItem => {
 const getBounceStatus = (
   event: Extract<ConfSetEventItem, { eventType: 'Bounce' }>,
 ): EmailStatus => {
+  const hasNonRetryableDiagnostic = event.bounce.bouncedRecipients.some(
+    ({ diagnosticCode }) =>
+      typeof diagnosticCode === 'string' &&
+      (/remote mta does not support starttls/i.test(diagnosticCode) ||
+        /hop count exceeded.*possible mail loop/i.test(diagnosticCode)),
+  );
+  if (hasNonRetryableDiagnostic) {
+    return EmailStatus.NonRetryableSoftBounce;
+  }
+
   const { bounceType, bounceSubType } = event.bounce;
   if (bounceType === CapitalizedSesBounceType.Permanent)
     return EmailStatus.HardBounce;
