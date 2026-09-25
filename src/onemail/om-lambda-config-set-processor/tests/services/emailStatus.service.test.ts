@@ -316,7 +316,9 @@ describe('emailStatus.service bounce flow', () => {
       },
     ]);
   });
+});
 
+describe('emailStatus.service non-retryable bounce flow', () => {
   it.each([
     CapitalizedSesBounceSubType.ContentRejected,
     CapitalizedSesBounceSubType.AttachmentRejected,
@@ -386,6 +388,38 @@ describe('emailStatus.service bounce flow', () => {
         {
           timestamp: '2025-06-01T12:00:00Z',
           status: EmailStatus.NonRetryableSoftBounce,
+          reason: CapitalizedSesBounceSubType.General,
+        },
+      ],
+    );
+    expect(handleSoftBounceRetry).not.toHaveBeenCalled();
+  });
+
+  it('keeps a permanent bounce as HardBounce when its diagnostic matches', async () => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
+    findEmailByProviderMessageId.mockResolvedValue(email);
+
+    await sqsEventHandler(
+      makeQueueRecord(
+        makeBounceEvent(
+          'ses-msg-1',
+          CapitalizedSesBounceType.Permanent,
+          CapitalizedSesBounceSubType.General,
+          '2025-06-01T12:00:00Z',
+          'smtp; Remote MTA does not support STARTTLS',
+        ),
+      ),
+    );
+
+    expect(updateEmailStatus).toHaveBeenCalledWith(
+      email.emailId,
+      email.status,
+      [
+        {
+          timestamp: '2025-06-01T12:00:00Z',
+          status: EmailStatus.HardBounce,
           reason: CapitalizedSesBounceSubType.General,
         },
       ],
