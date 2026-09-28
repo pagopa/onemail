@@ -62,6 +62,7 @@ export const makeBounceEvent = (
   bounceType: CapitalizedSesBounceType = CapitalizedSesBounceType.Permanent,
   bounceSubType: CapitalizedSesBounceSubType = CapitalizedSesBounceSubType.General,
   timestamp = '2025-01-01T00:00:00Z',
+  diagnosticCode?: string,
 ): ConfSetEventItem => ({
   eventType: CapitalizedSesConfigurationSetEventType.Bounce,
   mail: { timestamp, messageId },
@@ -69,7 +70,7 @@ export const makeBounceEvent = (
     bounceType,
     bounceSubType,
     feedbackId: 'feedback-1',
-    bouncedRecipients: [{ emailAddress: 'user@example.com' }],
+    bouncedRecipients: [{ emailAddress: 'user@example.com', diagnosticCode }],
     timestamp,
   },
 });

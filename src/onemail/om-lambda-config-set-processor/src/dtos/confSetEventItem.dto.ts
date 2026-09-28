@@ -18,6 +18,7 @@ const BounceSchema = z.object({
   bouncedRecipients: z.array(
     z.object({
       emailAddress: z.string(), // string because could be name <email>
+      diagnosticCode: z.string().optional(),
     }),
   ),
   timestamp: z.string(),

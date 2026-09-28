@@ -24,6 +24,7 @@ locals {
       admin_email            = format("%s@%s", tenant_data.admin_mailbox, local.tenant_domains[tenant_key])
       tenant_name            = "${local.tenant_name_prefix}-${tenant_key}"
       configuration_set_name = "${local.configuration_set_name_prefix}-${tenant_key}"
+      tls_policy             = try(tenant_data.tls_policy, "REQUIRE")
     } if try(length(trimspace(local.tenant_domains[tenant_key])) > 0, false)
   }
 }
