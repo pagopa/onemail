@@ -1,5 +1,11 @@
 # om-lambda-config-set-processor
 
+## 1.6.12
+
+### Patch Changes
+
+- 7afe555: add tls tenant config option and add starttls error and mail loop to no retryable softbounce
+
 ## 1.6.11
 
 ### Patch Changes

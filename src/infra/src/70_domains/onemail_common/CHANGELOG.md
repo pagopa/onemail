@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.22.1
+
+### Patch Changes
+
+- 7afe555: add tls tenant config option and add starttls error and mail loop to no retryable softbounce
+
 ## 1.22.0
 
 ### Minor Changes
