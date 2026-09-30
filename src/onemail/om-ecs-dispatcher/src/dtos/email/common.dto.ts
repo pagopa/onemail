@@ -33,12 +33,16 @@ export const EmailAddressSchema = z
   })
   .openapi('EmailAddress');
 
-const pecEmailPattern = /^[^@\s]+@[^@\s]*pec[^@\s]*$/i;
+const pecEmailPattern =
+  /^[^@\s]+@(?:(?:pec|cert)\.[^@\s]+|legalmail\.it|postecert\.it|arubapec\.it|mypec\.eu|gigapec\.it|postecertifica\.it|sicurezzapostale\.it|namirialpec\.it|spidmail\.it)$/i;
 
 export const RecipientEmailAddressSchema = EmailAddressSchema.extend({
-  email: z.email().refine((email) => !pecEmailPattern.test(email), {
-    message: 'PEC recipients are not supported',
-  }),
+  email: z
+    .email()
+    .refine((email) => !pecEmailPattern.test(email), {
+      message: 'PEC recipients are not supported',
+    })
+    .describe('Recipient email address'),
 }).openapi('RecipientEmailAddress');
 
 // Used for custom headers

@@ -97,10 +97,23 @@ describe('AttachmentsSchema', () => {
 });
 
 describe('recipient PEC validation', () => {
-  it('rejects a high priority PEC recipient', () => {
+  it.each([
+    'pec.it',
+    'pec.net',
+    'cert.legalmail.it',
+    'legalmail.it',
+    'postecert.it',
+    'arubapec.it',
+    'mypec.eu',
+    'gigapec.it',
+    'postecertifica.it',
+    'sicurezzapostale.it',
+    'namirialpec.it',
+    'spidmail.it',
+  ])('rejects a PEC domain: %s', (domain) => {
     const result = EmailHighPriorityBodySchema.safeParse({
       from: { email: 'sender@example.com' },
-      to: { email: 'recipient@legalpec.example' },
+      to: { email: `recipient@${domain}` },
       emailContent: { subject: 'Subject', html: '<p>Body</p>' },
     });
 
@@ -115,13 +128,26 @@ describe('recipient PEC validation', () => {
     );
   });
 
+  it.each(['legalpec.it', 'testpec.eu', 'examplepec.it'])(
+    'accepts a domain that does not start with pec or cert: %s',
+    (domain) => {
+      const result = EmailHighPriorityBodySchema.safeParse({
+        from: { email: 'sender@example.com' },
+        to: { email: `recipient@${domain}` },
+        emailContent: { subject: 'Subject', html: '<p>Body</p>' },
+      });
+
+      expect(result.success).toBe(true);
+    },
+  );
+
   it('rejects the entire low priority request when one recipient is PEC', () => {
     const result = EmailLowPriorityBodySchema.safeParse({
       from: { email: 'sender@example.com' },
       templateId: 'template-id',
       sendingInfo: [
         { to: { email: 'valid@example.com' } },
-        { to: { email: 'recipient@PEC.example' } },
+        { to: { email: 'recipient@PEC.IT' } },
       ],
     });
 
@@ -138,8 +164,8 @@ describe('recipient PEC validation', () => {
 
   it('does not reject PEC in sender or reply-to addresses', () => {
     const result = EmailLowPriorityBodySchema.safeParse({
-      from: { email: 'sender@pec.example' },
-      replyTo: { email: 'reply@legalpec.example' },
+      from: { email: 'sender@pec.it' },
+      replyTo: { email: 'reply@legalpec.it' },
       templateId: 'template-id',
       sendingInfo: [{ to: { email: 'valid@example.com' } }],
     });
