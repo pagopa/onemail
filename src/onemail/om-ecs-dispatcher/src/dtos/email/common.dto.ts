@@ -1,4 +1,5 @@
 import env from '#config/env';
+import { PecErrorMessage } from '#dtos/error.dto';
 import { InvalidHtmlRawError } from '#errors/invalidHtmlRawError.error';
 import { APP_ENV_VALUES, headerTenantName } from '#utils/constants';
 import { sanitizeEmailHtml } from '#utils/htmlSanitizer';
@@ -40,7 +41,7 @@ export const RecipientEmailAddressSchema = EmailAddressSchema.extend({
   email: z
     .email()
     .refine((email) => !pecEmailPattern.test(email), {
-      message: 'PEC recipients are not supported',
+      message: PecErrorMessage,
     })
     .describe('Recipient email address'),
 }).openapi('RecipientEmailAddress');

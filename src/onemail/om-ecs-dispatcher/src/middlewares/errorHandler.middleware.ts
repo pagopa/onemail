@@ -1,5 +1,6 @@
 import { getLogger } from '#config/logger';
 import { ERROR_CODES } from '#dtos/error.dto';
+import { PecErrorMessage } from '#dtos/error.dto';
 import { ApiError } from '#errors/api.error';
 import { InvalidHtmlRawError } from '#errors/invalidHtmlRawError.error';
 import {
@@ -28,7 +29,7 @@ export const errorHandler = (
 
   if (err instanceof ZodError) {
     const isPecError = err.issues.some(
-      (issue) => issue.message === 'PEC recipients are not supported',
+      (issue) => issue.message === PecErrorMessage,
     );
     const isAttachmentError = err.issues.some(
       (issue) => issue.path[0] === 'attachments',
@@ -36,7 +37,7 @@ export const errorHandler = (
 
     if (isPecError) {
       errorResponse = new ApiError(
-        'PEC recipients are not supported',
+        PecErrorMessage,
         StatusCodes.BAD_REQUEST,
         ERROR_CODES.PEC_RECIPIENT_NOT_ALLOWED,
       );

@@ -29,3 +29,5 @@ export const ErrorResponseSchema = z
   .openapi('ErrorResponseDTO');
 
 export type ErrorResponseDTO = z.infer<typeof ErrorResponseSchema>;
+
+export const PecErrorMessage = 'PEC recipients are not supported';

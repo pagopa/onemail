@@ -288,7 +288,8 @@
             "properties": {
               "email": {
                 "type": "string",
-                "format": "email"
+                "format": "email",
+                "description": "Recipient email address"
               }
             }
           }
