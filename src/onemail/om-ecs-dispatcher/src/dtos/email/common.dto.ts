@@ -1,4 +1,5 @@
 import env from '#config/env';
+import { PecErrorMessage } from '#dtos/error.dto';
 import { InvalidHtmlRawError } from '#errors/invalidHtmlRawError.error';
 import { APP_ENV_VALUES, headerTenantName } from '#utils/constants';
 import { sanitizeEmailHtml } from '#utils/htmlSanitizer';
@@ -32,6 +33,18 @@ export const EmailAddressSchema = z
     email: z.email().describe('Email address'),
   })
   .openapi('EmailAddress');
+
+const pecEmailPattern =
+  /^[^@\s]+@(?:(?:pec|cert)\.[^@\s]+|legalmail\.it|postecert\.it|arubapec\.it|mypec\.eu|gigapec\.it|postecertifica\.it|sicurezzapostale\.it|namirialpec\.it|spidmail\.it)$/i;
+
+export const RecipientEmailAddressSchema = EmailAddressSchema.extend({
+  email: z
+    .email()
+    .refine((email) => !pecEmailPattern.test(email), {
+      message: PecErrorMessage,
+    })
+    .describe('Recipient email address'),
+}).openapi('RecipientEmailAddress');
 
 // Used for custom headers
 export const NameValueSchema = z

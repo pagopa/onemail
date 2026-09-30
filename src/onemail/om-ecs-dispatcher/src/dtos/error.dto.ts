@@ -13,6 +13,7 @@ export const ERROR_CODES = {
   UNEXPECTED_ERROR: 'U001',
   INVALID_TENANT: 'T001',
   INVALID_ATTACHMENT: 'A001',
+  PEC_RECIPIENT_NOT_ALLOWED: 'P001',
 };
 
 export const ErrorResponseSchema = z
@@ -28,3 +29,5 @@ export const ErrorResponseSchema = z
   .openapi('ErrorResponseDTO');
 
 export type ErrorResponseDTO = z.infer<typeof ErrorResponseSchema>;
+
+export const PecErrorMessage = 'PEC recipients are not supported';
