@@ -7,6 +7,7 @@ import {
   ConfSetEventItemSchema,
   EventTypeSchema,
 } from '#dtos/confSetEventItem.dto';
+import { addToBlacklist } from '#repositories/blacklist.repository';
 import {
   findEmailByProviderMessageId,
   updateEmailStatus,
@@ -23,7 +24,8 @@ import {
   ConfigSetProcessorMetricName,
   publishMetrics,
 } from 'om-common/repositories';
-import { EmailStatus } from 'om-common/types';
+import { BlacklistSource, EmailStatus } from 'om-common/types';
+import { maskEmailAddress } from 'om-common/utils';
 
 const extractEventPayload = (recordBody: string): Record<string, unknown> => {
   const parsedRecordBody = JSON.parse(recordBody);
@@ -125,6 +127,33 @@ const getBounceStatus = (
   return EmailStatus.SoftBounce;
 };
 
+const blacklistHardBouncedRecipients = async (
+  event: Extract<ConfSetEventItem, { eventType: 'Bounce' }>,
+  emailRecord: EmailStatusHistoryItem,
+): Promise<void> => {
+  const logger = getNamedLogger(blacklistHardBouncedRecipients.name);
+
+  // Failures are swallowed on purpose: retrying the record would append duplicate status
+  // history entries, and the scheduled suppression-list alignment job recovers the gap.
+  await Promise.all(
+    event.bounce.bouncedRecipients.map(({ emailAddress }) =>
+      addToBlacklist({
+        emailAddress,
+        source: BlacklistSource.Event,
+        reason: 'BOUNCE',
+        bounceSubType: event.bounce.bounceSubType ?? undefined,
+        tenantName: emailRecord.tenantName,
+      }).catch((error: unknown) => {
+        logger.error('Failed to add hard bounced address to the blacklist', {
+          emailAddress: maskEmailAddress(emailAddress),
+          emailId: emailRecord.emailId,
+          error,
+        });
+      }),
+    ),
+  );
+};
+
 const handleBounce = async (
   event: Extract<ConfSetEventItem, { eventType: 'Bounce' }>,
   emailRecord: EmailStatusHistoryItem,
@@ -138,6 +167,7 @@ const handleBounce = async (
         reason: event.bounce.bounceSubType,
       },
     ]);
+    await blacklistHardBouncedRecipients(event, emailRecord);
     publishMetrics([
       {
         name: ConfigSetProcessorMetricName.EmailHardBounce,
