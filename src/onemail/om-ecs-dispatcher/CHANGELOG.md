@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.11.2
+
+### Patch Changes
+
+- f6af5ea: avoid pec recipents emails
+
 ## 1.11.1
 
 ### Patch Changes

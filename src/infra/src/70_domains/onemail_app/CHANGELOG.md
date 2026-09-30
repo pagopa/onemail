@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.25.1
+
+### Patch Changes
+
+- f6af5ea: avoid pec recipents emails
+
 ## 1.25.0
 
 ### Minor Changes
