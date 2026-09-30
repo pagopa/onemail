@@ -1,4 +1,6 @@
 import { AttachmentsSchema } from '#dtos/email/common.dto';
+import { EmailHighPriorityBodySchema } from '#dtos/email/emailHighPriority.dto';
+import { EmailLowPriorityBodySchema } from '#dtos/email/emailLowPriority.dto';
 import { describe, expect, it } from 'vitest';
 
 const validAttachment = {
@@ -91,5 +93,67 @@ describe('AttachmentsSchema', () => {
         },
       ]).success,
     ).toBe(true);
+  });
+});
+
+describe('recipient PEC validation', () => {
+  it('rejects a high priority PEC recipient', () => {
+    const result = EmailHighPriorityBodySchema.safeParse({
+      from: { email: 'sender@example.com' },
+      to: { email: 'recipient@legalpec.example' },
+      emailContent: { subject: 'Subject', html: '<p>Body</p>' },
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.success ? undefined : result.error.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: ['to', 'email'],
+          message: 'PEC recipients are not supported',
+        }),
+      ]),
+    );
+  });
+
+  it('rejects the entire low priority request when one recipient is PEC', () => {
+    const result = EmailLowPriorityBodySchema.safeParse({
+      from: { email: 'sender@example.com' },
+      templateId: 'template-id',
+      sendingInfo: [
+        { to: { email: 'valid@example.com' } },
+        { to: { email: 'recipient@PEC.example' } },
+      ],
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.success ? undefined : result.error.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: ['sendingInfo', 1, 'to', 'email'],
+          message: 'PEC recipients are not supported',
+        }),
+      ]),
+    );
+  });
+
+  it('does not reject PEC in sender or reply-to addresses', () => {
+    const result = EmailLowPriorityBodySchema.safeParse({
+      from: { email: 'sender@pec.example' },
+      replyTo: { email: 'reply@legalpec.example' },
+      templateId: 'template-id',
+      sendingInfo: [{ to: { email: 'valid@example.com' } }],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('does not reject pec in the local part', () => {
+    const result = EmailHighPriorityBodySchema.safeParse({
+      from: { email: 'sender@example.com' },
+      to: { email: 'pec-recipient@example.com' },
+      emailContent: { subject: 'Subject', html: '<p>Body</p>' },
+    });
+
+    expect(result.success).toBe(true);
   });
 });

@@ -61,7 +61,6 @@ const registerZodErrorTest = () => {
     const issue = new ZodError([
       { path: ['attachments', 0, 'content'] } as never,
     ]);
-
     errorHandler(issue, {} as never, response as never, vi.fn());
 
     expect(response.status).toHaveBeenCalledWith(400);
@@ -69,6 +68,27 @@ const registerZodErrorTest = () => {
       expect.objectContaining({
         message: 'Invalid attachment',
         errorCode: ERROR_CODES.INVALID_ATTACHMENT,
+      }),
+    );
+  });
+
+  it('returns the dedicated error for PEC recipient zod errors', () => {
+    const { errorHandler, response } = loadErrorHandler();
+    const issue = new ZodError([
+      {
+        code: 'custom',
+        path: ['sendingInfo', 0, 'to', 'email'],
+        message: 'PEC recipients are not supported',
+      },
+    ]);
+
+    errorHandler(issue, {} as never, response as never, vi.fn());
+
+    expect(response.status).toHaveBeenCalledWith(400);
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'PEC recipients are not supported',
+        errorCode: ERROR_CODES.PEC_RECIPIENT_NOT_ALLOWED,
       }),
     );
   });
