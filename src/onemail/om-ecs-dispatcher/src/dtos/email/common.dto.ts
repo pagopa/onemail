@@ -33,6 +33,14 @@ export const EmailAddressSchema = z
   })
   .openapi('EmailAddress');
 
+const pecEmailPattern = /^[^@\s]+@[^@\s]*pec[^@\s]*$/i;
+
+export const RecipientEmailAddressSchema = EmailAddressSchema.extend({
+  email: z.email().refine((email) => !pecEmailPattern.test(email), {
+    message: 'PEC recipients are not supported',
+  }),
+}).openapi('RecipientEmailAddress');
+
 // Used for custom headers
 export const NameValueSchema = z
   .object({

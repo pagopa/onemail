@@ -13,6 +13,7 @@ export const ERROR_CODES = {
   UNEXPECTED_ERROR: 'U001',
   INVALID_TENANT: 'T001',
   INVALID_ATTACHMENT: 'A001',
+  PEC_RECIPIENT_NOT_ALLOWED: 'P001',
 };
 
 export const ErrorResponseSchema = z

@@ -6,14 +6,15 @@ import {
   EmailAddressSchema,
   EmailSuccessResponseSchema,
   ExtendedHeadersSchema,
+  RecipientEmailAddressSchema,
   TagSchema,
   TemplateAttributesSchema,
   TemplateIdSchema,
 } from './common.dto.js';
 
 export const SendingInfoSchema = z.object({
-  to: EmailAddressSchema.describe(
-    'Recipient of the email, ignored in case of dryRun',
+  to: RecipientEmailAddressSchema.describe(
+    'Recipient of the email. PEC recipients are not supported. Recipients will be ignored in case of dryRun.',
   ),
   extendedHeaders: ExtendedHeadersSchema.optional(),
   templateAttributes: TemplateAttributesSchema.optional(),

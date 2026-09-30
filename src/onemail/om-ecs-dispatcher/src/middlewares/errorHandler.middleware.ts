@@ -27,11 +27,20 @@ export const errorHandler = (
   let errorResponse: ApiError;
 
   if (err instanceof ZodError) {
+    const isPecError = err.issues.some(
+      (issue) => issue.message === 'PEC recipients are not supported',
+    );
     const isAttachmentError = err.issues.some(
       (issue) => issue.path[0] === 'attachments',
     );
 
-    if (isAttachmentError) {
+    if (isPecError) {
+      errorResponse = new ApiError(
+        'PEC recipients are not supported',
+        StatusCodes.BAD_REQUEST,
+        ERROR_CODES.PEC_RECIPIENT_NOT_ALLOWED,
+      );
+    } else if (isAttachmentError) {
       errorResponse = new ApiError(
         'Invalid attachment',
         StatusCodes.BAD_REQUEST,
