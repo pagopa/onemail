@@ -5,7 +5,6 @@ import {
   CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
 import { EmailStatus } from 'om-common/types';
-import { BlacklistSource } from 'om-common/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -460,16 +459,10 @@ describe('emailStatus.service blacklist flow', () => {
     expect(addToBlacklist).toHaveBeenCalledTimes(2);
     expect(addToBlacklist).toHaveBeenCalledWith({
       emailAddress: 'first@example.com',
-      source: BlacklistSource.Event,
-      reason: 'BOUNCE',
-      bounceSubType: CapitalizedSesBounceSubType.General,
       tenantName: email.tenantName,
     });
     expect(addToBlacklist).toHaveBeenCalledWith({
       emailAddress: 'second@example.com',
-      source: BlacklistSource.Event,
-      reason: 'BOUNCE',
-      bounceSubType: CapitalizedSesBounceSubType.General,
       tenantName: email.tenantName,
     });
   });

@@ -75,4 +75,8 @@ locals {
     one(data.aws_dynamodb_table.TenantConfig.server_side_encryption).kms_key_arn,
     null
   )
+  blacklist_kms_key_arn = try(
+    one(data.aws_dynamodb_table.Blacklist.server_side_encryption).kms_key_arn,
+    null
+  )
 }

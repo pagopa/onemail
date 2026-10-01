@@ -93,6 +93,8 @@ export const DispatcherMetricName = {
   TenantConfigurationNotFound: 'TenantConfigurationNotFound',
   UnauthorizedTenant: 'UnauthorizedTenant',
   AttachmentRejected: 'AttachmentRejected',
+  BlacklistHit: 'BlacklistHit',
+  BlacklistCheckFailed: 'BlacklistCheckFailed',
 } as const;
 
 interface MetricInput {

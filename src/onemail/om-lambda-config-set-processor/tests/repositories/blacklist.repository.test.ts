@@ -1,6 +1,5 @@
 import { addToBlacklist } from '#repositories/blacklist.repository';
 import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
-import { BlacklistSource } from 'om-common/types';
 import { describe, expect, it, vi } from 'vitest';
 
 import { expectCommandInput } from '../../../testing/commandAssertions.js';
@@ -20,15 +19,10 @@ vi.mock('#config/env', () => ({
 
 describe('addToBlacklist', () => {
   it('writes the normalized address with an idempotent condition', async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2025-01-01T00:00:00Z'));
     dynamoSend.mockResolvedValue({});
 
     await addToBlacklist({
       emailAddress: '  User.Name@Example.IT ',
-      source: BlacklistSource.Event,
-      reason: 'BOUNCE',
-      bounceSubType: 'General',
       tenantName: 'tenant-1',
     });
 
@@ -40,18 +34,11 @@ describe('addToBlacklist', () => {
         ConditionExpression: 'attribute_not_exists(emailAddress)',
         Item: {
           emailAddress: 'user.name@example.it',
-          source: BlacklistSource.Event,
-          reason: 'BOUNCE',
-          bounceSubType: 'General',
           tenantName: 'tenant-1',
-          createdAt: '2025-01-01T00:00:00.000Z',
-          updatedAt: '2025-01-01T00:00:00.000Z',
         },
       },
       0,
     );
-
-    vi.useRealTimers();
   });
 
   it('swallows ConditionalCheckFailedException when the address already exists', async () => {
@@ -65,7 +52,7 @@ describe('addToBlacklist', () => {
     await expect(
       addToBlacklist({
         emailAddress: 'user@example.it',
-        source: BlacklistSource.Event,
+        tenantName: 'tenant-1',
       }),
     ).resolves.toBeUndefined();
   });
@@ -76,7 +63,7 @@ describe('addToBlacklist', () => {
     await expect(
       addToBlacklist({
         emailAddress: 'user@example.it',
-        source: BlacklistSource.Sync,
+        tenantName: 'tenant-1',
       }),
     ).rejects.toThrow('Throttled');
   });

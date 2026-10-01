@@ -27,6 +27,9 @@ export default {
     attachmentsBucket:
       process.env.AWS_ATTACHMENTS_BUCKET ??
       throwMissingRequiredEnvVar('AWS_ATTACHMENTS_BUCKET'),
+    blacklistDbTable:
+      process.env.AWS_BLACKLIST_DB_TABLE ??
+      throwMissingRequiredEnvVar('AWS_BLACKLIST_DB_TABLE'),
     localDynamoDb: {
       endpoint: process.env.AWS_DYNAMODB_ENDPOINT || 'http://localhost:8000',
       accessKeyId: process.env.AWS_DYNAMODB_ACCESS_KEY_ID || 'local',
