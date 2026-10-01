@@ -5,7 +5,7 @@ import {
   CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
 import { EmailStatus } from 'om-common/types';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   makeBounceEvent,
@@ -21,10 +21,14 @@ const findEmailByProviderMessageId = vi.hoisted(() => vi.fn());
 const updateEmailStatus = vi.hoisted(() => vi.fn());
 const handleSoftBounceRetry = vi.hoisted(() => vi.fn());
 const publishMetrics = vi.hoisted(() => vi.fn());
+const addToBlacklist = vi.hoisted(() => vi.fn());
 
 vi.mock('#repositories/email.repository', () => ({
   findEmailByProviderMessageId,
   updateEmailStatus,
+}));
+vi.mock('#repositories/blacklist.repository', () => ({
+  addToBlacklist,
 }));
 vi.mock('#services/bounceRetry.service', () => ({
   handleSoftBounceRetry,
@@ -45,6 +49,10 @@ vi.mock('om-common/repositories', () => ({
   },
   publishMetrics,
 }));
+
+beforeEach(() => {
+  addToBlacklist.mockResolvedValue(undefined);
+});
 
 describe('emailStatus.service validation and guard clauses', () => {
   it('discards records with empty body and publishes InvalidRecord', async () => {
@@ -425,6 +433,119 @@ describe('emailStatus.service non-retryable bounce flow', () => {
       ],
     );
     expect(handleSoftBounceRetry).not.toHaveBeenCalled();
+  });
+});
+
+describe('emailStatus.service blacklist flow', () => {
+  it('blacklists every bounced recipient on a hard bounce', async () => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
+    findEmailByProviderMessageId.mockResolvedValue(email);
+
+    await sqsEventHandler(
+      makeQueueRecord(
+        makeBounceEvent(
+          'ses-msg-1',
+          CapitalizedSesBounceType.Permanent,
+          CapitalizedSesBounceSubType.General,
+          '2025-06-01T12:00:00Z',
+          undefined,
+          ['first@example.com', 'second@example.com'],
+        ),
+      ),
+    );
+
+    expect(addToBlacklist).toHaveBeenCalledTimes(2);
+    expect(addToBlacklist).toHaveBeenCalledWith({
+      emailAddress: 'first@example.com',
+      tenantName: email.tenantName,
+    });
+    expect(addToBlacklist).toHaveBeenCalledWith({
+      emailAddress: 'second@example.com',
+      tenantName: email.tenantName,
+    });
+  });
+
+  it.each([
+    CapitalizedSesBounceSubType.Suppressed,
+    CapitalizedSesBounceSubType.OnAccountSuppressionList,
+  ])('blacklists permanent sub-type %s as well', async (subType) => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
+    findEmailByProviderMessageId.mockResolvedValue(email);
+
+    await sqsEventHandler(
+      makeQueueRecord(
+        makeBounceEvent(
+          'ses-msg-1',
+          CapitalizedSesBounceType.Permanent,
+          subType,
+          '2025-06-01T12:00:00Z',
+        ),
+      ),
+    );
+
+    expect(addToBlacklist).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    [CapitalizedSesBounceType.Transient, CapitalizedSesBounceSubType.General],
+    [
+      CapitalizedSesBounceType.Transient,
+      CapitalizedSesBounceSubType.ContentRejected,
+    ],
+    [
+      CapitalizedSesBounceType.Undetermined,
+      CapitalizedSesBounceSubType.Undetermined,
+    ],
+  ])('does not blacklist a %s/%s bounce', async (bounceType, subType) => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
+    findEmailByProviderMessageId.mockResolvedValue(email);
+
+    await sqsEventHandler(
+      makeQueueRecord(
+        makeBounceEvent(
+          'ses-msg-1',
+          bounceType,
+          subType,
+          '2025-06-01T12:00:00Z',
+        ),
+      ),
+    );
+
+    expect(addToBlacklist).not.toHaveBeenCalled();
+  });
+
+  it('keeps processing the record when the blacklist write fails', async () => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
+    findEmailByProviderMessageId.mockResolvedValue(email);
+    addToBlacklist.mockRejectedValue(new Error('Throttled'));
+
+    await expect(
+      sqsEventHandler(
+        makeQueueRecord(
+          makeBounceEvent(
+            'ses-msg-1',
+            CapitalizedSesBounceType.Permanent,
+            CapitalizedSesBounceSubType.General,
+            '2025-06-01T12:00:00Z',
+          ),
+        ),
+      ),
+    ).resolves.toBeUndefined();
+
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'EmailHardBounce',
+        dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+      },
+    ]);
   });
 });
 
