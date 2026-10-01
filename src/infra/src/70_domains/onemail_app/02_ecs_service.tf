@@ -47,6 +47,19 @@ data "aws_iam_policy_document" "ecs_task_policy" {
   }
 
   statement {
+    sid = "DynamoDBBlacklistReadAccess"
+
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:BatchGetItem"
+    ]
+
+    resources = [
+      data.aws_dynamodb_table.Blacklist.arn
+    ]
+  }
+
+  statement {
     sid = "CloudWatchMetricsAccess"
 
     actions = [
@@ -72,7 +85,8 @@ data "aws_iam_policy_document" "ecs_task_policy" {
   dynamic "statement" {
     for_each = toset(compact([
       local.dynamodb_kms_key_arn,
-      local.tenant_config_kms_key_arn
+      local.tenant_config_kms_key_arn,
+      local.blacklist_kms_key_arn
     ]))
 
     content {
@@ -158,6 +172,10 @@ module "ecs_service" {
     {
       name  = "AWS_ATTACHMENTS_BUCKET"
       value = data.aws_s3_bucket.email_attachments.bucket
+    },
+    {
+      name  = "AWS_BLACKLIST_DB_TABLE"
+      value = data.aws_dynamodb_table.Blacklist.name
     },
   ]
 

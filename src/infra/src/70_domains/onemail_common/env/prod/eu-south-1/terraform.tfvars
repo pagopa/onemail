@@ -92,6 +92,30 @@ dynamodb_tables = {
       }
     ]
   }
+  blacklist = {
+    table_name                     = "EmailBlacklist"
+    hash_key                       = "emailAddress"
+    billing_mode                   = "PAY_PER_REQUEST"
+    point_in_time_recovery_enabled = true
+    stream_enabled                 = true
+    stream_view_type               = "NEW_AND_OLD_IMAGES"
+    replication_enabled            = true
+    create_kms_key                 = true
+    kms_alias                      = "/dynamodb/blacklist"
+    server_side_encryption_enabled = true
+    deletion_protection_enabled    = true
+    attributes = [
+      {
+        name = "emailAddress"
+        type = "S"
+      }
+    ]
+    replica_regions = [
+      {
+        region_name = "eu-central-1"
+      }
+    ]
+  }
 }
 
 # ECS Cluster
