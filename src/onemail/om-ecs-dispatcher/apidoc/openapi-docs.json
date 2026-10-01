@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.11.1",
+    "version": "1.11.2",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -388,6 +388,43 @@
             "source": "web"
           }
         }
+      },
+      "EmailLowPriorityResponseDTO": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EmailSuccessResponseDTO"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "unhandledEmails": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/UnhandledEmail"
+                },
+                "description": "Recipients excluded from the request. Absent when every recipient was accepted."
+              }
+            }
+          }
+        ]
+      },
+      "UnhandledEmail": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "format": "email",
+            "description": "Discarded recipient email address"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason why the recipient was discarded"
+          }
+        },
+        "required": [
+          "address",
+          "reason"
+        ]
       },
       "EmailLowPriorityBodyDTO": {
         "type": "object",
@@ -806,6 +843,16 @@
               }
             }
           },
+          "422": {
+            "description": "Recipient is in the SES suppression list and cannot be contacted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
           "429": {
             "description": "Too many requests",
             "content": {
@@ -865,11 +912,11 @@
         },
         "responses": {
           "202": {
-            "description": "Email accepted for processing",
+            "description": "Email accepted for processing. Recipients in the SES suppression list are reported in unhandledEmails.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EmailSuccessResponseDTO"
+                  "$ref": "#/components/schemas/EmailLowPriorityResponseDTO"
                 }
               }
             }
@@ -916,6 +963,16 @@
           },
           "409": {
             "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Every recipient is in the SES suppression list and cannot be contacted",
             "content": {
               "application/json": {
                 "schema": {

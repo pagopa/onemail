@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.11.1",
+    "version": "1.11.2",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -121,6 +121,7 @@
             "403": { "statusCode": "403" },
             "404": { "statusCode": "404" },
             "409": { "statusCode": "409" },
+            "422": { "statusCode": "422" },
             "429": { "statusCode": "429" },
             "500": { "statusCode": "500" }
           }
@@ -178,6 +179,7 @@
             "403": { "statusCode": "403" },
             "404": { "statusCode": "404" },
             "409": { "statusCode": "409" },
+            "422": { "statusCode": "422" },
             "429": { "statusCode": "429" },
             "500": { "statusCode": "500" }
           }
