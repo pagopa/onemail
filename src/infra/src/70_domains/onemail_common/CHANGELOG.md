@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.22.2
+
+### Patch Changes
+
+- 8dd0a49: add blacklist table
+
 ## 1.22.1
 
 ### Patch Changes
