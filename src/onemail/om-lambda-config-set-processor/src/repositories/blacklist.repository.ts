@@ -12,6 +12,17 @@ export interface AddToBlacklistInput {
   tenantName: string;
 }
 
+const normalizeEmailAddress = (emailAddress: string): string => {
+  const openingBracketIndex = emailAddress.lastIndexOf('<');
+  const closingBracketIndex = emailAddress.indexOf('>', openingBracketIndex);
+  const address =
+    openingBracketIndex >= 0 && closingBracketIndex > openingBracketIndex
+      ? emailAddress.slice(openingBracketIndex + 1, closingBracketIndex)
+      : emailAddress;
+
+  return address.trim().toLowerCase();
+};
+
 /**
  * Adds an address to the blacklist mirroring the SES account-level suppression list.
  * The write is idempotent: an address already present is left untouched.
@@ -21,7 +32,7 @@ export const addToBlacklist = async ({
   tenantName,
 }: AddToBlacklistInput): Promise<void> => {
   const item: BlacklistItem = {
-    emailAddress: emailAddress.trim().toLowerCase(),
+    emailAddress: normalizeEmailAddress(emailAddress),
     tenantName,
   };
 

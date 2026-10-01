@@ -41,6 +41,29 @@ describe('addToBlacklist', () => {
     );
   });
 
+  it('writes only the address from a display-name formatted recipient', async () => {
+    dynamoSend.mockResolvedValue({});
+
+    await addToBlacklist({
+      emailAddress: 'User Name <User.Name@Example.IT>',
+      tenantName: 'tenant-1',
+    });
+
+    expect(dynamoSend).toHaveBeenCalledTimes(1);
+    expectCommandInput(
+      dynamoSend,
+      {
+        TableName: 'blacklist-table',
+        ConditionExpression: 'attribute_not_exists(emailAddress)',
+        Item: {
+          emailAddress: 'user.name@example.it',
+          tenantName: 'tenant-1',
+        },
+      },
+      0,
+    );
+  });
+
   it('swallows ConditionalCheckFailedException when the address already exists', async () => {
     dynamoSend.mockRejectedValue(
       new ConditionalCheckFailedException({
