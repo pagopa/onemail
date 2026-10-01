@@ -93,7 +93,7 @@ dynamodb_tables = {
     ]
   }
   blacklist = {
-    table_name                     = "Blacklist"
+    table_name                     = "EmailBlacklist"
     hash_key                       = "emailAddress"
     billing_mode                   = "PAY_PER_REQUEST"
     point_in_time_recovery_enabled = true
