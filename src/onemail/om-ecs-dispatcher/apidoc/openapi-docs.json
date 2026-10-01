@@ -912,7 +912,7 @@
         },
         "responses": {
           "202": {
-            "description": "Email accepted for processing. Recipients in the SES suppression list are reported in unhandledEmails.",
+            "description": "Email accepted for processing. Recipients in the SES suppression list are reported in unhandledEmails",
             "content": {
               "application/json": {
                 "schema": {

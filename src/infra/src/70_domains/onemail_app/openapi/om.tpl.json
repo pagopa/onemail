@@ -127,12 +127,13 @@
           }
         },
         "responses": {
-          "202": { "description": "Email accepted for processing" },
+          "202": { "description": "Email accepted for processing. Recipients in the SES suppression list are reported in unhandledEmails" },
           "400": { "description": "Bad request - invalid data" },
           "401": { "description": "Unauthorized - authentication required or invalid credentials" },
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
           "409": { "description": "Conflict - resource already exists" },
+          "422": { "description": "Every recipient is in the SES suppression list and cannot be contacted" },
           "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
@@ -191,6 +192,7 @@
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
           "409": { "description": "Conflict - resource already exists" },
+          "422": { "description": "Recipient is in the SES suppression list and cannot be contacted" },
           "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }

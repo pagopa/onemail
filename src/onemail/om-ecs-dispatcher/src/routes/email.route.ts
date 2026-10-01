@@ -104,7 +104,7 @@ registerOpenApiRoute({
     [StatusCodes.ACCEPTED]: {
       schema: EmailLowPriorityResponseSchema,
       description:
-        'Email accepted for processing. Recipients in the SES suppression list are reported in unhandledEmails.',
+        'Email accepted for processing. Recipients in the SES suppression list are reported in unhandledEmails',
     },
     [StatusCodes.UNPROCESSABLE_ENTITY]: {
       schema: ErrorResponseSchema,
