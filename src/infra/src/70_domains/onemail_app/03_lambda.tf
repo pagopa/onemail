@@ -75,8 +75,6 @@ data "aws_iam_policy_document" "sender_policy" {
     for_each = local.dynamodb_kms_key_arn != null ? [local.dynamodb_kms_key_arn] : []
 
     content {
-      sid = "KMSAccess"
-
       actions = [
         "kms:Decrypt",
         "kms:Encrypt"
@@ -231,8 +229,6 @@ data "aws_iam_policy_document" "set_processor_policy" {
     ]))
 
     content {
-      sid = "KMSAccess"
-
       actions = [
         "kms:Decrypt",
         "kms:Encrypt"
