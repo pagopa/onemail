@@ -45,7 +45,6 @@ import {
   EmailStatusHistoryItem,
   TenantConfigurationItem,
 } from 'om-common/types';
-import { maskEmailAddress, normalizeEmailAddress } from 'om-common/utils';
 
 /**
  * Resolves which recipients are blacklisted.
@@ -63,7 +62,6 @@ const findBlacklistedRecipients = async (
     return new Set(blacklisted.keys());
   } catch (error) {
     logger.error('Blacklist lookup failed, proceeding without the check', {
-      addresses: addresses.map(maskEmailAddress),
       error,
     });
     publishMetrics([
@@ -191,10 +189,10 @@ export const sendEmailLowPriority = async (
       );
 
   const acceptedSendingInfo = emailData.sendingInfo.filter(
-    ({ to }) => !blacklisted.has(normalizeEmailAddress(to.email)),
+    ({ to }) => !blacklisted.has(to.email.trim().toLowerCase()),
   );
   const unhandledEmails: UnhandledEmailDTO[] = emailData.sendingInfo
-    .filter(({ to }) => blacklisted.has(normalizeEmailAddress(to.email)))
+    .filter(({ to }) => blacklisted.has(to.email.trim().toLowerCase()))
     .map(({ to }) => ({
       address: to.email,
       reason: BlacklistedRecipientMessage,

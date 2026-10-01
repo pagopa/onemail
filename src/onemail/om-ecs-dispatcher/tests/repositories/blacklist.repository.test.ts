@@ -54,7 +54,7 @@ describe('findBlacklistedAddresses', () => {
     dynamoSend.mockResolvedValue({
       Responses: {
         'blacklist-table': [
-          { emailAddress: 'User@Example.IT', reason: 'BOUNCE' },
+          { emailAddress: 'User@Example.IT', tenantName: 'tenant-1' },
         ],
       },
     });
@@ -65,7 +65,9 @@ describe('findBlacklistedAddresses', () => {
     ]);
 
     expect([...result.keys()]).toEqual(['user@example.it']);
-    expect(result.get('user@example.it')).toMatchObject({ reason: 'BOUNCE' });
+    expect(result.get('user@example.it')).toMatchObject({
+      tenantName: 'tenant-1',
+    });
   });
 
   it('splits the lookup into chunks of 100 keys', async () => {

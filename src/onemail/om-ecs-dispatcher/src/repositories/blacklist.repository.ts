@@ -5,13 +5,15 @@ import { getNamedLogger } from '#config/logger';
 import { dynamoClient } from '#connectors/dynamo.connector';
 import { BatchGetCommand } from '@aws-sdk/lib-dynamodb';
 import { setTimeout as delay } from 'node:timers/promises';
-import { normalizeEmailAddress } from 'om-common/utils';
 
 // BatchGetItem accepts at most 100 keys per request.
 const BATCH_GET_LIMIT = 100;
 const MAX_RETRIES = 3;
 const BASE_BACKOFF_MS = 50;
 const MAX_BACKOFF_MS = 400;
+
+const normalizeEmailAddress = (emailAddress: string): string =>
+  emailAddress.trim().toLowerCase();
 
 const chunk = <T>(items: T[], size: number): T[][] => {
   const chunks: T[][] = [];
@@ -36,7 +38,7 @@ const fetchChunk = async (
         RequestItems: {
           [tableName]: {
             Keys: keys,
-            ProjectionExpression: 'emailAddress, reason',
+            ProjectionExpression: 'emailAddress, tenantName',
           },
         },
       }),
@@ -86,6 +88,9 @@ export const findBlacklistedAddresses = async (
   return new Map(
     results
       .flat()
-      .map((item) => [normalizeEmailAddress(item.emailAddress), item]),
+      .map((item): [string, BlacklistItem] => [
+        normalizeEmailAddress(item.emailAddress),
+        item,
+      ]),
   );
 };
