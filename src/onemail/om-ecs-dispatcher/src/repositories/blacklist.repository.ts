@@ -4,30 +4,16 @@ import env from '#config/env';
 import { getNamedLogger } from '#config/logger';
 import { dynamoClient } from '#connectors/dynamo.connector';
 import { BatchGetCommand } from '@aws-sdk/lib-dynamodb';
-import { setTimeout as delay } from 'node:timers/promises';
 
-// BatchGetItem accepts at most 100 keys per request.
-const BATCH_GET_LIMIT = 100;
 const MAX_RETRIES = 3;
-const BASE_BACKOFF_MS = 50;
-const MAX_BACKOFF_MS = 400;
 
 const normalizeEmailAddress = (emailAddress: string): string =>
   emailAddress.trim().toLowerCase();
 
-const chunk = <T>(items: T[], size: number): T[][] => {
-  const chunks: T[][] = [];
-  for (let index = 0; index < items.length; index += size) {
-    chunks.push(items.slice(index, index + size));
-  }
-  return chunks;
-};
-
-const fetchChunk = async (
+const fetchBlacklistItems = async (
   addresses: string[],
-  tableName: string,
 ): Promise<BlacklistItem[]> => {
-  const logger = getNamedLogger(fetchChunk.name);
+  const logger = getNamedLogger(fetchBlacklistItems.name);
   const found: BlacklistItem[] = [];
 
   let keys = addresses.map((emailAddress) => ({ emailAddress }));
@@ -36,31 +22,32 @@ const fetchChunk = async (
     const result = await dynamoClient.send(
       new BatchGetCommand({
         RequestItems: {
-          [tableName]: {
+          [env.aws.blacklistDbTable]: {
             Keys: keys,
-            ProjectionExpression: 'emailAddress, tenantName',
           },
         },
       }),
     );
 
-    found.push(...((result.Responses?.[tableName] ?? []) as BlacklistItem[]));
+    found.push(
+      ...((result.Responses?.[env.aws.blacklistDbTable] ??
+        []) as BlacklistItem[]),
+    );
 
-    const unprocessed = result.UnprocessedKeys?.[tableName]?.Keys;
+    const unprocessed =
+      result.UnprocessedKeys?.[env.aws.blacklistDbTable]?.Keys;
     if (!unprocessed || unprocessed.length === 0) {
       return found;
     }
 
     keys = unprocessed as { emailAddress: string }[];
 
-    if (attempt === MAX_RETRIES) {
+    if (attempt >= MAX_RETRIES) {
       logger.warn('Giving up on unprocessed blacklist keys', {
         unprocessedCount: keys.length,
       });
       return found;
     }
-
-    await delay(Math.min(BASE_BACKOFF_MS * 2 ** attempt, MAX_BACKOFF_MS));
   }
 
   return found;
@@ -78,19 +65,12 @@ export const findBlacklistedAddresses = async (
     return new Map();
   }
 
-  const tableName = env.aws.blacklistDbTable;
-  const results = await Promise.all(
-    chunk(uniqueAddresses, BATCH_GET_LIMIT).map((addressChunk) =>
-      fetchChunk(addressChunk, tableName),
-    ),
-  );
+  const results = await fetchBlacklistItems(uniqueAddresses);
 
   return new Map(
-    results
-      .flat()
-      .map((item): [string, BlacklistItem] => [
-        normalizeEmailAddress(item.emailAddress),
-        item,
-      ]),
+    results.map((item): [string, BlacklistItem] => [
+      normalizeEmailAddress(item.emailAddress),
+      item,
+    ]),
   );
 };

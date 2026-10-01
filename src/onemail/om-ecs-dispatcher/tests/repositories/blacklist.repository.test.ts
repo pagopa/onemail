@@ -70,20 +70,6 @@ describe('findBlacklistedAddresses', () => {
     });
   });
 
-  it('splits the lookup into chunks of 100 keys', async () => {
-    dynamoSend.mockResolvedValue({ Responses: { 'blacklist-table': [] } });
-    const addresses = Array.from(
-      { length: 150 },
-      (_, index) => `user${index}@example.it`,
-    );
-
-    await findBlacklistedAddresses(addresses);
-
-    expect(dynamoSend).toHaveBeenCalledTimes(2);
-    expect(keysOfCall(0)).toHaveLength(100);
-    expect(keysOfCall(1)).toHaveLength(50);
-  });
-
   it('retries unprocessed keys and merges the results', async () => {
     dynamoSend
       .mockResolvedValueOnce({

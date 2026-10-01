@@ -94,26 +94,23 @@ export const sendEmailTransactional = async (
   const tenantConfiguration =
     await getAndValidateTenantConfiguration(tenantName);
 
-  // dryRun ignores recipients, so the blacklist check is not applicable
-  if (!dryRun) {
-    const blacklisted = await findBlacklistedRecipients(
-      [emailData.to.email],
-      tenantName,
-      tenantConfiguration.clientId,
-    );
+  const blacklisted = await findBlacklistedRecipients(
+    [emailData.to.email],
+    tenantName,
+    tenantConfiguration.clientId,
+  );
 
-    if (blacklisted.size > 0) {
-      publishMetrics([
-        {
-          name: DispatcherMetricName.BlacklistHit,
-          dimensions: {
-            tenantName,
-            clientId: tenantConfiguration.clientId,
-          },
+  if (blacklisted.size > 0) {
+    publishMetrics([
+      {
+        name: DispatcherMetricName.BlacklistHit,
+        dimensions: {
+          tenantName,
+          clientId: tenantConfiguration.clientId,
         },
-      ]);
-      throwBlacklistedRecipient();
-    }
+      },
+    ]);
+    throwBlacklistedRecipient();
   }
 
   const requestId = randomUUID();
@@ -179,14 +176,11 @@ export const sendEmailLowPriority = async (
   const tenantConfiguration =
     await getAndValidateTenantConfiguration(tenantName);
 
-  // dryRun ignores recipients, so the blacklist check is not applicable
-  const blacklisted = dryRun
-    ? new Set<string>()
-    : await findBlacklistedRecipients(
-        emailData.sendingInfo.map(({ to }) => to.email),
-        tenantName,
-        tenantConfiguration.clientId,
-      );
+  const blacklisted = await findBlacklistedRecipients(
+    emailData.sendingInfo.map(({ to }) => to.email),
+    tenantName,
+    tenantConfiguration.clientId,
+  );
 
   const acceptedSendingInfo = emailData.sendingInfo.filter(
     ({ to }) => !blacklisted.has(to.email.trim().toLowerCase()),
