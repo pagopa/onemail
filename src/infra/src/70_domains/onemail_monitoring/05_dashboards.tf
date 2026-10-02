@@ -15,12 +15,14 @@ resource "aws_cloudwatch_dashboard" "main" {
         arn_suffix              = data.aws_lb.nlb.arn_suffix
         target_group_arn_suffix = data.aws_lb_target_group.ecs_core.arn_suffix
       }
-      sqs_high_priority = data.aws_sqs_queue.high_priority.name
-      sqs_low_priority  = data.aws_sqs_queue.low_priority.name
-      namespace         = local.project_nodomain
-      csp_service       = "${local.project_nodomain}-lambda-config-set-processor"
-      sender_service    = "${local.project_nodomain}-lambda-sender"
-      tenants           = local.tenants
+      sqs_high_priority  = data.aws_sqs_queue.high_priority.name
+      sqs_low_priority   = data.aws_sqs_queue.low_priority.name
+      namespace          = local.project_nodomain
+      csp_service        = "${local.project_nodomain}-lambda-config-set-processor"
+      sender_service     = "${local.project_nodomain}-lambda-sender"
+      dispatcher_service = "${local.project_nodomain}-ecs-dispatcher"
+      aligner_service    = "${local.project_nodomain}-lambda-blacklist-aligner"
+      tenants            = local.tenants
     }
   )
 }

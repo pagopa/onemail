@@ -32,3 +32,11 @@ lambda_set_processor = {
   package_path                   = "lambda/hello-nodejs/hello-nodejs.zip"
   reserved_concurrent_executions = -1 #Set based on expected load, Use -1 for unlimited concurrency for now
 }
+
+#Lambda Blacklist Aligner
+# Each region aligns against its own SES account-level suppression list.
+lambda_blacklist_aligner = {
+  package_path                   = "lambda/hello-nodejs/hello-nodejs.zip"
+  reserved_concurrent_executions = 1 #Single scheduled run, no concurrency needed
+  schedule_expression            = "cron(0 4 1 * ? *)"
+}
