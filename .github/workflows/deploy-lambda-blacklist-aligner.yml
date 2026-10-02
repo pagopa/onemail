@@ -1,0 +1,47 @@
+name: Deploy Lambda Blacklist Aligner
+
+permissions: {}
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - src/onemail/om-lambda-blacklist-aligner/CHANGELOG.md
+      - src/onemail/om-common/CHANGELOG.md
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose environment'
+        type: choice
+        required: true
+        default: dev
+        options:
+          - dev
+          - uat
+          - prod
+      bypass_security_checks:
+        type: boolean
+        default: false
+        description: 'Force deploy bypassing security checks: use only with proper authorization'
+
+# Never cancel an in-flight deploy to avoid s3 conflicts
+# It prevents issues where multiple commits are pushed in a short time, which would trigger multiple deploys and cancel the previous ones, potentially leaving the app in a broken state if the last deploy fails.
+concurrency:
+  group: deploy-lambda-blacklist-aligner-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-lambda.yml
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      lambda_name: blacklist-aligner
+      build_script: build:blacklist-aligner
+      package_script: package:blacklist-aligner
+      lambda_s3_key_var: LAMBDA_BLACKLIST_ALIGNER_KEY
+      event_name: ${{ github.event_name }}
+      environment_input: ${{ inputs.environment || '' }}
+      bypass_security_checks_manual: ${{ inputs.bypass_security_checks || false }}

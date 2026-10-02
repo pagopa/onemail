@@ -303,3 +303,103 @@ resource "aws_lambda_event_source_mapping" "config_set_processor" {
   function_name    = module.lambda_set_processor.lambda_function_arn
   #scaling_config { maximum_concurrency = 8 } # To adjust based on expected load for high priority tasks
 }
+
+# Lambda Blacklist Aligner
+data "aws_iam_policy_document" "blacklist_aligner_policy" {
+  statement {
+    sid = "SesSuppressionListReadAccess"
+
+    actions = [
+      "ses:ListSuppressedDestinations"
+    ]
+    # The SES suppression list is an account-level resource and has no ARN to scope to.
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "DynamoDBBlacklistAlignAccess"
+
+    actions = [
+      "dynamodb:Scan",
+      "dynamodb:PutItem",
+      "dynamodb:BatchWriteItem"
+    ]
+    resources = [
+      data.aws_dynamodb_table.Blacklist.arn
+    ]
+  }
+}
+
+
+module "security_group_lambda_blacklist_aligner" {
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-security-group.git?ref=a0abc9d3a6d94b055fda01b4c935020629585ec6" # v4.17.2
+
+  name        = "${local.project_nodomain}-sg-lambda-blacklist-aligner"
+  description = "Security group for blacklist aligner lambda"
+  vpc_id      = data.aws_vpc.core.id
+
+  egress_cidr_blocks      = []
+  egress_ipv6_cidr_blocks = []
+
+  egress_prefix_list_ids = [
+    data.aws_vpc_endpoint.dynamodb.prefix_list_id
+  ]
+
+  egress_with_cidr_blocks = [
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      description = "HTTPS to VPC"
+      cidr_blocks = data.aws_vpc.core.cidr_block
+    }
+  ]
+}
+
+module "lambda_blacklist_aligner" {
+  source = "./.terraform/modules/aws_modules/IDVH/lambda"
+
+  env                = var.env
+  product_name       = "onemail"
+  idvh_resource_tier = "standard"
+
+  name        = "${local.project_nodomain}-lambda-blacklist-aligner"
+  description = "Lambda function that realigns the blacklist table with the SES account-level suppression list"
+
+  package_path       = "${path.module}/${var.lambda_blacklist_aligner.package_path}"
+  lambda_policy_json = data.aws_iam_policy_document.blacklist_aligner_policy.json
+
+  memory_size                    = 256
+  reserved_concurrent_executions = var.lambda_blacklist_aligner.reserved_concurrent_executions
+  environment_variables = {
+    AWS_BLACKLIST_DB_TABLE           = data.aws_dynamodb_table.Blacklist.name
+    AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-blacklist-aligner"
+    SERVICE_PREFIX                   = "${local.project_nodomain}"
+    NODE_ENV                         = "production"
+    POWERTOOLS_LOG_LEVEL             = "INFO"
+  }
+  vpc_subnet_ids         = data.aws_subnets.private.ids
+  vpc_security_group_ids = [module.security_group_lambda_blacklist_aligner.security_group_id]
+
+  tags = module.tag_config.tags
+}
+
+resource "aws_cloudwatch_event_rule" "blacklist_aligner_schedule" {
+  name                = "${local.project_nodomain}-blacklist-aligner-schedule"
+  description         = "Triggers the blacklist aligner Lambda on a recurring schedule"
+  schedule_expression = var.lambda_blacklist_aligner.schedule_expression
+  tags                = module.tag_config.tags
+}
+
+resource "aws_cloudwatch_event_target" "blacklist_aligner" {
+  rule = aws_cloudwatch_event_rule.blacklist_aligner_schedule.name
+  arn  = module.lambda_blacklist_aligner.lambda_function_arn
+}
+
+resource "aws_lambda_permission" "blacklist_aligner_schedule" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_blacklist_aligner.lambda_function_arn
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.blacklist_aligner_schedule.arn
+}

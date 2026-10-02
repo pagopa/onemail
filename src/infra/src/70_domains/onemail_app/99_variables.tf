@@ -118,3 +118,12 @@ variable "lambda_set_processor" {
     reserved_concurrent_executions = optional(number)
   })
 }
+
+variable "lambda_blacklist_aligner" {
+  type = object({
+    package_path                   = string
+    reserved_concurrent_executions = optional(number)
+    schedule_expression            = optional(string, "cron(0 3 1 * ? *)")
+  })
+  description = "Blacklist aligner Lambda settings. The schedule defaults to the first day of each month at 03:00 UTC."
+}
