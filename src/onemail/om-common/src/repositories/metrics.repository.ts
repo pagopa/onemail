@@ -101,10 +101,19 @@ interface MetricInput {
   dimensions?: Record<string, string>;
 }
 
+export const BlacklistAlignerMetricName = {
+  BlacklistAlignedInserted: 'BlacklistAlignedInserted',
+  BlacklistAlignmentFailed: 'BlacklistAlignmentFailed',
+} as const;
+
 type AllMetricNames =
+  | BlacklistAlignerMetricName
   | ConfigSetProcessorMetricName
   | DispatcherMetricName
   | SenderMetricName;
+
+type BlacklistAlignerMetricName =
+  (typeof BlacklistAlignerMetricName)[keyof typeof BlacklistAlignerMetricName];
 
 type ConfigSetProcessorMetricName =
   (typeof ConfigSetProcessorMetricName)[keyof typeof ConfigSetProcessorMetricName];
