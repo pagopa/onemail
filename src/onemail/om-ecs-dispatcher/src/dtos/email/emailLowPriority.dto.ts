@@ -50,7 +50,25 @@ export type EmailLowPriorityQueryParams = z.infer<
   typeof EmailLowPriorityQueryParamsSchema
 >;
 
-export const EmailLowPriorityResponseSchema = EmailSuccessResponseSchema;
+export const UnhandledEmailSchema = z
+  .object({
+    address: z.email().describe('Discarded recipient email address'),
+    reason: z.string().describe('Reason why the recipient was discarded'),
+  })
+  .openapi('UnhandledEmail');
+
+export type UnhandledEmailDTO = z.infer<typeof UnhandledEmailSchema>;
+
+export const EmailLowPriorityResponseSchema = EmailSuccessResponseSchema.extend(
+  {
+    unhandledEmails: z
+      .array(UnhandledEmailSchema)
+      .optional()
+      .describe(
+        'Recipients excluded from the request. Absent when every recipient was accepted.',
+      ),
+  },
+).openapi('EmailLowPriorityResponseDTO');
 
 export type EmailLowPriorityResponseDTO = z.infer<
   typeof EmailLowPriorityResponseSchema

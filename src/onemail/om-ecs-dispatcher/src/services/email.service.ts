@@ -10,15 +10,17 @@ import {
 import {
   EmailLowPriorityBodyDTO,
   EmailLowPriorityResponseDTO,
+  UnhandledEmailDTO,
 } from '#dtos/email/emailLowPriority.dto';
 import { EmailStatusResponseDTO } from '#dtos/email/emailStatus.dto';
 import { SanitizeHtmlResponseDTO } from '#dtos/email/validateHtml.dto';
-import { ERROR_CODES } from '#dtos/error.dto';
+import { BlacklistedRecipientMessage, ERROR_CODES } from '#dtos/error.dto';
 import { ApiError } from '#errors/api.error';
 import {
   deleteAttachment,
   putAttachment,
 } from '#repositories/attachment.repository';
+import { findBlacklistedAddresses } from '#repositories/blacklist.repository';
 import {
   validateAttachments,
   ValidatedAttachment,
@@ -44,6 +46,42 @@ import {
   TenantConfigurationItem,
 } from 'om-common/types';
 
+/**
+ * Resolves which recipients are blacklisted.
+ * Fails open: a lookup error must not block a request, SES still enforces suppression.
+ */
+const findBlacklistedRecipients = async (
+  addresses: string[],
+  tenantName: string,
+  clientId: string,
+): Promise<Set<string>> => {
+  const logger = getNamedLogger(findBlacklistedRecipients.name);
+
+  try {
+    const blacklisted = await findBlacklistedAddresses(addresses);
+    return new Set(blacklisted.keys());
+  } catch (error) {
+    logger.error('Blacklist lookup failed, proceeding without the check', {
+      error,
+    });
+    publishMetrics([
+      {
+        name: DispatcherMetricName.BlacklistCheckFailed,
+        dimensions: { tenantName, clientId },
+      },
+    ]);
+    return new Set();
+  }
+};
+
+const throwBlacklistedRecipient = (): never => {
+  throw new ApiError(
+    BlacklistedRecipientMessage,
+    StatusCodes.UNPROCESSABLE_ENTITY,
+    ERROR_CODES.RECIPIENT_BLACKLISTED,
+  );
+};
+
 export const sendEmailTransactional = async (
   emailData: EmailHighPriorityBodyDTO,
   dryRun: boolean,
@@ -55,6 +93,26 @@ export const sendEmailTransactional = async (
   // get tenant configuration for clientId and configSetName
   const tenantConfiguration =
     await getAndValidateTenantConfiguration(tenantName);
+
+  const blacklisted = await findBlacklistedRecipients(
+    [emailData.to.email],
+    tenantName,
+    tenantConfiguration.clientId,
+  );
+
+  if (blacklisted.size > 0) {
+    publishMetrics([
+      {
+        name: DispatcherMetricName.BlacklistHit,
+        dimensions: {
+          tenantName,
+          clientId: tenantConfiguration.clientId,
+        },
+      },
+    ]);
+    throwBlacklistedRecipient();
+  }
+
   const requestId = randomUUID();
   const tableName = env.aws.emailDbTable;
   const validatedAttachments = await validateRequestAttachments(
@@ -117,6 +175,40 @@ export const sendEmailLowPriority = async (
   // get tenant configuration for clientId and configSetName
   const tenantConfiguration =
     await getAndValidateTenantConfiguration(tenantName);
+
+  const blacklisted = await findBlacklistedRecipients(
+    emailData.sendingInfo.map(({ to }) => to.email),
+    tenantName,
+    tenantConfiguration.clientId,
+  );
+
+  const acceptedSendingInfo = emailData.sendingInfo.filter(
+    ({ to }) => !blacklisted.has(to.email.trim().toLowerCase()),
+  );
+  const unhandledEmails: UnhandledEmailDTO[] = emailData.sendingInfo
+    .filter(({ to }) => blacklisted.has(to.email.trim().toLowerCase()))
+    .map(({ to }) => ({
+      address: to.email,
+      reason: BlacklistedRecipientMessage,
+    }));
+
+  if (unhandledEmails.length > 0) {
+    publishMetrics([
+      {
+        name: DispatcherMetricName.BlacklistHit,
+        value: unhandledEmails.length,
+        dimensions: {
+          tenantName,
+          clientId: tenantConfiguration.clientId,
+        },
+      },
+    ]);
+  }
+
+  if (acceptedSendingInfo.length === 0) {
+    throwBlacklistedRecipient();
+  }
+
   const requestId = randomUUID();
   const tableName = env.aws.emailDbTable;
   const validatedAttachments = await validateRequestAttachments(
@@ -129,7 +221,7 @@ export const sendEmailLowPriority = async (
     : await uploadAttachments(validatedAttachments, tenantName);
 
   const dbListObj = mapEmailLowPriorityToDbItem(
-    emailData,
+    { ...emailData, sendingInfo: acceptedSendingInfo },
     requestId,
     tenantConfiguration,
     dryRun,
@@ -182,7 +274,9 @@ export const sendEmailLowPriority = async (
   ]);
 
   logger.info('End');
-  return { requestId };
+  return unhandledEmails.length > 0
+    ? { requestId, unhandledEmails }
+    : { requestId };
 };
 
 export const sanitizeHtmlContent = (

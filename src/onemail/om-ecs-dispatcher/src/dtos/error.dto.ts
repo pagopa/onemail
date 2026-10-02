@@ -14,6 +14,7 @@ export const ERROR_CODES = {
   INVALID_TENANT: 'T001',
   INVALID_ATTACHMENT: 'A001',
   PEC_RECIPIENT_NOT_ALLOWED: 'P001',
+  RECIPIENT_BLACKLISTED: 'B001',
 };
 
 export const ErrorResponseSchema = z
@@ -31,3 +32,6 @@ export const ErrorResponseSchema = z
 export type ErrorResponseDTO = z.infer<typeof ErrorResponseSchema>;
 
 export const PecErrorMessage = 'PEC recipients are not supported';
+
+export const BlacklistedRecipientMessage =
+  'Email address is in SES suppression list';

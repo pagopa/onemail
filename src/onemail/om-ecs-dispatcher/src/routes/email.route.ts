@@ -19,6 +19,7 @@ import {
   SanitizeHtmlResponseSchema,
   SanitizeHtmlSchema,
 } from '#dtos/email/validateHtml.dto';
+import { ErrorResponseSchema } from '#dtos/error.dto';
 import { validate } from '#middlewares/validateApiInput.middleware';
 import { APP_ENV_VALUES, versionRoutePath } from '#utils/constants';
 import { registerOpenApiRoute } from '#utils/openapi';
@@ -74,6 +75,11 @@ registerOpenApiRoute({
       schema: EmailHighPriorityResponseSchema,
       description: 'Email accepted for processing',
     },
+    [StatusCodes.UNPROCESSABLE_ENTITY]: {
+      schema: ErrorResponseSchema,
+      description:
+        'Recipient is in the SES suppression list and cannot be contacted',
+    },
   },
 });
 
@@ -97,7 +103,13 @@ registerOpenApiRoute({
   responses: {
     [StatusCodes.ACCEPTED]: {
       schema: EmailLowPriorityResponseSchema,
-      description: 'Email accepted for processing',
+      description:
+        'Email accepted for processing. Recipients in the SES suppression list are reported in unhandledEmails',
+    },
+    [StatusCodes.UNPROCESSABLE_ENTITY]: {
+      schema: ErrorResponseSchema,
+      description:
+        'Every recipient is in the SES suppression list and cannot be contacted',
     },
   },
 });

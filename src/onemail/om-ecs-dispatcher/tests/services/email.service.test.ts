@@ -26,6 +26,7 @@ const publishMetrics = vi.hoisted(() => vi.fn());
 const putAttachment = vi.hoisted(() => vi.fn());
 const deleteAttachment = vi.hoisted(() => vi.fn());
 const validateAttachments = vi.hoisted(() => vi.fn());
+const findBlacklistedAddresses = vi.hoisted(() => vi.fn());
 
 vi.mock('#connectors/dynamo.connector', () => ({
   dynamoClient: { send: dynamoSend },
@@ -36,6 +37,9 @@ vi.mock('#connectors/sqs.connector', () => ({
 vi.mock('#repositories/attachment.repository', () => ({
   putAttachment,
   deleteAttachment,
+}));
+vi.mock('#repositories/blacklist.repository', () => ({
+  findBlacklistedAddresses,
 }));
 vi.mock('#utils/attachmentValidator', () => ({ validateAttachments }));
 vi.mock('node:crypto', () => ({ randomUUID }));
@@ -48,6 +52,8 @@ vi.mock('om-common/repositories', () => ({
     TenantConfigurationNotFound: 'TenantConfigurationNotFound',
     UnauthorizedTenant: 'UnauthorizedTenant',
     AttachmentRejected: 'AttachmentRejected',
+    BlacklistHit: 'BlacklistHit',
+    BlacklistCheckFailed: 'BlacklistCheckFailed',
   },
   publishMetrics,
 }));
@@ -55,6 +61,7 @@ vi.mock('om-common/repositories', () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   validateAttachments.mockResolvedValue([]);
+  findBlacklistedAddresses.mockResolvedValue(new Map());
 });
 
 describe('email.service - sendEmailTransactional', () => {
@@ -508,6 +515,288 @@ describe('email.service - sendEmailLowPriority', () => {
 
     expect(validateAttachments).toHaveBeenCalledTimes(1);
     expect(putAttachment).not.toHaveBeenCalled();
+  });
+});
+
+const blacklistOf = (...addresses: string[]) =>
+  new Map(addresses.map((address) => [address, { emailAddress: address }]));
+
+describe('email.service - high priority blacklist check', () => {
+  it('rejects a high priority request whose recipient is blacklisted', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    findBlacklistedAddresses.mockResolvedValueOnce(
+      blacklistOf('user@example.com'),
+    );
+
+    await expect(
+      sendEmailTransactional(makeHighPriorityEmailDto(), false, 'tenant-a'),
+    ).rejects.toMatchObject({
+      statusCode: 422,
+      errorCode: 'B001',
+      message: 'Email address is in SES suppression list',
+    });
+
+    expect(putAttachment).not.toHaveBeenCalled();
+    expect(sqsSend).not.toHaveBeenCalled();
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'BlacklistHit',
+        dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
+      },
+    ]);
+  });
+
+  it('checks the blacklist during a dry run for a non-blacklisted recipient', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    randomUUID
+      .mockReturnValueOnce('request-id-dry')
+      .mockReturnValueOnce('email-id-dry');
+
+    await sendEmailTransactional(makeHighPriorityEmailDto(), true, 'tenant-a');
+
+    expect(findBlacklistedAddresses).toHaveBeenCalledWith(['user@example.com']);
+    expect(sqsSend).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects a high priority dry run whose recipient is blacklisted', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    findBlacklistedAddresses.mockResolvedValueOnce(
+      blacklistOf('user@example.com'),
+    );
+
+    await expect(
+      sendEmailTransactional(makeHighPriorityEmailDto(), true, 'tenant-a'),
+    ).rejects.toMatchObject({ statusCode: 422, errorCode: 'B001' });
+
+    expect(dynamoSend).toHaveBeenCalledTimes(1);
+    expect(sqsSend).not.toHaveBeenCalled();
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'BlacklistHit',
+        dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
+      },
+    ]);
+  });
+
+  it('accepts a high priority request when the recipient is not blacklisted', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    randomUUID
+      .mockReturnValueOnce('request-id-ok')
+      .mockReturnValueOnce('email-id-ok');
+
+    const result = await sendEmailTransactional(
+      makeHighPriorityEmailDto(),
+      false,
+      'tenant-a',
+    );
+
+    expect(findBlacklistedAddresses).toHaveBeenCalledWith(['user@example.com']);
+    expect(result).toEqual({ requestId: 'request-id-ok' });
+  });
+
+  it('proceeds and reports the failure when the blacklist lookup throws', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    findBlacklistedAddresses.mockRejectedValueOnce(new Error('Throttled'));
+    randomUUID
+      .mockReturnValueOnce('request-id-open')
+      .mockReturnValueOnce('email-id-open');
+
+    const result = await sendEmailTransactional(
+      makeHighPriorityEmailDto(),
+      false,
+      'tenant-a',
+    );
+
+    expect(result).toEqual({ requestId: 'request-id-open' });
+    expect(sqsSend).toHaveBeenCalledTimes(1);
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'BlacklistCheckFailed',
+        dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
+      },
+    ]);
+  });
+
+  it('fails open during a dry-run blacklist lookup failure', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    findBlacklistedAddresses.mockRejectedValueOnce(new Error('Throttled'));
+    randomUUID
+      .mockReturnValueOnce('request-id-dry-open')
+      .mockReturnValueOnce('email-id-dry-open');
+
+    const result = await sendEmailTransactional(
+      makeHighPriorityEmailDto(),
+      true,
+      'tenant-a',
+    );
+
+    expect(result).toEqual({ requestId: 'request-id-dry-open' });
+    expect(sqsSend).toHaveBeenCalledTimes(1);
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'BlacklistCheckFailed',
+        dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
+      },
+    ]);
+  });
+});
+
+describe('email.service - low priority blacklist check', () => {
+  it('rejects a low priority request when every recipient is blacklisted', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    findBlacklistedAddresses.mockResolvedValueOnce(
+      blacklistOf('user1@example.com', 'user2@example.com'),
+    );
+
+    await expect(
+      sendEmailLowPriority(
+        makeLowPriorityEmailDto({
+          sendingInfo: [
+            { to: { email: 'user1@example.com' } },
+            { to: { email: 'user2@example.com' } },
+          ],
+        }),
+        false,
+        'tenant-a',
+      ),
+    ).rejects.toMatchObject({ statusCode: 422, errorCode: 'B001' });
+
+    expect(putAttachment).not.toHaveBeenCalled();
+    expect(sqsSend).not.toHaveBeenCalled();
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'BlacklistHit',
+        value: 2,
+        dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
+      },
+    ]);
+  });
+
+  it('processes the remaining recipients and reports the discarded ones', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    findBlacklistedAddresses.mockResolvedValueOnce(
+      blacklistOf('user2@example.com'),
+    );
+    randomUUID
+      .mockReturnValueOnce('request-id-partial')
+      .mockReturnValueOnce('email-id-partial');
+
+    const result = await sendEmailLowPriority(
+      makeLowPriorityEmailDto({
+        sendingInfo: [
+          { to: { email: 'user1@example.com' } },
+          { to: { email: 'user2@example.com' } },
+        ],
+      }),
+      false,
+      'tenant-a',
+    );
+
+    expect(result).toEqual({
+      requestId: 'request-id-partial',
+      unhandledEmails: [
+        {
+          address: 'user2@example.com',
+          reason: 'Email address is in SES suppression list',
+        },
+      ],
+    });
+
+    const writeCommand = getNthCommand(dynamoSend, 1) as {
+      input: {
+        RequestItems: Record<
+          string,
+          { PutRequest: { Item: { content: { to: { email: string } } } } }[]
+        >;
+      };
+    };
+    const writtenItems = writeCommand.input.RequestItems[env.aws.emailDbTable];
+    expect(writtenItems).toHaveLength(1);
+    expect(writtenItems[0].PutRequest.Item.content.to.email).toBe(
+      'user1@example.com',
+    );
+  });
+
+  it('filters blacklisted recipients during a dry run and maps accepted recipients to the simulator', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    findBlacklistedAddresses.mockResolvedValueOnce(
+      blacklistOf('user2@example.com'),
+    );
+    randomUUID
+      .mockReturnValueOnce('request-id-dry-partial')
+      .mockReturnValueOnce('email-id-dry-partial');
+
+    const result = await sendEmailLowPriority(
+      makeLowPriorityEmailDto({
+        sendingInfo: [
+          { to: { email: 'user1@example.com' } },
+          { to: { email: 'user2@example.com' } },
+        ],
+      }),
+      true,
+      'tenant-a',
+    );
+
+    expect(result).toEqual({
+      requestId: 'request-id-dry-partial',
+      unhandledEmails: [
+        {
+          address: 'user2@example.com',
+          reason: 'Email address is in SES suppression list',
+        },
+      ],
+    });
+
+    const writeCommand = getNthCommand(dynamoSend, 1) as {
+      input: {
+        RequestItems: Record<
+          string,
+          { PutRequest: { Item: { content: { to: { email: string } } } } }[]
+        >;
+      };
+    };
+    const writtenItems = writeCommand.input.RequestItems[env.aws.emailDbTable];
+    expect(writtenItems).toHaveLength(1);
+    expect(writtenItems[0].PutRequest.Item.content.to.email).toBe(
+      'success@simulator.amazonses.com',
+    );
+  });
+
+  it('rejects a dry-run request when every recipient is blacklisted', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    findBlacklistedAddresses.mockResolvedValueOnce(
+      blacklistOf('user1@example.com', 'user2@example.com'),
+    );
+
+    await expect(
+      sendEmailLowPriority(
+        makeLowPriorityEmailDto({
+          sendingInfo: [
+            { to: { email: 'user1@example.com' } },
+            { to: { email: 'user2@example.com' } },
+          ],
+        }),
+        true,
+        'tenant-a',
+      ),
+    ).rejects.toMatchObject({ statusCode: 422, errorCode: 'B001' });
+
+    expect(sqsSend).not.toHaveBeenCalled();
+  });
+
+  it('omits unhandledEmails when every recipient is accepted', async () => {
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    randomUUID
+      .mockReturnValueOnce('request-id-clean')
+      .mockReturnValueOnce('email-id-clean');
+
+    const result = await sendEmailLowPriority(
+      makeLowPriorityEmailDto(),
+      false,
+      'tenant-a',
+    );
+
+    expect(result).toEqual({ requestId: 'request-id-clean' });
   });
 });
 
