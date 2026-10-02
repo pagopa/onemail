@@ -32,7 +32,8 @@
     "test:coverage": "turbo run test:coverage",
     "test:dispatcher": "turbo run test --filter=om-ecs-dispatcher",
     "test:sender": "turbo run test --filter=om-lambda-sender",
-    "test:config-set-processor": "turbo run test --filter=om-lambda-config-set-processor"
+    "test:config-set-processor": "turbo run test --filter=om-lambda-config-set-processor",
+    "test:blacklist-aligner": "turbo run test --filter=om-lambda-blacklist-aligner"
   },
   "dependencies": {},
   "devDependencies": {

@@ -705,6 +705,52 @@
             "x": 0,
             "type": "text",
             "properties": {
+                "markdown": "## Blacklist\n"
+            }
+        },
+        {
+            "height": 6,
+            "width": 12,
+            "y": 63,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "view": "timeSeries",
+                "stacked": false,
+                "metrics": [
+                    [ { "expression": "SUM(SEARCH('{${namespace},service,tenantName,clientId} MetricName=\"BlacklistHit\" service=\"${dispatcher_service}\"', 'Sum', 300))", "label": "BlacklistHit", "id": "e1", "region": "${aws_region}" } ],
+                    [ { "expression": "SUM(SEARCH('{${namespace},service,tenantName,clientId} MetricName=\"BlacklistCheckFailed\" service=\"${dispatcher_service}\"', 'Sum', 300))", "label": "BlacklistCheckFailed", "id": "e2", "region": "${aws_region}" } ]
+                ],
+                "region": "${aws_region}",
+                "period": 300,
+                "title": "Recipients Rejected by Blacklist (all tenants)"
+            }
+        },
+        {
+            "height": 6,
+            "width": 12,
+            "y": 63,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "view": "timeSeries",
+                "stacked": false,
+                "metrics": [
+                    [ { "expression": "SUM(SEARCH('{${namespace},service} MetricName=\"BlacklistAlignedInserted\" service=\"${aligner_service}\"', 'Sum', 300))", "label": "Inserted", "id": "e1", "region": "${aws_region}" } ],
+                    [ { "expression": "SUM(SEARCH('{${namespace},service} MetricName=\"BlacklistAlignmentFailed\" service=\"${aligner_service}\"', 'Sum', 300))", "label": "Failed", "id": "e2", "region": "${aws_region}" } ]
+                ],
+                "region": "${aws_region}",
+                "period": 300,
+                "title": "Suppression List Alignment Job"
+            }
+        },
+        {
+            "height": 1,
+            "width": 24,
+            "y": 69,
+            "x": 0,
+            "type": "text",
+            "properties": {
                 "markdown": "## Email Outcome per Tenant (SES)\n"
             }
         }%{ if length(tenants) > 0 },%{ endif ~}
@@ -712,7 +758,7 @@
         {
             "height": 1,
             "width": 24,
-            "y": ${63 + i * 14},
+            "y": ${70 + i * 14},
             "x": 0,
             "type": "text",
             "properties": {
@@ -722,7 +768,7 @@
         {
             "height": 6,
             "width": 12,
-            "y": ${64 + i * 14},
+            "y": ${71 + i * 14},
             "x": 0,
             "type": "metric",
             "properties": {
@@ -743,7 +789,7 @@
         {
             "height": 6,
             "width": 12,
-            "y": ${64 + i * 14},
+            "y": ${71 + i * 14},
             "x": 12,
             "type": "metric",
             "properties": {
@@ -762,7 +808,7 @@
         {
             "height": 6,
             "width": 12,
-            "y": ${71 + i * 14},
+            "y": ${78 + i * 14},
             "x": 0,
             "type": "metric",
             "properties": {
@@ -780,7 +826,7 @@
         {
             "height": 6,
             "width": 12,
-            "y": ${71 + i * 14},
+            "y": ${78 + i * 14},
             "x": 12,
             "type": "metric",
             "properties": {
