@@ -1,5 +1,12 @@
 # infra-domains-onemail-monitoring
 
+## 1.12.2
+
+### Patch Changes
+
+- 552f38e: add infra lamba blacklist sync
+- 02929e9: remove lambda aligner conf
+
 ## 1.12.1
 
 ### Patch Changes

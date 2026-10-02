@@ -1,5 +1,15 @@
 # om-common
 
+## 1.6.0
+
+### Minor Changes
+
+- 49b8abb: add blacklist common type & set processor update
+
+### Patch Changes
+
+- c2bc009: add blacklist checks in ecs dispatcher, update put blacklist obj in lambda set processor
+
 ## 1.5.0
 
 ### Minor Changes

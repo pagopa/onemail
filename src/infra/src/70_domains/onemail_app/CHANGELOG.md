@@ -1,5 +1,13 @@
 # infra-domains-onemail-app
 
+## 1.25.3
+
+### Patch Changes
+
+- 552f38e: add infra lamba blacklist sync
+- c2bc009: add blacklist checks in ecs dispatcher, update put blacklist obj in lambda set processor
+- 02929e9: remove lambda aligner conf
+
 ## 1.25.2
 
 ### Patch Changes

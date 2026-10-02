@@ -1,5 +1,17 @@
 # om-ecs-dispatcher
 
+## 1.12.0
+
+### Minor Changes
+
+- c2bc009: add blacklist checks in ecs dispatcher, update put blacklist obj in lambda set processor
+
+### Patch Changes
+
+- Updated dependencies [49b8abb]
+- Updated dependencies [c2bc009]
+  - om-common@1.6.0
+
 ## 1.11.2
 
 ### Patch Changes

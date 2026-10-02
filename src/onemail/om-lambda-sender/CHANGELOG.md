@@ -1,5 +1,13 @@
 # om-lambda-sender
 
+## 1.8.1
+
+### Patch Changes
+
+- Updated dependencies [49b8abb]
+- Updated dependencies [c2bc009]
+  - om-common@1.6.0
+
 ## 1.8.0
 
 ### Minor Changes
