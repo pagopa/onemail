@@ -215,34 +215,6 @@ importers:
         specifier: ^4.21.0
         version: 4.21.0
 
-  src/onemail/om-lambda-blacklist-aligner:
-    dependencies:
-      '@aws-sdk/client-dynamodb':
-        specifier: catalog:aws-sdk
-        version: 3.1025.0
-      '@aws-sdk/client-sesv2':
-        specifier: catalog:aws-sdk
-        version: 3.1025.0
-      '@aws-sdk/lib-dynamodb':
-        specifier: catalog:aws-sdk
-        version: 3.1025.0(@aws-sdk/client-dynamodb@3.1025.0)
-      '@middy/core':
-        specifier: 'catalog:'
-        version: 7.2.1
-      om-common:
-        specifier: workspace:*
-        version: link:../om-common
-    devDependencies:
-      '@types/aws-lambda':
-        specifier: catalog:aws-lambda
-        version: 8.10.161
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.10.12
-      aws-lambda:
-        specifier: catalog:aws-lambda
-        version: 1.0.7
-
   src/onemail/om-lambda-config-set-processor:
     dependencies:
       '@aws-lambda-powertools/batch':
