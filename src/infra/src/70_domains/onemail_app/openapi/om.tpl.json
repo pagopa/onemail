@@ -133,7 +133,7 @@
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
           "409": { "description": "Conflict - resource already exists" },
-          "422": { "description": "Every recipient is in the SES suppression list and cannot be contacted" },
+          "422": { "description": "Recipient is in the SES suppression list and cannot be contacted" },
           "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
@@ -192,7 +192,7 @@
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
           "409": { "description": "Conflict - resource already exists" },
-          "422": { "description": "Recipient is in the SES suppression list and cannot be contacted" },
+          "422": { "description": "Every recipient is in the SES suppression list and cannot be contacted" },
           "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
