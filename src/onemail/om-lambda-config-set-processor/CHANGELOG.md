@@ -1,5 +1,18 @@
 # om-lambda-config-set-processor
 
+## 1.7.0
+
+### Minor Changes
+
+- 49b8abb: add blacklist common type & set processor update
+
+### Patch Changes
+
+- c2bc009: add blacklist checks in ecs dispatcher, update put blacklist obj in lambda set processor
+- Updated dependencies [49b8abb]
+- Updated dependencies [c2bc009]
+  - om-common@1.6.0
+
 ## 1.6.12
 
 ### Patch Changes
