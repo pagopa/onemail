@@ -21,7 +21,6 @@ resource "aws_cloudwatch_dashboard" "main" {
       csp_service        = "${local.project_nodomain}-lambda-config-set-processor"
       sender_service     = "${local.project_nodomain}-lambda-sender"
       dispatcher_service = "${local.project_nodomain}-ecs-dispatcher"
-      aligner_service    = "${local.project_nodomain}-lambda-blacklist-aligner"
       tenants            = local.tenants
     }
   )

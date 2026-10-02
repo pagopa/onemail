@@ -87,10 +87,9 @@ resource "aws_ses_domain_mail_from" "tenant_mail_from" {
 
 }
 
-# Account-level suppression list is regional: this resource manages it in var.aws_region only.
-resource "aws_sesv2_account_suppression_attributes" "main" {
-  suppressed_reasons = ["BOUNCE"]
-}
+# resource "aws_ses_account_suppression_attributes" "main" {
+#   suppressed_reasons = ["BOUNCE", "COMPLAINT"]
+# }
 
 resource "aws_sesv2_dedicated_ip_pool" "managed_pool" {
   count        = var.env == "prod" ? 1 : 0

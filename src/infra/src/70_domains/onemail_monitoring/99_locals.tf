@@ -26,10 +26,6 @@ locals {
       function_name = "${local.project_nodomain}-lambda-config-set-processor"
       label         = "config-set-processor"
     }
-    blacklist_aligner = {
-      function_name = "${local.project_nodomain}-lambda-blacklist-aligner"
-      label         = "blacklist-aligner"
-    }
   }
   sqs_alarm_targets = {
     high_priority = {
