@@ -75,8 +75,6 @@ data "aws_iam_policy_document" "sender_policy" {
     for_each = local.dynamodb_kms_key_arn != null ? [local.dynamodb_kms_key_arn] : []
 
     content {
-      sid = "KMSAccess"
-
       actions = [
         "kms:Decrypt",
         "kms:Encrypt"
@@ -213,12 +211,24 @@ data "aws_iam_policy_document" "set_processor_policy" {
     ]
   }
 
+  statement {
+    sid = "DynamoDBBlacklistWriteAccess"
+
+    actions = [
+      "dynamodb:PutItem"
+    ]
+    resources = [
+      data.aws_dynamodb_table.Blacklist.arn
+    ]
+  }
+
   dynamic "statement" {
-    for_each = local.dynamodb_kms_key_arn != null ? [local.dynamodb_kms_key_arn] : []
+    for_each = toset(compact([
+      local.dynamodb_kms_key_arn,
+      local.blacklist_kms_key_arn
+    ]))
 
     content {
-      sid = "KMSAccess"
-
       actions = [
         "kms:Decrypt",
         "kms:Encrypt"
@@ -279,6 +289,7 @@ module "lambda_set_processor" {
     POWERTOOLS_LOG_LEVEL             = "DEBUG"
     SQS_HIGH_PRIORITY_QUEUE_URL      = data.aws_sqs_queue.high_priority.url
     SQS_LOW_PRIORITY_QUEUE_URL       = data.aws_sqs_queue.low_priority.url
+    AWS_BLACKLIST_DB_TABLE           = data.aws_dynamodb_table.Blacklist.name
 
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids

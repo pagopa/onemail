@@ -24,8 +24,7 @@ import {
   ConfigSetProcessorMetricName,
   publishMetrics,
 } from 'om-common/repositories';
-import { BlacklistSource, EmailStatus } from 'om-common/types';
-import { maskEmailAddress } from 'om-common/utils';
+import { EmailStatus } from 'om-common/types';
 
 const extractEventPayload = (recordBody: string): Record<string, unknown> => {
   const parsedRecordBody = JSON.parse(recordBody);
@@ -139,13 +138,9 @@ const blacklistHardBouncedRecipients = async (
     event.bounce.bouncedRecipients.map(({ emailAddress }) =>
       addToBlacklist({
         emailAddress,
-        source: BlacklistSource.Event,
-        reason: 'BOUNCE',
-        bounceSubType: event.bounce.bounceSubType ?? undefined,
         tenantName: emailRecord.tenantName,
       }).catch((error: unknown) => {
         logger.error('Failed to add hard bounced address to the blacklist', {
-          emailAddress: maskEmailAddress(emailAddress),
           emailId: emailRecord.emailId,
           error,
         });

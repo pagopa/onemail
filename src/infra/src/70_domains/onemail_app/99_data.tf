@@ -47,7 +47,7 @@ data "aws_dynamodb_table" "TenantConfig" {
 }
 
 data "aws_dynamodb_table" "Blacklist" {
-  name = "Blacklist"
+  name = "EmailBlacklist"
 }
 
 data "aws_ecs_cluster" "core" {
