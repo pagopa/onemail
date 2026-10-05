@@ -3,6 +3,7 @@ import type { EmailStatusHistoryItem } from 'om-common/types';
 
 import { getLogger, getNamedLogger } from '#config/logger';
 import {
+  ConfSetBounceEventItem,
   ConfSetEventItem,
   ConfSetEventItemSchema,
   EventTypeSchema,
@@ -129,7 +130,7 @@ const getBounceStatus = (
 };
 
 const addHardBouncedRecipientsToBlacklist = async (
-  event: Extract<ConfSetEventItem, { eventType: 'Bounce' }>,
+  event: ConfSetBounceEventItem,
   emailRecord: EmailStatusHistoryItem,
 ): Promise<void> => {
   // Failures are swallowed: retrying the record would append duplicate status history entries
@@ -149,7 +150,7 @@ const addHardBouncedRecipientsToBlacklist = async (
 };
 
 const handleBounce = async (
-  event: Extract<ConfSetEventItem, { eventType: 'Bounce' }>,
+  event: ConfSetBounceEventItem,
   emailRecord: EmailStatusHistoryItem,
 ): Promise<void> => {
   const bounceStatus = getBounceStatus(event);
