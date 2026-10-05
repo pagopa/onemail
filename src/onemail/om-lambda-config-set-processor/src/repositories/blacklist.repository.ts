@@ -7,11 +7,6 @@ import { type BlacklistItem } from 'om-common/types';
 
 const logger = getLogger();
 
-export interface AddToBlacklistInput {
-  emailAddress: string;
-  tenantName: string;
-}
-
 const normalizeEmailAddress = (emailAddress: string): string => {
   const openingBracketIndex = emailAddress.lastIndexOf('<');
   const closingBracketIndex = emailAddress.indexOf('>', openingBracketIndex);
@@ -27,13 +22,12 @@ const normalizeEmailAddress = (emailAddress: string): string => {
  * Adds an address to the blacklist mirroring the SES account-level suppression list.
  * The write is idempotent: an address already present is left untouched.
  */
-export const addToBlacklist = async ({
-  emailAddress,
-  tenantName,
-}: AddToBlacklistInput): Promise<void> => {
+export const addToBlacklist = async (
+  blackListItem: BlacklistItem,
+): Promise<void> => {
   const item: BlacklistItem = {
-    emailAddress: normalizeEmailAddress(emailAddress),
-    tenantName,
+    emailAddress: normalizeEmailAddress(blackListItem.emailAddress),
+    tenantName: blackListItem.tenantName,
   };
 
   try {
