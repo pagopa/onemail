@@ -4,19 +4,9 @@ import { dynamoClient } from '#connectors/dynamo.connector';
 import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
 import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { type BlacklistItem } from 'om-common/types';
+import { extractEmailAddress } from 'om-common/utils';
 
 const logger = getLogger();
-
-const normalizeEmailAddress = (emailAddress: string): string => {
-  const openingBracketIndex = emailAddress.lastIndexOf('<');
-  const closingBracketIndex = emailAddress.indexOf('>', openingBracketIndex);
-  const address =
-    openingBracketIndex >= 0 && closingBracketIndex > openingBracketIndex
-      ? emailAddress.slice(openingBracketIndex + 1, closingBracketIndex)
-      : emailAddress;
-
-  return address.trim().toLowerCase();
-};
 
 /**
  * Adds an address to the blacklist mirroring the SES account-level suppression list.
@@ -26,7 +16,7 @@ export const addToBlacklist = async (
   blackListItem: BlacklistItem,
 ): Promise<void> => {
   const item: BlacklistItem = {
-    emailAddress: normalizeEmailAddress(blackListItem.emailAddress),
+    emailAddress: extractEmailAddress(blackListItem.emailAddress),
     tenantName: blackListItem.tenantName,
   };
 

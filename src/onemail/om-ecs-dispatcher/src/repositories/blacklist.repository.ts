@@ -4,11 +4,9 @@ import env from '#config/env';
 import { getLogger } from '#config/logger';
 import { dynamoClient } from '#connectors/dynamo.connector';
 import { BatchGetCommand } from '@aws-sdk/lib-dynamodb';
+import { normalizeEmailAddress } from 'om-common/utils';
 
 const logger = getLogger();
-
-const normalizeEmailAddress = (emailAddress: string): string =>
-  emailAddress.trim().toLowerCase();
 
 const fetchBlacklistItems = async (
   addresses: string[],

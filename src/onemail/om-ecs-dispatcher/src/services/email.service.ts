@@ -45,6 +45,7 @@ import {
   EmailStatusHistoryItem,
   TenantConfigurationItem,
 } from 'om-common/types';
+import { normalizeEmailAddress } from 'om-common/utils';
 
 const logger = getLogger();
 
@@ -182,7 +183,7 @@ export const sendEmailLowPriority = async (
   );
 
   const acceptedSendingInfo = emailData.sendingInfo.filter(
-    ({ to }) => !blacklisted.has(to.email.trim().toLowerCase()),
+    ({ to }) => !blacklisted.has(normalizeEmailAddress(to.email)),
   );
 
   // if all email recipients are blacklisted
@@ -191,7 +192,7 @@ export const sendEmailLowPriority = async (
   }
 
   const unhandledEmails: UnhandledEmailDTO[] = emailData.sendingInfo
-    .filter(({ to }) => blacklisted.has(to.email.trim().toLowerCase()))
+    .filter(({ to }) => blacklisted.has(normalizeEmailAddress(to.email)))
     .map(({ to }) => ({
       address: to.email,
       reason: BlacklistedRecipientMessage,
