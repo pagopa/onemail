@@ -6,6 +6,24 @@ domain         = "onemail_app"
 location       = "eu-south"
 location_short = "eus1"
 aws_region     = "eu-south-1"
+excluded_domains = [
+  "pec.*",
+  "cert.*",
+  "legalmail.it",
+  "postecert.it",
+  "arubapec.it",
+  "mypec.eu",
+  "gigapec.it",
+  "postecertifica.it",
+  "sicurezzapostale.it",
+  "namirialpec.it",
+  "spidmail.it",
+  "*.test",
+  "*.example",
+  "example.com",
+  "example.net",
+  "example.org",
+]
 
 # API Gateway
 api_gateway_deployment_version = "1.0.0"

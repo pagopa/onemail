@@ -1,3 +1,4 @@
+import { parseDomainPatterns } from '#config/domainPatterns';
 import { APP_ENV_VALUES } from '#utils/constants';
 import { configDotenv } from 'dotenv';
 
@@ -9,6 +10,11 @@ export default {
     PORT: Number(process.env.PORT) || 3000,
     host: process.env.HOST || 'http://localhost:3000',
     environment: process.env.APP_ENV || APP_ENV_VALUES.local,
+  },
+  recipientDomains: {
+    excludedDomains:
+      parseDomainPatterns('EXCLUDED_DOMAINS', process.env.EXCLUDED_DOMAINS) ||
+      [],
   },
   aws: {
     region: process.env.AWS_REGION ?? throwMissingRequiredEnvVar('AWS_REGION'),

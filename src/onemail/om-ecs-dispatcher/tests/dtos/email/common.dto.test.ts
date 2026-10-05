@@ -165,7 +165,7 @@ describe('recipient PEC validation', () => {
   it('does not reject PEC in sender or reply-to addresses', () => {
     const result = EmailLowPriorityBodySchema.safeParse({
       from: { email: 'sender@pec.it' },
-      replyTo: { email: 'reply@legalpec.it' },
+      replyTo: { email: 'reply@legalmail.it' },
       templateId: 'template-id',
       sendingInfo: [{ to: { email: 'valid@example.com' } }],
     });
