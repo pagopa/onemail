@@ -78,7 +78,7 @@ const registerZodErrorTest = () => {
       {
         code: 'custom',
         path: ['sendingInfo', 0, 'to', 'email'],
-        message: 'PEC recipients are not supported',
+        message: 'Domain recipient not supported',
       },
     ]);
 
@@ -87,7 +87,7 @@ const registerZodErrorTest = () => {
     expect(response.status).toHaveBeenCalledWith(400);
     expect(response.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        message: 'PEC recipients are not supported',
+        message: 'Domain recipient not supported',
         errorCode: ERROR_CODES.PEC_RECIPIENT_NOT_ALLOWED,
       }),
     );

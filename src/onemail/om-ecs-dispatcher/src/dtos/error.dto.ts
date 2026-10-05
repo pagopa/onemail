@@ -31,7 +31,7 @@ export const ErrorResponseSchema = z
 
 export type ErrorResponseDTO = z.infer<typeof ErrorResponseSchema>;
 
-export const PecErrorMessage = 'PEC recipients are not supported';
+export const PecErrorMessage = 'Domain recipient not supported';
 
 export const BlacklistedRecipientMessage =
   'Email address is in SES suppression list';

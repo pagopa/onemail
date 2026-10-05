@@ -294,7 +294,7 @@
             }
           }
         ],
-        "description": "Recipient of the email. PEC recipients are not supported. Recipients will be ignored in case of dryRun."
+        "description": "Recipient of the email. Domain recipient not supported. Recipients will be ignored in case of dryRun."
       },
       "NameValue": {
         "type": "object",
@@ -473,7 +473,14 @@
               "type": "object",
               "properties": {
                 "to": {
-                  "$ref": "#/components/schemas/RecipientEmailAddress"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/RecipientEmailAddress"
+                    },
+                    {
+                      "description": "Recipient of the email. Domain recipient not supported not supported. Recipients will be ignored in case of dryRun."
+                    }
+                  ]
                 },
                 "extendedHeaders": {
                   "type": "array",

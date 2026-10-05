@@ -122,7 +122,7 @@ describe('recipient PEC validation', () => {
       expect.arrayContaining([
         expect.objectContaining({
           path: ['to', 'email'],
-          message: 'PEC recipients are not supported',
+          message: 'Domain recipient not supported',
         }),
       ]),
     );
@@ -156,7 +156,7 @@ describe('recipient PEC validation', () => {
       expect.arrayContaining([
         expect.objectContaining({
           path: ['sendingInfo', 1, 'to', 'email'],
-          message: 'PEC recipients are not supported',
+          message: 'Domain recipient not supported',
         }),
       ]),
     );
