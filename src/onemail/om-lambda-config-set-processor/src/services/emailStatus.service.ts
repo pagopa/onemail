@@ -128,7 +128,7 @@ const getBounceStatus = (
   return EmailStatus.SoftBounce;
 };
 
-const blacklistHardBouncedRecipients = async (
+const addHardBouncedRecipientsToBlacklist = async (
   event: Extract<ConfSetEventItem, { eventType: 'Bounce' }>,
   emailRecord: EmailStatusHistoryItem,
 ): Promise<void> => {
@@ -161,7 +161,7 @@ const handleBounce = async (
         reason: event.bounce.bounceSubType,
       },
     ]);
-    await blacklistHardBouncedRecipients(event, emailRecord);
+    await addHardBouncedRecipientsToBlacklist(event, emailRecord);
     publishMetrics([
       {
         name: ConfigSetProcessorMetricName.EmailHardBounce,
