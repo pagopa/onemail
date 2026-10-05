@@ -1,5 +1,5 @@
 import env from '#config/env';
-import { getNamedLogger } from '#config/logger';
+import { getLogger, getNamedLogger } from '#config/logger';
 import { dynamoClient } from '#connectors/dynamo.connector';
 import { sqsClient } from '#connectors/sqs.connector';
 import { AttachmentInputDTO } from '#dtos/email/common.dto';
@@ -46,6 +46,8 @@ import {
   TenantConfigurationItem,
 } from 'om-common/types';
 
+const logger = getLogger();
+
 /**
  * Resolves which recipients are blacklisted.
  * Fails open: a lookup error must not block a request, SES still enforces suppression.
@@ -55,11 +57,8 @@ const findBlacklistedRecipients = async (
   tenantName: string,
   clientId: string,
 ): Promise<Set<string>> => {
-  const logger = getNamedLogger(findBlacklistedRecipients.name);
-
   try {
-    const blacklisted = await findBlacklistedAddresses(addresses);
-    return new Set(blacklisted.keys());
+    return await findBlacklistedAddresses(addresses);
   } catch (error) {
     logger.error('Blacklist lookup failed, proceeding without the check', {
       error,
@@ -185,6 +184,12 @@ export const sendEmailLowPriority = async (
   const acceptedSendingInfo = emailData.sendingInfo.filter(
     ({ to }) => !blacklisted.has(to.email.trim().toLowerCase()),
   );
+
+  // if all email recipients are blacklisted
+  if (acceptedSendingInfo.length === 0) {
+    throwBlacklistedRecipient();
+  }
+
   const unhandledEmails: UnhandledEmailDTO[] = emailData.sendingInfo
     .filter(({ to }) => blacklisted.has(to.email.trim().toLowerCase()))
     .map(({ to }) => ({
@@ -203,10 +208,6 @@ export const sendEmailLowPriority = async (
         },
       },
     ]);
-  }
-
-  if (acceptedSendingInfo.length === 0) {
-    throwBlacklistedRecipient();
   }
 
   const requestId = randomUUID();
@@ -452,7 +453,6 @@ const uploadAttachments = async (
   attachments: ValidatedAttachment[],
   tenantName: string,
 ): Promise<EmailAttachmentRef[] | undefined> => {
-  const logger = getNamedLogger(uploadAttachments.name);
   if (!attachments.length) return undefined;
 
   // Try to upload every attachment

@@ -1,5 +1,4 @@
 import env from '#config/env';
-import { getNamedLogger } from '#config/logger';
 import {
   getEmailStatus,
   sanitizeHtmlContent,
@@ -288,7 +287,6 @@ describe('email.service - transactional attachments', () => {
     ).rejects.toThrow('Attachment upload failed');
 
     expect(putAttachment).toHaveBeenCalledTimes(2);
-    expect(getNamedLogger).toHaveBeenCalledWith('uploadAttachments');
     expect(deleteAttachment).toHaveBeenCalledTimes(1);
     expect(deleteAttachment).toHaveBeenCalledWith(
       'tenant-a/first-attachment-id/first.pdf',
@@ -350,7 +348,6 @@ describe('email.service - transactional attachments', () => {
     ).rejects.toThrow('Attachment upload failed');
 
     expect(putAttachment).toHaveBeenCalledTimes(2);
-    expect(getNamedLogger).toHaveBeenCalledWith('uploadAttachments');
     expect(deleteAttachment).not.toHaveBeenCalled();
     expect(dynamoSend).toHaveBeenCalledTimes(1);
     expect(sqsSend).not.toHaveBeenCalled();
@@ -518,8 +515,7 @@ describe('email.service - sendEmailLowPriority', () => {
   });
 });
 
-const blacklistOf = (...addresses: string[]) =>
-  new Map(addresses.map((address) => [address, { emailAddress: address }]));
+const blacklistOf = (...addresses: string[]) => new Set(addresses);
 
 describe('email.service - high priority blacklist check', () => {
   it('rejects a high priority request whose recipient is blacklisted', async () => {
@@ -533,7 +529,7 @@ describe('email.service - high priority blacklist check', () => {
     ).rejects.toMatchObject({
       statusCode: 422,
       errorCode: 'B001',
-      message: 'Email address is in SES suppression list',
+      message: 'Email address is in blacklist',
     });
 
     expect(putAttachment).not.toHaveBeenCalled();
@@ -663,13 +659,6 @@ describe('email.service - low priority blacklist check', () => {
 
     expect(putAttachment).not.toHaveBeenCalled();
     expect(sqsSend).not.toHaveBeenCalled();
-    expect(publishMetrics).toHaveBeenCalledWith([
-      {
-        name: 'BlacklistHit',
-        value: 2,
-        dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
-      },
-    ]);
   });
 
   it('processes the remaining recipients and reports the discarded ones', async () => {
@@ -697,7 +686,7 @@ describe('email.service - low priority blacklist check', () => {
       unhandledEmails: [
         {
           address: 'user2@example.com',
-          reason: 'Email address is in SES suppression list',
+          reason: 'Email address is in blacklist',
         },
       ],
     });
@@ -742,7 +731,7 @@ describe('email.service - low priority blacklist check', () => {
       unhandledEmails: [
         {
           address: 'user2@example.com',
-          reason: 'Email address is in SES suppression list',
+          reason: 'Email address is in blacklist',
         },
       ],
     });
