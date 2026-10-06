@@ -28,14 +28,14 @@ export const errorHandler = (
   let errorResponse: ApiError;
 
   if (err instanceof ZodError) {
-    const isPecError = err.issues.some(
+    const isPecOrTestDomainError = err.issues.some(
       (issue) => issue.message === ExcludedDomainErrorMessage,
     );
     const isAttachmentError = err.issues.some(
       (issue) => issue.path[0] === 'attachments',
     );
 
-    if (isPecError) {
+    if (isPecOrTestDomainError) {
       errorResponse = new ApiError(
         ExcludedDomainErrorMessage,
         StatusCodes.BAD_REQUEST,
