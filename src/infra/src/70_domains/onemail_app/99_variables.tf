@@ -17,9 +17,9 @@ variable "env" {
   description = "Environment."
 }
 
-variable "excluded_domains" {
-  type        = list(string)
-  description = "Excluded recipient domains and suffix patterns rejected by the ECS dispatcher."
+variable "excluded_domains_regex" {
+  type        = string
+  description = "Regular expression matching recipient email addresses excluded by the ECS dispatcher."
 }
 
 variable "env_short" {

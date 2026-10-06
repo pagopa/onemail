@@ -1,8 +1,21 @@
-import { parseDomainPatterns } from '#config/domainPatterns';
 import { APP_ENV_VALUES } from '#utils/constants';
 import { configDotenv } from 'dotenv';
 
 configDotenv();
+
+const compileExcludedDomainsRegex = (
+  value: string | undefined,
+): RegExp | undefined => {
+  const pattern = value?.trim();
+  if (!pattern) return undefined;
+
+  try {
+    return new RegExp(pattern, 'i');
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : 'invalid pattern';
+    throw new Error(`Invalid EXCLUDED_DOMAINS_REGEX: ${reason}`);
+  }
+};
 
 export default {
   projectVersion: process.env.npm_package_version || '1.0.0',
@@ -12,9 +25,9 @@ export default {
     environment: process.env.APP_ENV || APP_ENV_VALUES.local,
   },
   recipientDomains: {
-    excludedDomains:
-      parseDomainPatterns('EXCLUDED_DOMAINS', process.env.EXCLUDED_DOMAINS) ||
-      [],
+    excludedDomainsRegex: compileExcludedDomainsRegex(
+      process.env.EXCLUDED_DOMAINS_REGEX,
+    ),
   },
   aws: {
     region: process.env.AWS_REGION ?? throwMissingRequiredEnvVar('AWS_REGION'),

@@ -178,8 +178,8 @@ module "ecs_service" {
       value = data.aws_dynamodb_table.Blacklist.name
     },
     {
-      name  = "EXCLUDED_DOMAINS"
-      value = join(",", var.excluded_domains)
+      name  = "EXCLUDED_DOMAINS_REGEX"
+      value = var.excluded_domains_regex
     },
   ]
 
