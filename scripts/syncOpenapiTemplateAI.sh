@@ -6,7 +6,7 @@
 # Usage:
 #   bash scripts/syncOpenapiTemplateAI.sh [--model <model>]
 #   pnpm run sync:openapi-template [-- --model <model>]
-#   By default, it uses the "gpt-5-mini" model
+#   By default, it uses the "gpt-6-luna" model
 #
 # Available models:
 # Run 'copilot --help' to see the full list under --model.
@@ -19,7 +19,7 @@ set -euo pipefail
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 
-MODEL="gpt-5-mini"
+MODEL="gpt-6-luna"
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 
