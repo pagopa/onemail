@@ -32,5 +32,11 @@
     "domain": {
       "prod": "ced.pagopa.it"
     }
+  },
+  "cloudstrategy": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": {
+      "uat": "uat.cloudstrategy.pagopa.it"
+    }
   }
 }
