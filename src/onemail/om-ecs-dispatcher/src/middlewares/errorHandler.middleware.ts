@@ -39,7 +39,7 @@ export const errorHandler = (
       errorResponse = new ApiError(
         ExcludedDomainErrorMessage,
         StatusCodes.BAD_REQUEST,
-        ERROR_CODES.PEC_RECIPIENT_NOT_ALLOWED,
+        ERROR_CODES.PEC_AND_TEST_DOMAIN_RECIPIENT_NOT_ALLOWED,
       );
     } else if (isAttachmentError) {
       errorResponse = new ApiError(

@@ -88,7 +88,7 @@ const registerZodErrorTest = () => {
     expect(response.json).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'PEC and test domain recipients are not supported',
-        errorCode: ERROR_CODES.PEC_RECIPIENT_NOT_ALLOWED,
+        errorCode: ERROR_CODES.PEC_AND_TEST_DOMAIN_RECIPIENT_NOT_ALLOWED,
       }),
     );
   });
