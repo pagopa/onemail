@@ -302,7 +302,7 @@
           "name": "Mario Rossi",
           "email": "mario.rossi@example.com"
         },
-        "description": "Recipient of the email. PEC recipients are not supported. Recipients will be ignored in case of dryRun."
+        "description": "Recipient of the email. PEC and test domain recipients are not supported. Recipients will be ignored in case of dryRun."
       },
       "NameValue": {
         "type": "object",

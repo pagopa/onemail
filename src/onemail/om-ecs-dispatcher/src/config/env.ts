@@ -3,12 +3,31 @@ import { configDotenv } from 'dotenv';
 
 configDotenv();
 
+const compileExcludedDomainsRegex = (
+  value: string | undefined,
+): RegExp | undefined => {
+  const pattern = value?.trim();
+  if (!pattern) return undefined;
+
+  try {
+    return new RegExp(pattern, 'i');
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : 'invalid pattern';
+    throw new Error(`Invalid EXCLUDED_DOMAINS_REGEX: ${reason}`);
+  }
+};
+
 export default {
   projectVersion: process.env.npm_package_version || '1.0.0',
   server: {
     PORT: Number(process.env.PORT) || 3000,
     host: process.env.HOST || 'http://localhost:3000',
     environment: process.env.APP_ENV || APP_ENV_VALUES.local,
+  },
+  recipientDomains: {
+    excludedDomainsRegex: compileExcludedDomainsRegex(
+      process.env.EXCLUDED_DOMAINS_REGEX,
+    ),
   },
   aws: {
     region: process.env.AWS_REGION ?? throwMissingRequiredEnvVar('AWS_REGION'),

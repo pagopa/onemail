@@ -122,31 +122,61 @@ describe('recipient PEC validation', () => {
       expect.arrayContaining([
         expect.objectContaining({
           path: ['to', 'email'],
-          message: 'PEC recipients are not supported',
+          message: 'PEC and test domain recipients are not supported',
         }),
       ]),
     );
   });
 
-  it.each(['legalpec.it', 'testpec.eu', 'examplepec.it'])(
-    'accepts a domain that does not start with pec or cert: %s',
-    (domain) => {
-      const result = EmailHighPriorityBodySchema.safeParse({
-        from: { email: 'sender@example.com' },
-        to: { email: `recipient@${domain}` },
-        emailContent: { subject: 'Subject', html: '<p>Body</p>' },
-      });
+  it.each([
+    'legalpec.it',
+    'testpec.eu',
+    'examplepec.it',
+    'test.it',
+    'example.it',
+    'allowed-domain.com',
+  ])('accepts a domain that does not start with pec or cert: %s', (domain) => {
+    const result = EmailHighPriorityBodySchema.safeParse({
+      from: { email: 'sender@example.com' },
+      to: { email: `recipient@${domain}` },
+      emailContent: { subject: 'Subject', html: '<p>Body</p>' },
+    });
 
-      expect(result.success).toBe(true);
-    },
-  );
+    expect(result.success).toBe(true);
+  });
+
+  it.each([
+    'foo.test',
+    'sub.foo.test',
+    'foo.example',
+    'sub.foo.example',
+    'example.com',
+    'example.net',
+    'example.org',
+  ])('rejects configured excluded domain: %s', (domain) => {
+    const result = EmailHighPriorityBodySchema.safeParse({
+      from: { email: 'sender@allowed-domain.com' },
+      to: { email: `recipient@${domain}` },
+      emailContent: { subject: 'Subject', html: '<p>Body</p>' },
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.success ? undefined : result.error.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: ['to', 'email'],
+          message: 'PEC and test domain recipients are not supported',
+        }),
+      ]),
+    );
+  });
 
   it('rejects the entire low priority request when one recipient is PEC', () => {
     const result = EmailLowPriorityBodySchema.safeParse({
       from: { email: 'sender@example.com' },
       templateId: 'template-id',
       sendingInfo: [
-        { to: { email: 'valid@example.com' } },
+        { to: { email: 'valid@allowed-domain.com' } },
         { to: { email: 'recipient@PEC.IT' } },
       ],
     });
@@ -156,7 +186,7 @@ describe('recipient PEC validation', () => {
       expect.arrayContaining([
         expect.objectContaining({
           path: ['sendingInfo', 1, 'to', 'email'],
-          message: 'PEC recipients are not supported',
+          message: 'PEC and test domain recipients are not supported',
         }),
       ]),
     );
@@ -165,9 +195,9 @@ describe('recipient PEC validation', () => {
   it('does not reject PEC in sender or reply-to addresses', () => {
     const result = EmailLowPriorityBodySchema.safeParse({
       from: { email: 'sender@pec.it' },
-      replyTo: { email: 'reply@legalpec.it' },
+      replyTo: { email: 'reply@legalmail.it' },
       templateId: 'template-id',
-      sendingInfo: [{ to: { email: 'valid@example.com' } }],
+      sendingInfo: [{ to: { email: 'valid@allowed-domain.com' } }],
     });
 
     expect(result.success).toBe(true);
@@ -176,7 +206,7 @@ describe('recipient PEC validation', () => {
   it('does not reject pec in the local part', () => {
     const result = EmailHighPriorityBodySchema.safeParse({
       from: { email: 'sender@example.com' },
-      to: { email: 'pec-recipient@example.com' },
+      to: { email: 'pec-recipient@allowed-domain.com' },
       emailContent: { subject: 'Subject', html: '<p>Body</p>' },
     });
 

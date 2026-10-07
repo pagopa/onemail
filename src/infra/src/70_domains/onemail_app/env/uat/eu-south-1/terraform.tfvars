@@ -1,11 +1,12 @@
 # general
-prefix         = "oml"
-env_short      = "u"
-env            = "uat"
-domain         = "onemail_app"
-location       = "eu-south"
-location_short = "eus1"
-aws_region     = "eu-south-1"
+prefix                 = "oml"
+env_short              = "u"
+env                    = "uat"
+domain                 = "onemail_app"
+location               = "eu-south"
+location_short         = "eus1"
+aws_region             = "eu-south-1"
+excluded_domains_regex = "^[^@\\s]+@(?:(?:pec|cert)\\.[^@\\s]+|legalmail\\.it|postecert\\.it|arubapec\\.it|mypec\\.eu|gigapec\\.it|postecertifica\\.it|sicurezzapostale\\.it|namirialpec\\.it|spidmail\\.it|[^@\\s]+\\.(?:test|example)|example\\.(?:com|net|org))$"
 
 # API Gateway
 api_gateway_deployment_version = "1.0.0"

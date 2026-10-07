@@ -1,6 +1,6 @@
 import { getLogger } from '#config/logger';
 import { ERROR_CODES } from '#dtos/error.dto';
-import { PecErrorMessage } from '#dtos/error.dto';
+import { ExcludedDomainErrorMessage } from '#dtos/error.dto';
 import { ApiError } from '#errors/api.error';
 import { InvalidHtmlRawError } from '#errors/invalidHtmlRawError.error';
 import {
@@ -28,18 +28,18 @@ export const errorHandler = (
   let errorResponse: ApiError;
 
   if (err instanceof ZodError) {
-    const isPecError = err.issues.some(
-      (issue) => issue.message === PecErrorMessage,
+    const isPecOrTestDomainError = err.issues.some(
+      (issue) => issue.message === ExcludedDomainErrorMessage,
     );
     const isAttachmentError = err.issues.some(
       (issue) => issue.path[0] === 'attachments',
     );
 
-    if (isPecError) {
+    if (isPecOrTestDomainError) {
       errorResponse = new ApiError(
-        PecErrorMessage,
+        ExcludedDomainErrorMessage,
         StatusCodes.BAD_REQUEST,
-        ERROR_CODES.PEC_RECIPIENT_NOT_ALLOWED,
+        ERROR_CODES.PEC_AND_TEST_DOMAIN_RECIPIENT_NOT_ALLOWED,
       );
     } else if (isAttachmentError) {
       errorResponse = new ApiError(

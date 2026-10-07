@@ -34,7 +34,7 @@ export const EmailContentSchema = z.object({
 const BaseEmailSchema = z.object({
   from: EmailAddressSchema.describe('Sender of the email'),
   to: RecipientEmailAddressSchema.describe(
-    'Recipient of the email. PEC recipients are not supported. Recipients will be ignored in case of dryRun.',
+    'Recipient of the email. PEC and test domain recipients are not supported. Recipients will be ignored in case of dryRun.',
   ),
   extendedHeaders: ExtendedHeadersSchema.optional(),
   tag: TagSchema.optional(),
