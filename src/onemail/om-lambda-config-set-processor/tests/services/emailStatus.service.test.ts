@@ -4,6 +4,7 @@ import {
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
+import { RetryableEventError } from 'om-common/errors';
 import { EmailStatus } from 'om-common/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -91,10 +92,12 @@ describe('emailStatus.service validation and guard clauses', () => {
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'InvalidRecord' }]);
   });
 
-  it('publishes EmailNotFound when no email record matches the SES message id', async () => {
+  it('throws a retryable error when no email record matches the SES message id', async () => {
     findEmailByProviderMessageId.mockResolvedValue(undefined);
 
-    await sqsEventHandler(makeQueueRecord(makeDeliveryEvent('ses-msg-1')));
+    await expect(
+      sqsEventHandler(makeQueueRecord(makeDeliveryEvent('ses-msg-1'))),
+    ).rejects.toBeInstanceOf(RetryableEventError);
 
     expect(findEmailByProviderMessageId).toHaveBeenCalledWith('ses-msg-1');
     expect(publishMetrics).toHaveBeenCalledWith([{ name: 'EmailNotFound' }]);
@@ -136,6 +139,128 @@ describe('emailStatus.service validation and guard clauses', () => {
 });
 
 describe('emailStatus.service max internal attempts', () => {
+  it('marks an unfinished email as EventProcessingFailed after exhausting non-delivery processing attempts', async () => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
+    findEmailByProviderMessageId.mockResolvedValue(email);
+
+    await sqsEventHandler({
+      ...makeQueueRecord(makeComplaintEvent()),
+      attributes: { ApproximateReceiveCount: '4' },
+    } as never);
+
+    expect(updateEmailStatus).toHaveBeenCalledWith(
+      email.emailId,
+      email.status,
+      [
+        {
+          timestamp: expect.any(String),
+          status: EmailStatus.EventProcessingFailed,
+          reason: 'Max internal event processing retries exceeded',
+        },
+      ],
+    );
+    expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'ExhaustedInternalRetries',
+        dimensions: { tenantName: email.tenantName, clientId: email.clientId },
+      },
+    ]);
+    expect(handleSoftBounceRetry).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    EmailStatus.Delivered,
+    EmailStatus.HardBounce,
+    EmailStatus.Complaint,
+    EmailStatus.Rejected,
+    EmailStatus.NonRetryableSoftBounce,
+    EmailStatus.MaxRetriesReached,
+    EmailStatus.Queued,
+    EmailStatus.EventProcessingFailed,
+  ])(
+    'marks %s as EventProcessingFailed when non-delivery processing attempts are exhausted',
+    async (status) => {
+      findEmailByProviderMessageId.mockResolvedValue(
+        makeEmailStatusHistoryItem({ status }),
+      );
+
+      await sqsEventHandler({
+        ...makeQueueRecord(makeComplaintEvent()),
+        attributes: { ApproximateReceiveCount: '4' },
+      } as never);
+
+      expect(updateEmailStatus).toHaveBeenCalledTimes(1);
+      expect(updateEmailStatus).toHaveBeenCalledWith('email-1', status, [
+        {
+          timestamp: expect.any(String),
+          status: EmailStatus.EventProcessingFailed,
+          reason: 'Max internal event processing retries exceeded',
+        },
+      ]);
+      expect(publishMetrics).toHaveBeenCalledWith([
+        {
+          name: 'ExhaustedInternalRetries',
+          dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+        },
+      ]);
+    },
+  );
+
+  it('retries a missing email at the receive-count limit', async () => {
+    findEmailByProviderMessageId.mockResolvedValue(undefined);
+    const record = {
+      ...makeQueueRecord(makeDeliveryEvent('ses-msg-1')),
+      attributes: { ApproximateReceiveCount: '3' },
+    } as never;
+
+    await expect(sqsEventHandler(record)).rejects.toMatchObject({
+      name: 'RetryableEventError',
+      context: { providerMessageId: 'ses-msg-1', attempt: 3 },
+    });
+    expect(updateEmailStatus).not.toHaveBeenCalled();
+  });
+
+  it('discards a missing email after the receive-count limit without updating DynamoDB', async () => {
+    findEmailByProviderMessageId.mockResolvedValue(undefined);
+    const record = {
+      ...makeQueueRecord(makeDeliveryEvent()),
+      attributes: { ApproximateReceiveCount: '4' },
+    } as never;
+
+    await expect(sqsEventHandler(record)).resolves.toBeUndefined();
+    expect(updateEmailStatus).not.toHaveBeenCalled();
+    expect(publishMetrics).toHaveBeenCalledWith([
+      { name: 'ExhaustedInternalRetries' },
+    ]);
+  });
+
+  it('processes an email that becomes visible on the next delivery', async () => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
+    findEmailByProviderMessageId
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(email);
+    const record = makeQueueRecord(makeDeliveryEvent());
+
+    await expect(sqsEventHandler(record)).rejects.toBeInstanceOf(
+      RetryableEventError,
+    );
+    await sqsEventHandler({
+      ...record,
+      attributes: { ...record.attributes, ApproximateReceiveCount: '2' },
+    });
+
+    expect(updateEmailStatus).toHaveBeenCalledTimes(1);
+    expect(updateEmailStatus).toHaveBeenCalledWith(
+      email.emailId,
+      email.status,
+      [expect.objectContaining({ status: EmailStatus.Delivered })],
+    );
+  });
+
   it('processes normally when currentAttempt is at the limit', async () => {
     const email = makeEmailStatusHistoryItem({
       status: EmailStatus.Dispatched,
@@ -156,7 +281,7 @@ describe('emailStatus.service max internal attempts', () => {
     );
   });
 
-  it('escalates to Rejected and publishes ExhaustedInternalRetries when max attempts exceeded', async () => {
+  it('records Delivery with the SES timestamp when max attempts are exceeded', async () => {
     const email = makeEmailStatusHistoryItem({
       status: EmailStatus.Dispatched,
     });
@@ -175,9 +300,8 @@ describe('emailStatus.service max internal attempts', () => {
       email.status,
       [
         {
-          timestamp: expect.any(String),
-          status: EmailStatus.Rejected,
-          reason: 'Max internal retries exceeded',
+          timestamp: '2025-01-01T00:00:00Z',
+          status: EmailStatus.Delivered,
         },
       ],
     );
