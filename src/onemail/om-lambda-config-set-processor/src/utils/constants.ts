@@ -4,3 +4,5 @@ export const SOFT_BOUNCE_MAX_ATTEMPTS = {
 };
 
 export const INTERNAL_MAX_ATTEMPTS = 3;
+
+export const EMAIL_NOT_FOUND_MAX_ATTEMPTS = 3;
