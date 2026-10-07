@@ -14,6 +14,7 @@ export enum EmailStatus {
   SoftBounce = 'SoftBounce',
   Complaint = 'Complaint',
   MaxRetriesReached = 'MaxRetriesReached',
+  EventProcessingFailed = 'EventProcessingFailed',
 }
 
 export interface EmailAttachmentRef {

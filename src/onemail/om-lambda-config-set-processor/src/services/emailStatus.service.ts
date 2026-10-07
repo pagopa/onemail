@@ -19,8 +19,11 @@ import {
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
-import { INTERNAL_MAX_ATTEMPTS } from '#utils/constants';
-import { PermanentEventError } from 'om-common/errors';
+import {
+  EMAIL_NOT_FOUND_MAX_ATTEMPTS,
+  INTERNAL_MAX_ATTEMPTS,
+} from '#utils/constants';
+import { PermanentEventError, RetryableEventError } from 'om-common/errors';
 import {
   ConfigSetProcessorMetricName,
   publishMetrics,
@@ -200,21 +203,52 @@ const handleBounce = async (
   }
 };
 
+const handleMissingEmailRecord = (
+  providerMessageId: string,
+  currentAttempt: number,
+): never => {
+  publishMetrics([{ name: ConfigSetProcessorMetricName.EmailNotFound }]);
+  if (currentAttempt > EMAIL_NOT_FOUND_MAX_ATTEMPTS) {
+    publishMetrics([
+      { name: ConfigSetProcessorMetricName.ExhaustedInternalRetries },
+    ]);
+    throw new PermanentEventError(
+      'Email record not found after max internal retries',
+      { providerMessageId },
+    );
+  }
+
+  // SES events may arrive before the sender's write is visible in the eventually consistent DynamoDB GSI.
+  throw new RetryableEventError('Email record not found', {
+    providerMessageId,
+    attempt: currentAttempt,
+  });
+};
+
 async function checkIfMaxInternalAttemptsReached(
   currentAttempt: number,
   email: EmailStatusHistoryItem,
+  event: ConfSetEventItem,
 ): Promise<void> {
   if (currentAttempt <= INTERNAL_MAX_ATTEMPTS) return;
 
   const identifier = email.emailId;
 
-  await updateEmailStatus(identifier, email.status, [
-    {
-      timestamp: new Date().toISOString(),
-      status: EmailStatus.Rejected,
-      reason: 'Max internal retries exceeded',
-    },
-  ]);
+  // If event status is delivery, mark as delivered; but log and publish error metrics
+  // otherwise, mark as failed with EventProcessingFailed status
+  if (event.eventType === CapitalizedSesConfigurationSetEventType.Delivery) {
+    await updateEmailStatus(identifier, email.status, [
+      { timestamp: event.delivery.timestamp, status: EmailStatus.Delivered },
+    ]);
+  } else {
+    await updateEmailStatus(identifier, email.status, [
+      {
+        timestamp: new Date().toISOString(),
+        status: EmailStatus.EventProcessingFailed,
+        reason: 'Max internal event processing retries exceeded',
+      },
+    ]);
+  }
 
   publishMetrics([
     {
@@ -242,13 +276,14 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       eventItem.mail.messageId,
     );
     if (!emailRecord) {
-      publishMetrics([{ name: ConfigSetProcessorMetricName.EmailNotFound }]);
-      throw new PermanentEventError('Email record not found', {
-        providerMessageId: eventItem.mail.messageId,
-      });
+      return handleMissingEmailRecord(eventItem.mail.messageId, currentAttempt);
     }
 
-    await checkIfMaxInternalAttemptsReached(currentAttempt, emailRecord);
+    await checkIfMaxInternalAttemptsReached(
+      currentAttempt,
+      emailRecord,
+      eventItem,
+    );
 
     // Skip if current status is already Queued to avoid duplicate retries
     if (EmailStatus.Queued === emailRecord.status) {
