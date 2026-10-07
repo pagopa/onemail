@@ -1,5 +1,12 @@
 # infra-domains-onemail-app
 
+## 1.25.4
+
+### Patch Changes
+
+- 52a12e1: parametrize excluded domain var
+- 9650858: handle missing email record and fix lambda event partial failure
+
 ## 1.25.3
 
 ### Patch Changes

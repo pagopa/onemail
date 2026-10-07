@@ -1,5 +1,13 @@
 # om-lambda-sender
 
+## 1.8.2
+
+### Patch Changes
+
+- 3f73437: Code refactor improvement
+- Updated dependencies [3f73437]
+  - om-common@1.6.1
+
 ## 1.8.1
 
 ### Patch Changes
