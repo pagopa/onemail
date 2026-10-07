@@ -1,5 +1,14 @@
 # om-lambda-config-set-processor
 
+## 1.7.1
+
+### Patch Changes
+
+- 3f73437: Code refactor improvement
+- 9650858: handle missing email record and fix lambda event partial failure
+- Updated dependencies [3f73437]
+  - om-common@1.6.1
+
 ## 1.7.0
 
 ### Minor Changes

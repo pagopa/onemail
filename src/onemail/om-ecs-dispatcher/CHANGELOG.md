@@ -1,5 +1,14 @@
 # om-ecs-dispatcher
 
+## 1.12.1
+
+### Patch Changes
+
+- 3f73437: Code refactor improvement
+- 52a12e1: parametrize excluded domain var
+- Updated dependencies [3f73437]
+  - om-common@1.6.1
+
 ## 1.12.0
 
 ### Minor Changes

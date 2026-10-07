@@ -1,5 +1,11 @@
 # om-common
 
+## 1.6.1
+
+### Patch Changes
+
+- 3f73437: Code refactor improvement
+
 ## 1.6.0
 
 ### Minor Changes
