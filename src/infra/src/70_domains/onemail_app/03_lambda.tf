@@ -164,14 +164,16 @@ module "lambda_sender" {
 }
 
 resource "aws_lambda_event_source_mapping" "high_priority_sender" {
-  event_source_arn = data.aws_sqs_queue.high_priority.arn
-  function_name    = module.lambda_sender.lambda_function_arn
+  event_source_arn        = data.aws_sqs_queue.high_priority.arn
+  function_name           = module.lambda_sender.lambda_function_arn
+  function_response_types = ["ReportBatchItemFailures"]
   scaling_config { maximum_concurrency = 8 } # To adjust based on expected load for high priority tasks
 }
 
 resource "aws_lambda_event_source_mapping" "low_priority_sender" {
-  event_source_arn = data.aws_sqs_queue.low_priority.arn
-  function_name    = module.lambda_sender.lambda_function_arn
+  event_source_arn        = data.aws_sqs_queue.low_priority.arn
+  function_name           = module.lambda_sender.lambda_function_arn
+  function_response_types = ["ReportBatchItemFailures"]
   scaling_config { maximum_concurrency = 2 } # To adjust based on expected load for low priority tasks
 }
 
@@ -299,7 +301,8 @@ module "lambda_set_processor" {
 }
 
 resource "aws_lambda_event_source_mapping" "config_set_processor" {
-  event_source_arn = data.aws_sqs_queue.sqs_set_processor.arn
-  function_name    = module.lambda_set_processor.lambda_function_arn
+  event_source_arn        = data.aws_sqs_queue.sqs_set_processor.arn
+  function_name           = module.lambda_set_processor.lambda_function_arn
+  function_response_types = ["ReportBatchItemFailures"]
   #scaling_config { maximum_concurrency = 8 } # To adjust based on expected load for high priority tasks
 }
