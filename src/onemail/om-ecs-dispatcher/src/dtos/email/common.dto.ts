@@ -32,7 +32,12 @@ export const EmailAddressSchema = z
       .describe('Name associated with the email address'),
     email: z.email().describe('Email address'),
   })
-  .openapi('EmailAddress');
+  .openapi('EmailAddress', {
+    example: {
+      name: 'Mario Rossi',
+      email: 'mario.rossi@example.com',
+    },
+  });
 
 export const RecipientEmailAddressSchema = EmailAddressSchema.extend({
   email: z

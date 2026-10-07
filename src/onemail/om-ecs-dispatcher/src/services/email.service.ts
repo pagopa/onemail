@@ -1,5 +1,5 @@
 import env from '#config/env';
-import { getNamedLogger } from '#config/logger';
+import { getLogger, getNamedLogger } from '#config/logger';
 import { dynamoClient } from '#connectors/dynamo.connector';
 import { sqsClient } from '#connectors/sqs.connector';
 import { AttachmentInputDTO } from '#dtos/email/common.dto';
@@ -45,6 +45,9 @@ import {
   EmailStatusHistoryItem,
   TenantConfigurationItem,
 } from 'om-common/types';
+import { normalizeEmailAddress } from 'om-common/utils';
+
+const logger = getLogger();
 
 /**
  * Resolves which recipients are blacklisted.
@@ -55,11 +58,8 @@ const findBlacklistedRecipients = async (
   tenantName: string,
   clientId: string,
 ): Promise<Set<string>> => {
-  const logger = getNamedLogger(findBlacklistedRecipients.name);
-
   try {
-    const blacklisted = await findBlacklistedAddresses(addresses);
-    return new Set(blacklisted.keys());
+    return await findBlacklistedAddresses(addresses);
   } catch (error) {
     logger.error('Blacklist lookup failed, proceeding without the check', {
       error,
@@ -183,10 +183,16 @@ export const sendEmailLowPriority = async (
   );
 
   const acceptedSendingInfo = emailData.sendingInfo.filter(
-    ({ to }) => !blacklisted.has(to.email.trim().toLowerCase()),
+    ({ to }) => !blacklisted.has(normalizeEmailAddress(to.email)),
   );
+
+  // if all email recipients are blacklisted
+  if (acceptedSendingInfo.length === 0) {
+    throwBlacklistedRecipient();
+  }
+
   const unhandledEmails: UnhandledEmailDTO[] = emailData.sendingInfo
-    .filter(({ to }) => blacklisted.has(to.email.trim().toLowerCase()))
+    .filter(({ to }) => blacklisted.has(normalizeEmailAddress(to.email)))
     .map(({ to }) => ({
       address: to.email,
       reason: BlacklistedRecipientMessage,
@@ -203,10 +209,6 @@ export const sendEmailLowPriority = async (
         },
       },
     ]);
-  }
-
-  if (acceptedSendingInfo.length === 0) {
-    throwBlacklistedRecipient();
   }
 
   const requestId = randomUUID();
@@ -452,7 +454,6 @@ const uploadAttachments = async (
   attachments: ValidatedAttachment[],
   tenantName: string,
 ): Promise<EmailAttachmentRef[] | undefined> => {
-  const logger = getNamedLogger(uploadAttachments.name);
   if (!attachments.length) return undefined;
 
   // Try to upload every attachment

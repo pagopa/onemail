@@ -9,8 +9,8 @@ import {
   SendBulkEmailCommandInput,
   SendEmailCommandInput,
 } from '@aws-sdk/client-sesv2';
-import { EmailAddress, EmailStatusHistoryItem } from 'om-common/types';
-import { SES_SIMULATOR } from 'om-common/utils';
+import { EmailStatusHistoryItem } from 'om-common/types';
+import { formatEmailAddress, SES_SIMULATOR } from 'om-common/utils';
 
 export function mapDbHighPriorityItemToSesModel(
   item: EmailStatusHistoryItem,
@@ -166,20 +166,4 @@ function checkDryRunRecipient(item: EmailStatusHistoryItem): void {
       `Dry-run email item (id: ${item.emailId}) has non-simulator recipient address: ${toEmail}. Aborting send.`,
     );
   }
-}
-
-function escapeEmailDisplayName(name: string): string {
-  // escape backslashes and double quotes in the display name
-  const escaped = name.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-  // quote it if it contains special characters or leading/trailing whitespace
-  const hasSpecialChars = /[",;:<>@()[\]\\]/.test(name);
-  const hasLeadingOrTrailingWhitespace = /^\s/.test(name) || /\s$/.test(name);
-  const needsQuoting = hasSpecialChars || hasLeadingOrTrailingWhitespace;
-  return needsQuoting ? `"${escaped}"` : escaped;
-}
-
-function formatEmailAddress(address: EmailAddress): string {
-  return address.name
-    ? `${escapeEmailDisplayName(address.name)} <${address.email}>`
-    : address.email;
 }

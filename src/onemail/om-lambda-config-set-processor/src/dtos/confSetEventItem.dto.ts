@@ -82,3 +82,8 @@ export const ConfSetEventItemSchema = z.discriminatedUnion('eventType', [
 ]);
 
 export type ConfSetEventItem = z.infer<typeof ConfSetEventItemSchema>;
+
+export type ConfSetBounceEventItem = Extract<
+  ConfSetEventItem,
+  { eventType: 'Bounce' }
+>;

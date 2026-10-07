@@ -4,9 +4,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getNthCommand } from '../../../testing/commandAssertions.js';
 
 const dynamoSend = vi.hoisted(() => vi.fn());
+const loggerWarn = vi.hoisted(() => vi.fn());
 
 vi.mock('#connectors/dynamo.connector', () => ({
   dynamoClient: { send: dynamoSend },
+}));
+vi.mock('#config/logger', () => ({
+  getLogger: () => ({ warn: loggerWarn }),
+  getNamedLogger: () => ({ warn: loggerWarn }),
 }));
 vi.mock('#config/env', () => ({
   default: {
@@ -30,7 +35,7 @@ beforeEach(() => {
 });
 
 describe('findBlacklistedAddresses', () => {
-  it('returns an empty map without querying DynamoDB when there are no addresses', async () => {
+  it('returns an empty set without querying DynamoDB when there are no addresses', async () => {
     const result = await findBlacklistedAddresses([]);
 
     expect(result.size).toBe(0);
@@ -50,7 +55,7 @@ describe('findBlacklistedAddresses', () => {
     expect(keysOfCall(0)).toEqual(['user@example.it', 'other@example.it']);
   });
 
-  it('returns only the blacklisted addresses keyed by normalized address', async () => {
+  it('returns only the blacklisted addresses as normalized strings', async () => {
     dynamoSend.mockResolvedValue({
       Responses: {
         'blacklist-table': [
@@ -64,52 +69,30 @@ describe('findBlacklistedAddresses', () => {
       'other@example.it',
     ]);
 
-    expect([...result.keys()]).toEqual(['user@example.it']);
-    expect(result.get('user@example.it')).toMatchObject({
-      tenantName: 'tenant-1',
-    });
+    expect([...result]).toEqual(['user@example.it']);
   });
 
-  it('retries unprocessed keys and merges the results', async () => {
-    dynamoSend
-      .mockResolvedValueOnce({
-        Responses: {
-          'blacklist-table': [{ emailAddress: 'first@example.it' }],
-        },
-        UnprocessedKeys: {
-          'blacklist-table': { Keys: [{ emailAddress: 'second@example.it' }] },
-        },
-      })
-      .mockResolvedValueOnce({
-        Responses: {
-          'blacklist-table': [{ emailAddress: 'second@example.it' }],
-        },
-      });
+  it('returns processed addresses and logs unprocessed keys without retrying', async () => {
+    dynamoSend.mockResolvedValueOnce({
+      Responses: {
+        'blacklist-table': [{ emailAddress: 'first@example.it' }],
+      },
+      UnprocessedKeys: {
+        'blacklist-table': { Keys: [{ emailAddress: 'second@example.it' }] },
+      },
+    });
 
     const result = await findBlacklistedAddresses([
       'first@example.it',
       'second@example.it',
     ]);
 
-    expect(dynamoSend).toHaveBeenCalledTimes(2);
-    expect(keysOfCall(1)).toEqual(['second@example.it']);
-    expect([...result.keys()]).toEqual([
-      'first@example.it',
-      'second@example.it',
-    ]);
-  });
-
-  it('gives up after the retry budget and returns what was found', async () => {
-    dynamoSend.mockResolvedValue({
-      Responses: { 'blacklist-table': [] },
-      UnprocessedKeys: {
-        'blacklist-table': { Keys: [{ emailAddress: 'user@example.it' }] },
-      },
-    });
-
-    const result = await findBlacklistedAddresses(['user@example.it']);
-
-    expect(result.size).toBe(0);
-    expect(dynamoSend).toHaveBeenCalledTimes(4);
+    expect(dynamoSend).toHaveBeenCalledTimes(1);
+    expect(keysOfCall(0)).toEqual(['first@example.it', 'second@example.it']);
+    expect([...result]).toEqual(['first@example.it']);
+    expect(loggerWarn).toHaveBeenCalledWith(
+      'Some blacklist entries were not processed',
+      { unprocessedCount: 1 },
+    );
   });
 });

@@ -130,6 +130,10 @@
         "required": [
           "email"
         ],
+        "example": {
+          "name": "Mario Rossi",
+          "email": "mario.rossi@example.com"
+        },
         "description": "Recipient email address"
       },
       "ErrorResponseDTO": {
@@ -294,6 +298,10 @@
             }
           }
         ],
+        "example": {
+          "name": "Mario Rossi",
+          "email": "mario.rossi@example.com"
+        },
         "description": "Recipient of the email. PEC and test domain recipients are not supported. Recipients will be ignored in case of dryRun."
       },
       "NameValue": {
@@ -844,7 +852,7 @@
             }
           },
           "422": {
-            "description": "Recipient is in the SES suppression list and cannot be contacted",
+            "description": "Recipient is in blacklist and cannot be contacted",
             "content": {
               "application/json": {
                 "schema": {
@@ -912,7 +920,7 @@
         },
         "responses": {
           "202": {
-            "description": "Email accepted for processing. Recipients in the SES suppression list are reported in unhandledEmails",
+            "description": "Email accepted for processing. Recipients in the blacklist are reported in unhandledEmails",
             "content": {
               "application/json": {
                 "schema": {
@@ -972,7 +980,7 @@
             }
           },
           "422": {
-            "description": "Every recipient is in the SES suppression list and cannot be contacted",
+            "description": "Every recipient is in the blacklist and cannot be contacted",
             "content": {
               "application/json": {
                 "schema": {

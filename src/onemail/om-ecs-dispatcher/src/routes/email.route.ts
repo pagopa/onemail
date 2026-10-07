@@ -77,8 +77,7 @@ registerOpenApiRoute({
     },
     [StatusCodes.UNPROCESSABLE_ENTITY]: {
       schema: ErrorResponseSchema,
-      description:
-        'Recipient is in the SES suppression list and cannot be contacted',
+      description: 'Recipient is in blacklist and cannot be contacted',
     },
   },
 });
@@ -104,12 +103,12 @@ registerOpenApiRoute({
     [StatusCodes.ACCEPTED]: {
       schema: EmailLowPriorityResponseSchema,
       description:
-        'Email accepted for processing. Recipients in the SES suppression list are reported in unhandledEmails',
+        'Email accepted for processing. Recipients in the blacklist are reported in unhandledEmails',
     },
     [StatusCodes.UNPROCESSABLE_ENTITY]: {
       schema: ErrorResponseSchema,
       description:
-        'Every recipient is in the SES suppression list and cannot be contacted',
+        'Every recipient is in the blacklist and cannot be contacted',
     },
   },
 });

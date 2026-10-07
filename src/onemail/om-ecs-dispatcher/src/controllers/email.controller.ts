@@ -24,6 +24,7 @@ import { AsStringQuery } from '#types/request.type';
 import { headerTenantName } from '#utils/constants';
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { normalizeEmailAddress } from 'om-common/utils';
 
 const getTenantNameFromHeaders = (headers: Request['headers']): string =>
   headers[headerTenantName] as string;
@@ -99,7 +100,7 @@ function validateNoDuplicateRecipients(sendingInfo: SendingInfoDTO[]) {
   const seen = new Set<string>();
   const duplicates = new Set<string>();
   for (const item of sendingInfo) {
-    const email = item.to.email.trim().toLowerCase();
+    const email = normalizeEmailAddress(item.to.email);
     if (seen.has(email)) duplicates.add(email);
     seen.add(email);
   }

@@ -34,5 +34,4 @@ export type ErrorResponseDTO = z.infer<typeof ErrorResponseSchema>;
 export const ExcludedDomainErrorMessage =
   'PEC and test domain recipients are not supported';
 
-export const BlacklistedRecipientMessage =
-  'Email address is in SES suppression list';
+export const BlacklistedRecipientMessage = 'Email address is in blacklist';

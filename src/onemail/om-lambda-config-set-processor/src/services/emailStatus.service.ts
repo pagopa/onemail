@@ -1,8 +1,9 @@
 import type { SQSRecord } from 'aws-lambda';
 import type { EmailStatusHistoryItem } from 'om-common/types';
 
-import { getNamedLogger } from '#config/logger';
+import { getLogger, getNamedLogger } from '#config/logger';
 import {
+  ConfSetBounceEventItem,
   ConfSetEventItem,
   ConfSetEventItemSchema,
   EventTypeSchema,
@@ -25,6 +26,8 @@ import {
   publishMetrics,
 } from 'om-common/repositories';
 import { EmailStatus } from 'om-common/types';
+
+const logger = getLogger();
 
 const extractEventPayload = (recordBody: string): Record<string, unknown> => {
   const parsedRecordBody = JSON.parse(recordBody);
@@ -126,14 +129,11 @@ const getBounceStatus = (
   return EmailStatus.SoftBounce;
 };
 
-const blacklistHardBouncedRecipients = async (
-  event: Extract<ConfSetEventItem, { eventType: 'Bounce' }>,
+const addHardBouncedRecipientsToBlacklist = async (
+  event: ConfSetBounceEventItem,
   emailRecord: EmailStatusHistoryItem,
 ): Promise<void> => {
-  const logger = getNamedLogger(blacklistHardBouncedRecipients.name);
-
-  // Failures are swallowed on purpose: retrying the record would append duplicate status
-  // history entries, and the scheduled suppression-list alignment job recovers the gap.
+  // Failures are swallowed: retrying the record would append duplicate status history entries
   await Promise.all(
     event.bounce.bouncedRecipients.map(({ emailAddress }) =>
       addToBlacklist({
@@ -150,7 +150,7 @@ const blacklistHardBouncedRecipients = async (
 };
 
 const handleBounce = async (
-  event: Extract<ConfSetEventItem, { eventType: 'Bounce' }>,
+  event: ConfSetBounceEventItem,
   emailRecord: EmailStatusHistoryItem,
 ): Promise<void> => {
   const bounceStatus = getBounceStatus(event);
@@ -162,7 +162,7 @@ const handleBounce = async (
         reason: event.bounce.bounceSubType,
       },
     ]);
-    await blacklistHardBouncedRecipients(event, emailRecord);
+    await addHardBouncedRecipientsToBlacklist(event, emailRecord);
     publishMetrics([
       {
         name: ConfigSetProcessorMetricName.EmailHardBounce,
