@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.23.0
+
+### Minor Changes
+
+- bfcc99a: Set sqs-set-processor delay for consistency
+
 ## 1.22.3
 
 ### Patch Changes
