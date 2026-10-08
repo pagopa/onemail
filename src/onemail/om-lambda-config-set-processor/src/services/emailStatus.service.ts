@@ -207,7 +207,6 @@ const handleMissingEmailRecord = (
   providerMessageId: string,
   currentAttempt: number,
 ): never => {
-  publishMetrics([{ name: ConfigSetProcessorMetricName.EmailNotFound }]);
   if (currentAttempt > EMAIL_NOT_FOUND_MAX_ATTEMPTS) {
     publishMetrics([
       { name: ConfigSetProcessorMetricName.ExhaustedInternalRetries },
