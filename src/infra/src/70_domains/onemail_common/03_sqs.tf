@@ -14,4 +14,5 @@ resource "aws_sqs_queue" "sqs_set_processor" {
   name                       = "${local.project_nodomain}-sqs-config-set-processor"
   sqs_managed_sse_enabled    = true
   visibility_timeout_seconds = 60
+  delay_seconds              = 30 # Lets the sender's providerMessageId reach the GSI before SES events are processed
 }
