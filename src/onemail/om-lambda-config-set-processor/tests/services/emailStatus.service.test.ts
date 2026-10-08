@@ -100,7 +100,7 @@ describe('emailStatus.service validation and guard clauses', () => {
     ).rejects.toBeInstanceOf(RetryableEventError);
 
     expect(findEmailByProviderMessageId).toHaveBeenCalledWith('ses-msg-1');
-    expect(publishMetrics).toHaveBeenCalledWith([{ name: 'EmailNotFound' }]);
+    expect(publishMetrics).not.toHaveBeenCalled();
     expect(updateEmailStatus).not.toHaveBeenCalled();
   });
 
