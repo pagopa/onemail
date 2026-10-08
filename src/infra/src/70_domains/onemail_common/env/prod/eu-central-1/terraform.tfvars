@@ -11,3 +11,5 @@ ses_deed_parent_region = "eu-south-1"
 
 # ECS Cluster
 enable_container_insights = true
+
+sqs_set_processor_delay_enabled = true
