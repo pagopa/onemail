@@ -1,6 +1,6 @@
 {
   "name": "infra-domains-onemail-monitoring",
-  "version": "1.12.2",
+  "version": "1.12.3",
   "description": "Domain infrastructure code for the OneMail monitoring.",
   "private": true
 }

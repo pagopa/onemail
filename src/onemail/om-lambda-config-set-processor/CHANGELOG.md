@@ -1,5 +1,11 @@
 # om-lambda-config-set-processor
 
+## 1.7.2
+
+### Patch Changes
+
+- d0e10ad: increase alarm threashold
+
 ## 1.7.1
 
 ### Patch Changes
