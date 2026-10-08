@@ -107,3 +107,9 @@ variable "ses_deed_parent_region" {
   description = "Parent region for DEED replica SES identities. Leave null in the parent region."
   default     = null
 }
+
+variable "sqs_set_processor_delay_enabled" {
+  type        = bool
+  description = "Whether to enable the delay for the SQS set processor queue."
+  default     = false
+}
