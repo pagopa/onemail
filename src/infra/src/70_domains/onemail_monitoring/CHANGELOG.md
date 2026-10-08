@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.12.3
+
+### Patch Changes
+
+- d0e10ad: increase alarm threashold
+
 ## 1.12.2
 
 ### Patch Changes
