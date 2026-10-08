@@ -1,5 +1,11 @@
 # om-lambda-config-set-processor
 
+## 1.7.3
+
+### Patch Changes
+
+- 4fbc938: enable throwOnFullBatchFailure for disabling FullBatchFailureError
+
 ## 1.7.2
 
 ### Patch Changes
