@@ -17,6 +17,7 @@ const createMockLogger = () => {
 };
 
 vi.mock('#config/logger', () => ({
+  addLambdaContextToLogger: vi.fn(),
   getLogger: vi.fn(() => createMockLogger()),
   getNamedLogger: vi.fn(() => createMockLogger()),
 }));
