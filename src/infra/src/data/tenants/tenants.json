@@ -12,7 +12,8 @@
     "domain": {
       "uat": "selfcare.pagopa.it",
       "prod": "areariservata.pagopa.it"
-    }
+    },
+    "tls_policy": "OPTIONAL"
   },
   "ioapp": {
     "admin_mailbox": "ops-dmarc",
