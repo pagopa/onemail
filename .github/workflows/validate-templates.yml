@@ -1,0 +1,94 @@
+name: Validate SES templates
+
+on:
+  workflow_call:
+    inputs:
+      source_ref:
+        description: Exact pagopa/onemail-template candidate commit SHA (assets only)
+        required: true
+        type: string
+      base_ref:
+        description: Optional exact base commit SHA; omit to validate every template
+        required: false
+        default: ''
+        type: string
+      tooling_ref:
+        description: Reviewed pagopa/onemail tooling commit SHA; match the pinned reusable workflow revision
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  sanitize:
+    name: Validate templates with production sanitizer
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Validate immutable checkout references
+        shell: bash
+        env:
+          SOURCE_REF: ${{ inputs.source_ref }}
+          BASE_REF: ${{ inputs.base_ref }}
+          TOOLING_REF: ${{ inputs.tooling_ref }}
+        run: |
+          set -euo pipefail
+          for ref in "$SOURCE_REF" "$TOOLING_REF"; do
+            if [[ ! "$ref" =~ ^[a-f0-9]{40}$ ]]; then
+              printf '%s\n' 'source_ref and tooling_ref must be full lowercase commit SHAs' >&2
+              exit 1
+            fi
+          done
+          if [[ -n "$BASE_REF" && ! "$BASE_REF" =~ ^[a-f0-9]{40}$ ]]; then
+            printf '%s\n' 'base_ref must be a full lowercase commit SHA' >&2
+            exit 1
+          fi
+
+      - name: Checkout reviewed tooling
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1 https://github.com/actions/checkout/releases/tag/v4.3.1
+        with:
+          repository: pagopa/onemail
+          ref: ${{ inputs.tooling_ref }}
+          path: tooling
+          persist-credentials: false
+
+      - name: Checkout candidate template data
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1 https://github.com/actions/checkout/releases/tag/v4.3.1
+        with:
+          repository: pagopa/onemail-template
+          ref: ${{ inputs.source_ref }}
+          path: assets
+          fetch-depth: 0
+          sparse-checkout: templates
+          persist-credentials: false
+
+      - name: Setup trusted Node.js version
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0 https://github.com/actions/setup-node/releases/tag/v4.4.0
+        with:
+          node-version-file: tooling/.nvmrc
+
+      - name: Recheck selected asset paths before dependency setup
+        shell: bash
+        env:
+          BASE_REF: ${{ inputs.base_ref }}
+        run: |
+          set -euo pipefail
+          node tooling/src/onemail/om-ecs-dispatcher/test-html-sanitization/selectTemplateFiles.mjs "$GITHUB_WORKSPACE/assets" "$BASE_REF" > /dev/null
+
+      - name: Install frozen dispatcher dependency closure without lifecycle scripts
+        working-directory: tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack pnpm --filter om-ecs-dispatcher... install --frozen-lockfile --ignore-scripts
+
+      - name: Validate explicit candidate SES JSON without output files
+        working-directory: tooling
+        shell: bash
+        env:
+          BASE_REF: ${{ inputs.base_ref }}
+        run: |
+          set -euo pipefail
+          node src/onemail/om-ecs-dispatcher/test-html-sanitization/selectTemplateFiles.mjs "$GITHUB_WORKSPACE/assets" "$BASE_REF" |
+            corepack pnpm --filter om-ecs-dispatcher exec tsx -C local test-html-sanitization/testSanitizeHtml.ts --ci --root "$GITHUB_WORKSPACE/assets" --files-stdin
