@@ -59,6 +59,7 @@ variable "dynamodb_tables" {
     point_in_time_recovery_enabled = optional(bool)
     stream_enabled                 = optional(bool)
     stream_view_type               = optional(string)
+    ttl_enabled                    = optional(bool)
     ttl_attribute_name             = optional(string)
     deletion_protection_enabled    = optional(bool)
     create_kms_key                 = optional(bool)
@@ -88,6 +89,12 @@ variable "dns_zone_name" {
   type        = string
   description = "Name of the DNS hosted zone. For prod: 'onemail.pagopa.it', for dev/uat: subdomain will be automatically prefixed."
   default     = "onemail.pagopa.it"
+}
+
+variable "template_github_repository" {
+  type        = string
+  description = "GitHub repository allowed to publish and retire SES templates through protected environments."
+  default     = "pagopa/onemail-template"
 }
 
 variable "secondary_aws_region" {

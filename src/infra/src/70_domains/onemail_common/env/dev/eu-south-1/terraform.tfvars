@@ -9,6 +9,23 @@ aws_region     = "eu-south-1"
 
 # DynamoDB configuration for dev
 dynamodb_tables = {
+  template = {
+    table_name                     = "Template"
+    hash_key                       = "TemplateName"
+    billing_mode                   = "PAY_PER_REQUEST"
+    point_in_time_recovery_enabled = false
+    stream_enabled                 = true
+    stream_view_type               = "NEW_AND_OLD_IMAGES"
+    ttl_enabled                    = false
+    deletion_protection_enabled    = false
+    replication_enabled            = true
+    create_kms_key                 = true
+    kms_alias                      = "/dynamodb/template"
+    server_side_encryption_enabled = true
+    attributes                     = [{ name = "TemplateName", type = "S" }]
+    global_secondary_indexes       = []
+    replica_regions                = [{ region_name = "eu-central-1" }]
+  }
   email_status_history = {
     table_name                     = "EmailStatusHistory"
     hash_key                       = "emailId"
