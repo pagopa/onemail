@@ -226,7 +226,7 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 255,
-                        "description": "Identifier of the email template"
+                        "description": "SES TemplateName. When registry checks are enabled, the template must exist (otherwise 404/R001) and belong to the authenticated tenant (otherwise 401/T001)."
                       },
                       "templateAttributes": {
                         "$ref": "#/components/schemas/TemplateAttributes"
@@ -470,7 +470,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 255,
-            "description": "Identifier of the email template"
+            "description": "SES TemplateName. When registry checks are enabled, the template must exist (otherwise 404/R001) and belong to the authenticated tenant (otherwise 401/T001)."
           },
           "attachments": {
             "$ref": "#/components/schemas/Attachments"
@@ -880,6 +880,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Template registry unavailable (D001). Retry the request; no email was accepted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
           }
         }
       }
@@ -1001,6 +1011,16 @@
           },
           "500": {
             "description": "Generic error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Template registry unavailable (D001). Retry the request; no email was accepted.",
             "content": {
               "application/json": {
                 "schema": {

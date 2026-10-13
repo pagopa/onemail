@@ -21,6 +21,7 @@ import {
   putAttachment,
 } from '#repositories/attachment.repository';
 import { findBlacklistedAddresses } from '#repositories/blacklist.repository';
+import { templateRepository } from '#repositories/template.repository';
 import {
   validateAttachments,
   ValidatedAttachment,
@@ -93,6 +94,13 @@ export const sendEmailTransactional = async (
   // get tenant configuration for clientId and configSetName
   const tenantConfiguration =
     await getAndValidateTenantConfiguration(tenantName);
+
+  await validateTemplateOwnership(
+    'templateContent' in emailData
+      ? emailData.templateContent.templateId
+      : undefined,
+    tenantConfiguration.tenantName,
+  );
 
   const blacklisted = await findBlacklistedRecipients(
     [emailData.to.email],
@@ -175,6 +183,11 @@ export const sendEmailLowPriority = async (
   // get tenant configuration for clientId and configSetName
   const tenantConfiguration =
     await getAndValidateTenantConfiguration(tenantName);
+
+  await validateTemplateOwnership(
+    emailData.templateId,
+    tenantConfiguration.tenantName,
+  );
 
   const blacklisted = await findBlacklistedRecipients(
     emailData.sendingInfo.map(({ to }) => to.email),
@@ -371,6 +384,39 @@ export const getEmailStatus = async (
 
   logger.info('End');
   return mapped;
+};
+
+const validateTemplateOwnership = async (
+  templateName: string | undefined,
+  tenantName: string,
+): Promise<void> => {
+  if (!env.aws.templateRegistry.enabled || !templateName) return;
+
+  let template;
+  try {
+    template = await templateRepository.getByTemplateName(templateName);
+  } catch (error) {
+    logger.error('Template registry lookup failed', { error });
+    throw new ApiError(
+      'Template registry is temporarily unavailable; retry the request',
+      StatusCodes.SERVICE_UNAVAILABLE,
+      ERROR_CODES.DB_ERROR.GENERIC,
+    );
+  }
+  if (!template) {
+    throw new ApiError(
+      'Template not found',
+      StatusCodes.NOT_FOUND,
+      ERROR_CODES.RESOURCE_NOT_FOUND,
+    );
+  }
+  if (template.tenantName !== tenantName) {
+    throw new ApiError(
+      'Template does not belong to the authenticated tenant',
+      StatusCodes.UNAUTHORIZED,
+      ERROR_CODES.INVALID_TENANT,
+    );
+  }
 };
 
 const getAndValidateTenantConfiguration = async (

@@ -87,7 +87,7 @@ export const TemplateAttributesSchema = z
 
 // Identifier of the email template
 export const TemplateIdSchema = stringCheckedSchema().describe(
-  'Identifier of the email template',
+  'SES TemplateName. When registry checks are enabled, the template must exist (otherwise 404/R001) and belong to the authenticated tenant (otherwise 401/T001).',
 );
 
 const attachmentExtensionByContentType = {
