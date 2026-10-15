@@ -82,14 +82,40 @@ describe('AttachmentsSchema', () => {
     );
   });
 
-  it('accepts a docx filename for the docx content type', () => {
+  it.each([
+    ['report.doc', 'application/msword'],
+    ['report.xls', 'application/vnd.ms-excel'],
+    ['report.ppt', 'application/vnd.ms-powerpoint'],
+  ])('rejects legacy Office file %s', (filename, contentType) => {
+    const result = AttachmentsSchema.safeParse([
+      { ...validAttachment, filename, contentType },
+    ]);
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual([0, 'contentType']);
+  });
+
+  it.each([
+    ['report.odt', 'application/vnd.oasis.opendocument.text'],
+    [
+      'report.docx',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ],
+    [
+      'report.xlsx',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ],
+    [
+      'report.pptx',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    ],
+  ])('accepts supported Office file %s', (filename, contentType) => {
     expect(
       AttachmentsSchema.safeParse([
         {
           ...validAttachment,
-          filename: 'report.docx',
-          contentType:
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          filename,
+          contentType,
         },
       ]).success,
     ).toBe(true);
