@@ -120,3 +120,8 @@ dynamodb_tables = {
 
 # ECS Cluster
 enable_container_insights = true
+
+# Email retention (attachments bucket lifecycle)
+email_retention = {
+  enabled = false
+}

@@ -59,6 +59,7 @@ variable "dynamodb_tables" {
     point_in_time_recovery_enabled = optional(bool)
     stream_enabled                 = optional(bool)
     stream_view_type               = optional(string)
+    ttl_enabled                    = optional(bool)
     ttl_attribute_name             = optional(string)
     deletion_protection_enabled    = optional(bool)
     create_kms_key                 = optional(bool)
@@ -112,4 +113,21 @@ variable "sqs_set_processor_delay_enabled" {
   type        = bool
   description = "Whether to enable the delay for the SQS set processor queue."
   default     = false
+}
+
+variable "email_retention" {
+  type = object({
+    enabled                                = bool
+    attachments_expiration_days            = optional(number, 7)
+    attachments_noncurrent_expiration_days = optional(number, 1)
+  })
+  description = "Email retention resources owned by this domain: the attachments bucket lifecycle safety net."
+  default = {
+    enabled = false
+  }
+
+  validation {
+    condition     = var.email_retention.attachments_expiration_days > 0 && var.email_retention.attachments_noncurrent_expiration_days > 0
+    error_message = "Attachment expiration days must be greater than 0."
+  }
 }

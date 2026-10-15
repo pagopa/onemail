@@ -306,3 +306,152 @@ resource "aws_lambda_event_source_mapping" "config_set_processor" {
   function_response_types = ["ReportBatchItemFailures"]
   #scaling_config { maximum_concurrency = 8 } # To adjust based on expected load for high priority tasks
 }
+
+# Lambda Email Retention
+data "aws_iam_policy_document" "email_retention_policy" {
+  count = var.lambda_email_retention.enabled ? 1 : 0
+
+  statement {
+    sid = "ReadEmailStatusHistoryStream"
+    actions = [
+      "dynamodb:DescribeStream",
+      "dynamodb:GetRecords",
+      "dynamodb:GetShardIterator"
+    ]
+    resources = [data.aws_dynamodb_table.EmailStatusHistory.stream_arn]
+  }
+
+  statement {
+    sid       = "ListDynamoDBStreams"
+    actions   = ["dynamodb:ListStreams"]
+    resources = ["*"] # ListStreams does not support resource-level permissions
+  }
+
+  statement {
+    sid       = "SetEmailExpirationTime"
+    actions   = ["dynamodb:UpdateItem"]
+    resources = [data.aws_dynamodb_table.EmailStatusHistory.arn]
+
+    condition {
+      test     = "ForAllValues:StringEquals"
+      variable = "dynamodb:Attributes"
+      values   = ["emailId", "expiration_time"]
+    }
+
+    condition {
+      test     = "StringEqualsIfExists"
+      variable = "dynamodb:ReturnValues"
+      values   = ["NONE"]
+    }
+  }
+
+  statement {
+    sid       = "QueryEmailsByRequestId"
+    actions   = ["dynamodb:Query"]
+    resources = ["${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsis["gsi_request_id_idx"].name}"]
+  }
+
+  statement {
+    sid       = "DeleteEmailAttachments"
+    actions   = ["s3:DeleteObject"]
+    resources = ["${data.aws_s3_bucket.email_attachments.arn}/*"]
+  }
+
+  dynamic "statement" {
+    for_each = local.dynamodb_kms_key_arn != null ? [local.dynamodb_kms_key_arn] : []
+
+    content {
+      actions = [
+        "kms:Decrypt",
+        "kms:Encrypt"
+      ]
+
+      resources = [statement.value]
+    }
+  }
+}
+
+module "security_group_lambda_email_retention" {
+  count  = var.lambda_email_retention.enabled ? 1 : 0
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-security-group.git?ref=a0abc9d3a6d94b055fda01b4c935020629585ec6" # v4.17.2
+
+  name        = "${local.project_nodomain}-sg-lambda-email-retention"
+  description = "Security group for email retention lambda"
+  vpc_id      = data.aws_vpc.core.id
+
+  egress_cidr_blocks      = []
+  egress_ipv6_cidr_blocks = []
+}
+
+resource "aws_security_group_rule" "lambda_email_retention_egress" {
+  for_each = var.lambda_email_retention.enabled ? {
+    dynamodb = data.aws_vpc_endpoint.dynamodb.prefix_list_id
+    s3       = data.aws_vpc_endpoint.s3[0].prefix_list_id
+  } : {}
+
+  type              = "egress"
+  security_group_id = module.security_group_lambda_email_retention[0].security_group_id
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  prefix_list_ids   = [each.value]
+  description       = "HTTPS to ${each.key} gateway endpoint"
+}
+
+module "lambda_email_retention" {
+  count  = var.lambda_email_retention.enabled ? 1 : 0
+  source = "./.terraform/modules/aws_modules/IDVH/lambda"
+
+  env                = var.env
+  product_name       = "onemail"
+  idvh_resource_tier = "standard"
+
+  name        = "${local.project_nodomain}-lambda-email-retention"
+  description = "Lambda function that sets the TTL on finalized emails and deletes their S3 attachments, triggered by the EmailStatusHistory stream"
+
+  package_path       = "${path.module}/${var.lambda_email_retention.package_path}"
+  lambda_policy_json = data.aws_iam_policy_document.email_retention_policy[0].json
+
+  memory_size                    = 256
+  reserved_concurrent_executions = var.lambda_email_retention.reserved_concurrent_executions
+  environment_variables = {
+    AWS_EMAIL_DB_TABLE          = data.aws_dynamodb_table.EmailStatusHistory.name
+    AWS_EMAIL_DB_REQUEST_ID_GSI = local.gsis["gsi_request_id_idx"].name
+    AWS_ATTACHMENTS_BUCKET      = data.aws_s3_bucket.email_attachments.bucket
+    EMAIL_RETENTION_DAYS        = tostring(var.lambda_email_retention.email_retention_days)
+    NODE_ENV                    = "production"
+    POWERTOOLS_LOG_LEVEL        = "INFO"
+  }
+  vpc_subnet_ids         = data.aws_subnets.private.ids
+  vpc_security_group_ids = [module.security_group_lambda_email_retention[0].security_group_id]
+
+  tags = module.tag_config.tags
+}
+
+resource "aws_lambda_event_source_mapping" "email_retention" {
+  count = var.lambda_email_retention.enabled ? 1 : 0
+
+  event_source_arn  = data.aws_dynamodb_table.EmailStatusHistory.stream_arn
+  function_name     = module.lambda_email_retention[0].lambda_function_arn
+  enabled           = var.lambda_email_retention.stream_trigger_enabled
+  starting_position = "LATEST"
+
+  batch_size                     = var.lambda_email_retention.stream_batch_size
+  maximum_retry_attempts         = var.lambda_email_retention.stream_maximum_retry_attempts
+  maximum_record_age_in_seconds  = var.lambda_email_retention.stream_max_record_age_seconds
+  bisect_batch_on_function_error = true
+  function_response_types        = ["ReportBatchItemFailures"]
+
+  # Only transitions into a final status: the TTL update keeps the status final in both images, so it does not re-trigger.
+  filter_criteria {
+    filter {
+      pattern = jsonencode({
+        eventName = ["MODIFY"]
+        dynamodb = {
+          NewImage = { status = { S = local.email_final_statuses } }
+          OldImage = { status = { S = [{ "anything-but" = local.email_final_statuses }] } }
+        }
+      })
+    }
+  }
+}

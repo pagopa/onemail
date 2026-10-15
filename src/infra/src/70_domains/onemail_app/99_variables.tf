@@ -123,3 +123,25 @@ variable "lambda_set_processor" {
     reserved_concurrent_executions = optional(number)
   })
 }
+
+variable "lambda_email_retention" {
+  type = object({
+    enabled                        = bool
+    package_path                   = optional(string, "lambda/hello-nodejs/hello-nodejs.zip")
+    reserved_concurrent_executions = optional(number)
+    email_retention_days           = optional(number, 5)
+    stream_trigger_enabled         = optional(bool, true)
+    stream_batch_size              = optional(number, 10)
+    stream_maximum_retry_attempts  = optional(number, 5)
+    stream_max_record_age_seconds  = optional(number, 3600)
+  })
+  description = "Email retention Lambda: sets the TTL on finalized emails and deletes their S3 attachments."
+  default = {
+    enabled = false
+  }
+
+  validation {
+    condition     = var.lambda_email_retention.email_retention_days > 0
+    error_message = "email_retention_days must be greater than 0."
+  }
+}
