@@ -258,6 +258,40 @@ importers:
         specifier: catalog:aws-lambda
         version: 1.0.7
 
+  src/onemail/om-lambda-email-retention:
+    dependencies:
+      '@aws-lambda-powertools/batch':
+        specifier: catalog:aws-lambda
+        version: 2.32.0
+      '@aws-sdk/client-dynamodb':
+        specifier: catalog:aws-sdk
+        version: 3.1025.0
+      '@aws-sdk/client-s3':
+        specifier: catalog:aws-sdk
+        version: 3.1025.0
+      '@aws-sdk/lib-dynamodb':
+        specifier: catalog:aws-sdk
+        version: 3.1025.0(@aws-sdk/client-dynamodb@3.1025.0)
+      '@middy/core':
+        specifier: 'catalog:'
+        version: 7.2.1
+      om-common:
+        specifier: workspace:*
+        version: link:../om-common
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.6
+    devDependencies:
+      '@types/aws-lambda':
+        specifier: catalog:aws-lambda
+        version: 8.10.161
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.10.12
+      aws-lambda:
+        specifier: catalog:aws-lambda
+        version: 1.0.7
+
   src/onemail/om-lambda-sender:
     dependencies:
       '@aws-lambda-powertools/batch':

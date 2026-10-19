@@ -17,16 +17,26 @@ locals {
     )
   }
 
-  lambda_alarm_targets = {
-    sender = {
-      function_name = "${local.project_nodomain}-lambda-sender"
-      label         = "sender"
+  lambda_alarm_targets = merge(
+    {
+      sender = {
+        function_name = "${local.project_nodomain}-lambda-sender"
+        label         = "sender"
+      }
+      config_set_processor = {
+        function_name = "${local.project_nodomain}-lambda-config-set-processor"
+        label         = "config-set-processor"
+      }
+    },
+    {
+      for key, target in {
+        email_retention = {
+          function_name = "${local.project_nodomain}-lambda-email-retention"
+          label         = "email-retention"
+        }
+      } : key => target if var.email_retention_alarms_enabled
     }
-    config_set_processor = {
-      function_name = "${local.project_nodomain}-lambda-config-set-processor"
-      label         = "config-set-processor"
-    }
-  }
+  )
   sqs_alarm_targets = {
     high_priority = {
       queue_name      = "${local.project_nodomain}-sqs-high-priority"

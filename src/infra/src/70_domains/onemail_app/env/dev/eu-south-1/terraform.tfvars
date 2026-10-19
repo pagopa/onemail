@@ -31,3 +31,11 @@ lambda_set_processor = {
   package_path                   = "lambda/hello-nodejs/hello-nodejs.zip"
   reserved_concurrent_executions = -1 #Set based on expected load, Use -1 for unlimited concurrency for now
 }
+
+#Lambda Email Retention
+lambda_email_retention = {
+  enabled                        = true
+  package_path                   = "lambda/hello-nodejs/hello-nodejs.zip"
+  reserved_concurrent_executions = 5
+  email_retention_days           = 5
+}

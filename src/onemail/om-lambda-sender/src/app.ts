@@ -57,6 +57,7 @@ const lambdaHandler: SQSHandler = async (event: SQSEvent, context: Context) => {
   // TODO: idempotency with @aws-lambda-powertools/idempotency
   return processPartialResponse(event, recordHandler, processor, {
     context,
+    throwOnFullBatchFailure: false,
   });
 };
 

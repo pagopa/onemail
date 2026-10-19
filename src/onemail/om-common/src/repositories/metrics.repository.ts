@@ -85,6 +85,10 @@ export const SenderMetricName = {
   EmailWithAttachmentsDispatched: 'EmailWithAttachmentsDispatched',
 } as const;
 
+export const EmailRetentionMetricName = {
+  UnexpectedRetryableError: 'EmailRetentionUnexpectedRetryableError',
+} as const;
+
 export const DispatcherMetricName = {
   HighPriorityAccepted: `${PriorityPrefix[EmailPriority.HIGH]}Accepted`,
   LowPriorityAccepted: `${PriorityPrefix[EmailPriority.LOW]}Accepted`,
@@ -106,6 +110,7 @@ interface MetricInput {
 type AllMetricNames =
   | ConfigSetProcessorMetricName
   | DispatcherMetricName
+  | EmailRetentionMetricName
   | SenderMetricName;
 
 type ConfigSetProcessorMetricName =
@@ -113,6 +118,9 @@ type ConfigSetProcessorMetricName =
 
 type DispatcherMetricName =
   (typeof DispatcherMetricName)[keyof typeof DispatcherMetricName];
+
+type EmailRetentionMetricName =
+  (typeof EmailRetentionMetricName)[keyof typeof EmailRetentionMetricName];
 
 type SenderMetricName =
   (typeof SenderMetricName)[keyof typeof SenderMetricName];

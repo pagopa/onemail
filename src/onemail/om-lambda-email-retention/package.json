@@ -1,0 +1,45 @@
+{
+  "name": "om-lambda-email-retention",
+  "version": "1.0.0",
+  "description": "Lambda that handles retention policy by setting TTL on finalized emails and deleting their S3 attachments.",
+  "private": true,
+  "main": "dist/app.js",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "node dist/app.js",
+    "dev": "echo \"No dev start yet for email retention\"",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "type-check": "tsc --noEmit",
+    "lint:check": "eslint",
+    "lint": "eslint --fix",
+    "format:check": "prettier --check '**/*.{ts,js,mjs,json,yml,yaml}' --ignore-path ../../../.prettierignore",
+    "format": "prettier --write '**/*.{ts,js,mjs,json,yml,yaml}' --ignore-path ../../../.prettierignore"
+  },
+  "dependencies": {
+    "@aws-lambda-powertools/batch": "catalog:aws-lambda",
+    "@middy/core": "catalog:",
+    "@aws-sdk/client-dynamodb": "catalog:aws-sdk",
+    "@aws-sdk/client-s3": "catalog:aws-sdk",
+    "@aws-sdk/lib-dynamodb": "catalog:aws-sdk",
+    "om-common": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "aws-lambda": "catalog:aws-lambda",
+    "@types/aws-lambda": "catalog:aws-lambda",
+    "@types/node": "catalog:"
+  },
+  "imports": {
+    "#*": {
+      "local": "./src/*.js",
+      "default": "./dist/*.js"
+    }
+  },
+  "homepage": "https://github.com/pagopa/onemail/blob/main/src/onemail/om-lambda-email-retention/README.md"
+}
