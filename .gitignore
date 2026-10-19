@@ -61,6 +61,7 @@ dist-artifact/
 
 # .zip files
 **/*.zip
+!src/infra/src/70_domains/onemail_app/lambda/hello-nodejs/hello-nodejs.zip
 
 ## node files
 # Logs
