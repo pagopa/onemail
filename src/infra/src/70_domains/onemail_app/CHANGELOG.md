@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.25.5
+
+### Patch Changes
+
+- 900873d: new email retention lambda
+
 ## 1.25.4
 
 ### Patch Changes
