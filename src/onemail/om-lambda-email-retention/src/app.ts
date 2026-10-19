@@ -10,17 +10,18 @@ import {
 
 const logger = getLogger();
 
-class EmailRetentionBatchProcessor extends BatchProcessor {
+class CustomBatchProcessor extends BatchProcessor {
   override failureHandler(record: DynamoDBRecord, error: Error) {
-    logger.error('❌ Email retention failed, record will be retried', {
+    logger.error('Email retention failed, record will be retried', {
       sequenceNumber: record.dynamodb?.SequenceNumber,
       error,
+      retryable: true,
     });
     return super.failureHandler(record, error);
   }
 }
 
-const processor = new EmailRetentionBatchProcessor(EventType.DynamoDBStreams);
+const processor = new CustomBatchProcessor(EventType.DynamoDBStreams);
 
 export const handler = async (event: DynamoDBStreamEvent, context: Context) => {
   addLambdaContextToLogger(context);
@@ -30,3 +31,5 @@ export const handler = async (event: DynamoDBStreamEvent, context: Context) => {
     throwOnFullBatchFailure: false,
   });
 };
+
+// TODO manca middy e flush metrics

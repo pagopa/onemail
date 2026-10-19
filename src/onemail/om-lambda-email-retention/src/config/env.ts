@@ -1,3 +1,4 @@
+import { EnvironmentValidationError } from '#errors/environmentValidation.error';
 import { z } from 'zod';
 
 const EnvSchema = z.object({
@@ -8,7 +9,13 @@ const EnvSchema = z.object({
 });
 
 export const parseEnv = (source: NodeJS.ProcessEnv) => {
-  const parsed = EnvSchema.parse(source);
+  const result = EnvSchema.safeParse(source);
+
+  if (!result.success) {
+    throw new EnvironmentValidationError(result.error.issues);
+  }
+
+  const parsed = result.data;
 
   return {
     aws: {

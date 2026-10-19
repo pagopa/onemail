@@ -22,7 +22,9 @@ describe('email retention handler', () => {
   });
 
   it('reports the sequence number of failed records without rejecting', async () => {
-    dynamoStreamRecordHandler.mockRejectedValueOnce(new Error('S3 unavailable'));
+    dynamoStreamRecordHandler.mockRejectedValueOnce(
+      new Error('S3 unavailable'),
+    );
 
     const result = await handler(
       { Records: [makeStreamRecord('100')] },

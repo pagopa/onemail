@@ -10,7 +10,7 @@ const AttachmentAttributeSchema = z.object({
 // Subset of an EmailStatusHistory item as found in a DynamoDB stream image (DynamoDB JSON).
 export const EmailStreamImageSchema = z.object({
   emailId: StringAttributeSchema,
-  requestId: StringAttributeSchema.optional(),
+  requestId: StringAttributeSchema,
   priority: z.object({ S: z.enum(EmailPriority) }),
   status: z.object({ S: z.enum(EmailStatus) }),
   content: z

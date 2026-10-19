@@ -1,3 +1,4 @@
+import type { EmailStreamImage } from '#dtos/emailStreamImage.dto';
 import type { DynamoDBRecord } from 'aws-lambda';
 
 import { EmailPriority, EmailStatus } from 'om-common/types';
@@ -6,7 +7,7 @@ type StreamImageInput = {
   emailId?: string;
   requestId?: string;
   priority?: EmailPriority;
-  status?: string;
+  status?: EmailStatus;
   attachmentKeys?: string[];
 };
 
@@ -16,19 +17,16 @@ export const makeStreamImage = ({
   priority = EmailPriority.HIGH,
   status = EmailStatus.Delivered,
   attachmentKeys = ['tenant/attachment-1/file.pdf'],
-}: StreamImageInput = {}) => ({
+}: StreamImageInput = {}): EmailStreamImage => ({
   emailId: { S: emailId },
   requestId: { S: requestId },
   priority: { S: priority },
   status: { S: status },
   content: {
     M: {
-      subject: { S: 'Subject' },
       attachments: {
         L: attachmentKeys.map((key) => ({
           M: {
-            filename: { S: 'file.pdf' },
-            contentType: { S: 'application/pdf' },
             s3Key: { S: key },
           },
         })),

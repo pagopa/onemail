@@ -49,7 +49,7 @@ export const setEmailExpirationTime = async (
 /**
  * Returns true when another email of the same request is not in a final status yet.
  */
-export const hasOpenEmailsInRequest = async (
+export const hasNonFinalEmailsInRequest = async (
   requestId: string,
   excludedEmailId: string,
 ): Promise<boolean> => {

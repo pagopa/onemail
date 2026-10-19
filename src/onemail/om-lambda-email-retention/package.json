@@ -1,7 +1,7 @@
 {
   "name": "om-lambda-email-retention",
-  "version": "0.0.0",
-  "description": "Lambda that sets the TTL on finalized emails and deletes their S3 attachments.",
+  "version": "1.0.0",
+  "description": "Lambda that handles retention policy by setting TTL on finalized emails and deleting their S3 attachments.",
   "private": true,
   "main": "dist/app.js",
   "type": "module",

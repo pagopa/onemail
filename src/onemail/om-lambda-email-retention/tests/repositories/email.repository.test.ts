@@ -1,5 +1,5 @@
 import {
-  hasOpenEmailsInRequest,
+  hasNonFinalEmailsInRequest,
   setEmailExpirationTime,
 } from '#repositories/email.repository';
 import { FINAL_EMAIL_STATUSES } from '#utils/constants';
@@ -63,7 +63,7 @@ describe('hasOpenEmailsInRequest', () => {
   it('queries the request GSI excluding the current email and final statuses', async () => {
     dynamoSend.mockResolvedValue({ Count: 0 });
 
-    await hasOpenEmailsInRequest('request-1', 'email-1');
+    await hasNonFinalEmailsInRequest('request-1', 'email-1');
 
     const command = expectCommandInput(dynamoSend, {
       TableName: 'email-table',
@@ -95,9 +95,9 @@ describe('hasOpenEmailsInRequest', () => {
       })
       .mockResolvedValueOnce({ Count: 0 });
 
-    await expect(hasOpenEmailsInRequest('request-1', 'email-1')).resolves.toBe(
-      false,
-    );
+    await expect(
+      hasNonFinalEmailsInRequest('request-1', 'email-1'),
+    ).resolves.toBe(false);
 
     expect(dynamoSend).toHaveBeenCalledTimes(2);
     const secondCommand = getNthCommand(dynamoSend, 1) as {
@@ -119,17 +119,17 @@ describe('hasOpenEmailsInRequest', () => {
         LastEvaluatedKey: { emailId: 'email-20' },
       });
 
-    await expect(hasOpenEmailsInRequest('request-1', 'email-1')).resolves.toBe(
-      true,
-    );
+    await expect(
+      hasNonFinalEmailsInRequest('request-1', 'email-1'),
+    ).resolves.toBe(true);
     expect(dynamoSend).toHaveBeenCalledTimes(2);
   });
 
   it('treats a missing Count as no open emails', async () => {
     dynamoSend.mockResolvedValue({});
 
-    await expect(hasOpenEmailsInRequest('request-1', 'email-1')).resolves.toBe(
-      false,
-    );
+    await expect(
+      hasNonFinalEmailsInRequest('request-1', 'email-1'),
+    ).resolves.toBe(false);
   });
 });
