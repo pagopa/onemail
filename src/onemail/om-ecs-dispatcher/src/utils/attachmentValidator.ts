@@ -48,10 +48,7 @@ const validateDecodedFileType = async (
     return;
   }
 
-  if (
-    detected?.mime === contentType ||
-    isAllowedContainer(contentType, detected?.mime)
-  ) {
+  if (detected?.mime === contentType) {
     return;
   }
   throwInvalidAttachment('Attachment content does not match its content type');
@@ -70,28 +67,6 @@ const validateTextContent = (
       'Attachment content does not match its content type',
     );
   }
-};
-
-const isAllowedContainer = (
-  contentType: AttachmentAllowedContentType,
-  detectedMime: string | undefined,
-): boolean => {
-  // For office/openDocument files, the detected mime type is often 'application/zip'
-  if (detectedMime === 'application/zip') {
-    return (
-      contentType.startsWith('application/vnd.openxmlformats.') ||
-      contentType === 'application/vnd.oasis.opendocument.text'
-    );
-  }
-  // For older Microsoft Office files, the detected mime type is often 'application/x-cfb'
-  if (detectedMime === 'application/x-cfb') {
-    return (
-      contentType === 'application/msword' ||
-      contentType === 'application/vnd.ms-excel' ||
-      contentType === 'application/vnd.ms-powerpoint'
-    );
-  }
-  return false;
 };
 
 export const validateAttachments = async (

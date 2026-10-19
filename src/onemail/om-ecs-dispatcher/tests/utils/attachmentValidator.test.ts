@@ -25,6 +25,24 @@ const cfb = (): Buffer =>
     0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1, 0x00, 0x00, 0x00, 0x00,
   ]);
 
+const zipEntry = (filename: string, content: string): Buffer => {
+  const name = Buffer.from(filename);
+  const data = Buffer.from(content);
+  const header = Buffer.alloc(30);
+  header.writeUInt32LE(0x04034b50, 0);
+  header.writeUInt32LE(data.length, 18);
+  header.writeUInt32LE(data.length, 22);
+  header.writeUInt16LE(name.length, 26);
+  return Buffer.concat([header, name, data]);
+};
+
+const officeContentTypes = [
+  'application/vnd.oasis.opendocument.text',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+] as const;
+
 const attachment = (
   bytes: Uint8Array,
   filename: string,
@@ -60,15 +78,46 @@ describe('validateAttachments', () => {
     });
   });
 
-  it('accepts legacy Microsoft Office CFB containers for declared Office MIME types', async () => {
-    await expect(
-      validateAttachments([
-        attachment(cfb(), 'document.doc', 'application/msword'),
-        attachment(cfb(), 'spreadsheet.xls', 'application/vnd.ms-excel'),
-        attachment(cfb(), 'presentation.ppt', 'application/vnd.ms-powerpoint'),
-      ]),
-    ).resolves.toHaveLength(3);
-  });
+  it.each(officeContentTypes)(
+    'accepts document metadata detected as the exact declared MIME %s',
+    async (contentType) => {
+      const bytes =
+        contentType === 'application/vnd.oasis.opendocument.text'
+          ? zipEntry('mimetype', contentType)
+          : zipEntry(
+              '[Content_Types].xml',
+              `<Types><Override ContentType="${contentType}.main+xml"/></Types>`,
+            );
+
+      await expect(
+        validateAttachments([attachment(bytes, 'document', contentType)]),
+      ).resolves.toEqual([{ filename: 'document', contentType, bytes }]);
+    },
+  );
+
+  it.each(officeContentTypes)(
+    'rejects a generic ZIP declared as %s',
+    async (contentType) => {
+      expect.assertions(1);
+      await expectInvalidAttachment([
+        attachment(
+          zipEntry('notes.txt', 'not an Office document'),
+          'document',
+          contentType,
+        ),
+      ]);
+    },
+  );
+
+  it.each(officeContentTypes)(
+    'rejects a generic CFB declared as %s',
+    async (contentType) => {
+      expect.assertions(1);
+      await expectInvalidAttachment([
+        attachment(cfb(), 'document', contentType),
+      ]);
+    },
+  );
 
   it('accepts omitted and empty attachments', async () => {
     await expect(validateAttachments()).resolves.toEqual([]);
