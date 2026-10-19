@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.8.3
+
+### Patch Changes
+
+- 900873d: new email retention lambda
+
 ## 1.8.2
 
 ### Patch Changes
