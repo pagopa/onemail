@@ -7,23 +7,43 @@ import {
   EventType,
   processPartialResponse,
 } from '@aws-lambda-powertools/batch';
+import middy from '@middy/core';
+import { RetryableEventError } from 'om-common/errors';
+import {
+  EmailRetentionMetricName,
+  flushMetrics,
+  publishMetrics,
+} from 'om-common/repositories';
 
 const logger = getLogger();
 
 class CustomBatchProcessor extends BatchProcessor {
   override failureHandler(record: DynamoDBRecord, error: Error) {
-    logger.error('Email retention failed, record will be retried', {
-      sequenceNumber: record.dynamodb?.SequenceNumber,
-      error,
-      retryable: true,
-    });
+    if (error instanceof RetryableEventError) {
+      logger.error(`Retryable error: ${error.message}`, {
+        ...error.context,
+        error: error.cause,
+        retryable: true,
+      });
+    } else {
+      publishMetrics([
+        {
+          name: EmailRetentionMetricName.UnexpectedRetryableError,
+        },
+      ]);
+      logger.error('Unexpected error, will be retried', {
+        sequenceNumber: record.dynamodb?.SequenceNumber,
+        error,
+        retryable: true,
+      });
+    }
     return super.failureHandler(record, error);
   }
 }
 
 const processor = new CustomBatchProcessor(EventType.DynamoDBStreams);
 
-export const handler = async (event: DynamoDBStreamEvent, context: Context) => {
+const lambdaHandler = async (event: DynamoDBStreamEvent, context: Context) => {
   addLambdaContextToLogger(context);
 
   return processPartialResponse(event, dynamoStreamRecordHandler, processor, {
@@ -32,4 +52,4 @@ export const handler = async (event: DynamoDBStreamEvent, context: Context) => {
   });
 };
 
-// TODO manca middy e flush metrics
+export const handler = middy(lambdaHandler).use(flushMetrics);

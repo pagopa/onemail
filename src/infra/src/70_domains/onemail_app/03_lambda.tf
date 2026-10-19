@@ -415,12 +415,14 @@ module "lambda_email_retention" {
   memory_size                    = 256
   reserved_concurrent_executions = var.lambda_email_retention.reserved_concurrent_executions
   environment_variables = {
-    AWS_EMAIL_DB_TABLE          = data.aws_dynamodb_table.EmailStatusHistory.name
-    AWS_EMAIL_DB_REQUEST_ID_GSI = local.gsis["gsi_request_id_idx"].name
-    AWS_ATTACHMENTS_BUCKET      = data.aws_s3_bucket.email_attachments.bucket
-    EMAIL_RETENTION_DAYS        = tostring(var.lambda_email_retention.email_retention_days)
-    NODE_ENV                    = "production"
-    POWERTOOLS_LOG_LEVEL        = "INFO"
+    AWS_EMAIL_DB_TABLE               = data.aws_dynamodb_table.EmailStatusHistory.name
+    AWS_EMAIL_DB_REQUEST_ID_GSI      = local.gsis["gsi_request_id_idx"].name
+    AWS_ATTACHMENTS_BUCKET           = data.aws_s3_bucket.email_attachments.bucket
+    AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-email-retention"
+    EMAIL_RETENTION_DAYS             = tostring(var.lambda_email_retention.email_retention_days)
+    NODE_ENV                         = "production"
+    POWERTOOLS_LOG_LEVEL             = "INFO"
+    SERVICE_PREFIX                   = local.project_nodomain
   }
   vpc_subnet_ids         = data.aws_subnets.private.ids
   vpc_security_group_ids = [module.security_group_lambda_email_retention[0].security_group_id]
