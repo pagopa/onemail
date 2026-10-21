@@ -31,3 +31,6 @@ catalogs:
 cleanupUnusedCatalogs: true
 
 minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  # Renovate security update: sanitize-html@2.18.0
+  - sanitize-html@2.18.0
