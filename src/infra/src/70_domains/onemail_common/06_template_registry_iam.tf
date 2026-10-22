@@ -18,7 +18,7 @@ locals {
 resource "aws_iam_role" "template_publish" {
   count       = local.create_template_publish_role ? 1 : 0
   name        = "${local.project_nodomain_ses}-template-publish-role"
-  description = "Direct SES template publication and retirement from the protected template repository environment."
+  description = "Direct SES template publication, update and retirement from the protected template repository environment."
   tags        = module.tag_config.tags
 
   assume_role_policy = jsonencode({
@@ -47,9 +47,9 @@ resource "aws_iam_role_policy" "template_publish" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid      = "ImmutableTemplates"
+        Sid      = "ManagedTemplates"
         Effect   = "Allow"
-        Action   = ["ses:CreateEmailTemplate", "ses:GetEmailTemplate", "ses:DeleteEmailTemplate", "ses:ListResourceTenants"]
+        Action   = ["ses:CreateEmailTemplate", "ses:GetEmailTemplate", "ses:UpdateEmailTemplate", "ses:DeleteEmailTemplate", "ses:ListResourceTenants"]
         Resource = local.template_resource_arns
       },
       {
@@ -67,7 +67,7 @@ resource "aws_iam_role_policy" "template_publish" {
       {
         Sid      = "PrimaryRegistryItems"
         Effect   = "Allow"
-        Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"]
+        Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem"]
         Resource = module.dynamodb_table["template"].table_arn
       },
       {

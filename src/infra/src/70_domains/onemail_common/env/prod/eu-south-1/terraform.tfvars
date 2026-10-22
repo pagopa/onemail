@@ -12,7 +12,7 @@ create_ses_multi_region_endpoint = true
 # DynamoDB configuration for prod
 dynamodb_tables = {
   template = {
-    table_name                     = "Template"
+    table_name                     = "TemplateRegistry"
     hash_key                       = "TemplateName"
     billing_mode                   = "PAY_PER_REQUEST"
     point_in_time_recovery_enabled = true

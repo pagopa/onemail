@@ -26,7 +26,7 @@ variable "template_registry_enabled" {
 variable "template_registry_table_name" {
   type        = string
   description = "Global template registry table managed by onemail_common."
-  default     = "Template"
+  default     = "TemplateRegistry"
 }
 
 variable "excluded_domains_regex" {

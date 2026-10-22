@@ -10,7 +10,7 @@ aws_region     = "eu-south-1"
 # DynamoDB configuration for dev
 dynamodb_tables = {
   template = {
-    table_name                     = "Template"
+    table_name                     = "TemplateRegistry"
     hash_key                       = "TemplateName"
     billing_mode                   = "PAY_PER_REQUEST"
     point_in_time_recovery_enabled = false
