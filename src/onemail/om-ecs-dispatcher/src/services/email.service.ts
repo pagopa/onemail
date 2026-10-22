@@ -424,6 +424,24 @@ const validateTemplateOwnership = async (
       ERROR_CODES.RESOURCE_NOT_FOUND,
     );
   }
+  if (template.status === 'RETIRED' || template.retiredAt) {
+    throw new ApiError(
+      'Template not found',
+      StatusCodes.NOT_FOUND,
+      ERROR_CODES.RESOURCE_NOT_FOUND,
+    );
+  }
+  if (template.status !== undefined && template.status !== 'ACTIVE') {
+    logger.error('Template registry returned an unsupported template status', {
+      templateName,
+      status: template.status,
+    });
+    throw new ApiError(
+      'Template registry is temporarily unavailable; retry the request',
+      StatusCodes.SERVICE_UNAVAILABLE,
+      ERROR_CODES.DB_ERROR.GENERIC,
+    );
+  }
   if (template.tenantName !== tenantName) {
     throw new ApiError(
       'Template does not belong to the authenticated tenant',

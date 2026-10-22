@@ -125,6 +125,45 @@ describe('email.service - template registry', () => {
   );
 
   it.each(['high', 'low'] as const)(
+    'rejects a logically retired %s priority template before writes',
+    async (priority) => {
+      getByTemplateName.mockResolvedValue({
+        TemplateName: templateName,
+        tenantName: 'tenant-a',
+        lastModifiedDate: '2026-10-13T00:00:00.000Z',
+        status: 'RETIRED',
+        retiredAt: '2026-10-20T00:00:00Z',
+      });
+      await expect(sendTemplate(priority)).rejects.toMatchObject({
+        statusCode: 404,
+        errorCode: 'R001',
+      });
+      expect(dynamoSend).toHaveBeenCalledOnce();
+      expect(sqsSend).not.toHaveBeenCalled();
+      expect(putAttachment).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['high', 'low'] as const)(
+    'fails closed for an unknown %s priority template status',
+    async (priority) => {
+      getByTemplateName.mockResolvedValue({
+        TemplateName: templateName,
+        tenantName: 'tenant-a',
+        lastModifiedDate: '2026-10-13T00:00:00.000Z',
+        status: 'PENDING',
+      });
+      await expect(sendTemplate(priority)).rejects.toMatchObject({
+        statusCode: 503,
+        errorCode: 'D001',
+      });
+      expect(dynamoSend).toHaveBeenCalledOnce();
+      expect(sqsSend).not.toHaveBeenCalled();
+      expect(putAttachment).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['high', 'low'] as const)(
     'rejects a foreign %s priority template before writes',
     async (priority) => {
       getByTemplateName.mockResolvedValue({ tenantName: 'tenant-other' });
