@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.12.3
+
+### Patch Changes
+
+- 64ad896: bump sanitize-html to 2.18
+
 ## 1.12.2
 
 ### Patch Changes
