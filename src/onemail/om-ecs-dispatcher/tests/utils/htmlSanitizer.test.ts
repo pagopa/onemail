@@ -1,7 +1,9 @@
 import {
   hasHtmlSanitizationChange,
+  normalizeHtml,
   sanitizeEmailHtml as sanitizeEmailHtmlResult,
 } from '#utils/htmlSanitizer';
+import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 
 const sanitizeEmailHtml = (html: string): string =>
@@ -198,6 +200,18 @@ describe('hasMeaningfulHtmlSanitizationChange', () => {
 });
 
 describe('sanitizeEmailHtml result', () => {
+  it('preserves the example email HTML without meaningful sanitization changes', async () => {
+    const html = await readFile(
+      new URL('../html-to-sanitize.html', import.meta.url),
+      'utf8',
+    );
+
+    const result = sanitizeEmailHtmlResult(html);
+
+    expect(normalizeHtml(result.sanitizedHtml)).toBe(normalizeHtml(html));
+    expect(result.isSanitized).toBe(false);
+  });
+
   it('returns false when sanitization does not change the HTML', () => {
     const result = sanitizeEmailHtmlResult('<p>Hello</p>');
 

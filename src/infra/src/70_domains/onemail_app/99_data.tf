@@ -23,6 +23,18 @@ data "aws_vpc_endpoint" "dynamodb" {
   service_name = "com.amazonaws.${var.aws_region}.dynamodb"
 }
 
+data "aws_vpc_endpoint" "s3" {
+  count = var.lambda_email_retention.enabled ? 1 : 0
+
+  vpc_id       = data.aws_vpc.core.id
+  service_name = "com.amazonaws.${var.aws_region}.s3"
+
+  filter {
+    name   = "vpc-endpoint-type"
+    values = ["Gateway"]
+  }
+}
+
 data "aws_vpc_endpoint" "api_gtw" {
   service_name = "com.amazonaws.${var.aws_region}.execute-api"
   vpc_id       = data.aws_vpc.core.id

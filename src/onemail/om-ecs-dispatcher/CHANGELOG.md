@@ -1,5 +1,17 @@
 # om-ecs-dispatcher
 
+## 1.12.3
+
+### Patch Changes
+
+- 64ad896: bump sanitize-html to 2.18
+
+## 1.12.2
+
+### Patch Changes
+
+- 03a01cb: update attachment policy to reject legacy Office formats and improve validation
+
 ## 1.12.1
 
 ### Patch Changes

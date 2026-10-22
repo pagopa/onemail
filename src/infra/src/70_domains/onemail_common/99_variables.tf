@@ -120,3 +120,20 @@ variable "sqs_set_processor_delay_enabled" {
   description = "Whether to enable the delay for the SQS set processor queue."
   default     = false
 }
+
+variable "email_retention" {
+  type = object({
+    enabled                                = bool
+    attachments_expiration_days            = optional(number, 7)
+    attachments_noncurrent_expiration_days = optional(number, 1)
+  })
+  description = "Email retention resources owned by this domain: the attachments bucket lifecycle safety net."
+  default = {
+    enabled = false
+  }
+
+  validation {
+    condition     = var.email_retention.attachments_expiration_days > 0 && var.email_retention.attachments_noncurrent_expiration_days > 0
+    error_message = "Attachment expiration days must be greater than 0."
+  }
+}

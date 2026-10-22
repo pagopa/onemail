@@ -66,7 +66,18 @@ locals {
   }
   api_gateway_tenant_request_template = file("${path.module}/openapi/tenant-request-mapping.vtl")
   gsis                                = { for g in data.aws_dynamodb_table.EmailStatusHistory.global_secondary_index : g.name => g }
-  tenant_config_gsis                  = { for g in data.aws_dynamodb_table.TenantConfig.global_secondary_index : g.name => g }
+  # Must match FINAL_EMAIL_STATUSES in src/onemail/om-lambda-email-retention/src/utils/constants.ts
+  email_final_statuses = [
+    "Delivered",
+    "HardBounce",
+    "NonRetryableSoftBounce",
+    "Rejected",
+    "Complaint",
+    "MaxRetriesReached",
+    "DryRunError",
+    "EventProcessingFailed",
+  ]
+  tenant_config_gsis = { for g in data.aws_dynamodb_table.TenantConfig.global_secondary_index : g.name => g }
   dynamodb_kms_key_arn = try(
     one(data.aws_dynamodb_table.EmailStatusHistory.server_side_encryption).kms_key_arn,
     null

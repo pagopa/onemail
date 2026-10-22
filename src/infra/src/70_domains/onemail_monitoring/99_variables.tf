@@ -58,6 +58,12 @@ variable "sqs_alarm_max_age_seconds" {
   })
 }
 
+variable "email_retention_alarms_enabled" {
+  type        = bool
+  description = "Whether to create alarms for the email retention Lambda (onemail_app). Enable it only where the Lambda is enabled."
+  default     = false
+}
+
 variable "infra_alarm_templates" {
   description = "Template configuration for infrastructure CloudWatch alarms. Configure per environment in terraform.tfvars."
 

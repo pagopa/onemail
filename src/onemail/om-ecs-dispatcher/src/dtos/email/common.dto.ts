@@ -97,9 +97,6 @@ const attachmentExtensionByContentType = {
   'image/webp': ['webp'],
   'image/heic': ['heic'],
   'image/heif': ['heif'],
-  'application/msword': ['doc'],
-  'application/vnd.ms-excel': ['xls'],
-  'application/vnd.ms-powerpoint': ['ppt'],
   'application/vnd.oasis.opendocument.text': ['odt'],
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
     'docx',
@@ -137,7 +134,9 @@ export const AttachmentInputSchema = z
       )
       .openapi({ example: 'document.pdf' }),
     contentType: attachmentContentTypeSchema
-      .describe('Declared attachment MIME type')
+      .describe(
+        'Declared attachment MIME type. Binary content must be detected as this exact MIME type; generic ZIP and CFB containers are rejected. Supported Office documents are DOCX, XLSX, PPTX, and ODT; legacy DOC, XLS, and PPT are not supported. MIME detection is not full document validation or malware scanning.',
+      )
       .openapi({ example: 'application/pdf' }),
     content: z
       .base64('Attachment content must be valid base64')
