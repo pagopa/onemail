@@ -301,6 +301,20 @@ export const sanitizeHtmlContent = (
   return { sanitizedHtml, isSanitized };
 };
 
+export const sanitizeTemplateContent = (
+  htmlContent: string,
+): SanitizeHtmlResponseDTO => {
+  const escapedHtml = htmlContent
+    .replace(/\{\{\{/g, '{{')
+    .replace(/\}\}\}/g, '}}')
+    .replace(/\{\{\s*&\s*/g, '{{');
+  const result = sanitizeHtmlContent(escapedHtml);
+  return {
+    sanitizedHtml: result.sanitizedHtml,
+    isSanitized: escapedHtml !== htmlContent || result.isSanitized,
+  };
+};
+
 export const getEmailStatus = async (
   requestId: string,
   tenantName: string,

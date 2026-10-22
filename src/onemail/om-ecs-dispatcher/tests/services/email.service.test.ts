@@ -2,6 +2,7 @@ import env from '#config/env';
 import {
   getEmailStatus,
   sanitizeHtmlContent,
+  sanitizeTemplateContent,
   sendEmailLowPriority,
   sendEmailTransactional,
 } from '#services/email.service';
@@ -1089,6 +1090,56 @@ describe('email.service - getEmailStatus', () => {
         dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
       },
     ]);
+  });
+});
+
+describe('sanitizeTemplateContent', () => {
+  it.each([
+    ['<p>{{{name}}}</p>', '<p>{{name}}</p>'],
+    ['<p>{{& name}}</p>', '<p>{{name}}</p>'],
+    ['<p>{{ &name}}</p>', '<p>{{name}}</p>'],
+    ['<p>{{\n& name}}</p>', '<p>{{name}}</p>'],
+    ['<p>{{{first}}} {{{last}}}</p>', '<p>{{first}} {{last}}</p>'],
+  ])(
+    'normalizes unescaped placeholders before sanitizing: %s',
+    (input, expected) => {
+      expect(sanitizeTemplateContent(input)).toEqual({
+        sanitizedHtml: expected,
+        isSanitized: true,
+      });
+    },
+  );
+
+  it('sanitizes unsafe HTML after normalizing placeholders', () => {
+    expect(
+      sanitizeTemplateContent(
+        '<p onclick="evil()">{{{name}}}</p><script>alert(1)</script>',
+      ),
+    ).toEqual({
+      sanitizedHtml: '<p>{{name}}</p>',
+      isSanitized: true,
+    });
+  });
+
+  it('preserves safe placeholders and does not change raw HTML behavior', () => {
+    const html = '<p>{{name}}</p>';
+    expect(sanitizeTemplateContent(html)).toEqual({
+      sanitizedHtml: html,
+      isSanitized: false,
+    });
+    expect(sanitizeHtmlContent('<p>{{{name}}}</p>')).toEqual({
+      sanitizedHtml: '<p>{{{name}}}</p>',
+      isSanitized: false,
+    });
+  });
+
+  it('reports HTML sanitization even when placeholders do not change', () => {
+    expect(sanitizeTemplateContent('<p onclick="evil()">{{name}}</p>')).toEqual(
+      {
+        sanitizedHtml: '<p>{{name}}</p>',
+        isSanitized: true,
+      },
+    );
   });
 });
 

@@ -8,7 +8,7 @@ vi.mock('#connectors/dynamo.connector', () => ({
   templateDynamoClient: { send: templateSend },
 }));
 vi.mock('#config/env', () => ({
-  default: { aws: { templateRegistry: { tableName: 'Template' } } },
+  default: { aws: { templateRegistry: { tableName: 'TemplateRegistry' } } },
 }));
 
 beforeEach(() => {
@@ -30,7 +30,7 @@ describe('templateRepository', () => {
     const command = templateSend.mock.calls[0][0] as GetCommand;
     expect(command).toBeInstanceOf(GetCommand);
     expect(command.input).toEqual({
-      TableName: 'Template',
+      TableName: 'TemplateRegistry',
       Key: { TemplateName: item.TemplateName },
       ConsistentRead: true,
     });
