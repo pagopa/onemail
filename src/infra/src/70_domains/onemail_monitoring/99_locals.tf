@@ -54,6 +54,21 @@ locals {
       label           = "config-set-processor"
     }
   }
+  metrics_archive_name     = "${local.project_nodomain}-metrics-archive"
+  metrics_archive_database = replace("${local.project_nodomain}_metrics_archive", "-", "_")
+
+  metrics_archive_query_files = {
+    for sql_file in fileset("${path.module}/athena_queries", "*.sql") :
+    trimsuffix(sql_file, ".sql") => split("\n", file("${path.module}/athena_queries/${sql_file}"))
+  }
+  # First comment line is the description; comment lines are stripped because Athena DDL may reject them.
+  metrics_archive_named_queries = {
+    for name, lines in local.metrics_archive_query_files : name => {
+      description = trimspace(trimprefix(lines[0], "--"))
+      query       = trimspace(join("\n", [for line in lines : line if !startswith(trimspace(line), "--")]))
+    }
+  }
+
   ecs_cluster_name       = "${local.project_nodomain}-ecs-cluster"
   ecs_service_name       = "${local.project_nodomain}-ecs-service"
   api_gateway_name       = "${local.project_nodomain}-api-gateway"
