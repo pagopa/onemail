@@ -137,3 +137,21 @@ variable "application_dashboard_name" {
   type        = string
   description = "CloudWatch application metrics dashboard name."
 }
+
+variable "metrics_archive" {
+  description = "Long-term archive of custom email metrics: CloudWatch metric stream -> Firehose -> S3, queryable with Athena."
+  type = object({
+    enabled              = bool
+    namespace            = optional(string)
+    metric_names         = optional(list(string), ["EmailDelivered", "EmailHardBounce"])
+    partition_start_date = optional(string, "2025-01-01")
+  })
+  default = {
+    enabled = false
+  }
+
+  validation {
+    condition     = !var.metrics_archive.enabled || try(length(trimspace(var.metrics_archive.namespace)) > 0, false)
+    error_message = "metrics_archive.namespace is required when metrics_archive.enabled is true."
+  }
+}
