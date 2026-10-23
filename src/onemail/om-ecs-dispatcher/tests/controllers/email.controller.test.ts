@@ -1,6 +1,7 @@
 import {
   getEmailStatus,
   sanitizeHtmlContent,
+  sanitizeTemplateContent,
   sendEmailLowPriority,
   sendEmailTransactional,
 } from '#controllers/email.controller';
@@ -27,12 +28,14 @@ const sendEmailTransactionalMock = vi.hoisted(() => vi.fn());
 const sendEmailLowPriorityMock = vi.hoisted(() => vi.fn());
 const getEmailStatusMock = vi.hoisted(() => vi.fn());
 const sanitizeHtmlContentMock = vi.hoisted(() => vi.fn());
+const sanitizeTemplateContentMock = vi.hoisted(() => vi.fn());
 
 vi.mock('#services/email.service', () => ({
   sendEmailTransactional: sendEmailTransactionalMock,
   sendEmailLowPriority: sendEmailLowPriorityMock,
   getEmailStatus: getEmailStatusMock,
   sanitizeHtmlContent: sanitizeHtmlContentMock,
+  sanitizeTemplateContent: sanitizeTemplateContentMock,
 }));
 
 describe('email.controller', () => {
@@ -154,6 +157,23 @@ describe('email.controller', () => {
       sanitizedHtml: '<p>safe</p>',
       isSanitized: true,
     });
+  });
+
+  it('returns HTTP 200 and normalized template HTML when placeholders change', async () => {
+    const result = { sanitizedHtml: '<p>{{name}}</p>', isSanitized: true };
+    sanitizeTemplateContentMock.mockReturnValue(result);
+    const response = createResponseMock();
+
+    await sanitizeTemplateContent(
+      { body: { htmlContent: '<p>{{{name}}}</p>' } } as never,
+      response as never,
+    );
+
+    expect(sanitizeTemplateContentMock).toHaveBeenCalledWith(
+      '<p>{{{name}}}</p>',
+    );
+    expect(response.status).toHaveBeenCalledWith(200);
+    expect(response.json).toHaveBeenCalledWith(result);
   });
 
   it('gets email status and returns ok', async () => {

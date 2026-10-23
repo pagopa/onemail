@@ -17,6 +17,18 @@ variable "env" {
   description = "Environment."
 }
 
+variable "template_registry_enabled" {
+  type        = bool
+  description = "Enable template ownership checks only after the global registry and both-region SES templates have been manually aligned."
+  default     = false
+}
+
+variable "template_registry_table_name" {
+  type        = string
+  description = "Global template registry table managed by onemail_common."
+  default     = "TemplateRegistry"
+}
+
 variable "excluded_domains_regex" {
   type        = string
   description = "Regular expression matching recipient email addresses excluded by the ECS dispatcher."

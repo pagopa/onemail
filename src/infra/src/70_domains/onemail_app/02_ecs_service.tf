@@ -70,6 +70,32 @@ data "aws_iam_policy_document" "ecs_task_policy" {
 
   }
 
+  dynamic "statement" {
+    for_each = data.aws_dynamodb_table.template
+    content {
+      sid       = "TemplateRegistryReadOnly"
+      actions   = ["dynamodb:GetItem"]
+      resources = [statement.value.arn]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = toset(compact([
+      for table in data.aws_dynamodb_table.template :
+      try(one(table.server_side_encryption).kms_key_arn, null)
+    ]))
+    content {
+      sid       = "TemplateRegistryDecryption"
+      actions   = ["kms:Decrypt"]
+      resources = [statement.value]
+      condition {
+        test     = "StringEquals"
+        variable = "kms:ViaService"
+        values   = ["dynamodb.eu-south-1.amazonaws.com"]
+      }
+    }
+  }
+
   statement {
     sid = "EmailAttachmentsWriteAccess"
 
@@ -136,6 +162,18 @@ module "ecs_service" {
     {
       name  = "AWS_EMAIL_DB_TABLE"
       value = data.aws_dynamodb_table.EmailStatusHistory.name
+    },
+    {
+      name  = "AWS_TEMPLATE_DB_TABLE"
+      value = var.template_registry_table_name
+    },
+    {
+      name  = "AWS_TEMPLATE_PRIMARY_REGION"
+      value = "eu-south-1"
+    },
+    {
+      name  = "TEMPLATE_REGISTRY_ENABLED"
+      value = tostring(var.template_registry_enabled)
     },
     {
       name  = "AWS_EMAIL_DB_REQUEST_ID_GSI"

@@ -1,7 +1,27 @@
 import { APP_ENV_VALUES } from '#utils/constants';
 import { configDotenv } from 'dotenv';
+import { z } from 'zod';
 
 configDotenv();
+
+const templateRegistry = z
+  .object({
+    enabled: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
+    tableName: z.string().min(1).optional(),
+    primaryRegion: z.literal('eu-south-1').default('eu-south-1'),
+  })
+  .refine((value) => !value.enabled || Boolean(value.tableName), {
+    message:
+      'AWS_TEMPLATE_DB_TABLE is required when TEMPLATE_REGISTRY_ENABLED is true',
+  })
+  .parse({
+    enabled: process.env.TEMPLATE_REGISTRY_ENABLED,
+    tableName: process.env.AWS_TEMPLATE_DB_TABLE,
+    primaryRegion: process.env.AWS_TEMPLATE_PRIMARY_REGION,
+  });
 
 const compileExcludedDomainsRegex = (
   value: string | undefined,
@@ -30,6 +50,7 @@ export default {
     ),
   },
   aws: {
+    templateRegistry,
     region: process.env.AWS_REGION ?? throwMissingRequiredEnvVar('AWS_REGION'),
     emailDbTable:
       process.env.AWS_EMAIL_DB_TABLE ??

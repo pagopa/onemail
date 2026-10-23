@@ -2,6 +2,7 @@ import env from '#config/env';
 import {
   getEmailStatus,
   sanitizeHtmlContent,
+  sanitizeTemplateContent,
   sendEmailLowPriority,
   sendEmailTransactional,
 } from '#services/email.service';
@@ -26,6 +27,11 @@ const putAttachment = vi.hoisted(() => vi.fn());
 const deleteAttachment = vi.hoisted(() => vi.fn());
 const validateAttachments = vi.hoisted(() => vi.fn());
 const findBlacklistedAddresses = vi.hoisted(() => vi.fn());
+const getByTemplateName = vi.hoisted(() => vi.fn());
+
+vi.mock('#repositories/template.repository', () => ({
+  templateRepository: { getByTemplateName },
+}));
 
 vi.mock('#connectors/dynamo.connector', () => ({
   dynamoClient: { send: dynamoSend },
@@ -59,8 +65,167 @@ vi.mock('om-common/repositories', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  env.aws.templateRegistry.enabled = false;
   validateAttachments.mockResolvedValue([]);
   findBlacklistedAddresses.mockResolvedValue(new Map());
+});
+
+describe('email.service - template registry', () => {
+  const templateName = 'ced_welcome_v1';
+  const sendTemplate = (priority: 'high' | 'low', dryRun = false) =>
+    priority === 'high'
+      ? sendEmailTransactional(
+          makeHighPriorityEmailDto({
+            emailContent: undefined,
+            templateContent: { templateId: templateName },
+          }),
+          dryRun,
+          'tenant-a',
+        )
+      : sendEmailLowPriority(
+          makeLowPriorityEmailDto({ templateId: templateName }),
+          dryRun,
+          'tenant-a',
+        );
+
+  beforeEach(() => {
+    env.aws.templateRegistry.enabled = true;
+    dynamoSend.mockResolvedValue({});
+    dynamoSend.mockResolvedValueOnce({ Items: [makeTenantConfiguration()] });
+    randomUUID.mockReturnValue('request-id');
+  });
+
+  it.each(['high', 'low'] as const)(
+    'accepts an owned %s priority template',
+    async (priority) => {
+      getByTemplateName.mockResolvedValue({
+        TemplateName: templateName,
+        tenantName: 'tenant-a',
+        lastModifiedDate: '2026-10-13T00:00:00.000Z',
+      });
+      await sendTemplate(priority);
+      expect(getByTemplateName).toHaveBeenCalledWith(templateName);
+      expect(dynamoSend).toHaveBeenCalledTimes(2);
+      expect(sqsSend).toHaveBeenCalledOnce();
+    },
+  );
+
+  it.each(['high', 'low'] as const)(
+    'rejects a missing %s priority template before writes',
+    async (priority) => {
+      getByTemplateName.mockResolvedValue(undefined);
+      await expect(sendTemplate(priority)).rejects.toMatchObject({
+        statusCode: 404,
+        errorCode: 'R001',
+      });
+      expect(dynamoSend).toHaveBeenCalledOnce();
+      expect(sqsSend).not.toHaveBeenCalled();
+      expect(putAttachment).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['high', 'low'] as const)(
+    'rejects a logically retired %s priority template before writes',
+    async (priority) => {
+      getByTemplateName.mockResolvedValue({
+        TemplateName: templateName,
+        tenantName: 'tenant-a',
+        lastModifiedDate: '2026-10-13T00:00:00.000Z',
+        status: 'RETIRED',
+        retiredAt: '2026-10-20T00:00:00Z',
+      });
+      await expect(sendTemplate(priority)).rejects.toMatchObject({
+        statusCode: 404,
+        errorCode: 'R001',
+      });
+      expect(dynamoSend).toHaveBeenCalledOnce();
+      expect(sqsSend).not.toHaveBeenCalled();
+      expect(putAttachment).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['high', 'low'] as const)(
+    'fails closed for an unknown %s priority template status',
+    async (priority) => {
+      getByTemplateName.mockResolvedValue({
+        TemplateName: templateName,
+        tenantName: 'tenant-a',
+        lastModifiedDate: '2026-10-13T00:00:00.000Z',
+        status: 'PENDING',
+      });
+      await expect(sendTemplate(priority)).rejects.toMatchObject({
+        statusCode: 503,
+        errorCode: 'D001',
+      });
+      expect(dynamoSend).toHaveBeenCalledOnce();
+      expect(sqsSend).not.toHaveBeenCalled();
+      expect(putAttachment).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['high', 'low'] as const)(
+    'rejects a foreign %s priority template before writes',
+    async (priority) => {
+      getByTemplateName.mockResolvedValue({ tenantName: 'tenant-other' });
+      await expect(sendTemplate(priority)).rejects.toMatchObject({
+        statusCode: 401,
+        errorCode: 'T001',
+      });
+      expect(dynamoSend).toHaveBeenCalledOnce();
+      expect(sqsSend).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['high', 'low'] as const)(
+    'returns a retryable service error for %s priority on outage',
+    async (priority) => {
+      getByTemplateName.mockRejectedValue(new Error('DynamoDB unavailable'));
+      await expect(sendTemplate(priority)).rejects.toMatchObject({
+        statusCode: 503,
+        errorCode: 'D001',
+      });
+      expect(dynamoSend).toHaveBeenCalledOnce();
+      expect(sqsSend).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['high', 'low'] as const)(
+    'checks %s priority dry-run templates too',
+    async (priority) => {
+      getByTemplateName.mockResolvedValue(undefined);
+      await expect(sendTemplate(priority, true)).rejects.toMatchObject({
+        statusCode: 404,
+      });
+      expect(sqsSend).not.toHaveBeenCalled();
+    },
+  );
+
+  it('leaves direct-body sends unchanged when enabled', async () => {
+    await sendEmailTransactional(makeHighPriorityEmailDto(), false, 'tenant-a');
+    expect(getByTemplateName).not.toHaveBeenCalled();
+    expect(sqsSend).toHaveBeenCalledOnce();
+  });
+
+  it('uses the authenticated configuration tenant rather than the header value', async () => {
+    dynamoSend.mockReset();
+    dynamoSend.mockResolvedValueOnce({
+      Items: [
+        { ...makeTenantConfiguration(), tenantName: 'configured-tenant' },
+      ],
+    });
+    getByTemplateName.mockResolvedValue({ tenantName: 'tenant-a' });
+    await expect(sendTemplate('high')).rejects.toMatchObject({
+      statusCode: 401,
+    });
+    expect(sqsSend).not.toHaveBeenCalled();
+  });
+
+  it('bypasses the registry when rollout is disabled', async () => {
+    env.aws.templateRegistry.enabled = false;
+    await sendTemplate('low');
+    expect(getByTemplateName).not.toHaveBeenCalled();
+    expect(sqsSend).toHaveBeenCalledOnce();
+  });
 });
 
 describe('email.service - sendEmailTransactional', () => {
@@ -964,6 +1129,56 @@ describe('email.service - getEmailStatus', () => {
         dimensions: { tenantName: 'tenant-a', clientId: 'client-id-a' },
       },
     ]);
+  });
+});
+
+describe('sanitizeTemplateContent', () => {
+  it.each([
+    ['<p>{{{name}}}</p>', '<p>{{name}}</p>'],
+    ['<p>{{& name}}</p>', '<p>{{name}}</p>'],
+    ['<p>{{ &name}}</p>', '<p>{{name}}</p>'],
+    ['<p>{{\n& name}}</p>', '<p>{{name}}</p>'],
+    ['<p>{{{first}}} {{{last}}}</p>', '<p>{{first}} {{last}}</p>'],
+  ])(
+    'normalizes unescaped placeholders before sanitizing: %s',
+    (input, expected) => {
+      expect(sanitizeTemplateContent(input)).toEqual({
+        sanitizedHtml: expected,
+        isSanitized: true,
+      });
+    },
+  );
+
+  it('sanitizes unsafe HTML after normalizing placeholders', () => {
+    expect(
+      sanitizeTemplateContent(
+        '<p onclick="evil()">{{{name}}}</p><script>alert(1)</script>',
+      ),
+    ).toEqual({
+      sanitizedHtml: '<p>{{name}}</p>',
+      isSanitized: true,
+    });
+  });
+
+  it('preserves safe placeholders and does not change raw HTML behavior', () => {
+    const html = '<p>{{name}}</p>';
+    expect(sanitizeTemplateContent(html)).toEqual({
+      sanitizedHtml: html,
+      isSanitized: false,
+    });
+    expect(sanitizeHtmlContent('<p>{{{name}}}</p>')).toEqual({
+      sanitizedHtml: '<p>{{{name}}}</p>',
+      isSanitized: false,
+    });
+  });
+
+  it('reports HTML sanitization even when placeholders do not change', () => {
+    expect(sanitizeTemplateContent('<p onclick="evil()">{{name}}</p>')).toEqual(
+      {
+        sanitizedHtml: '<p>{{name}}</p>',
+        isSanitized: true,
+      },
+    );
   });
 });
 
