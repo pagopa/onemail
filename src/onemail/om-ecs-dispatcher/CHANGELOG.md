@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.12.4
+
+### Patch Changes
+
+- 6645dd1: update sanitize-html to 2.18.1
+
 ## 1.12.3
 
 ### Patch Changes
