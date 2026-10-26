@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.13.0
+
+### Minor Changes
+
+- 1755241: Cloudwatch metrics archiver feature
+
 ## 1.12.4
 
 ### Patch Changes
