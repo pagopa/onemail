@@ -87,7 +87,7 @@ export const TemplateAttributesSchema = z
 
 // Identifier of the email template
 export const TemplateIdSchema = stringCheckedSchema().describe(
-  'SES TemplateName. When registry checks are enabled, the template must exist (otherwise 404/R001) and belong to the authenticated tenant (otherwise 401/T001).',
+  'Identifier of the email template',
 );
 
 const attachmentExtensionByContentType = {
@@ -134,9 +134,7 @@ export const AttachmentInputSchema = z
       )
       .openapi({ example: 'document.pdf' }),
     contentType: attachmentContentTypeSchema
-      .describe(
-        'Declared attachment MIME type. Binary content must be detected as this exact MIME type; generic ZIP and CFB containers are rejected. Supported Office documents are DOCX, XLSX, PPTX, and ODT; legacy DOC, XLS, and PPT are not supported. MIME detection is not full document validation or malware scanning.',
-      )
+      .describe('Declared attachment MIME type')
       .openapi({ example: 'application/pdf' }),
     content: z
       .base64('Attachment content must be valid base64')

@@ -19,6 +19,7 @@ const dynamoClient = DynamoDBDocumentClient.from(client, {
   },
 });
 
+// TODO: check if we need a separate client for the template registry and align the regions
 const templateDynamoClient = DynamoDBDocumentClient.from(
   new DynamoDBClient({
     region: env.aws.templateRegistry.primaryRegion,

@@ -102,6 +102,7 @@ describe('email.service - template registry', () => {
         TemplateName: templateName,
         tenantName: 'tenant-a',
         lastModifiedDate: '2026-10-13T00:00:00.000Z',
+        status: 'ACTIVE',
       });
       await sendTemplate(priority);
       expect(getByTemplateName).toHaveBeenCalledWith(templateName);
@@ -145,7 +146,7 @@ describe('email.service - template registry', () => {
   );
 
   it.each(['high', 'low'] as const)(
-    'fails closed for an unknown %s priority template status',
+    'rejects an unknown %s priority template status before writes',
     async (priority) => {
       getByTemplateName.mockResolvedValue({
         TemplateName: templateName,
@@ -154,8 +155,8 @@ describe('email.service - template registry', () => {
         status: 'PENDING',
       });
       await expect(sendTemplate(priority)).rejects.toMatchObject({
-        statusCode: 503,
-        errorCode: 'D001',
+        statusCode: 404,
+        errorCode: 'R001',
       });
       expect(dynamoSend).toHaveBeenCalledOnce();
       expect(sqsSend).not.toHaveBeenCalled();
@@ -163,10 +164,33 @@ describe('email.service - template registry', () => {
     },
   );
 
+  it.each([
+    { status: undefined },
+    { status: 'RETIRED' },
+    { status: 'ACTIVE', retiredAt: '2026-10-20T00:00:00Z' },
+  ])('rejects unusable template metadata: %j', async (metadata) => {
+    getByTemplateName.mockResolvedValue({
+      TemplateName: templateName,
+      tenantName: 'tenant-a',
+      ...metadata,
+    });
+
+    await expect(sendTemplate('high')).rejects.toMatchObject({
+      statusCode: 404,
+      errorCode: 'R001',
+    });
+    expect(dynamoSend).toHaveBeenCalledOnce();
+    expect(sqsSend).not.toHaveBeenCalled();
+    expect(putAttachment).not.toHaveBeenCalled();
+  });
+
   it.each(['high', 'low'] as const)(
     'rejects a foreign %s priority template before writes',
     async (priority) => {
-      getByTemplateName.mockResolvedValue({ tenantName: 'tenant-other' });
+      getByTemplateName.mockResolvedValue({
+        tenantName: 'tenant-other',
+        status: 'ACTIVE',
+      });
       await expect(sendTemplate(priority)).rejects.toMatchObject({
         statusCode: 401,
         errorCode: 'T001',
@@ -177,13 +201,11 @@ describe('email.service - template registry', () => {
   );
 
   it.each(['high', 'low'] as const)(
-    'returns a retryable service error for %s priority on outage',
+    'propagates the registry error for %s priority on outage',
     async (priority) => {
-      getByTemplateName.mockRejectedValue(new Error('DynamoDB unavailable'));
-      await expect(sendTemplate(priority)).rejects.toMatchObject({
-        statusCode: 503,
-        errorCode: 'D001',
-      });
+      const error = new Error('DynamoDB unavailable');
+      getByTemplateName.mockRejectedValue(error);
+      await expect(sendTemplate(priority)).rejects.toBe(error);
       expect(dynamoSend).toHaveBeenCalledOnce();
       expect(sqsSend).not.toHaveBeenCalled();
     },
@@ -213,7 +235,10 @@ describe('email.service - template registry', () => {
         { ...makeTenantConfiguration(), tenantName: 'configured-tenant' },
       ],
     });
-    getByTemplateName.mockResolvedValue({ tenantName: 'tenant-a' });
+    getByTemplateName.mockResolvedValue({
+      tenantName: 'tenant-a',
+      status: 'ACTIVE',
+    });
     await expect(sendTemplate('high')).rejects.toMatchObject({
       statusCode: 401,
     });

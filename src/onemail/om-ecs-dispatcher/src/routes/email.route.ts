@@ -80,11 +80,6 @@ registerOpenApiRoute({
       schema: ErrorResponseSchema,
       description: 'Recipient is in blacklist and cannot be contacted',
     },
-    [StatusCodes.SERVICE_UNAVAILABLE]: {
-      schema: ErrorResponseSchema,
-      description:
-        'Template registry unavailable (D001). Retry the request; no email was accepted.',
-    },
   },
 });
 
@@ -115,11 +110,6 @@ registerOpenApiRoute({
       schema: ErrorResponseSchema,
       description:
         'Every recipient is in the blacklist and cannot be contacted',
-    },
-    [StatusCodes.SERVICE_UNAVAILABLE]: {
-      schema: ErrorResponseSchema,
-      description:
-        'Template registry unavailable (D001). Retry the request; no email was accepted.',
     },
   },
 });

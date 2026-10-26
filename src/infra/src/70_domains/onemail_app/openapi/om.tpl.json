@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.12.1",
+    "version": "1.12.3",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -123,8 +123,7 @@
             "409": { "statusCode": "409" },
             "422": { "statusCode": "422" },
             "429": { "statusCode": "429" },
-            "500": { "statusCode": "500" },
-            "503": { "statusCode": "503" }
+            "500": { "statusCode": "500" }
           }
         },
         "responses": {
@@ -136,8 +135,7 @@
           "409": { "description": "Conflict - resource already exists" },
           "422": { "description": "Recipient is in blacklist and cannot be contacted" },
           "429": { "description": "Too many requests" },
-          "500": { "description": "Generic error" },
-          "503": { "description": "Template registry unavailable (D001). Retry the request; no email was accepted." }
+          "500": { "description": "Generic error" }
         }
       }
     },
@@ -184,8 +182,7 @@
             "409": { "statusCode": "409" },
             "422": { "statusCode": "422" },
             "429": { "statusCode": "429" },
-            "500": { "statusCode": "500" },
-            "503": { "statusCode": "503" }
+            "500": { "statusCode": "500" }
           }
         },
         "responses": {
@@ -197,8 +194,7 @@
           "409": { "description": "Conflict - resource already exists" },
           "422": { "description": "Every recipient is in the blacklist and cannot be contacted" },
           "429": { "description": "Too many requests" },
-          "500": { "description": "Generic error" },
-          "503": { "description": "Template registry unavailable (D001). Retry the request; no email was accepted." }
+          "500": { "description": "Generic error" }
         }
       }
     },

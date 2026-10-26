@@ -30,6 +30,7 @@ import {
   mapEmailLowPriorityToDbItem,
   mapEmailTransactionalToDbItem,
 } from '#utils/dbMapper';
+import { isTemplatedEmail } from '#utils/emailTypeGuard';
 import { sanitizeEmailHtml } from '#utils/htmlSanitizer';
 import { SendMessageCommand } from '@aws-sdk/client-sqs';
 import {
@@ -95,12 +96,12 @@ export const sendEmailTransactional = async (
   const tenantConfiguration =
     await getAndValidateTenantConfiguration(tenantName);
 
-  await validateTemplateOwnership(
-    'templateContent' in emailData
-      ? emailData.templateContent.templateId
-      : undefined,
-    tenantConfiguration.tenantName,
-  );
+  if (isTemplatedEmail(emailData)) {
+    await validateTemplateOwnership(
+      emailData.templateContent.templateId,
+      tenantConfiguration.tenantName,
+    );
+  }
 
   const blacklisted = await findBlacklistedRecipients(
     [emailData.to.email],
@@ -404,42 +405,15 @@ const validateTemplateOwnership = async (
   templateName: string | undefined,
   tenantName: string,
 ): Promise<void> => {
+  // TODO: do we want the enabled feature flag?
   if (!env.aws.templateRegistry.enabled || !templateName) return;
 
-  let template;
-  try {
-    template = await templateRepository.getByTemplateName(templateName);
-  } catch (error) {
-    logger.error('Template registry lookup failed', { error });
-    throw new ApiError(
-      'Template registry is temporarily unavailable; retry the request',
-      StatusCodes.SERVICE_UNAVAILABLE,
-      ERROR_CODES.DB_ERROR.GENERIC,
-    );
-  }
-  if (!template) {
+  const template = await templateRepository.getByTemplateName(templateName);
+  if (!template || template.status !== 'ACTIVE' || template.retiredAt) {
     throw new ApiError(
       'Template not found',
       StatusCodes.NOT_FOUND,
       ERROR_CODES.RESOURCE_NOT_FOUND,
-    );
-  }
-  if (template.status === 'RETIRED' || template.retiredAt) {
-    throw new ApiError(
-      'Template not found',
-      StatusCodes.NOT_FOUND,
-      ERROR_CODES.RESOURCE_NOT_FOUND,
-    );
-  }
-  if (template.status !== undefined && template.status !== 'ACTIVE') {
-    logger.error('Template registry returned an unsupported template status', {
-      templateName,
-      status: template.status,
-    });
-    throw new ApiError(
-      'Template registry is temporarily unavailable; retry the request',
-      StatusCodes.SERVICE_UNAVAILABLE,
-      ERROR_CODES.DB_ERROR.GENERIC,
     );
   }
   if (template.tenantName !== tenantName) {

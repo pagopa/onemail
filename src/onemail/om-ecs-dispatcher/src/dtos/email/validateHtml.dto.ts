@@ -15,7 +15,7 @@ export type SanitizeHtmlDTO = z.infer<typeof SanitizeHtmlSchema>;
 export const SanitizeTemplateSchema = z
   .object({
     htmlContent: stringCheckedSchema({ min: 1, max: 500000 })
-      .describe('Template HTML to sanitize, including unescaped placeholders')
+      .describe('Handlebars template HTML to sanitize')
       .openapi({ example: '<p>Hello {{name}}</p>' }),
   })
   .openapi('SanitizeTemplateBodyDTO');
