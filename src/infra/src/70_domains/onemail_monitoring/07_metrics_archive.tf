@@ -250,11 +250,9 @@ resource "aws_glue_catalog_table" "email_metrics_raw" {
     input_format  = "org.apache.hadoop.mapred.TextInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
 
+    # Hive JSON SerDe as documented for metric streams: OpenX lowercases map keys and can return non-deterministic rows.
     ser_de_info {
-      serialization_library = "org.openx.data.jsonserde.JsonSerDe"
-      parameters = {
-        "ignore.malformed.json" = "true"
-      }
+      serialization_library = "org.apache.hive.hcatalog.data.JsonSerDe"
     }
 
     columns {
