@@ -143,7 +143,7 @@ variable "metrics_archive" {
   type = object({
     enabled              = bool
     namespace            = optional(string)
-    metric_names         = optional(list(string), ["EmailDelivered", "EmailHardBounce"])
+    metric_names         = optional(list(string), [])
     partition_start_date = optional(string, "2025-01-01")
   })
   default = {
@@ -153,5 +153,10 @@ variable "metrics_archive" {
   validation {
     condition     = !var.metrics_archive.enabled || try(length(trimspace(var.metrics_archive.namespace)) > 0, false)
     error_message = "metrics_archive.namespace is required when metrics_archive.enabled is true."
+  }
+
+  validation {
+    condition     = !var.metrics_archive.enabled || length(var.metrics_archive.metric_names) > 0
+    error_message = "metrics_archive.metric_names must list at least one metric when metrics_archive.enabled is true."
   }
 }

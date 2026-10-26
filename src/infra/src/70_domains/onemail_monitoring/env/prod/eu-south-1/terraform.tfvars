@@ -11,8 +11,9 @@ aws_region     = "eu-south-1"
 alarm_subscribers = "alarm-subscribers"
 
 metrics_archive = {
-  enabled   = true
-  namespace = "oml-p-eus1"
+  enabled      = true
+  namespace    = "oml-p-eus1"
+  metric_names = ["EmailDelivered", "EmailHardBounce"]
 }
 
 sqs_alarm_max_age_seconds = {
