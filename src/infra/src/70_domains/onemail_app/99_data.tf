@@ -62,9 +62,8 @@ data "aws_dynamodb_table" "Blacklist" {
   name = "EmailBlacklist"
 }
 
-data "aws_dynamodb_table" "template" {
-  count = var.template_registry_enabled ? 1 : 0
-  name  = var.template_registry_table_name
+data "aws_dynamodb_table" "Template" {
+  name = "TemplateRegistry"
 }
 
 data "aws_ecs_cluster" "core" {
