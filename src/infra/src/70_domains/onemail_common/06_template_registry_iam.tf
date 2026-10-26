@@ -1,20 +1,3 @@
-locals {
-  template_ses_regions = ["eu-south-1", "eu-central-1"]
-  template_resource_arns = flatten([
-    for region in local.template_ses_regions : [
-      for product, tenant in local.tenants :
-      "arn:${data.aws_partition.current.partition}:ses:${region}:${data.aws_caller_identity.current.account_id}:template/${product}_*"
-    ]
-  ])
-  template_tenant_arns = flatten([
-    for region in local.template_ses_regions : [
-      for tenant in values(local.tenants) :
-      "arn:${data.aws_partition.current.partition}:ses:${region}:${data.aws_caller_identity.current.account_id}:tenant/${tenant.tenant_name}/*"
-    ]
-  ])
-  create_template_publish_role = var.aws_region == "eu-south-1" && contains(keys(var.dynamodb_tables), "template")
-}
-
 resource "aws_iam_role" "template_publish" {
   count       = local.create_template_publish_role ? 1 : 0
   name        = "${local.project_nodomain_ses}-template-publish-role"
@@ -83,9 +66,4 @@ resource "aws_iam_role_policy" "template_publish" {
       }
     ]
   })
-}
-
-output "template_publish_role_arn" {
-  description = "OIDC role for the template repository's environment-specific direct publication workflow."
-  value       = try(aws_iam_role.template_publish[0].arn, null)
 }

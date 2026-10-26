@@ -27,4 +27,18 @@ locals {
       tls_policy             = try(tenant_data.tls_policy, "REQUIRE")
     } if try(length(trimspace(local.tenant_domains[tenant_key])) > 0, false)
   }
+  template_ses_regions = ["eu-south-1", "eu-central-1"]
+  template_resource_arns = flatten([
+    for region in local.template_ses_regions : [
+      for product, tenant in local.tenants :
+      "arn:${data.aws_partition.current.partition}:ses:${region}:${data.aws_caller_identity.current.account_id}:template/${product}_*"
+    ]
+  ])
+  template_tenant_arns = flatten([
+    for region in local.template_ses_regions : [
+      for tenant in values(local.tenants) :
+      "arn:${data.aws_partition.current.partition}:ses:${region}:${data.aws_caller_identity.current.account_id}:tenant/${tenant.tenant_name}/*"
+    ]
+  ])
+  create_template_publish_role = var.aws_region == "eu-south-1" && contains(keys(var.dynamodb_tables), "template")
 }
