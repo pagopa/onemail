@@ -63,9 +63,8 @@ data "aws_dynamodb_table" "Blacklist" {
 }
 
 data "aws_dynamodb_table" "template" {
-  count    = var.template_registry_enabled ? 1 : 0
-  provider = aws.template_primary
-  name     = var.template_registry_table_name
+  count = var.template_registry_enabled ? 1 : 0
+  name  = var.template_registry_table_name
 }
 
 data "aws_ecs_cluster" "core" {

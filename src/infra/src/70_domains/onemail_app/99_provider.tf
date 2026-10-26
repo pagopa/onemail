@@ -19,11 +19,6 @@ provider "aws" {
   region = var.aws_region
 }
 
-provider "aws" {
-  alias  = "template_primary"
-  region = "eu-south-1"
-}
-
 module "aws_modules" {
   source = "git::https://github.com/pagopa/technology-aws-modules.git?ref=main"
 }

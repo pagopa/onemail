@@ -35,8 +35,6 @@ export default {
       tableName:
         process.env.AWS_TEMPLATE_DB_TABLE ||
         throwMissingRequiredEnvVar('AWS_TEMPLATE_DB_TABLE'),
-      // TODO: remove?
-      primaryRegion: process.env.AWS_TEMPLATE_PRIMARY_REGION || 'eu-south-1',
     },
     region: process.env.AWS_REGION ?? throwMissingRequiredEnvVar('AWS_REGION'),
     emailDbTable:

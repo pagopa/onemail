@@ -405,7 +405,6 @@ const validateTemplateOwnership = async (
   templateName: string | undefined,
   tenantName: string,
 ): Promise<void> => {
-  // TODO: do we want the enabled feature flag?
   if (!env.aws.templateRegistry.enabled || !templateName) return;
 
   const template = await templateRepository.getByTemplateName(templateName);

@@ -168,10 +168,6 @@ module "ecs_service" {
       value = var.template_registry_table_name
     },
     {
-      name  = "AWS_TEMPLATE_PRIMARY_REGION"
-      value = "eu-south-1"
-    },
-    {
       name  = "TEMPLATE_REGISTRY_ENABLED"
       value = tostring(var.template_registry_enabled)
     },
