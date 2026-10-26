@@ -2,16 +2,17 @@
 """Purpose: Backfill historical CloudWatch email metrics into the metrics archive bucket for Athena.
 
 Writes hourly datapoints (CloudWatch keeps them for 455 days) as gzip JSON lines with the same shape as the
-metric stream output delivered by Firehose, one object per metric and UTC day (rerun-safe, it overwrites):
-  s3://<bucket>/metrics/source=backfill/<metric_name>/dt=YYYY-MM-DD/backfill.json.gz
+metric stream output delivered by Firehose, one object per region, metric and UTC day (rerun-safe, it overwrites):
+  s3://<bucket>/metrics/source=backfill/<region>/<metric_name>/dt=YYYY-MM-DD/backfill.json.gz
+Every source region is read with its own namespace and written to the archive bucket in the hosting region.
 Only series listed by ListMetrics (data in the last 14 days) are backfilled.
 The range is always the CloudWatch retention (455 days, ~15 months) up to the last complete hour; it starts at the
 first full UTC day so a rerun never overwrites an older day with a partial one.
 
 Usage examples:
   python backfill.py --help
-  python backfill.py --region eu-south-1 --bucket <bucket>
-  python backfill.py --region eu-south-1 --bucket <bucket> --dry-run
+  python backfill.py --bucket <bucket>
+  python backfill.py --bucket <bucket> --dry-run
 """
 
 from __future__ import annotations
@@ -27,7 +28,9 @@ import boto3
 
 RETENTION_DAYS = 455
 MAX_QUERIES_PER_CALL = 500
-NAMESPACE = "oml-p-eus1"
+ARCHIVE_REGION = "eu-south-1"
+# Source region -> CloudWatch namespace, aligned with metrics_archive in the onemail_monitoring tfvars.
+REGION_NAMESPACES = {"eu-south-1": "oml-p-eus1", "eu-central-1": "oml-p-euc1"}
 METRIC_NAMES = ["EmailDelivered", "EmailHardBounce"]
 # Metric stream JSON "value" keys -> GetMetricData statistic.
 STATISTICS = {"min": "Minimum", "max": "Maximum", "count": "SampleCount", "sum": "Sum"}
@@ -91,7 +94,7 @@ def to_gzip_body(records: list[dict[str, Any]]) -> bytes:
 def group_by_object_key(records: list[dict[str, Any]], day: datetime) -> dict[str, list[dict[str, Any]]]:
     objects: dict[str, list[dict[str, Any]]] = {}
     for record in records:
-        key = f"metrics/source=backfill/{record['metric_name']}/dt={day:%Y-%m-%d}/backfill.json.gz"
+        key = f"metrics/source=backfill/{record['region']}/{record['metric_name']}/dt={day:%Y-%m-%d}/backfill.json.gz"
         objects.setdefault(key, []).append(record)
     return objects
 
@@ -107,40 +110,48 @@ def fetch(cloudwatch: Any, queries: list[dict[str, Any]], start: datetime, end: 
     return results
 
 
+def list_series(cloudwatch: Any, namespace: str) -> list[dict[str, Any]]:
+    paginator = cloudwatch.get_paginator("list_metrics")
+    return [
+        metric
+        for name in METRIC_NAMES
+        for page in paginator.paginate(Namespace=namespace, MetricName=name)
+        for metric in page["Metrics"]
+    ]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Backfill CloudWatch email metrics to the S3 metrics archive.")
-    parser.add_argument("--region", required=True)
     parser.add_argument("--bucket", required=True)
     parser.add_argument("--dry-run", action="store_true", help="Fetch data but do not write to S3.")
     args = parser.parse_args()
 
     start, end = resolve_range(datetime.now(timezone.utc))
+    s3 = boto3.client("s3", region_name=ARCHIVE_REGION)
+    account_id = boto3.client("sts", region_name=ARCHIVE_REGION).get_caller_identity()["Account"]
 
-    session = boto3.Session(region_name=args.region)
-    cloudwatch, s3 = session.client("cloudwatch"), session.client("s3")
-    account_id = session.client("sts").get_caller_identity()["Account"]
+    written = 0
+    for region, namespace in REGION_NAMESPACES.items():
+        cloudwatch = boto3.client("cloudwatch", region_name=region)
+        metrics = list_series(cloudwatch, namespace)
+        if not metrics:
+            logger.warning("⚠️ %s: no series found in namespace %s", region, namespace)
+            continue
+        logger.info("📋 %s: %d series, %s -> %s", region, len(metrics), start.isoformat(), end.isoformat())
 
-    paginator = cloudwatch.get_paginator("list_metrics")
-    metrics = [
-        metric
-        for name in METRIC_NAMES
-        for page in paginator.paginate(Namespace=NAMESPACE, MetricName=name)
-        for metric in page["Metrics"]
-    ]
-    if not metrics:
-        logger.error("❌ No series found in namespace %s: check the namespace and region", NAMESPACE)
+        queries = build_queries(metrics)
+        for window_start, window_end in day_windows(start, end):
+            records = to_records(metrics, fetch(cloudwatch, queries, window_start, window_end), region, account_id)
+            for key, object_records in group_by_object_key(records, window_start).items():
+                if not args.dry_run:
+                    s3.put_object(Bucket=args.bucket, Key=key, Body=to_gzip_body(object_records))
+                written += 1
+                logger.info("%s %s: %d records", "🧪" if args.dry_run else "✅", key, len(object_records))
+
+    if written == 0:
+        logger.error("❌ No data found in any region: check namespaces and credentials")
         return 1
-    logger.info("📋 %d series, %s -> %s", len(metrics), start.isoformat(), end.isoformat())
-
-    queries = build_queries(metrics)
-    for window_start, window_end in day_windows(start, end):
-        records = to_records(metrics, fetch(cloudwatch, queries, window_start, window_end), args.region, account_id)
-        for key, object_records in group_by_object_key(records, window_start).items():
-            if not args.dry_run:
-                s3.put_object(Bucket=args.bucket, Key=key, Body=to_gzip_body(object_records))
-            logger.info("%s %s: %d records", "🧪" if args.dry_run else "✅", key, len(object_records))
-
-    logger.info("🏁 Done")
+    logger.info("🏁 Done: %d objects", written)
     return 0
 
 

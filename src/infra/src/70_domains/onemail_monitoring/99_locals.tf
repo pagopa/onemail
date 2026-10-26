@@ -56,6 +56,14 @@ locals {
   }
   metrics_archive_name     = "${local.project_nodomain}-metrics-archive"
   metrics_archive_database = replace("${local.project_nodomain}_metrics_archive", "-", "_")
+  metrics_archive_is_host  = var.metrics_archive.enabled && var.metrics_archive.archive_location_short == null
+  # The IDVH s3_bucket module suffixes bucket names with the account id.
+  metrics_archive_bucket_name = (
+    local.metrics_archive_is_host
+    ? one(module.s3_metrics_archive_bucket[*].name)
+    : "${var.prefix}-${var.env_short}-${coalesce(var.metrics_archive.archive_location_short, var.location_short)}-metrics-archive-${data.aws_caller_identity.current.account_id}"
+  )
+  metrics_archive_bucket_arn = "arn:aws:s3:::${local.metrics_archive_bucket_name}"
 
   metrics_archive_query_files = {
     for sql_file in fileset("${path.module}/athena_queries", "*.sql") :

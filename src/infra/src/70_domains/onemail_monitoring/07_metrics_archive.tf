@@ -1,5 +1,5 @@
 module "s3_metrics_archive_bucket" {
-  count  = var.metrics_archive.enabled ? 1 : 0
+  count  = local.metrics_archive_is_host ? 1 : 0
   source = "git::https://github.com/pagopa/technology-aws-modules.git//IDVH/s3_bucket?ref=main"
 
   env                = var.env
@@ -9,7 +9,7 @@ module "s3_metrics_archive_bucket" {
   tags               = module.tag_config.tags
 }
 
-# --- Metric stream -> Firehose -> S3 (daily partitions, no expiration) ---
+# --- Metric stream -> Firehose -> S3 of the hosting region (daily partitions, no expiration) ---
 
 data "aws_iam_policy_document" "metrics_archive_firehose_assume" {
   count = var.metrics_archive.enabled ? 1 : 0
@@ -45,7 +45,7 @@ data "aws_iam_policy_document" "metrics_archive_firehose" {
       "s3:ListBucket",
       "s3:ListBucketMultipartUploads",
     ]
-    resources = [module.s3_metrics_archive_bucket[0].arn]
+    resources = [local.metrics_archive_bucket_arn]
   }
 
   statement {
@@ -55,8 +55,8 @@ data "aws_iam_policy_document" "metrics_archive_firehose" {
       "s3:PutObject",
     ]
     resources = [
-      "${module.s3_metrics_archive_bucket[0].arn}/metrics/source=stream/*",
-      "${module.s3_metrics_archive_bucket[0].arn}/errors/*",
+      "${local.metrics_archive_bucket_arn}/metrics/source=stream/${var.aws_region}/*",
+      "${local.metrics_archive_bucket_arn}/errors/${var.aws_region}/*",
     ]
   }
 }
@@ -81,9 +81,9 @@ resource "aws_kinesis_firehose_delivery_stream" "metrics_archive" {
 
   extended_s3_configuration {
     role_arn            = aws_iam_role.metrics_archive_firehose[0].arn
-    bucket_arn          = module.s3_metrics_archive_bucket[0].arn
-    prefix              = "metrics/source=stream/!{partitionKeyFromQuery:metric_name}/dt=!{partitionKeyFromQuery:dt}/"
-    error_output_prefix = "errors/!{firehose:error-output-type}/dt=!{timestamp:yyyy-MM-dd}/"
+    bucket_arn          = local.metrics_archive_bucket_arn
+    prefix              = "metrics/source=stream/${var.aws_region}/!{partitionKeyFromQuery:metric_name}/dt=!{partitionKeyFromQuery:dt}/"
+    error_output_prefix = "errors/${var.aws_region}/!{firehose:error-output-type}/dt=!{timestamp:yyyy-MM-dd}/"
     buffering_size      = 64
     buffering_interval  = 300
     compression_format  = "GZIP"
@@ -189,10 +189,10 @@ resource "aws_cloudwatch_metric_stream" "metrics_archive" {
   depends_on = [aws_iam_role_policy.metrics_archive_stream]
 }
 
-# --- Glue catalog + Athena ---
+# --- Glue catalog + Athena (hosting region only, covers every source region) ---
 
 resource "aws_glue_catalog_database" "metrics_archive" {
-  count = var.metrics_archive.enabled ? 1 : 0
+  count = local.metrics_archive_is_host ? 1 : 0
 
   name = local.metrics_archive_database
   tags = module.tag_config.tags
@@ -200,29 +200,37 @@ resource "aws_glue_catalog_database" "metrics_archive" {
 
 # Shared by the metric stream (source=stream) and the one-off backfill script (source=backfill).
 resource "aws_glue_catalog_table" "email_metrics_raw" {
-  count = var.metrics_archive.enabled ? 1 : 0
+  count = local.metrics_archive_is_host ? 1 : 0
 
   name          = "email_metrics_raw"
   database_name = aws_glue_catalog_database.metrics_archive[0].name
   table_type    = "EXTERNAL_TABLE"
 
   parameters = {
-    classification                = "json"
-    "projection.enabled"          = "true"
-    "projection.source.type"      = "enum"
-    "projection.source.values"    = "stream,backfill"
-    "projection.metric.type"      = "enum"
-    "projection.metric.values"    = join(",", var.metrics_archive.metric_names)
-    "projection.dt.type"          = "date"
-    "projection.dt.format"        = "yyyy-MM-dd"
-    "projection.dt.range"         = "${var.metrics_archive.partition_start_date},NOW"
-    "projection.dt.interval"      = "1"
-    "projection.dt.interval.unit" = "DAYS"
-    "storage.location.template"   = "s3://${module.s3_metrics_archive_bucket[0].name}/metrics/source=$${source}/$${metric}/dt=$${dt}/"
+    classification                    = "json"
+    "projection.enabled"              = "true"
+    "projection.source.type"          = "enum"
+    "projection.source.values"        = "stream,backfill"
+    "projection.source_region.type"   = "enum"
+    "projection.source_region.values" = join(",", var.metrics_archive.source_regions)
+    "projection.metric.type"          = "enum"
+    "projection.metric.values"        = join(",", var.metrics_archive.metric_names)
+    "projection.dt.type"              = "date"
+    "projection.dt.format"            = "yyyy-MM-dd"
+    "projection.dt.range"             = "${var.metrics_archive.partition_start_date},NOW"
+    "projection.dt.interval"          = "1"
+    "projection.dt.interval.unit"     = "DAYS"
+    "storage.location.template"       = "s3://${local.metrics_archive_bucket_name}/metrics/source=$${source}/$${source_region}/$${metric}/dt=$${dt}/"
   }
 
   partition_keys {
     name = "source"
+    type = "string"
+  }
+
+  # Named "source_region" because "region" is already a data column.
+  partition_keys {
+    name = "source_region"
     type = "string"
   }
 
@@ -238,7 +246,7 @@ resource "aws_glue_catalog_table" "email_metrics_raw" {
   }
 
   storage_descriptor {
-    location      = "s3://${module.s3_metrics_archive_bucket[0].name}/metrics/"
+    location      = "s3://${local.metrics_archive_bucket_name}/metrics/"
     input_format  = "org.apache.hadoop.mapred.TextInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
 
@@ -289,7 +297,7 @@ resource "aws_glue_catalog_table" "email_metrics_raw" {
 }
 
 resource "aws_athena_workgroup" "metrics_archive" {
-  count = var.metrics_archive.enabled ? 1 : 0
+  count = local.metrics_archive_is_host ? 1 : 0
 
   name = local.metrics_archive_name
 
@@ -298,7 +306,7 @@ resource "aws_athena_workgroup" "metrics_archive" {
     publish_cloudwatch_metrics_enabled = true
 
     result_configuration {
-      output_location = "s3://${module.s3_metrics_archive_bucket[0].name}/athena-results/"
+      output_location = "s3://${local.metrics_archive_bucket_name}/athena-results/"
 
       encryption_configuration {
         encryption_option = "SSE_S3"
@@ -310,7 +318,7 @@ resource "aws_athena_workgroup" "metrics_archive" {
 }
 
 resource "aws_athena_named_query" "metrics_archive" {
-  for_each = var.metrics_archive.enabled ? local.metrics_archive_named_queries : {}
+  for_each = local.metrics_archive_is_host ? local.metrics_archive_named_queries : {}
 
   name        = each.key
   description = each.value.description

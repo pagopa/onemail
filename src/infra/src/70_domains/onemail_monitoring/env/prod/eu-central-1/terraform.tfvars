@@ -10,6 +10,14 @@ aws_region     = "eu-central-1"
 
 alarm_subscribers = "alarm-subscribers"
 
+# Streams metrics into the eu-south-1 archive bucket; Athena lives only in eu-south-1.
+metrics_archive = {
+  enabled                = true
+  namespace              = "oml-p-euc1"
+  metric_names           = ["EmailDelivered", "EmailHardBounce"]
+  archive_location_short = "eus1"
+}
+
 sqs_alarm_max_age_seconds = {
   high_priority        = 60
   low_priority         = 600

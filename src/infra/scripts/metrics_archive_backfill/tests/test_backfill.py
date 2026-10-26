@@ -150,8 +150,9 @@ def test_object_keys_follow_glue_partition_template() -> None:
     expected_prefix = (
         template.group(1)
         .replace("$${source}", "backfill")
+        .replace("$${source_region}", record["region"])
         .replace("$${metric}", record["metric_name"])
         .replace("$${dt}", "2026-01-01")
     )
     assert keys == [f"{expected_prefix}backfill.json.gz"]
-    assert expected_prefix == "metrics/source=backfill/EmailHardBounce/dt=2026-01-01/"
+    assert expected_prefix == "metrics/source=backfill/eu-south-1/EmailHardBounce/dt=2026-01-01/"
