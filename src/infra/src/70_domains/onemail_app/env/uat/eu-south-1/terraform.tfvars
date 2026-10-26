@@ -16,6 +16,7 @@ api_gateway_usage_plan_throttle = {
 }
 
 # ECS Service
+template_registry_enabled     = true
 ecs_service_image_name        = "core"
 ecs_service_image_version     = "latest" #Temporary version to test ECS Service
 deploy_role_github_repository = "pagopa/onemail"
