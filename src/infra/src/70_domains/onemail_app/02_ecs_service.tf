@@ -76,16 +76,6 @@ data "aws_iam_policy_document" "ecs_task_policy" {
     resources = [data.aws_dynamodb_table.Template.arn]
   }
 
-  statement {
-    sid       = "TemplateRegistryDecryption"
-    actions   = ["kms:Decrypt"]
-    resources = [one(data.aws_dynamodb_table.Template.server_side_encryption).kms_key_arn]
-    condition {
-      test     = "StringEquals"
-      variable = "kms:ViaService"
-      values   = ["dynamodb.${var.aws_region}.amazonaws.com"]
-    }
-  }
 
   statement {
     sid = "EmailAttachmentsWriteAccess"
@@ -103,7 +93,8 @@ data "aws_iam_policy_document" "ecs_task_policy" {
     for_each = toset(compact([
       local.dynamodb_kms_key_arn,
       local.tenant_config_kms_key_arn,
-      local.blacklist_kms_key_arn
+      local.blacklist_kms_key_arn,
+      local.template_registry_kms_key_arn
     ]))
 
     content {
