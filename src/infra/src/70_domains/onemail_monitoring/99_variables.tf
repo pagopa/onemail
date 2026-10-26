@@ -137,3 +137,37 @@ variable "application_dashboard_name" {
   type        = string
   description = "CloudWatch application metrics dashboard name."
 }
+
+variable "metrics_archive" {
+  description = <<-EOT
+    Long-term archive of custom email metrics: CloudWatch metric stream -> Firehose -> S3, queryable with Athena.
+    The hosting region (archive_location_short unset) owns the bucket, Glue table and Athena and lists source_regions;
+    other regions set archive_location_short and only stream their metrics into the hosting region bucket.
+  EOT
+  type = object({
+    enabled                = bool
+    namespace              = optional(string)
+    metric_names           = optional(list(string), [])
+    partition_start_date   = optional(string, "2025-01-01")
+    source_regions         = optional(list(string), [])
+    archive_location_short = optional(string)
+  })
+  default = {
+    enabled = false
+  }
+
+  validation {
+    condition     = !var.metrics_archive.enabled || try(length(trimspace(var.metrics_archive.namespace)) > 0, false)
+    error_message = "metrics_archive.namespace is required when metrics_archive.enabled is true."
+  }
+
+  validation {
+    condition     = !var.metrics_archive.enabled || length(var.metrics_archive.metric_names) > 0
+    error_message = "metrics_archive.metric_names must list at least one metric when metrics_archive.enabled is true."
+  }
+
+  validation {
+    condition     = !var.metrics_archive.enabled || var.metrics_archive.archive_location_short != null || contains(var.metrics_archive.source_regions, var.aws_region)
+    error_message = "In the hosting region metrics_archive.source_regions must include aws_region."
+  }
+}
