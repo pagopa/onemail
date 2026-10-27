@@ -1,5 +1,11 @@
 # om-lambda-sender
 
+## 1.8.4
+
+### Patch Changes
+
+- 2e5941e: bump zod to 4.6.6
+
 ## 1.8.3
 
 ### Patch Changes

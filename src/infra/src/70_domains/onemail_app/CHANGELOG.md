@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.26.0
+
+### Minor Changes
+
+- 16d251c: feat: add template lifecycle
+
 ## 1.25.5
 
 ### Patch Changes
