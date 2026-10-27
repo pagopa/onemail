@@ -10,8 +10,8 @@ WITH backfill_cutoff AS (
 SELECT
   r.source_region AS region,
   r.metric AS metric_name,
-  r.dimensions['tenantName'] AS tenant_name,
-  r.dimensions['clientId']   AS client_id,
+  COALESCE(r.dimensions['tenantName'], r.dimensions['tenantname']) AS tenant_name,
+  COALESCE(r.dimensions['clientId'], r.dimensions['clientid'])     AS client_id,
   r.dimensions['service']    AS service,
   from_unixtime(r."timestamp" / 1000) AS metric_time,
   r.value.sum AS value,
