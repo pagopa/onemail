@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.24.2
+
+### Patch Changes
+
+- a0137ab: fix oidc subject
+
 ## 1.24.1
 
 ### Patch Changes
