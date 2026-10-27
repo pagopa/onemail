@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.24.1
+
+### Patch Changes
+
+- e745dce: set correct aws region
+
 ## 1.24.0
 
 ### Minor Changes
