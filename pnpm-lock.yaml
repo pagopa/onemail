@@ -53,9 +53,6 @@ catalogs:
     lodash-es:
       specifier: ^4.18.1
       version: 4.18.1
-    zod:
-      specifier: ^4.3.6
-      version: 4.3.6
   vitest:
     '@vitest/coverage-v8':
       specifier: ^4.1.3
@@ -140,7 +137,7 @@ importers:
     dependencies:
       '@asteasolutions/zod-to-openapi':
         specifier: ^8.4.1
-        version: 8.4.1(zod@4.3.6)
+        version: 8.4.1(zod@4.6.6)
       '@aws-sdk/client-dynamodb':
         specifier: catalog:aws-sdk
         version: 3.1025.0
@@ -188,7 +185,7 @@ importers:
         version: 5.0.1(express@5.2.1)
       zod:
         specifier: 'catalog:'
-        version: 4.3.6
+        version: 4.6.6
     devDependencies:
       '@types/express':
         specifier: ^5.0.6
@@ -243,7 +240,7 @@ importers:
         version: link:../om-common
       zod:
         specifier: 'catalog:'
-        version: 4.3.6
+        version: 4.6.6
     devDependencies:
       '@types/aws-lambda':
         specifier: catalog:aws-lambda
@@ -280,7 +277,7 @@ importers:
         version: link:../om-common
       zod:
         specifier: 'catalog:'
-        version: 4.3.6
+        version: 4.6.6
     devDependencies:
       '@types/aws-lambda':
         specifier: catalog:aws-lambda
@@ -323,7 +320,7 @@ importers:
         version: link:../om-common
       zod:
         specifier: 'catalog:'
-        version: 4.3.6
+        version: 4.6.6
     devDependencies:
       '@types/aws-lambda':
         specifier: catalog:aws-lambda
@@ -983,12 +980,12 @@ packages:
     resolution: {integrity: sha512-vwtRPxQ5stQFR8Ulfsuqt8GgPJX6iXrF/9SiOTsJzw2nliNu/aPcZ8DR6sPj+gFar/QdUJuym6iyjevfeMNiFA==}
     engines: {node: '>=22'}
 
-  '@napi-rs/wasm-runtime@1.2.5':
-    resolution: {integrity: sha512-HshSvXzmBxNzqejd3k/KemgQ3hdREUYFRRrgxOZ+gPljDIsO2SDZrVZMd4Z/HsxudQbE62OVyVFE8z9BCurfjA==}
+  '@napi-rs/wasm-runtime@1.2.6':
+    resolution: {integrity: sha512-mRyDmEw9/fCDXCGfL1sbgIw/GUK0PVxRW4YwgPN61F3LQ+fSyoBFarJVzgGyhF6kRzEQZ0FejDqm4WLXSeqQmw==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
     peerDependencies:
-      '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.4
-      '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.4
+      '@emnapi/core': ^1.7.1 || 2.0.0-beta.2
+      '@emnapi/runtime': ^1.7.1 || 2.0.0-beta.2
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -3100,15 +3097,15 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zod@4.3.6:
-    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+  zod@4.6.6:
+    resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
 
 snapshots:
 
-  '@asteasolutions/zod-to-openapi@8.4.1(zod@4.3.6)':
+  '@asteasolutions/zod-to-openapi@8.4.1(zod@4.6.6)':
     dependencies:
       openapi3-ts: 4.5.0
-      zod: 4.3.6
+      zod: 4.6.6
 
   '@aws-crypto/sha1-browser@5.2.0':
     dependencies:
@@ -4179,7 +4176,7 @@ snapshots:
 
   '@middy/util@7.2.1': {}
 
-  '@napi-rs/wasm-runtime@1.2.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)':
+  '@napi-rs/wasm-runtime@1.2.6(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)':
     dependencies:
       '@emnapi/core': 1.9.1
       '@emnapi/runtime': 1.9.1
@@ -4258,7 +4255,7 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.9.1
       '@emnapi/runtime': 1.9.1
-      '@napi-rs/wasm-runtime': 1.2.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)
+      '@napi-rs/wasm-runtime': 1.2.6(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)
     optional: true
 
   '@rolldown/binding-win32-arm64-msvc@1.0.0-rc.13':
@@ -6349,4 +6346,4 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zod@4.3.6: {}
+  zod@4.6.6: {}
