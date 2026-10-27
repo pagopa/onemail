@@ -15,7 +15,7 @@ resource "aws_iam_role" "template_publish" {
       Condition = {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-          "token.actions.githubusercontent.com:sub" = "repo:${var.template_github_repository}:environment:${var.env}"
+          "token.actions.githubusercontent.com:sub" = "${coalesce(var.template_github_oidc_subject_prefix, "repo:${var.template_github_repository}")}:environment:${var.env}"
         }
       }
     }]
