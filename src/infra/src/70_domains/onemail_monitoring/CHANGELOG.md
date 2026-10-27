@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.14.0
+
+### Minor Changes
+
+- 16d155c: Fix query for view metrics
+
 ## 1.13.0
 
 ### Minor Changes
