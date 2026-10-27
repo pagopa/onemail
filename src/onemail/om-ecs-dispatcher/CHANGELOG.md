@@ -1,5 +1,15 @@
 # om-ecs-dispatcher
 
+## 1.13.0
+
+### Minor Changes
+
+- 16d251c: feat: add template lifecycle
+
+### Patch Changes
+
+- 2e5941e: bump zod to 4.6.6
+
 ## 1.12.4
 
 ### Patch Changes

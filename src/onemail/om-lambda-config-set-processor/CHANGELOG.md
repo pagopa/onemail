@@ -1,5 +1,11 @@
 # om-lambda-config-set-processor
 
+## 1.7.4
+
+### Patch Changes
+
+- 2e5941e: bump zod to 4.6.6
+
 ## 1.7.3
 
 ### Patch Changes

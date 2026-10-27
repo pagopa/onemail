@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.24.0
+
+### Minor Changes
+
+- 16d251c: feat: add template lifecycle
+
 ## 1.23.1
 
 ### Patch Changes
