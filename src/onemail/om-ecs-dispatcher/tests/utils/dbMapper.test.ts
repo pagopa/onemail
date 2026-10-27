@@ -16,6 +16,41 @@ const randomUUID = vi.hoisted(() => vi.fn());
 vi.mock('node:crypto', () => ({ randomUUID }));
 
 describe('dbMapper', () => {
+  it.each([undefined, { firstName: 'User' }])(
+    'maps transactional template content with attributes %j',
+    (templateAttributes) => {
+      randomUUID.mockReturnValue('templated-email-id');
+
+      const result = mapEmailTransactionalToDbItem(
+        {
+          from: { email: 'sender@example.com' },
+          to: { email: 'user@example.com' },
+          templateContent: {
+            templateId: 'template-id',
+            templateAttributes,
+          },
+        },
+        'request-id',
+        makeTenantConfiguration(),
+        false,
+      );
+
+      expect(result).toMatchObject({
+        emailId: 'templated-email-id',
+        content: {
+          template: {
+            id: 'template-id',
+            matchedAttributes: templateAttributes
+              ? JSON.stringify(templateAttributes)
+              : undefined,
+          },
+        },
+      });
+      expect(result.content.body).toBeUndefined();
+      expect(result.content.subject).toBeUndefined();
+    },
+  );
+
   it('maps transactional email content using the direct email body payload', () => {
     randomUUID.mockReturnValue('mapped-email-id');
 

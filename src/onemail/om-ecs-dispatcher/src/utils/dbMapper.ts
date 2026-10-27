@@ -1,5 +1,6 @@
 import { EmailHighPriorityBodyDTO } from '#dtos/email/emailHighPriority.dto';
 import { EmailLowPriorityBodyDTO } from '#dtos/email/emailLowPriority.dto';
+import { isTemplatedEmail } from '#utils/emailTypeGuard';
 import { randomUUID } from 'node:crypto';
 import {
   DbEmailContent,
@@ -84,7 +85,7 @@ export function mapEmailTransactionalToDbItem(
   let dbBody: EmailContent | undefined;
   let dbEmailSubject: string | undefined;
 
-  if ('templateContent' in body) {
+  if (isTemplatedEmail(body)) {
     dbTemplate = {
       id: body.templateContent.templateId,
       // stringified JSON of the original object

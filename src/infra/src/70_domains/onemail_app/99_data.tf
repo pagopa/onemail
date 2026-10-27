@@ -62,6 +62,10 @@ data "aws_dynamodb_table" "Blacklist" {
   name = "EmailBlacklist"
 }
 
+data "aws_dynamodb_table" "Template" {
+  name = "TemplateRegistry"
+}
+
 data "aws_ecs_cluster" "core" {
   cluster_name = "${local.project_nodomain}-ecs-cluster"
 }

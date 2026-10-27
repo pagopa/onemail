@@ -16,6 +16,7 @@ import {
 import {
   SanitizeHtmlDTO,
   SanitizeHtmlResponseDTO,
+  SanitizeTemplateDTO,
 } from '#dtos/email/validateHtml.dto';
 import { ERROR_CODES } from '#dtos/error.dto';
 import { ApiError } from '#errors/api.error';
@@ -77,6 +78,14 @@ export const sanitizeHtmlContent = async (
   res: Response<SanitizeHtmlResponseDTO>,
 ) => {
   const result = emailService.sanitizeHtmlContent(req.body.htmlContent);
+  res.status(StatusCodes.OK).json(result);
+};
+
+export const sanitizeTemplateContent = async (
+  req: Request<unknown, unknown, SanitizeTemplateDTO>,
+  res: Response<SanitizeHtmlResponseDTO>,
+) => {
+  const result = emailService.sanitizeTemplateContent(req.body.htmlContent);
   res.status(StatusCodes.OK).json(result);
 };
 

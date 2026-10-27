@@ -18,6 +18,7 @@ import {
 import {
   SanitizeHtmlResponseSchema,
   SanitizeHtmlSchema,
+  SanitizeTemplateSchema,
 } from '#dtos/email/validateHtml.dto';
 import { ErrorResponseSchema } from '#dtos/error.dto';
 import { validate } from '#middlewares/validateApiInput.middleware';
@@ -114,6 +115,26 @@ registerOpenApiRoute({
 });
 
 if (env.server.environment !== APP_ENV_VALUES.production) {
+  router.post(
+    '/sanitize-template',
+    validate({ body: SanitizeTemplateSchema }),
+    EmailController.sanitizeTemplateContent,
+  );
+  registerOpenApiRoute({
+    method: 'post',
+    path: `${versionRoutePath.v1}/${prefix}/sanitize-template`,
+    summary:
+      'Check template HTML sanitization, only available in non-production environments',
+    tags: [tag],
+    requestBody: SanitizeTemplateSchema,
+    responses: {
+      [StatusCodes.OK]: {
+        schema: SanitizeHtmlResponseSchema,
+        description: 'Template HTML checked successfully',
+      },
+    },
+  });
+
   router.post(
     '/sanitize-html',
     validate({

@@ -91,6 +91,12 @@ variable "dns_zone_name" {
   default     = "onemail.pagopa.it"
 }
 
+variable "template_github_repository" {
+  type        = string
+  description = "GitHub repository allowed to publish and retire SES templates through protected environments."
+  default     = "pagopa/onemail-template"
+}
+
 variable "secondary_aws_region" {
   type        = string
   description = "Secondary AWS region used by the SES multi-region endpoint."

@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.12.0",
+    "version": "1.12.3",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -107,7 +107,8 @@
           "DryRunError",
           "SoftBounce",
           "Complaint",
-          "MaxRetriesReached"
+          "MaxRetriesReached",
+          "EventProcessingFailed"
         ],
         "description": "Status of the email"
       },
@@ -520,6 +521,21 @@
         "required": [
           "sanitizedHtml",
           "isSanitized"
+        ]
+      },
+      "SanitizeTemplateBodyDTO": {
+        "type": "object",
+        "properties": {
+          "htmlContent": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500000,
+            "description": "Handlebars template HTML to sanitize",
+            "example": "<p>Hello {{name}}</p>"
+          }
+        },
+        "required": [
+          "htmlContent"
         ]
       },
       "SanitizeHtmlBodyDTO": {
@@ -978,6 +994,106 @@
           },
           "422": {
             "description": "Every recipient is in the blacklist and cannot be contacted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Generic error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/emails/sanitize-template": {
+      "post": {
+        "tags": [
+          "Emails"
+        ],
+        "summary": "Check template HTML sanitization, only available in non-production environments",
+        "requestBody": {
+          "description": "Request body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SanitizeTemplateBodyDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Template HTML checked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SanitizeHtmlResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - resource already exists",
             "content": {
               "application/json": {
                 "schema": {

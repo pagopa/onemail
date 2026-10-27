@@ -30,6 +30,12 @@ export default {
     ),
   },
   aws: {
+    templateRegistry: {
+      enabled: process.env.TEMPLATE_REGISTRY_ENABLED === 'true',
+      tableName:
+        process.env.AWS_TEMPLATE_DB_TABLE ||
+        throwMissingRequiredEnvVar('AWS_TEMPLATE_DB_TABLE'),
+    },
     region: process.env.AWS_REGION ?? throwMissingRequiredEnvVar('AWS_REGION'),
     emailDbTable:
       process.env.AWS_EMAIL_DB_TABLE ??

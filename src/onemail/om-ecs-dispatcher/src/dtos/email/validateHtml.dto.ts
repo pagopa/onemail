@@ -1,6 +1,6 @@
 import z from 'zod';
 
-import { htmlInputSchema } from './common.dto.js';
+import { htmlInputSchema, stringCheckedSchema } from './common.dto.js';
 
 export const SanitizeHtmlSchema = z
   .object({
@@ -11,6 +11,16 @@ export const SanitizeHtmlSchema = z
   .openapi('SanitizeHtmlBodyDTO');
 
 export type SanitizeHtmlDTO = z.infer<typeof SanitizeHtmlSchema>;
+
+export const SanitizeTemplateSchema = z
+  .object({
+    htmlContent: stringCheckedSchema({ min: 1, max: 500000 })
+      .describe('Handlebars template HTML to sanitize')
+      .openapi({ example: '<p>Hello {{name}}</p>' }),
+  })
+  .openapi('SanitizeTemplateBodyDTO');
+
+export type SanitizeTemplateDTO = z.infer<typeof SanitizeTemplateSchema>;
 
 export const SanitizeHtmlResponseSchema = z
   .object({

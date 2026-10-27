@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "OneMail Dispatcher API",
-    "version": "1.12.0",
+    "version": "1.12.3",
     "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
     "contact": {
       "email": "team-one-mail@pagopa.it"
@@ -133,7 +133,7 @@
           "403": { "description": "Forbidden - permission denied to perform the request" },
           "404": { "description": "Resource not found" },
           "409": { "description": "Conflict - resource already exists" },
-          "422": { "description": "Recipient is in the blacklist and cannot be contacted" },
+          "422": { "description": "Recipient is in blacklist and cannot be contacted" },
           "429": { "description": "Too many requests" },
           "500": { "description": "Generic error" }
         }
@@ -214,6 +214,31 @@
           },
           "responses": {
             "200": { "description": "Email sanitized successfully" },
+            "400": { "description": "Bad request - invalid data" },
+            "401": { "description": "Unauthorized - authentication required or invalid credentials" },
+            "403": { "description": "Forbidden - permission denied to perform the request" },
+            "404": { "description": "Resource not found" },
+            "409": { "description": "Conflict - resource already exists" },
+            "429": { "description": "Too many requests" },
+            "500": { "description": "Generic error" }
+          }
+        }
+      },
+      "/v1/emails/sanitize-template": {
+        "post": {
+          "tags": ["Emails"],
+          "summary": "Check template HTML sanitization, only available in non-production environments",
+          "x-amazon-apigateway-integration": {
+            "type": "HTTP_PROXY",
+            "httpMethod": "POST",
+            "uri": "${uri}/v1/emails/sanitize-template",
+            "connectionType": "VPC_LINK",
+            "connectionId": "${connection_id}",
+            "passthroughBehavior": "WHEN_NO_TEMPLATES",
+            "timeoutInMillis": 20000
+          },
+          "responses": {
+            "200": { "description": "Template HTML checked successfully" },
             "400": { "description": "Bad request - invalid data" },
             "401": { "description": "Unauthorized - authentication required or invalid credentials" },
             "403": { "description": "Forbidden - permission denied to perform the request" },

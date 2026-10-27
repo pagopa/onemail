@@ -71,6 +71,13 @@ data "aws_iam_policy_document" "ecs_task_policy" {
   }
 
   statement {
+    sid       = "TemplateRegistryReadOnly"
+    actions   = ["dynamodb:GetItem"]
+    resources = [data.aws_dynamodb_table.Template.arn]
+  }
+
+
+  statement {
     sid = "EmailAttachmentsWriteAccess"
 
     actions = [
@@ -86,7 +93,8 @@ data "aws_iam_policy_document" "ecs_task_policy" {
     for_each = toset(compact([
       local.dynamodb_kms_key_arn,
       local.tenant_config_kms_key_arn,
-      local.blacklist_kms_key_arn
+      local.blacklist_kms_key_arn,
+      local.template_registry_kms_key_arn
     ]))
 
     content {
@@ -136,6 +144,14 @@ module "ecs_service" {
     {
       name  = "AWS_EMAIL_DB_TABLE"
       value = data.aws_dynamodb_table.EmailStatusHistory.name
+    },
+    {
+      name  = "TEMPLATE_REGISTRY_ENABLED"
+      value = tostring(var.template_registry_enabled)
+    },
+    {
+      name  = "AWS_TEMPLATE_DB_TABLE"
+      value = data.aws_dynamodb_table.Template.name
     },
     {
       name  = "AWS_EMAIL_DB_REQUEST_ID_GSI"

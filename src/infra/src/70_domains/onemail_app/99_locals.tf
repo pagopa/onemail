@@ -90,4 +90,8 @@ locals {
     one(data.aws_dynamodb_table.Blacklist.server_side_encryption).kms_key_arn,
     null
   )
+  template_registry_kms_key_arn = try(
+    one(data.aws_dynamodb_table.Template.server_side_encryption).kms_key_arn,
+    null
+  )
 }

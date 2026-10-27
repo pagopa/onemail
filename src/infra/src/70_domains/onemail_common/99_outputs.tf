@@ -22,3 +22,8 @@ output "attachments_bucket_arn" {
   description = "ARN of the private S3 bucket used to store email attachments."
   value       = module.s3_email_attachments_bucket.arn
 }
+
+output "template_publish_role_arn" {
+  description = "OIDC role for the template repository's environment-specific direct publication workflow."
+  value       = try(aws_iam_role.template_publish[0].arn, null)
+}
