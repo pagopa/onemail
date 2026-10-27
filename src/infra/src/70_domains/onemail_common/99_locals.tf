@@ -27,7 +27,7 @@ locals {
       tls_policy             = try(tenant_data.tls_policy, "REQUIRE")
     } if try(length(trimspace(local.tenant_domains[tenant_key])) > 0, false)
   }
-  template_ses_regions = ["eu-south-1", "eu-central-1"]
+  template_ses_regions = distinct(compact([var.aws_region, var.secondary_aws_region]))
   template_resource_arns = flatten([
     for region in local.template_ses_regions : [
       for product, tenant in local.tenants :
