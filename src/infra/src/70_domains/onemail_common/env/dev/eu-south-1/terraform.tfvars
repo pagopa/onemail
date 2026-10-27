@@ -7,6 +7,8 @@ location       = "eu-south"
 location_short = "eus1"
 aws_region     = "eu-south-1"
 
+template_github_oidc_subject_prefix = "repo:pagopa@57742367/onemail-template@1416789213"
+
 # DynamoDB configuration for dev
 dynamodb_tables = {
   template = {
