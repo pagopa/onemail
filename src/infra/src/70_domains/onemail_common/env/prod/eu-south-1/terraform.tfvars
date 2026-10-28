@@ -9,6 +9,8 @@ aws_region                       = "eu-south-1"
 secondary_aws_region             = "eu-central-1"
 create_ses_multi_region_endpoint = true
 
+template_github_oidc_subject_prefix = "repo:pagopa@57742367/onemail-template@1416789213"
+
 # DynamoDB configuration for prod
 dynamodb_tables = {
   template = {
