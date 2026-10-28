@@ -36,9 +36,20 @@ resource "aws_iam_role_policy" "template_publish" {
         Resource = local.template_resource_arns
       },
       {
+        Sid      = "TenantExistenceCheck"
+        Effect   = "Allow"
+        Action   = ["ses:GetTenant"]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "aws:RequestedRegion" = local.template_ses_regions
+          }
+        }
+      },
+      {
         Sid      = "ConfiguredTenants"
         Effect   = "Allow"
-        Action   = ["ses:GetTenant", "ses:ListTenantResources"]
+        Action   = ["ses:ListTenantResources"]
         Resource = local.template_tenant_arns
       },
       {
