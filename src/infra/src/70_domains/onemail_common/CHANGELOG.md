@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.24.3
+
+### Patch Changes
+
+- 4419289: fix resource getTenant
+
 ## 1.24.2
 
 ### Patch Changes
