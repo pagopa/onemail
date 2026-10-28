@@ -23,7 +23,7 @@ resource "aws_iam_role" "github_lambda_deploy" {
               [
                 "repo:${var.github_repository}:environment:dev",
                 "repo:${var.github_repository}:environment:uat",
-                "repo:${var.github_repository}:environment:prod",
+                "repo:${var.github_repository}:environment:prod/eu-south-1",
                 "repo:${var.github_repository}:ref:refs/heads/main"
               ],
               var.env == "prod" && var.aws_region == "eu-central-1" ? ["repo:${var.github_repository}:environment:prod/eu-central-1"] : []
