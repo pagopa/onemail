@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.25.0
+
+### Minor Changes
+
+- df280a9: feat: add immutable oidc claims for prod envs
+
 ## 1.24.3
 
 ### Patch Changes
