@@ -6,12 +6,12 @@ applyTo: "**/*.js,**/*.cjs,**/*.mjs,**/*.ts,**/*.tsx"
 # Node.js Instructions
 
 ## Mandatory rules
-- Treat work as project-oriented (modules/services/handlers), not script-oriented.
-- Apply DDD boundaries: keep domain decisions in domain modules, not transport adapters.
+- Apply these architecture rules to application modules, not standalone CLI, maintenance, or benchmark scripts.
+- For non-trivial business features, keep domain decisions in domain modules rather than transport adapters.
 - Keep framework and infrastructure wiring in outer layers (controllers/handlers/adapters).
 - Use ubiquitous language for domain-level names and errors.
 - Add a concise purpose comment for new/changed core modules when intent is not obvious.
-- Use emoji logs for key runtime states when logging is touched.
+- Use the project's logger for application code; add emoji only to human-facing log messages when they improve runtime visibility.
 - Prefer early return and guard clauses.
 - Keep code readable with straightforward control flow.
 - Add unit tests for testable logic.
@@ -33,8 +33,8 @@ applyTo: "**/*.js,**/*.cjs,**/*.mjs,**/*.ts,**/*.tsx"
 You are an expert Node.js and TypeScript developer. When generating code, answering questions, or refactoring for this workspace, you MUST strictly adhere to the following conventions:
 
 ## 1. File and Folder Naming (Crucial)
-- **Folders:** Always use lowercase, kebab-case, and plural words (e.g., `controllers`, `services`, `repositories`, `middlewares`).
-- **Files:** Always use lowercase, camelCase, and append the specific layer suffix, except for files under configs and utils folders.
+- **Folders:** Use lowercase names and follow the conventions of the package being changed; use plural names for collections where that matches nearby code.
+- **Files:** Follow nearby naming conventions, using `camelCase` and a layer suffix where established. Do not rename unrelated existing files as part of a feature change.
   - Routes: `*.route.ts` (e.g., `email.route.ts`)
   - Controllers: `*.controller.ts` (e.g., `email.controller.ts`)
   - Services: `*.service.ts` (e.g., `email.service.ts`)
@@ -48,19 +48,19 @@ You are an expert Node.js and TypeScript developer. When generating code, answer
 - Global declarations go into `.d.ts` files, but business logic types go into `.type.ts` files.
 
 ## 3. Tech Stack & Libraries
-- **Logging:** Always use `@aws-lambda-powertools/logger` imported from the internal `common` package and configured in `config/logger.ts` file. Do NOT use `console.log`.
-- **Validation:** Always use `zod` for request payload validation and environment variable parsing.
-- **Database/Infrastructure:** Abstract all external SDK client configuration (like DynamoDB, SQS, SES) into `connectors` folder and their calls/methods into the `repositories` layer. Do not put them in the `services` layer.
+- **Logging:** In application packages, use the logger configured by that package (typically `@aws-lambda-powertools/logger` from `om-common`); avoid `console.log` in application code.
+- **Validation:** Use the package's established validation library (currently Zod) for request payloads and environment variables.
+- **Database/Infrastructure:** In application packages, keep external SDK client configuration in `connectors` and data-access operations in `repositories`; do not call SDK clients directly from `services`.
 
 ## 4. API Design
-- Always design RESTful endpoints. If returning a collection, use plural nouns (e.g., `/emails/statuses?requestId=123` or `/emails/events`).
+- For HTTP APIs, follow the existing API style and use REST conventions where appropriate. Use plural nouns for collection endpoints (e.g., `/emails/events`).
 
 ## 5. Monorepo Awareness
 - We use Turborepo and pnpm workspaces. When suggesting dependency installations, use `pnpm add` or `pnpm add -D` with the `--filter` flag if applicable. Before executing any pnpm command, check if an alias for the command is already listed in the root `package.json`.
 
 ## 6. Package Structure
 
-All application packages live under `src/onemail/`. All packages have a `om-` suffix like `om-lambda-sender`. There is also a shared library package `om-common` for cross-cutting concerns and shared types. An example structure is shown below, but the exact folder and file names may vary based on the domain and functionality of each package:
+Deployable application packages live under `src/onemail/` and use the `om-` prefix, such as `om-lambda-sender`. `om-common` is a shared library with its own package entry point. The structure below is a guide for application packages, not a requirement to reshape existing packages or standalone scripts:
 
 ### (`om-<name>`)
 ```
@@ -92,7 +92,7 @@ om-<name>/
 ```
 
 ### Key rules derived from the structure
-- `app.ts` is always the entry point (Lambda handler or Express bootstrap); keep it thin.
+- For deployable application packages, keep the configured entry point (typically `app.ts`) thin. Shared libraries such as `om-common` use their package-defined entry points.
 - `connectors/` holds only SDK client instantiation — no business logic.
 - `repositories/` calls connectors and returns domain objects — no HTTP or Lambda coupling.
 - `services/` contains business logic — never imports connectors directly.

@@ -24,15 +24,26 @@ applyTo: "**/workflows/**"
 
 ## Minimal example
 ```yaml
-steps:
-  - name: Checkout
-    uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 https://github.com/actions/checkout/releases/tag/v6.0.2
+name: CI
 
-concurrency:
-  group: example-${{ github.ref }}
-  cancel-in-progress: true
+on:
+  push:
+    branches: [main]
 
 permissions:
-  id-token: write
   contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 https://github.com/actions/checkout/releases/tag/v6.0.2
 ```
+
+Add `id-token: write` only to jobs that need to request an OIDC token.

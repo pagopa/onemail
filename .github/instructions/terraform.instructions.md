@@ -6,8 +6,6 @@ applyTo: "**/*.tf"
 # Terraform Instructions
 
 ## Formatting
-- Run `terraform fmt` before commit.
-- Use 2-space indentation.
 - Use `tfenv` (or repository equivalent) for Terraform version management.
 
 ## Naming conventions
