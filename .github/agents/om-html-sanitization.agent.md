@@ -1,9 +1,9 @@
 ---
 description: Fetch HTML files from a public GitHub repository folder URL, run them through the om-ecs-dispatcher sanitizer check, and report pass/fail per file.
-name: internal-onemail-html-sanitization-checker
+name: om-html-sanitization
 ---
 
-# internal onemail HTML Sanitization Checker Agent
+# OM HTML Sanitization Agent
 
 ## Objective
 Given a GitHub folder URL (e.g. `https://github.com/<owner>/<repo>/tree/<ref>/<path>`), download every matching file found there, extract its HTML content, feed it into the local sanitizer check script, and report which files pass or fail the check.
