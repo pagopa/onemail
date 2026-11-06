@@ -425,13 +425,26 @@ resource "aws_lambda_event_source_mapping" "email_retention" {
   bisect_batch_on_function_error = true
   function_response_types        = ["ReportBatchItemFailures"]
 
-  # Only transitions into a final status trigger attachment cleanup.
+  # Only transitions into a final status with attachment keys trigger cleanup.
   filter_criteria {
     filter {
       pattern = jsonencode({
         eventName = ["MODIFY"]
         dynamodb = {
-          NewImage = { status = { S = local.email_final_statuses } }
+          NewImage = {
+            status = { S = local.email_final_statuses }
+            content = {
+              M = {
+                attachments = {
+                  L = {
+                    M = {
+                      s3Key = { S = [{ exists = true }] }
+                    }
+                  }
+                }
+              }
+            }
+          }
           OldImage = { status = { S = [{ "anything-but" = local.email_final_statuses }] } }
         }
       })
