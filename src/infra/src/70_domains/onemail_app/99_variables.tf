@@ -130,24 +130,30 @@ variable "lambda_set_processor" {
   })
 }
 
+variable "email_retention_days" {
+  type        = number
+  description = "Email item lifetime in days from its initial creation by the dispatcher."
+  default     = 5
+
+  validation {
+    condition     = var.email_retention_days > 0 && floor(var.email_retention_days) == var.email_retention_days
+    error_message = "email_retention_days must be a positive integer."
+  }
+}
+
 variable "lambda_email_retention" {
   type = object({
     enabled                        = bool
     package_path                   = optional(string, "lambda/hello-nodejs/hello-nodejs.zip")
     reserved_concurrent_executions = optional(number)
-    email_retention_days           = optional(number, 5)
     stream_trigger_enabled         = optional(bool, true)
     stream_batch_size              = optional(number, 10)
     stream_maximum_retry_attempts  = optional(number, 5)
     stream_max_record_age_seconds  = optional(number, 3600)
   })
-  description = "Email retention Lambda: sets the TTL on finalized emails and deletes their S3 attachments."
+  description = "Email retention Lambda: deletes attachments of finalized emails."
   default = {
     enabled = false
   }
 
-  validation {
-    condition     = var.lambda_email_retention.email_retention_days > 0
-    error_message = "email_retention_days must be greater than 0."
-  }
 }

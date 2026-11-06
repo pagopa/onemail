@@ -1,8 +1,7 @@
 import env from '#config/env';
 import { dynamoClient } from '#connectors/dynamo.connector';
 import { FINAL_EMAIL_STATUSES } from '#utils/constants';
-import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
-import { QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 const FINAL_STATUS_PLACEHOLDERS = FINAL_EMAIL_STATUSES.map(
   (_, index) => `:finalStatus${index}`,
@@ -14,37 +13,6 @@ const FINAL_STATUS_VALUES = Object.fromEntries(
     status,
   ]),
 );
-
-/**
- * Sets the TTL attribute only once, so retries never move the expiration forward.
- * Returns false when the TTL is already set or the email no longer exists.
- */
-export const setEmailExpirationTime = async (
-  emailId: string,
-  expirationTime: number,
-): Promise<boolean> => {
-  try {
-    await dynamoClient.send(
-      new UpdateCommand({
-        TableName: env.aws.emailDbTable,
-        Key: { emailId },
-        UpdateExpression: 'SET #expirationTime = :expirationTime',
-        ConditionExpression:
-          'attribute_exists(#emailId) AND attribute_not_exists(#expirationTime)',
-        ExpressionAttributeNames: {
-          '#emailId': 'emailId',
-          '#expirationTime': 'expiration_time',
-        },
-        ExpressionAttributeValues: { ':expirationTime': expirationTime },
-        ReturnValues: 'NONE',
-      }),
-    );
-    return true;
-  } catch (error) {
-    if (error instanceof ConditionalCheckFailedException) return false;
-    throw error;
-  }
-};
 
 /**
  * Returns true when another email of the same request is not in a final status yet.

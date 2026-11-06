@@ -54,6 +54,7 @@ export interface EmailStatusHistoryItem {
   emailId: string; // PK
   requestId: string; // GSI
   providerMessageId?: string;
+  expiration_time?: number;
   priority: EmailPriority;
   status: EmailStatus;
   history: EmailEvent[];

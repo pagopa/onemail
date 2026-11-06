@@ -18,6 +18,7 @@ const compileExcludedDomainsRegex = (
 };
 
 export default {
+  emailRetentionDays: Number(process.env.EMAIL_RETENTION_DAYS ?? '5'),
   projectVersion: process.env.npm_package_version || '1.0.0',
   server: {
     PORT: Number(process.env.PORT) || 3000,

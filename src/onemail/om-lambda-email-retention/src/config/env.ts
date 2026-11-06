@@ -5,7 +5,6 @@ const EnvSchema = z.object({
   AWS_EMAIL_DB_TABLE: z.string().trim().min(1),
   AWS_EMAIL_DB_REQUEST_ID_GSI: z.string().trim().min(1),
   AWS_ATTACHMENTS_BUCKET: z.string().trim().min(1),
-  EMAIL_RETENTION_DAYS: z.coerce.number().int().positive(),
 });
 
 export const parseEnv = (source: NodeJS.ProcessEnv) => {
@@ -23,7 +22,6 @@ export const parseEnv = (source: NodeJS.ProcessEnv) => {
       emailDbRequestIdGSI: parsed.AWS_EMAIL_DB_REQUEST_ID_GSI,
       attachmentsBucket: parsed.AWS_ATTACHMENTS_BUCKET,
     },
-    emailRetentionDays: parsed.EMAIL_RETENTION_DAYS,
   };
 };
 

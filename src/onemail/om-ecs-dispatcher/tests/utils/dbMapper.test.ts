@@ -1,3 +1,4 @@
+import env from '#config/env';
 import {
   mapEmailLowPriorityToDbItem,
   mapEmailTransactionalToDbItem,
@@ -16,6 +17,35 @@ const randomUUID = vi.hoisted(() => vi.fn());
 vi.mock('node:crypto', () => ({ randomUUID }));
 
 describe('dbMapper', () => {
+  it('sets the TTL from creation time for high and low priority emails', () => {
+    const now = new Date('2026-11-06T10:00:00.999Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+    try {
+      const expectedExpiration =
+        Math.floor(now.getTime() / 1000) + env.emailRetentionDays * 86400;
+      const high = mapEmailTransactionalToDbItem(
+        makeHighPriorityEmailDto(),
+        'request-high',
+        makeTenantConfiguration(),
+        false,
+      );
+      const low = mapEmailLowPriorityToDbItem(
+        makeLowPriorityEmailDto(),
+        'request-low',
+        makeTenantConfiguration(),
+        false,
+      );
+      expect(high.expiration_time).toBe(expectedExpiration);
+      expect(low.length).toBeGreaterThan(0);
+      expect(
+        low.every((email) => email.expiration_time === expectedExpiration),
+      ).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it.each([undefined, { firstName: 'User' }])(
     'maps transactional template content with attributes %j',
     (templateAttributes) => {
