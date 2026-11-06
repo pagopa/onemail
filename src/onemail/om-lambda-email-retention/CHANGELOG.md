@@ -1,5 +1,11 @@
 # om-lambda-email-retention
 
+## 1.0.3
+
+### Patch Changes
+
+- 0ba5b7f: Email retention improvement
+
 ## 1.0.2
 
 ### Patch Changes
