@@ -18,6 +18,9 @@ sqs_alarm_max_age_seconds = {
 
 email_retention_alarms_enabled = true
 
+# Matches onemail_app lambda_email_retention.stream_maximum_retry_attempts (default: 5).
+email_retention_maximum_retry_attempts = 5
+
 infra_alarm_templates = {
   sqs_oldest_message_age = {
     comparison_operator = "GreaterThanOrEqualToThreshold"

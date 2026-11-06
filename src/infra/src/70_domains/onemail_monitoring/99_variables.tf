@@ -64,6 +64,22 @@ variable "email_retention_alarms_enabled" {
   default     = false
 }
 
+variable "email_retention_maximum_retry_attempts" {
+  type        = number
+  description = "Must match onemail_app lambda_email_retention.stream_maximum_retry_attempts. The email retention Errors alarm threshold is this value plus the initial attempt."
+  default     = 5
+  nullable    = false
+
+  validation {
+    condition = (
+      var.email_retention_maximum_retry_attempts >= 0 &&
+      var.email_retention_maximum_retry_attempts <= 10000 &&
+      floor(var.email_retention_maximum_retry_attempts) == var.email_retention_maximum_retry_attempts
+    )
+    error_message = "email_retention_maximum_retry_attempts must be an integer between 0 and 10000; unlimited retries cannot define a finite alarm threshold."
+  }
+}
+
 variable "infra_alarm_templates" {
   description = "Template configuration for infrastructure CloudWatch alarms. Configure per environment in terraform.tfvars."
 

@@ -328,24 +328,6 @@ data "aws_iam_policy_document" "email_retention_policy" {
   }
 
   statement {
-    sid       = "SetEmailExpirationTime"
-    actions   = ["dynamodb:UpdateItem"]
-    resources = [data.aws_dynamodb_table.EmailStatusHistory.arn]
-
-    condition {
-      test     = "ForAllValues:StringEquals"
-      variable = "dynamodb:Attributes"
-      values   = ["emailId", "expiration_time"]
-    }
-
-    condition {
-      test     = "StringEqualsIfExists"
-      variable = "dynamodb:ReturnValues"
-      values   = ["NONE"]
-    }
-  }
-
-  statement {
     sid       = "QueryEmailsByRequestId"
     actions   = ["dynamodb:Query"]
     resources = ["${data.aws_dynamodb_table.EmailStatusHistory.arn}/index/${local.gsis["gsi_request_id_idx"].name}"]
@@ -407,7 +389,7 @@ module "lambda_email_retention" {
   idvh_resource_tier = "standard"
 
   name        = "${local.project_nodomain}-lambda-email-retention"
-  description = "Lambda function that sets the TTL on finalized emails and deletes their S3 attachments, triggered by the EmailStatusHistory stream"
+  description = "Lambda function that deletes finalized email attachments, triggered by the EmailStatusHistory stream"
 
   package_path       = "${path.module}/${var.lambda_email_retention.package_path}"
   lambda_policy_json = data.aws_iam_policy_document.email_retention_policy[0].json
@@ -419,7 +401,6 @@ module "lambda_email_retention" {
     AWS_EMAIL_DB_REQUEST_ID_GSI      = local.gsis["gsi_request_id_idx"].name
     AWS_ATTACHMENTS_BUCKET           = data.aws_s3_bucket.email_attachments.bucket
     AWS_CLOUDWATCH_METRICS_NAMESPACE = "${local.project_nodomain}-lambda-email-retention"
-    EMAIL_RETENTION_DAYS             = tostring(var.lambda_email_retention.email_retention_days)
     NODE_ENV                         = "production"
     POWERTOOLS_LOG_LEVEL             = "INFO"
     SERVICE_PREFIX                   = local.project_nodomain
@@ -444,13 +425,26 @@ resource "aws_lambda_event_source_mapping" "email_retention" {
   bisect_batch_on_function_error = true
   function_response_types        = ["ReportBatchItemFailures"]
 
-  # Only transitions into a final status: the TTL update keeps the status final in both images, so it does not re-trigger.
+  # Only transitions into a final status with attachment keys trigger cleanup.
   filter_criteria {
     filter {
       pattern = jsonencode({
         eventName = ["MODIFY"]
         dynamodb = {
-          NewImage = { status = { S = local.email_final_statuses } }
+          NewImage = {
+            status = { S = local.email_final_statuses }
+            content = {
+              M = {
+                attachments = {
+                  L = {
+                    M = {
+                      s3Key = { S = [{ exists = true }] }
+                    }
+                  }
+                }
+              }
+            }
+          }
           OldImage = { status = { S = [{ "anything-but" = local.email_final_statuses }] } }
         }
       })

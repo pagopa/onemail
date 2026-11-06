@@ -1,3 +1,4 @@
+import env from '#config/env';
 import { EmailHighPriorityBodyDTO } from '#dtos/email/emailHighPriority.dto';
 import { EmailLowPriorityBodyDTO } from '#dtos/email/emailLowPriority.dto';
 import { isTemplatedEmail } from '#utils/emailTypeGuard';
@@ -14,6 +15,9 @@ import {
 } from 'om-common/types';
 import { SES_SIMULATOR } from 'om-common/utils';
 
+const computeExpirationTime = (createdAt: string): number =>
+  Math.floor(Date.parse(createdAt) / 1000) + env.emailRetentionDays * 86400;
+
 export function mapEmailLowPriorityToDbItem(
   body: EmailLowPriorityBodyDTO,
   requestId: string,
@@ -28,6 +32,7 @@ export function mapEmailLowPriorityToDbItem(
   const initialStatus: EmailStatus = EmailStatus.Queued;
   const lowPriority: EmailPriority = EmailPriority.LOW;
   const now = new Date().toISOString();
+  const expirationTime = computeExpirationTime(now);
 
   body.sendingInfo.forEach((element) => {
     dbTemplate = {
@@ -50,6 +55,7 @@ export function mapEmailLowPriorityToDbItem(
     // 3. add to emailHistoryList
     emailHistoryList.push({
       emailId: randomUUID(),
+      expiration_time: expirationTime,
       requestId: requestId,
       priority: lowPriority,
       status: initialStatus,
@@ -79,6 +85,7 @@ export function mapEmailTransactionalToDbItem(
   attachments?: EmailAttachmentRef[],
 ): EmailStatusHistoryItem {
   const now = new Date().toISOString();
+  const expirationTime = computeExpirationTime(now);
 
   // 1. Mutually exclusive mapping of Template and Body
   let dbTemplate: TemplateContent | undefined;
@@ -118,6 +125,7 @@ export function mapEmailTransactionalToDbItem(
 
   return {
     emailId: randomUUID(),
+    expiration_time: expirationTime,
     requestId: requestId,
     priority: highPriority,
     status: initialStatus,

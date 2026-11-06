@@ -102,7 +102,8 @@ locals {
         var.infra_alarm_templates.lambda_errors,
         {
           alarm_name        = "${lambda_target.function_name}-errors"
-          alarm_description = "The ${lambda_target.label} Lambda function reported at least ${var.infra_alarm_templates.lambda_errors.threshold} errors in the last ${var.infra_alarm_templates.lambda_errors.period / 60} minutes."
+          alarm_description = "The ${lambda_target.label} Lambda function reported at least ${key == "email_retention" ? var.email_retention_maximum_retry_attempts + 1 : var.infra_alarm_templates.lambda_errors.threshold} errors in the last ${var.infra_alarm_templates.lambda_errors.period / 60} minutes."
+          threshold         = key == "email_retention" ? var.email_retention_maximum_retry_attempts + 1 : var.infra_alarm_templates.lambda_errors.threshold
           dimensions = {
             FunctionName = lambda_target.function_name
           }
