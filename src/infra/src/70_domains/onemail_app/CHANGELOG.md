@@ -1,5 +1,11 @@
 # infra-domains-onemail-app
 
+## 1.26.1
+
+### Patch Changes
+
+- 0ba5b7f: Email retention improvement
+
 ## 1.26.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.14.1
+
+### Patch Changes
+
+- 0ba5b7f: Email retention improvement
+
 ## 1.14.0
 
 ### Minor Changes
