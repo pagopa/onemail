@@ -99,7 +99,7 @@ describe('email.service - template registry', () => {
     'accepts an owned %s priority template',
     async (priority) => {
       getByTemplateName.mockResolvedValue({
-        TemplateName: templateName,
+        templateName,
         tenantName: 'tenant-a',
         lastModifiedDate: '2026-10-13T00:00:00.000Z',
         status: 'ACTIVE',
@@ -129,7 +129,7 @@ describe('email.service - template registry', () => {
     'rejects a logically retired %s priority template before writes',
     async (priority) => {
       getByTemplateName.mockResolvedValue({
-        TemplateName: templateName,
+        templateName,
         tenantName: 'tenant-a',
         lastModifiedDate: '2026-10-13T00:00:00.000Z',
         status: 'RETIRED',
@@ -149,7 +149,7 @@ describe('email.service - template registry', () => {
     'rejects an unknown %s priority template status before writes',
     async (priority) => {
       getByTemplateName.mockResolvedValue({
-        TemplateName: templateName,
+        templateName,
         tenantName: 'tenant-a',
         lastModifiedDate: '2026-10-13T00:00:00.000Z',
         status: 'PENDING',
@@ -170,7 +170,7 @@ describe('email.service - template registry', () => {
     { status: 'ACTIVE', retiredAt: '2026-10-20T00:00:00Z' },
   ])('rejects unusable template metadata: %j', async (metadata) => {
     getByTemplateName.mockResolvedValue({
-      TemplateName: templateName,
+      templateName,
       tenantName: 'tenant-a',
       ...metadata,
     });
