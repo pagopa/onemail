@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.25.2
+
+### Patch Changes
+
+- c6fff9a: Align dispatcher code with new TemplateRegistry pk
+
 ## 1.25.1
 
 ### Patch Changes
