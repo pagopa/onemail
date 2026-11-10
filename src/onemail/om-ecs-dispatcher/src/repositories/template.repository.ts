@@ -11,7 +11,7 @@ export const templateRepository = {
     const result = await dynamoClient.send(
       new GetCommand({
         TableName: env.aws.templateRegistry.tableName,
-        Key: { TemplateName: templateName },
+        Key: { templateName },
         ConsistentRead: true,
       }),
     );
