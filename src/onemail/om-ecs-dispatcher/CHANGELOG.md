@@ -1,5 +1,11 @@
 # om-ecs-dispatcher
 
+## 1.13.2
+
+### Patch Changes
+
+- c6fff9a: Align dispatcher code with new TemplateRegistry pk
+
 ## 1.13.1
 
 ### Patch Changes
