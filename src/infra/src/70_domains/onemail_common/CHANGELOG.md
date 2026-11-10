@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.25.1
+
+### Patch Changes
+
+- cb90389: TemplateRegistry pk renaming
+
 ## 1.25.0
 
 ### Minor Changes
