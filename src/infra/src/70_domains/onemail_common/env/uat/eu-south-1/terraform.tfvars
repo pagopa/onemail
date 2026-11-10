@@ -20,13 +20,12 @@ dynamodb_tables = {
     stream_view_type               = "NEW_AND_OLD_IMAGES"
     ttl_enabled                    = false
     deletion_protection_enabled    = false
-    replication_enabled            = true
+    replication_enabled            = false
     create_kms_key                 = true
     kms_alias                      = "/dynamodb/template"
     server_side_encryption_enabled = true
     attributes                     = [{ name = "templateName", type = "S" }]
     global_secondary_indexes       = []
-    replica_regions                = [{ region_name = "eu-central-1" }]
   }
   email_status_history = {
     table_name                     = "EmailStatusHistory"
