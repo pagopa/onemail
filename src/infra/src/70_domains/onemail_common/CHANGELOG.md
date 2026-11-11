@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.25.3
+
+### Patch Changes
+
+- bfb7a24: add statement om-template tenants check
+
 ## 1.25.2
 
 ### Patch Changes
