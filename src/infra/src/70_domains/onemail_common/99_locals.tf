@@ -34,6 +34,18 @@ locals {
       "arn:${data.aws_partition.current.partition}:ses:${region}:${data.aws_caller_identity.current.account_id}:template/${product}_*"
     ]
   ])
+  template_known_client_resource_arns = flatten([
+    for region in local.template_ses_regions : [
+      for product in keys(local.raw_tenants) :
+      "arn:${data.aws_partition.current.partition}:ses:${region}:${data.aws_caller_identity.current.account_id}:template/${product}_*"
+    ]
+  ])
+  template_known_client_tenant_arns = flatten([
+    for region in local.template_ses_regions : [
+      for tenant_key in keys(local.raw_tenants) :
+      "arn:${data.aws_partition.current.partition}:ses:${region}:${data.aws_caller_identity.current.account_id}:tenant/${local.tenant_name_prefix}-${tenant_key}/*"
+    ]
+  ])
   template_tenant_arns = flatten([
     for region in local.template_ses_regions : [
       for tenant in values(local.tenants) :
