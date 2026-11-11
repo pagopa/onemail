@@ -38,19 +38,14 @@ resource "aws_iam_role_policy" "template_publish" {
       {
         Sid      = "ManagedTemplates"
         Effect   = "Allow"
-        Action   = ["ses:CreateEmailTemplate", "ses:GetEmailTemplate", "ses:UpdateEmailTemplate", "ses:DeleteEmailTemplate", "ses:ListResourceTenants"]
+        Action   = ["ses:CreateEmailTemplate", "ses:GetEmailTemplate", "ses:UpdateEmailTemplate", "ses:ListResourceTenants"]
         Resource = local.template_resource_arns
       },
       {
-        Sid      = "TenantExistenceCheck"
+        Sid      = "RetireKnownClientResources"
         Effect   = "Allow"
-        Action   = ["ses:GetTenant"]
-        Resource = "*"
-        Condition = {
-          StringEquals = {
-            "aws:RequestedRegion" = local.template_ses_regions
-          }
-        }
+        Action   = ["ses:DeleteEmailTemplate", "ses:GetTenant"]
+        Resource = concat(local.template_known_client_resource_arns, local.template_known_client_tenant_arns)
       },
       {
         Sid      = "ConfiguredTenants"
