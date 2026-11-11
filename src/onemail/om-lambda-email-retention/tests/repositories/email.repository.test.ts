@@ -1,9 +1,5 @@
-import {
-  hasNonFinalEmailsInRequest,
-  setEmailExpirationTime,
-} from '#repositories/email.repository';
+import { hasNonFinalEmailsInRequest } from '#repositories/email.repository';
 import { FINAL_EMAIL_STATUSES } from '#utils/constants';
-import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -16,48 +12,6 @@ const dynamoSend = vi.hoisted(() => vi.fn());
 vi.mock('#connectors/dynamo.connector', () => ({
   dynamoClient: { send: dynamoSend },
 }));
-
-describe('setEmailExpirationTime', () => {
-  it('sends a conditional update of the TTL attribute and returns true', async () => {
-    dynamoSend.mockResolvedValue({});
-
-    const result = await setEmailExpirationTime('email-1', 1792915200);
-
-    expect(result).toBe(true);
-    expectCommandInput(dynamoSend, {
-      TableName: 'email-table',
-      Key: { emailId: 'email-1' },
-      UpdateExpression: 'SET #expirationTime = :expirationTime',
-      ConditionExpression:
-        'attribute_exists(#emailId) AND attribute_not_exists(#expirationTime)',
-      ExpressionAttributeNames: {
-        '#emailId': 'emailId',
-        '#expirationTime': 'expiration_time',
-      },
-      ExpressionAttributeValues: { ':expirationTime': 1792915200 },
-      ReturnValues: 'NONE',
-    });
-  });
-
-  it('returns false when the TTL is already set or the email does not exist', async () => {
-    dynamoSend.mockRejectedValue(
-      new ConditionalCheckFailedException({
-        message: 'The conditional request failed',
-        $metadata: {},
-      }),
-    );
-
-    await expect(setEmailExpirationTime('email-1', 1)).resolves.toBe(false);
-  });
-
-  it('rethrows unexpected DynamoDB errors', async () => {
-    dynamoSend.mockRejectedValue(new Error('Throttled'));
-
-    await expect(setEmailExpirationTime('email-1', 1)).rejects.toThrow(
-      'Throttled',
-    );
-  });
-});
 
 describe('hasOpenEmailsInRequest', () => {
   it('queries the request GSI excluding the current email and final statuses', async () => {

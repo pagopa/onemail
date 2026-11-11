@@ -97,6 +97,12 @@ variable "template_github_repository" {
   default     = "pagopa/onemail-template"
 }
 
+variable "template_github_oidc_subject_prefix" {
+  type        = string
+  description = "GitHub OIDC subject prefix, including repo: and immutable owner/repository IDs when enabled. Defaults to the name-based repository prefix when null."
+  default     = null
+}
+
 variable "secondary_aws_region" {
   type        = string
   description = "Secondary AWS region used by the SES multi-region endpoint."

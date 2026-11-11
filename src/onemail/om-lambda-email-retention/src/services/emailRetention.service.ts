@@ -1,25 +1,16 @@
 import type { FinalizedEmail } from '#types/finalizedEmail.type';
 import type { DynamoDBRecord } from 'aws-lambda';
 
-import env from '#config/env';
 import { getNamedLogger } from '#config/logger';
 import {
   EmailStreamImage,
   EmailStreamImageSchema,
 } from '#dtos/emailStreamImage.dto';
 import { deleteAttachments } from '#repositories/attachment.repository';
-import {
-  hasNonFinalEmailsInRequest,
-  setEmailExpirationTime,
-} from '#repositories/email.repository';
-import { FINAL_EMAIL_STATUSES, SECONDS_PER_DAY } from '#utils/constants';
+import { hasNonFinalEmailsInRequest } from '#repositories/email.repository';
+import { FINAL_EMAIL_STATUSES } from '#utils/constants';
 import { PermanentEventError } from 'om-common/errors';
 import { EmailPriority } from 'om-common/types';
-
-export const computeExpirationTime = (
-  nowMs: number,
-  retentionDays: number,
-): number => Math.floor(nowMs / 1000) + retentionDays * SECONDS_PER_DAY;
 
 /**
  * Parses a DynamoDB stream record into an EmailStreamImage.
@@ -96,27 +87,12 @@ const canDeleteAttachments = async (
 };
 
 /**
- * Handles a finalized email by setting its expiration time and deleting attachments if applicable.
+ * Deletes attachments of a finalized email when they are no longer needed.
  */
 export const handleFinalizedEmail = async (
   email: FinalizedEmail,
 ): Promise<void> => {
   const logger = getNamedLogger(handleFinalizedEmail.name);
-
-  const expirationTime = computeExpirationTime(
-    Date.now(),
-    env.emailRetentionDays,
-  );
-  const isExpirationSet = await setEmailExpirationTime(
-    email.emailId,
-    expirationTime,
-  );
-  logger.info(
-    isExpirationSet
-      ? 'Expiration time set'
-      : 'Expiration time already set or email not found',
-    { emailId: email.emailId, status: email.status, expirationTime },
-  );
 
   if (email.attachmentKeys.length === 0) return;
 

@@ -7,24 +7,25 @@ location       = "eu-south"
 location_short = "eus1"
 aws_region     = "eu-south-1"
 
+template_github_oidc_subject_prefix = "repo:pagopa@57742367/onemail-template@1416789213"
+
 # DynamoDB configuration for uat
 dynamodb_tables = {
   template = {
     table_name                     = "TemplateRegistry"
-    hash_key                       = "TemplateName"
+    hash_key                       = "templateName"
     billing_mode                   = "PAY_PER_REQUEST"
     point_in_time_recovery_enabled = false
     stream_enabled                 = true
     stream_view_type               = "NEW_AND_OLD_IMAGES"
     ttl_enabled                    = false
     deletion_protection_enabled    = false
-    replication_enabled            = true
+    replication_enabled            = false
     create_kms_key                 = true
     kms_alias                      = "/dynamodb/template"
     server_side_encryption_enabled = true
-    attributes                     = [{ name = "TemplateName", type = "S" }]
+    attributes                     = [{ name = "templateName", type = "S" }]
     global_secondary_indexes       = []
-    replica_regions                = [{ region_name = "eu-central-1" }]
   }
   email_status_history = {
     table_name                     = "EmailStatusHistory"

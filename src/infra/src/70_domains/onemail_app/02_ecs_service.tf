@@ -126,6 +126,10 @@ module "ecs_service" {
   deploy_role_github_repository = var.deploy_role_github_repository
   environment_variables = [
     {
+      name  = "EMAIL_RETENTION_DAYS"
+      value = tostring(var.email_retention_days)
+    },
+    {
       name  = "PORT"
       value = "3000"
     },

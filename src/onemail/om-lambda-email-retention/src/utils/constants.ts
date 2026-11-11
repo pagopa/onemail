@@ -13,6 +13,4 @@ export const FINAL_EMAIL_STATUSES: readonly EmailStatus[] = [
   EmailStatus.EventProcessingFailed,
 ];
 
-export const SECONDS_PER_DAY = 86400;
-
 export const S3_DELETE_OBJECTS_MAX_KEYS = 1000;

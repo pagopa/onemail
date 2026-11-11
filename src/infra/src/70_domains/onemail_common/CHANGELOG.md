@@ -1,5 +1,35 @@
 # infra-domains-onemail-common
 
+## 1.25.2
+
+### Patch Changes
+
+- c6fff9a: Align dispatcher code with new TemplateRegistry pk
+
+## 1.25.1
+
+### Patch Changes
+
+- cb90389: TemplateRegistry pk renaming
+
+## 1.25.0
+
+### Minor Changes
+
+- df280a9: feat: add immutable oidc claims for prod envs
+
+## 1.24.3
+
+### Patch Changes
+
+- 4419289: fix resource getTenant
+
+## 1.24.2
+
+### Patch Changes
+
+- a0137ab: fix oidc subject
+
 ## 1.24.1
 
 ### Patch Changes

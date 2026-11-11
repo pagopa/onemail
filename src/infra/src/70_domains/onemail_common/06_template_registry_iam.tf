@@ -15,7 +15,13 @@ resource "aws_iam_role" "template_publish" {
       Condition = {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-          "token.actions.githubusercontent.com:sub" = "repo:${var.template_github_repository}:environment:${var.env}"
+          "token.actions.githubusercontent.com:sub" = [
+            for environment in(
+              var.env == "prod"
+              ? [var.env, "${var.env}/eu-south-1", "${var.env}/eu-central-1"]
+              : [var.env]
+            ) : "${coalesce(var.template_github_oidc_subject_prefix, "repo:${var.template_github_repository}")}:environment:${environment}"
+          ]
         }
       }
     }]
@@ -42,7 +48,7 @@ resource "aws_iam_role_policy" "template_publish" {
         Resource = concat(local.template_known_client_resource_arns, local.template_known_client_tenant_arns)
       },
       {
-        Sid      = "ConfiguredTenantResources"
+        Sid      = "ConfiguredTenants"
         Effect   = "Allow"
         Action   = ["ses:ListTenantResources"]
         Resource = local.template_tenant_arns

@@ -1,5 +1,5 @@
 export type TemplateItem = {
-  TemplateName: string;
+  templateName: string;
   tenantName: string;
   lastModifiedDate: string;
   status: 'ACTIVE' | 'RETIRED';

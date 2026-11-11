@@ -1,5 +1,5 @@
 ---
-name: tech-ai-project-nodejs
+name: project-nodejs
 description: Create or modify Node.js/TypeScript application components using DDD boundaries, early returns, and deterministic test coverage.
 ---
 

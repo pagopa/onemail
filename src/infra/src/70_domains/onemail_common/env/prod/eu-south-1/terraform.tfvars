@@ -9,11 +9,13 @@ aws_region                       = "eu-south-1"
 secondary_aws_region             = "eu-central-1"
 create_ses_multi_region_endpoint = true
 
+template_github_oidc_subject_prefix = "repo:pagopa@57742367/onemail-template@1416789213"
+
 # DynamoDB configuration for prod
 dynamodb_tables = {
   template = {
     table_name                     = "TemplateRegistry"
-    hash_key                       = "TemplateName"
+    hash_key                       = "templateName"
     billing_mode                   = "PAY_PER_REQUEST"
     point_in_time_recovery_enabled = true
     stream_enabled                 = true
@@ -24,7 +26,7 @@ dynamodb_tables = {
     create_kms_key                 = true
     kms_alias                      = "/dynamodb/template"
     server_side_encryption_enabled = true
-    attributes                     = [{ name = "TemplateName", type = "S" }]
+    attributes                     = [{ name = "templateName", type = "S" }]
     global_secondary_indexes       = []
     replica_regions                = [{ region_name = "eu-central-1" }]
   }
