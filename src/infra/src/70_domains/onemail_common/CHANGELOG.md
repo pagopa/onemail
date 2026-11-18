@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.25.4
+
+### Patch Changes
+
+- 73d8db8: enable email retention for prod and uat
+
 ## 1.25.3
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # infra-domains-onemail-monitoring
 
+## 1.14.2
+
+### Patch Changes
+
+- 73d8db8: enable email retention for prod and uat
+
 ## 1.14.1
 
 ### Patch Changes
