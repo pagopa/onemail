@@ -24,6 +24,8 @@ sqs_alarm_max_age_seconds = {
   config_set_processor = 180
 }
 
+email_retention_alarms_enabled = true
+
 infra_alarm_templates = {
   sqs_oldest_message_age = {
     comparison_operator = "GreaterThanOrEqualToThreshold"
