@@ -37,6 +37,7 @@ dynamodb_tables = {
     point_in_time_recovery_enabled = true
     stream_enabled                 = true
     stream_view_type               = "NEW_AND_OLD_IMAGES"
+    ttl_enabled                    = true
     ttl_attribute_name             = "expiration_time"
     replication_enabled            = true
     create_kms_key                 = true
@@ -142,5 +143,6 @@ enable_container_insights = true
 
 # Email retention (attachments bucket lifecycle)
 email_retention = {
-  enabled = false
+  enabled                     = true
+  attachments_expiration_days = 7
 }

@@ -21,6 +21,7 @@ api_gateway_usage_plan_throttle = {
 ecs_service_image_name        = "core"
 ecs_service_image_version     = "latest" #Temporary version to test ECS Service
 deploy_role_github_repository = "pagopa/onemail"
+email_retention_days          = 60
 
 # Lambda Sender
 lambda_sender = {
@@ -32,4 +33,10 @@ lambda_sender = {
 lambda_set_processor = {
   package_path                   = "lambda/hello-nodejs/hello-nodejs.zip"
   reserved_concurrent_executions = -1 #Set based on expected load, Use -1 for unlimited concurrency for now
+}
+
+#Lambda Email Retention
+lambda_email_retention = {
+  enabled                        = true
+  reserved_concurrent_executions = 5
 }

@@ -13,3 +13,9 @@ ses_deed_parent_region = "eu-south-1"
 enable_container_insights = true
 
 sqs_set_processor_delay_enabled = true
+
+# Email retention (attachments bucket lifecycle)
+email_retention = {
+  enabled                     = true
+  attachments_expiration_days = 7
+}
