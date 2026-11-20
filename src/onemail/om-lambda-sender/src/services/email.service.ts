@@ -26,7 +26,8 @@ export const sendHighPriorityEmail = async (
     ...mapDbHighPriorityItemToSesModel(input, attachmentBytes),
     ListManagementOptions: {
       ContactListName: env.ses.contactListName,
-      TopicName: env.ses.contactListTopicName,
+      // TopicName: env.ses.contactListTopicName,
+      TopicName: 'newsletter',
     },
   };
 
