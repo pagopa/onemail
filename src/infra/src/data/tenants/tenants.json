@@ -18,7 +18,12 @@
   "ioapp": {
     "admin_mailbox": "ops-dmarc",
     "domain": {
-      "uat": "uat.ioapp.it",
+      "uat": "uat.ioapp.it"
+    }
+  },
+   "news-ioapp": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": {
       "prod": "news.ioapp.it"
     }
   },
