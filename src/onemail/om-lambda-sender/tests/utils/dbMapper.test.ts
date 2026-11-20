@@ -104,7 +104,9 @@ describe('dbMapper high priority utils', () => {
         Simple: {
           Subject: { Data: 'Subject line' },
           Body: {
-            Html: { Data: '<p>Hello</p>' },
+            Html: {
+              Data: '<p>Hello</p><p><a href="{{amazonSESUnsubscribeUrl}}">Disiscriviti</a></p>',
+            },
             Text: { Data: 'Hello' },
           },
           Headers: [{ Name: 'X-Test', Value: 'value' }],
@@ -113,6 +115,34 @@ describe('dbMapper high priority utils', () => {
       TenantName: 'tenant-1',
       ConfigurationSetName: 'config-set-1',
     });
+  });
+
+  it('inserts the unsubscribe link before the closing body tag and does not duplicate it', () => {
+    const html =
+      '<html><body><p>Hello</p><p><a href="{{amazonSESUnsubscribeUrl}}">Disiscriviti</a></p></body></html>';
+    const input = makeEmailStatusHistoryItem({
+      content: {
+        from: { email: 'sender@example.com' },
+        to: { email: 'user@example.com' },
+        body: {
+          html: '<html><body><p>Hello</p></body></html>',
+          text: 'Hello',
+        },
+      },
+    });
+
+    const firstResult = mapDbHighPriorityItemToSesModel(input);
+
+    expect(firstResult.Content?.Simple?.Body?.Html?.Data).toBe(html);
+    expect(
+      mapDbHighPriorityItemToSesModel({
+        ...input,
+        content: {
+          ...input.content,
+          body: { html, text: 'Hello' },
+        },
+      }).Content?.Simple?.Body?.Html?.Data,
+    ).toBe(html);
   });
 
   it('rejects a high priority dry-run item with non-simulator recipient', () => {

@@ -152,6 +152,8 @@ module "lambda_sender" {
       NODE_ENV                         = "production"
       POWERTOOLS_LOG_LEVEL             = "DEBUG"
       AWS_ATTACHMENTS_BUCKET           = data.aws_s3_bucket.email_attachments.bucket
+      SES_CONTACT_LIST_NAME            = local.ses_contact_list_name
+      SES_CONTACT_LIST_TOPIC_NAME      = "campagna-test"
     },
     var.ses_multi_region_endpoint_enabled ? {
       SES_MULTI_REGION_ENDPOINT_ID = data.aws_ssm_parameter.ses_multi_region_endpoint_id[0].value

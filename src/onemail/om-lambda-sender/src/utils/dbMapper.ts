@@ -36,7 +36,9 @@ export function mapDbHighPriorityItemToSesModel(
     };
   } else if (content.body) {
     const simpleBodyContent: Body = {};
-    simpleBodyContent.Html = { Data: content.body.html };
+    simpleBodyContent.Html = {
+      Data: appendUnsubscribeLink(content.body.html),
+    };
     if (content.body.text) {
       simpleBodyContent.Text = { Data: content.body.text };
     }
@@ -60,6 +62,19 @@ export function mapDbHighPriorityItemToSesModel(
   };
 
   return input;
+}
+
+function appendUnsubscribeLink(html: string): string {
+  const unsubscribePlaceholder = '{{amazonSESUnsubscribeUrl}}';
+  if (html.includes(unsubscribePlaceholder)) return html;
+
+  const unsubscribeLink = `<p><a href="${unsubscribePlaceholder}">Disiscriviti</a></p>`;
+  const closingBodyTag = /<\/body\s*>/i;
+  if (closingBodyTag.test(html)) {
+    return html.replace(closingBodyTag, (tag) => `${unsubscribeLink}${tag}`);
+  }
+
+  return `${html}${unsubscribeLink}`;
 }
 
 export function mapDbLowPriorityItemToSesModel(

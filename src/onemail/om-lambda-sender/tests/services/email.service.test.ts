@@ -22,6 +22,8 @@ const envConfig = vi.hoisted(() => ({
     attachmentsBucket: 'bucket-a',
   },
   ses: {
+    contactListName: 'onemail-contact-list',
+    contactListTopicName: 'campagna-test',
     sesMultiRegionEndpointId: undefined as string | undefined,
   },
 }));
@@ -64,7 +66,33 @@ describe('email.service', () => {
     expect(getAttachment).not.toHaveBeenCalled();
     const command = getNthCommand(sesSend, 0);
     expect(command).toBeInstanceOf(SendEmailCommand);
-    expect((command as SendEmailCommand).input).toEqual(sesInput);
+    expect((command as SendEmailCommand).input).toEqual({
+      ...sesInput,
+      ListManagementOptions: {
+        ContactListName: 'onemail-contact-list',
+        TopicName: 'campagna-test',
+      },
+    });
+  });
+
+  it('uses the same SES contact list topic for different tenants', async () => {
+    sesSend.mockResolvedValue({ MessageId: 'ses-message-id' });
+    mapDbHighPriorityItemToSesModel.mockReturnValue({});
+
+    await sendHighPriorityEmail(
+      makeEmailStatusHistoryItem({ tenantName: 'tenant-1' }),
+    );
+    await sendHighPriorityEmail(
+      makeEmailStatusHistoryItem({ tenantName: 'tenant-2' }),
+    );
+
+    for (const index of [0, 1]) {
+      const command = getNthCommand(sesSend, index) as SendEmailCommand;
+      expect(command.input.ListManagementOptions).toEqual({
+        ContactListName: 'onemail-contact-list',
+        TopicName: 'campagna-test',
+      });
+    }
   });
 
   it('adds the SES multi-region endpoint id to high priority email requests when configured', async () => {
@@ -81,6 +109,10 @@ describe('email.service', () => {
     expect((command as SendEmailCommand).input).toEqual({
       ...sesInput,
       EndpointId: 'ses-endpoint-id',
+      ListManagementOptions: {
+        ContactListName: 'onemail-contact-list',
+        TopicName: 'campagna-test',
+      },
     });
   });
 

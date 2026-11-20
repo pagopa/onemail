@@ -4,6 +4,17 @@ resource "aws_sesv2_tenant" "tenants" {
   tenant_name = each.value.tenant_name
 }
 
+resource "aws_sesv2_contact_list" "main" {
+  contact_list_name = local.ses_contact_list_name
+
+  topic {
+    topic_name                  = "campagna-test"
+    display_name                = "campagna test"
+    description                 = "Subscription preferences for campagna-test"
+    default_subscription_status = "OPT_IN"
+  }
+}
+
 # Email identities for each tenant
 resource "aws_sesv2_email_identity" "tenant_identities" {
   for_each = var.ses_deed_parent_region == null ? local.tenants : {}

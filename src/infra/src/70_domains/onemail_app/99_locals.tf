@@ -2,6 +2,7 @@ locals {
   project                         = "${var.prefix}-${var.env_short}-${var.location_short}-${var.domain}"
   project_nodomain                = "${var.prefix}-${var.env_short}-${var.location_short}"
   project_nodomain_ses            = "${var.prefix}-${var.env_short}"
+  ses_contact_list_name           = "onemail-contact-list-test"
   product                         = "${var.prefix}-${var.env_short}"
   ses_authorization_regions       = length(var.ses_regions) > 0 ? var.ses_regions : [var.aws_region]
   ses_multi_region_parameter_name = "/onemail/${local.product}/ses/multi-region-endpoint-id"

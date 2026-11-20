@@ -14,6 +14,12 @@ export default {
       throwMissingRequiredEnvVar('AWS_ATTACHMENTS_BUCKET'),
   },
   ses: {
+    contactListName:
+      process.env.SES_CONTACT_LIST_NAME ??
+      throwMissingRequiredEnvVar('SES_CONTACT_LIST_NAME'),
+    contactListTopicName:
+      process.env.SES_CONTACT_LIST_TOPIC_NAME ??
+      throwMissingRequiredEnvVar('SES_CONTACT_LIST_TOPIC_NAME'),
     sesMultiRegionEndpointId: process.env.SES_MULTI_REGION_ENDPOINT_ID,
   },
   sqs: {

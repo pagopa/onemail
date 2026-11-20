@@ -22,7 +22,13 @@ export const sendHighPriorityEmail = async (
 ): Promise<string | undefined> => {
   const attachmentBytes = await fetchAttachments([input]);
   //1. from dynamodb to ses model
-  const sesInput = mapDbHighPriorityItemToSesModel(input, attachmentBytes);
+  const sesInput = {
+    ...mapDbHighPriorityItemToSesModel(input, attachmentBytes),
+    ListManagementOptions: {
+      ContactListName: env.ses.contactListName,
+      TopicName: env.ses.contactListTopicName,
+    },
+  };
 
   //2. send email with ses connector
   //const command = new SendEmailCommand(sesInput);
