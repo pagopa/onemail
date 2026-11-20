@@ -1,5 +1,11 @@
 # infra-data-tenants
 
+## 1.11.0
+
+### Minor Changes
+
+- 46d72ad: Add client io to prod env
+
 ## 1.10.1
 
 ### Patch Changes
