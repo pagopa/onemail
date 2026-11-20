@@ -9,6 +9,7 @@ export enum CapitalizedSesBounceSubType {
   CustomTimeoutExceeded = 'CustomTimeoutExceeded',
   ContentRejected = 'ContentRejected',
   AttachmentRejected = 'AttachmentRejected',
+  UnsubscribedRecipient = 'UnsubscribedRecipient',
 }
 export enum CapitalizedSesBounceType {
   Undetermined = 'Undetermined',
