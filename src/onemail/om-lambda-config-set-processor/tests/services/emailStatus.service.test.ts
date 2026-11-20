@@ -561,6 +561,67 @@ describe('emailStatus.service non-retryable bounce flow', () => {
 });
 
 describe('emailStatus.service blacklist flow', () => {
+  it('records an unsubscribed recipient bounce without blacklisting, retrying or publishing metrics', async () => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Dispatched,
+    });
+    findEmailByProviderMessageId.mockResolvedValue(email);
+    const record = makeQueueRecord({});
+    record.body = JSON.stringify({
+      'detail-type': 'Email Bounced',
+      source: 'aws.ses',
+      detail: makeBounceEvent(
+        'ses-msg-1',
+        CapitalizedSesBounceType.Permanent,
+        CapitalizedSesBounceSubType.UnsubscribedRecipient,
+        '2025-06-01T12:00:00Z',
+        'Amazon SES did not send the message because the contact has unsubscribed.',
+      ),
+    });
+
+    await sqsEventHandler(record);
+
+    expect(updateEmailStatus).toHaveBeenCalledWith(
+      email.emailId,
+      email.status,
+      [
+        {
+          timestamp: '2025-06-01T12:00:00Z',
+          status: EmailStatus.HardBounce,
+          reason: CapitalizedSesBounceSubType.UnsubscribedRecipient,
+        },
+      ],
+    );
+    expect(addToBlacklist).not.toHaveBeenCalled();
+    expect(handleSoftBounceRetry).not.toHaveBeenCalled();
+    expect(publishMetrics).not.toHaveBeenCalled();
+  });
+
+  it.each([null, undefined])(
+    'blacklists a permanent bounce with subtype %s',
+    async (subType) => {
+      const email = makeEmailStatusHistoryItem({
+        status: EmailStatus.Dispatched,
+      });
+      findEmailByProviderMessageId.mockResolvedValue(email);
+      const event = makeBounceEvent('ses-msg-1');
+      if (event.eventType !== CapitalizedSesConfigurationSetEventType.Bounce) {
+        throw new Error('Expected a bounce event');
+      }
+      event.bounce.bounceSubType = subType;
+
+      await sqsEventHandler(makeQueueRecord(event));
+
+      expect(addToBlacklist).toHaveBeenCalledTimes(1);
+      expect(publishMetrics).toHaveBeenCalledWith([
+        {
+          name: 'EmailHardBounce',
+          dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+        },
+      ]);
+    },
+  );
+
   it('blacklists every bounced recipient on a hard bounce', async () => {
     const email = makeEmailStatusHistoryItem({
       status: EmailStatus.Dispatched,

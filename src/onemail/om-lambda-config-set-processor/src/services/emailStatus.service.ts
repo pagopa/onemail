@@ -16,6 +16,7 @@ import {
 import { handleSoftBounceRetry } from '#services/bounceRetry.service';
 import {
   CapitalizedNonRetryableTransientSubTypes,
+  CapitalizedSesBounceSubType,
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
@@ -165,16 +166,22 @@ const handleBounce = async (
         reason: event.bounce.bounceSubType,
       },
     ]);
-    await addHardBouncedRecipientsToBlacklist(event, emailRecord);
-    publishMetrics([
-      {
-        name: ConfigSetProcessorMetricName.EmailHardBounce,
-        dimensions: {
-          tenantName: emailRecord.tenantName,
-          clientId: emailRecord.clientId,
+    // Only add to blacklist and publish metrics if the hard bounce is not due to an unsubscribed recipient from topic list
+    if (
+      event.bounce.bounceSubType !==
+      CapitalizedSesBounceSubType.UnsubscribedRecipient
+    ) {
+      await addHardBouncedRecipientsToBlacklist(event, emailRecord);
+      publishMetrics([
+        {
+          name: ConfigSetProcessorMetricName.EmailHardBounce,
+          dimensions: {
+            tenantName: emailRecord.tenantName,
+            clientId: emailRecord.clientId,
+          },
         },
-      },
-    ]);
+      ]);
+    }
   } else if (bounceStatus === EmailStatus.NonRetryableSoftBounce) {
     await updateEmailStatus(emailRecord.emailId, emailRecord.status, [
       {
