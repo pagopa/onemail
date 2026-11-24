@@ -278,6 +278,34 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
       return handleMissingEmailRecord(eventItem.mail.messageId, currentAttempt);
     }
 
+    if (
+      eventItem.eventType === CapitalizedSesConfigurationSetEventType.Bounce &&
+      emailRecord.status === EmailStatus.Delivered
+    ) {
+      const bounceStatus = getBounceStatus(eventItem);
+      if (bounceStatus !== EmailStatus.HardBounce) {
+        logger.warn(
+          'Ignoring soft bounce received for an already delivered email',
+          {
+            emailId: emailRecord.emailId,
+            bounceStatus,
+            bounceSubType: eventItem.bounce.bounceSubType,
+          },
+        );
+        // TODO: Remove this temporary metric once monitoring is no longer needed.
+        publishMetrics([
+          {
+            name: ConfigSetProcessorMetricName.EmailSoftBounceAfterDeliveryIgnored,
+            dimensions: {
+              tenantName: emailRecord.tenantName,
+              clientId: emailRecord.clientId,
+            },
+          },
+        ]);
+        return;
+      }
+    }
+
     await checkIfMaxInternalAttemptsReached(
       currentAttempt,
       emailRecord,
