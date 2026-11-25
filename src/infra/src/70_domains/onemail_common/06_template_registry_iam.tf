@@ -42,16 +42,22 @@ resource "aws_iam_role_policy" "template_publish" {
         Resource = local.template_resource_arns
       },
       {
-        Sid      = "RetireKnownClientResources"
+        Sid      = "DeleteKnownClientTemplates"
         Effect   = "Allow"
-        Action   = ["ses:DeleteEmailTemplate", "ses:GetTenant"]
-        Resource = concat(local.template_known_client_resource_arns, local.template_known_client_tenant_arns)
+        Action   = ["ses:DeleteEmailTemplate"]
+        Resource = local.template_known_client_resource_arns
       },
       {
         Sid      = "ConfiguredTenants"
         Effect   = "Allow"
         Action   = ["ses:ListTenantResources"]
         Resource = local.template_tenant_arns
+      },
+      {
+        Sid      = "GetTenant"
+        Effect   = "Allow"
+        Action   = ["ses:GetTenant"]
+        Resource = "*"
       },
       {
         Sid      = "TemplateAssociationsOnly"
