@@ -1,0 +1,44 @@
+name: Tenant Template Reminder
+
+permissions: {}
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'src/infra/src/data/tenants/tenants.json'
+
+jobs:
+  comment:
+    name: Remind to check the tenant template
+    runs-on: ubuntu-22.04
+    permissions:
+      issues: write
+    steps:
+      - name: Create or update reminder comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          body="$(cat <<'EOF'
+          <!-- tenant-template-reminder -->
+          If you added or renamed a tenant in `src/infra/src/data/tenants/tenants.json`, please check the [OneMailTemplate repository](https://github.com/pagopa/onemail-template) and verify that a folder for the tenant exists. If it does not, create the folder and add a `.gitkeep` file so it is tracked.
+          EOF
+          )"
+
+          # Find an existing reminder from this workflow to avoid duplicate comments.
+          comment_id="$(gh api --paginate "repos/$REPOSITORY/issues/$PR_NUMBER/comments" \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- tenant-template-reminder -->"))) | .id' \
+            | tail -n 1)"
+
+          # Update the existing reminder, or post it if this is the first run.
+          if [[ -n "$comment_id" ]]; then
+            gh api --method PATCH "repos/$REPOSITORY/issues/comments/$comment_id" -f body="$body"
+          else
+            gh api --method POST "repos/$REPOSITORY/issues/$PR_NUMBER/comments" -f body="$body"
+          fi
