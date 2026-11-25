@@ -1,5 +1,11 @@
 # infra-domains-onemail-common
 
+## 1.25.5
+
+### Patch Changes
+
+- 0ed24cf: update om-template role resources
+
 ## 1.25.4
 
 ### Patch Changes
