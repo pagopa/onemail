@@ -5,7 +5,7 @@ locals {
   tenants_file_path           = "${path.module}/../data/tenants/tenants.json"
   raw_tenants                 = jsondecode(file(local.tenants_file_path))
   tenant_domain_prefix        = var.env == "prod" ? "" : "${var.env}."
-  route53_managed_tenant_keys = toset(["onemail"])
+  route53_managed_tenant_keys = toset(["onemail", "security-a-onemail", "security-b-onemail"])
   tenant_domains = {
     for tenant_key, tenant_data in local.raw_tenants : tenant_key => try(
       tenant_data.domain[var.env],
