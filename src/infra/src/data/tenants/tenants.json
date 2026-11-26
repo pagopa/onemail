@@ -45,5 +45,17 @@
     "domain": {
       "uat": "uat.cloudstrategy.pagopa.it"
     }
+  },
+  "security-a-onemail": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": {
+      "uat": "security-a.uat.onemail.pagopa.it"
+    }
+  },
+  "security-b-onemail": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": {
+      "uat": "security-b.uat.onemail.pagopa.it"
+    }
   }
 }
