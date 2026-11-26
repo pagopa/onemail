@@ -280,6 +280,7 @@ config_set_processor_metric_math_alarm_config = {
     metric_name         = "EmailHardBounce"
     period              = 300
     treat_missing_data  = "notBreaching"
+    actions_enabled     = false
   }
   email_complaint = {
     comparison_operator = "GreaterThanOrEqualToThreshold"
@@ -320,6 +321,7 @@ config_set_processor_metric_math_alarm_config = {
     metric_name         = "HighPriorityMaxRetriesReached"
     period              = 300
     treat_missing_data  = "notBreaching"
+    actions_enabled     = false
   }
   low_priority_max_retries_reached = {
     comparison_operator = "GreaterThanOrEqualToThreshold"

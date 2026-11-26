@@ -273,6 +273,7 @@ locals {
       treat_missing_data  = tpl.treat_missing_data
       period              = tpl.period
       metric_name         = tpl.metric_name
+      actions_enabled     = tpl.actions_enabled
     }
   }
 }

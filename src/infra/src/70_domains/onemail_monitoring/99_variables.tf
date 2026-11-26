@@ -140,6 +140,7 @@ variable "config_set_processor_metric_math_alarm_config" {
     metric_name         = string
     period              = number
     treat_missing_data  = optional(string, "notBreaching")
+    actions_enabled     = optional(bool, true)
   }))
   default = {}
 }

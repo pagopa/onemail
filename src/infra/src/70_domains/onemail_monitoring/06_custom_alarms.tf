@@ -30,6 +30,7 @@ resource "aws_cloudwatch_metric_alarm" "csp_metric_math" {
   evaluation_periods  = each.value.evaluation_periods
   threshold           = each.value.threshold
   alarm_actions       = local.alarm_actions
+  actions_enabled     = each.value.actions_enabled
   treat_missing_data  = each.value.treat_missing_data
 
   metric_query {
