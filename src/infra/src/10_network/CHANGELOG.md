@@ -1,5 +1,11 @@
 # infra-network
 
+## 1.17.1
+
+### Patch Changes
+
+- 3ebc9d4: add security tenants
+
 ## 1.17.0
 
 ### Minor Changes

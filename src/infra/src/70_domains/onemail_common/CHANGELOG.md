@@ -1,5 +1,17 @@
 # infra-domains-onemail-common
 
+## 1.25.6
+
+### Patch Changes
+
+- 316e2a9: add delay in sqs config-set-processor milano
+
+## 1.25.5
+
+### Patch Changes
+
+- 0ed24cf: update om-template role resources
+
 ## 1.25.4
 
 ### Patch Changes

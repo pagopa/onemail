@@ -21,6 +21,12 @@
       "uat": "uat.ioapp.it"
     }
   },
+   "news-ioapp": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": {
+      "prod": "news.ioapp.it"
+    }
+  },
   "internal-apps": {
     "admin_mailbox": "ops-dmarc",
     "domain": {
@@ -38,6 +44,18 @@
     "admin_mailbox": "ops-dmarc",
     "domain": {
       "uat": "uat.cloudstrategy.pagopa.it"
+    }
+  },
+  "security-a-onemail": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": {
+      "uat": "security-a.uat.onemail.pagopa.it"
+    }
+  },
+  "security-b-onemail": {
+    "admin_mailbox": "ops-dmarc",
+    "domain": {
+      "uat": "security-b.uat.onemail.pagopa.it"
     }
   }
 }

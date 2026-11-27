@@ -1,5 +1,18 @@
 # infra-data-tenants
 
+## 1.11.1
+
+### Patch Changes
+
+- 3ebc9d4: add security tenants
+- 3ebc9d4: Add security tenants
+
+## 1.11.0
+
+### Minor Changes
+
+- 46d72ad: Add client io to prod env
+
 ## 1.10.1
 
 ### Patch Changes
