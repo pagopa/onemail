@@ -366,7 +366,7 @@ describe('emailStatus.service bounce flow', () => {
     expect(updateEmailStatus).not.toHaveBeenCalled();
   });
 
-  it('delegates transient General bounce to handleSoftBounceRetry', async () => {
+  it('delegates transient General bounce with a diagnostic to handleSoftBounceRetry', async () => {
     const email = makeEmailStatusHistoryItem({
       status: EmailStatus.Dispatched,
     });
@@ -379,6 +379,7 @@ describe('emailStatus.service bounce flow', () => {
           CapitalizedSesBounceType.Transient,
           CapitalizedSesBounceSubType.General,
           '2025-06-01T12:00:00Z',
+          'smtp; 421 4.4.2 Connection timed out',
         ),
       ),
     );
@@ -616,6 +617,47 @@ describe('emailStatus.service non-retryable bounce flow', () => {
     );
     expect(handleSoftBounceRetry).not.toHaveBeenCalled();
   });
+
+  it.each([undefined, '', '   '])(
+    'does not retry a transient General bounce without diagnostic (%j)',
+    async (diagnosticCode) => {
+      const email = makeEmailStatusHistoryItem({
+        status: EmailStatus.Dispatched,
+      });
+      findEmailByProviderMessageId.mockResolvedValue(email);
+
+      await sqsEventHandler(
+        makeQueueRecord(
+          makeBounceEvent(
+            'ses-msg-1',
+            CapitalizedSesBounceType.Transient,
+            CapitalizedSesBounceSubType.General,
+            '2025-06-01T12:00:00Z',
+            diagnosticCode,
+          ),
+        ),
+      );
+
+      expect(updateEmailStatus).toHaveBeenCalledWith(
+        email.emailId,
+        email.status,
+        [
+          {
+            timestamp: '2025-06-01T12:00:00Z',
+            status: EmailStatus.NonRetryableSoftBounce,
+            reason: CapitalizedSesBounceSubType.General,
+          },
+        ],
+      );
+      expect(publishMetrics).toHaveBeenCalledWith([
+        {
+          name: 'EmailNonRetryableSoftBounce',
+          dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+        },
+      ]);
+      expect(handleSoftBounceRetry).not.toHaveBeenCalled();
+    },
+  );
 
   it('keeps a permanent bounce as HardBounce when its diagnostic matches', async () => {
     const email = makeEmailStatusHistoryItem({

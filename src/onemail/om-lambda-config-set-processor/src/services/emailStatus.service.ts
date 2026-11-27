@@ -16,6 +16,7 @@ import {
 import { handleSoftBounceRetry } from '#services/bounceRetry.service';
 import {
   CapitalizedNonRetryableTransientSubTypes,
+  CapitalizedSesBounceSubType,
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
@@ -122,9 +123,18 @@ const getBounceStatus = (
         /hop count exceeded.*possible mail loop/i.test(diagnosticCode)),
   );
 
+  // Transient/General without any diagnostic is typically an automatic reply
+  // (e.g. out-of-office) for a message that was already delivered: retrying would only duplicate it.
+  const isGeneralWithoutDiagnostic =
+    bounceSubType === CapitalizedSesBounceSubType.General &&
+    event.bounce.bouncedRecipients.every(
+      ({ diagnosticCode }) => !diagnosticCode?.trim(),
+    );
+
   if (
     bounceType === CapitalizedSesBounceType.Transient &&
     (hasNonRetryableDiagnostic ||
+      isGeneralWithoutDiagnostic ||
       (bounceSubType &&
         CapitalizedNonRetryableTransientSubTypes.has(bounceSubType)))
   )
