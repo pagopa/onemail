@@ -68,6 +68,27 @@ export const handleEmailRecordByPriority = async (
   }
 };
 
+const hasBeenDelivered = (email: EmailStatusHistoryItem): boolean =>
+  email.status === EmailStatus.Delivered ||
+  email.history.some((event) => event.status === EmailStatus.Delivered);
+
+const markEmailAsAlreadyDelivered = async (
+  email: EmailStatusHistoryItem,
+): Promise<void> => {
+  if (email.status !== EmailStatus.Delivered) {
+    await updateEmailStatus({
+      emailId: email.emailId,
+      status: EmailStatus.Delivered,
+      reason: 'Retry skipped: email was already delivered',
+    });
+  }
+
+  getNamedLogger(markEmailAsAlreadyDelivered.name).warn(
+    'Skipping retry for an already delivered email',
+    { emailId: email.emailId },
+  );
+};
+
 const handleHighPriority = async (
   record: SQSRecord,
   currentAttempt: number,
@@ -90,6 +111,11 @@ const handleHighPriority = async (
     throw new PermanentEventError('Email not found in DB', { emailId });
   }
   logger.debug('Email fetched from DB', { emailId });
+
+  if (hasBeenDelivered(email)) {
+    await markEmailAsAlreadyDelivered(email);
+    return;
+  }
 
   // 3. Check max attempts before sending
   await checkIfMaxInternalAttemptsReached(currentAttempt, EmailPriority.HIGH, [
@@ -207,25 +233,32 @@ const handleLowPriority = async (
     count: emails.length,
   });
 
+  const alreadyDeliveredEmails = emails.filter(hasBeenDelivered);
+  const emailsToSend = emails.filter((email) => !hasBeenDelivered(email));
+  await Promise.all(alreadyDeliveredEmails.map(markEmailAsAlreadyDelivered));
+  if (emailsToSend.length === 0) {
+    return;
+  }
+
   // 3. Check max attempts before sending
   await checkIfMaxInternalAttemptsReached(
     currentAttempt,
     EmailPriority.LOW,
-    emails,
+    emailsToSend,
   );
   const metricDimensions = {
-    clientId: emails[0].clientId,
-    tenantName: emails[0].tenantName,
+    clientId: emailsToSend[0].clientId,
+    tenantName: emailsToSend[0].tenantName,
   };
 
   // 4. Send bulk email with SES
   let sesSendResult: BulkSendResult;
   try {
-    sesSendResult = await sendLowPriorityEmail(emails);
+    sesSendResult = await sendLowPriorityEmail(emailsToSend);
   } catch (error) {
     if (error instanceof DryRunValidationError) {
       await batchUpdateEmailStatuses(
-        emails.map((email) => ({
+        emailsToSend.map((email) => ({
           item: email,
           status: EmailStatus.DryRunError,
         })),
@@ -233,7 +266,7 @@ const handleLowPriority = async (
       publishMetrics([
         {
           name: SenderMetricName.LowPriorityDryRunError,
-          value: emails.length,
+          value: emailsToSend.length,
           dimensions: metricDimensions,
         },
       ]);
@@ -247,7 +280,7 @@ const handleLowPriority = async (
     if (errorMessage) {
       // Whole batch rejected — mark all items
       await batchUpdateEmailStatuses(
-        emails.map((email) => ({
+        emailsToSend.map((email) => ({
           item: email,
           status: EmailStatus.Rejected,
           reason: errorMessage.reason,
@@ -256,7 +289,7 @@ const handleLowPriority = async (
       publishMetrics([
         {
           name: SenderMetricName.LowPriorityRejected,
-          value: emails.length,
+          value: emailsToSend.length,
           dimensions: metricDimensions,
         },
       ]);

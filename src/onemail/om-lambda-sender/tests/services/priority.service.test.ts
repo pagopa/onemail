@@ -118,6 +118,32 @@ describe('priority.service high priority flows', () => {
     ]);
   });
 
+  it('skips and restores a queued high-priority email already delivered', async () => {
+    const email = makeEmailStatusHistoryItem({
+      status: EmailStatus.Queued,
+      history: [
+        {
+          status: EmailStatus.Delivered,
+          changedAt: '2025-06-01T12:00:00Z',
+        },
+      ],
+    });
+    getEmailById.mockResolvedValue(email);
+
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ emailId: email.emailId }),
+      true,
+    );
+
+    expect(updateEmailStatus).toHaveBeenCalledWith({
+      emailId: email.emailId,
+      status: EmailStatus.Delivered,
+      reason: 'Retry skipped: email was already delivered',
+    });
+    expect(sendHighPriorityEmail).not.toHaveBeenCalled();
+    expect(publishMetrics).not.toHaveBeenCalled();
+  });
+
   it('dispatches high priority emails with attachments', async () => {
     const email = makeEmailStatusHistoryItem({
       content: {
@@ -386,6 +412,64 @@ describe('priority.service low priority flows', () => {
     expect(publishMetrics).toHaveBeenCalledWith([
       { name: 'EmailBatchNotFound' },
     ]);
+  });
+
+  it('restores delivered emails and excludes them from a low-priority batch', async () => {
+    const deliveredEmail = makeEmailStatusHistoryItem({
+      emailId: 'email-delivered',
+      priority: EmailPriority.LOW,
+      status: EmailStatus.Queued,
+      history: [
+        {
+          status: EmailStatus.Delivered,
+          changedAt: '2025-06-01T12:00:00Z',
+        },
+      ],
+    });
+    const pendingEmail = makeEmailStatusHistoryItem({
+      emailId: 'email-pending',
+      priority: EmailPriority.LOW,
+    });
+    getEmailsByRequestId.mockResolvedValue([deliveredEmail, pendingEmail]);
+    sendLowPriorityEmail.mockResolvedValue({ successful: [], failed: [] });
+
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ requestId: 'request-1' }),
+      false,
+    );
+
+    expect(updateEmailStatus).toHaveBeenCalledWith({
+      emailId: deliveredEmail.emailId,
+      status: EmailStatus.Delivered,
+      reason: 'Retry skipped: email was already delivered',
+    });
+    expect(sendLowPriorityEmail).toHaveBeenCalledWith([pendingEmail]);
+  });
+
+  it('does not send a low-priority batch when every email was already delivered', async () => {
+    const deliveredEmail = makeEmailStatusHistoryItem({
+      priority: EmailPriority.LOW,
+      status: EmailStatus.Queued,
+      history: [
+        {
+          status: EmailStatus.Delivered,
+          changedAt: '2025-06-01T12:00:00Z',
+        },
+      ],
+    });
+    getEmailsByRequestId.mockResolvedValue([deliveredEmail]);
+
+    await handleEmailRecordByPriority(
+      makeQueueRecord({ requestId: deliveredEmail.requestId }),
+      false,
+    );
+
+    expect(updateEmailStatus).toHaveBeenCalledWith({
+      emailId: deliveredEmail.emailId,
+      status: EmailStatus.Delivered,
+      reason: 'Retry skipped: email was already delivered',
+    });
+    expect(sendLowPriorityEmail).not.toHaveBeenCalled();
   });
 
   it('marks whole low priority batches as dry-run errors', async () => {

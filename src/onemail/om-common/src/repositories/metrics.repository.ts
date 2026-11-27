@@ -48,6 +48,7 @@ export const ConfigSetProcessorMetricName = {
   EmailHardBounce: `Email${EmailStatus.HardBounce}`,
   EmailNonRetryableSoftBounce: `Email${EmailStatus.NonRetryableSoftBounce}`,
   EmailSoftBounce: `Email${EmailStatus.SoftBounce}`,
+  EmailSoftBounceAfterDeliveryIgnored: 'EmailSoftBounceAfterDeliveryIgnored',
   EmailComplaint: `Email${EmailStatus.Complaint}`,
   EmailRejected: `Email${EmailStatus.Rejected}`,
   EmailRenderingFailure: `EmailRenderingFailure`,

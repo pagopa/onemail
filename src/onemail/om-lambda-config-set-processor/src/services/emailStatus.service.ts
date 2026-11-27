@@ -16,6 +16,7 @@ import {
 import { handleSoftBounceRetry } from '#services/bounceRetry.service';
 import {
   CapitalizedNonRetryableTransientSubTypes,
+  CapitalizedSesBounceSubType,
   CapitalizedSesBounceType,
   CapitalizedSesConfigurationSetEventType,
 } from '#types/ses.type';
@@ -122,9 +123,18 @@ const getBounceStatus = (
         /hop count exceeded.*possible mail loop/i.test(diagnosticCode)),
   );
 
+  // Transient/General without any diagnostic is typically an automatic reply
+  // (e.g. out-of-office) for a message that was already delivered: retrying would only duplicate it.
+  const isGeneralWithoutDiagnostic =
+    bounceSubType === CapitalizedSesBounceSubType.General &&
+    event.bounce.bouncedRecipients.every(
+      ({ diagnosticCode }) => !diagnosticCode?.trim(),
+    );
+
   if (
     bounceType === CapitalizedSesBounceType.Transient &&
     (hasNonRetryableDiagnostic ||
+      isGeneralWithoutDiagnostic ||
       (bounceSubType &&
         CapitalizedNonRetryableTransientSubTypes.has(bounceSubType)))
   )
@@ -276,6 +286,34 @@ export const sqsEventHandler = async (record: SQSRecord): Promise<void> => {
     );
     if (!emailRecord) {
       return handleMissingEmailRecord(eventItem.mail.messageId, currentAttempt);
+    }
+
+    if (
+      eventItem.eventType === CapitalizedSesConfigurationSetEventType.Bounce &&
+      emailRecord.status === EmailStatus.Delivered
+    ) {
+      const bounceStatus = getBounceStatus(eventItem);
+      if (bounceStatus !== EmailStatus.HardBounce) {
+        logger.warn(
+          'Ignoring soft bounce received for an already delivered email',
+          {
+            emailId: emailRecord.emailId,
+            bounceStatus,
+            bounceSubType: eventItem.bounce.bounceSubType,
+          },
+        );
+        // TODO: Remove this temporary metric once monitoring is no longer needed.
+        publishMetrics([
+          {
+            name: ConfigSetProcessorMetricName.EmailSoftBounceAfterDeliveryIgnored,
+            dimensions: {
+              tenantName: emailRecord.tenantName,
+              clientId: emailRecord.clientId,
+            },
+          },
+        ]);
+        return;
+      }
     }
 
     await checkIfMaxInternalAttemptsReached(

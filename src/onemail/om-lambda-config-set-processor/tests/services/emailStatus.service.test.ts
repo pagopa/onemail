@@ -42,6 +42,7 @@ vi.mock('om-common/repositories', () => ({
     EmailDelivered: 'EmailDelivered',
     EmailHardBounce: 'EmailHardBounce',
     EmailNonRetryableSoftBounce: 'EmailNonRetryableSoftBounce',
+    EmailSoftBounceAfterDeliveryIgnored: 'EmailSoftBounceAfterDeliveryIgnored',
     EmailComplaint: 'EmailComplaint',
     EmailRejected: 'EmailRejected',
     EmailRenderingFailure: 'EmailRenderingFailure',
@@ -365,7 +366,7 @@ describe('emailStatus.service bounce flow', () => {
     expect(updateEmailStatus).not.toHaveBeenCalled();
   });
 
-  it('delegates transient General bounce to handleSoftBounceRetry', async () => {
+  it('delegates transient General bounce with a diagnostic to handleSoftBounceRetry', async () => {
     const email = makeEmailStatusHistoryItem({
       status: EmailStatus.Dispatched,
     });
@@ -378,6 +379,7 @@ describe('emailStatus.service bounce flow', () => {
           CapitalizedSesBounceType.Transient,
           CapitalizedSesBounceSubType.General,
           '2025-06-01T12:00:00Z',
+          'smtp; 421 4.4.2 Connection timed out',
         ),
       ),
     );
@@ -442,6 +444,95 @@ describe('emailStatus.service bounce flow', () => {
       ],
     );
     expect(publishMetrics).toHaveBeenCalledWith([
+      {
+        name: 'EmailHardBounce',
+        dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+      },
+    ]);
+  });
+
+  it.each([
+    [
+      CapitalizedSesBounceType.Transient,
+      CapitalizedSesBounceSubType.MailboxFull,
+    ],
+    [
+      CapitalizedSesBounceType.Undetermined,
+      CapitalizedSesBounceSubType.Undetermined,
+    ],
+    [
+      CapitalizedSesBounceType.Transient,
+      CapitalizedSesBounceSubType.ContentRejected,
+    ],
+  ])(
+    'ignores %s/%s bounce when email is already Delivered',
+    async (bounceType, bounceSubType) => {
+      findEmailByProviderMessageId.mockResolvedValue(
+        makeEmailStatusHistoryItem({ status: EmailStatus.Delivered }),
+      );
+
+      await sqsEventHandler(
+        makeQueueRecord(
+          makeBounceEvent('ses-msg-1', bounceType, bounceSubType),
+        ),
+      );
+
+      expect(handleSoftBounceRetry).not.toHaveBeenCalled();
+      expect(updateEmailStatus).not.toHaveBeenCalled();
+      expect(publishMetrics).toHaveBeenCalledExactlyOnceWith([
+        {
+          name: 'EmailSoftBounceAfterDeliveryIgnored',
+          dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+        },
+      ]);
+    },
+  );
+
+  it('ignores a soft bounce after Delivered even when internal retries are exhausted', async () => {
+    findEmailByProviderMessageId.mockResolvedValue(
+      makeEmailStatusHistoryItem({ status: EmailStatus.Delivered }),
+    );
+
+    await sqsEventHandler({
+      ...makeQueueRecord(
+        makeBounceEvent(
+          'ses-msg-1',
+          CapitalizedSesBounceType.Transient,
+          CapitalizedSesBounceSubType.MailboxFull,
+        ),
+      ),
+      attributes: { ApproximateReceiveCount: '100' },
+    } as never);
+
+    expect(updateEmailStatus).not.toHaveBeenCalled();
+    expect(handleSoftBounceRetry).not.toHaveBeenCalled();
+    expect(publishMetrics).toHaveBeenCalledExactlyOnceWith([
+      {
+        name: 'EmailSoftBounceAfterDeliveryIgnored',
+        dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+      },
+    ]);
+  });
+
+  it('handles a hard bounce after Delivered without publishing the ignored soft bounce metric', async () => {
+    findEmailByProviderMessageId.mockResolvedValue(
+      makeEmailStatusHistoryItem({ status: EmailStatus.Delivered }),
+    );
+
+    await sqsEventHandler(makeQueueRecord(makeBounceEvent()));
+
+    expect(updateEmailStatus).toHaveBeenCalledWith(
+      'email-1',
+      EmailStatus.Delivered,
+      [
+        {
+          timestamp: '2025-01-01T00:00:00Z',
+          status: EmailStatus.HardBounce,
+          reason: CapitalizedSesBounceSubType.General,
+        },
+      ],
+    );
+    expect(publishMetrics).toHaveBeenCalledExactlyOnceWith([
       {
         name: 'EmailHardBounce',
         dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
@@ -526,6 +617,47 @@ describe('emailStatus.service non-retryable bounce flow', () => {
     );
     expect(handleSoftBounceRetry).not.toHaveBeenCalled();
   });
+
+  it.each([undefined, '', '   '])(
+    'does not retry a transient General bounce without diagnostic (%j)',
+    async (diagnosticCode) => {
+      const email = makeEmailStatusHistoryItem({
+        status: EmailStatus.Dispatched,
+      });
+      findEmailByProviderMessageId.mockResolvedValue(email);
+
+      await sqsEventHandler(
+        makeQueueRecord(
+          makeBounceEvent(
+            'ses-msg-1',
+            CapitalizedSesBounceType.Transient,
+            CapitalizedSesBounceSubType.General,
+            '2025-06-01T12:00:00Z',
+            diagnosticCode,
+          ),
+        ),
+      );
+
+      expect(updateEmailStatus).toHaveBeenCalledWith(
+        email.emailId,
+        email.status,
+        [
+          {
+            timestamp: '2025-06-01T12:00:00Z',
+            status: EmailStatus.NonRetryableSoftBounce,
+            reason: CapitalizedSesBounceSubType.General,
+          },
+        ],
+      );
+      expect(publishMetrics).toHaveBeenCalledWith([
+        {
+          name: 'EmailNonRetryableSoftBounce',
+          dimensions: { tenantName: 'tenant-1', clientId: 'client-1' },
+        },
+      ]);
+      expect(handleSoftBounceRetry).not.toHaveBeenCalled();
+    },
+  );
 
   it('keeps a permanent bounce as HardBounce when its diagnostic matches', async () => {
     const email = makeEmailStatusHistoryItem({
